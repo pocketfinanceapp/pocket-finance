@@ -18,6 +18,7 @@ import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
 import { fetchCommentCount } from "@/lib/userInteractions";
+import { getArticleDisplayTicker } from "@/lib/tickerMap";
 import {
   getExplicitFilterLabels,
   hasExplicitFilters,
@@ -283,7 +284,7 @@ export function FeedCard({
               strokeLinecap="round"
             />
           </svg>
-          {article.ticker}
+          {getArticleDisplayTicker(article)}
         </div>
 
         <div className="mt-4 flex items-center gap-1 text-white/30">

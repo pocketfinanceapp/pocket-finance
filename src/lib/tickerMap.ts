@@ -164,16 +164,39 @@ const TICKER_MAP: Record<string, TickerMeta> = {
   },
 };
 
+/** Themed tickers for broad-market articles with no specific stock */
+export const THEME_SPX: TickerMeta = {
+  ticker: "SPX",
+  companyName: "S&P 500 Index",
+  market: "NYSE",
+  sector: "Finance",
+  tags: ["SPX", "Index", "Markets"],
+  logoColor: "#6b7280",
+};
+
+export const THEME_OIL: TickerMeta = {
+  ticker: "OIL",
+  companyName: "Crude Oil",
+  market: "NYSE",
+  sector: "Energy",
+  tags: ["OIL", "Energy", "Commodities"],
+  logoColor: "#f97316",
+};
+
+export const THEME_MARKET: TickerMeta = {
+  ticker: "MARKET",
+  companyName: "Broad Market",
+  market: "NYSE",
+  sector: "Finance",
+  tags: ["MARKET", "Economy", "News"],
+  logoColor: "#6b7280",
+};
+
 /** Symbols referenced in demo / news that aren't keyed by company name */
 const SYMBOL_OVERRIDES: Record<string, TickerMeta> = {
-  SPY: {
-    ticker: "SPY",
-    companyName: "S&P 500 ETF",
-    market: "NYSE",
-    sector: "Finance",
-    tags: ["Markets", "ETF"],
-    logoColor: "#3B6EF5",
-  },
+  SPX: THEME_SPX,
+  OIL: THEME_OIL,
+  MARKET: THEME_MARKET,
   XOM: TICKER_MAP.exxon,
   BHP: TICKER_MAP.bhp,
   COIN: TICKER_MAP.coinbase,
@@ -221,15 +244,6 @@ const SYMBOL_OVERRIDES: Record<string, TickerMeta> = {
   },
 };
 
-const DEFAULT_META: TickerMeta = {
-  ticker: "SPY",
-  companyName: "S&P 500 ETF",
-  market: "NYSE",
-  sector: "Finance",
-  tags: ["Markets", "Stocks", "Economy"],
-  logoColor: "#3B6EF5",
-};
-
 const TICKER_BY_SYMBOL: Record<string, TickerMeta> = {
   ...SYMBOL_OVERRIDES,
   ...Object.values(TICKER_MAP).reduce(
@@ -263,13 +277,27 @@ function matchName(text: string, name: string): boolean {
   return re.test(text);
 }
 
-/** Extract the most relevant ticker from article text */
+const INDEX_RE =
+  /\bs&p\s*500\b|\bsp\s*500\b|\bspx\b|\bdow\s*jones\b|\bdjia\b|\bnasdaq\s+(composite|index)\b|\brussell\s*2000\b|\bstock\s+(index|indices|market)\b|\bmarket\s+futures\b|\bfutures\s+market\b|\bwall\s+street\b|\bindex\s+futures\b/i;
+
+const OIL_RE =
+  /\boil\s+prices?\b|\bcrude\s+oil\b|\bpetroleum\b|\bbrent\s+crude\b|\bwti\b|\boil\s+market\b|\bopec\b|\bnatural\s+gas\s+prices?\b|\bgas\s+prices?\b/i;
+
+const OIL_COMPANY_RE = /\bexxon\b|\bxom\b|\bchevron\b|\bcvx\b|\bshell\b|\bbp\b|\bconocophillips\b/i;
+
+/** Classify broad-market articles that don't map to a single stock */
+function inferThemedTicker(text: string): TickerMeta {
+  if (INDEX_RE.test(text)) return THEME_SPX;
+  if (OIL_RE.test(text) && !OIL_COMPANY_RE.test(text)) return THEME_OIL;
+  return THEME_MARKET;
+}
+
+/** Extract the most relevant ticker from article text — never returns SPY */
 export function inferTickerFromText(text: string): TickerMeta {
-  if (!text.trim()) return DEFAULT_META;
+  if (!text.trim()) return THEME_MARKET;
 
   // 1. Explicit ticker symbols ($AAPL, NVDA, (BTC))
   for (const symbol of KNOWN_SYMBOLS) {
-    if (symbol === "SPY") continue;
     if (matchSymbol(text, symbol)) {
       return TICKER_BY_SYMBOL[symbol];
     }
@@ -283,26 +311,32 @@ export function inferTickerFromText(text: string): TickerMeta {
   // 3. Common aliases not stored as map keys
   if (/\bbitcoin\b|\bbtc\b/i.test(text)) return TICKER_MAP.bitcoin;
   if (/\bethereum\b|\beth\b/i.test(text)) return TICKER_MAP.ethereum;
-  if (/\bexxon\b|\boil prices?\b/i.test(text)) return TICKER_MAP.exxon;
+  if (/\bexxon\b|\bxom\b/i.test(text)) return TICKER_MAP.exxon;
   if (/\bbhp\b|\biron ore\b/i.test(text)) return TICKER_MAP.bhp;
   if (/\bcoinbase\b/i.test(text)) return TICKER_MAP.coinbase;
-  if (/\bsony\b|\bnikkei\b/i.test(text)) return TICKER_MAP.sony;
+  if (/\bsony\b/i.test(text)) return TICKER_MAP.sony;
   if (/\bjohnson\s*&\s*johnson\b|\bjnj\b/i.test(text))
     return TICKER_MAP["johnson & johnson"];
-  if (/\bfed\b|\bfederal reserve\b|\binterest rates?\b/i.test(text))
-    return TICKER_MAP.jpmorgan;
 
-  return DEFAULT_META;
+  return inferThemedTicker(text);
 }
 
-const GENERIC_TICKER = "SPY";
+const DEPRECATED_TICKER = "SPY";
 
-function isGenericTicker(ticker: string | null | undefined): boolean {
+function isDeprecatedTicker(ticker: string | null | undefined): boolean {
   const upper = ticker?.trim().toUpperCase() ?? "";
-  return !upper || upper === GENERIC_TICKER;
+  return !upper || upper === DEPRECATED_TICKER;
 }
 
-/** Best ticker for a feed article — avoids saving/displaying the generic SPY fallback */
+function articleInferenceText(article: {
+  headline: string;
+  subheading?: string;
+  body?: string;
+}): string {
+  return [article.headline, article.subheading ?? "", article.body ?? ""].join(" ");
+}
+
+/** Display/save ticker for a feed article — re-infers when stored value is SPY or missing */
 export function resolveArticleTicker(article: {
   ticker: string;
   headline: string;
@@ -310,13 +344,18 @@ export function resolveArticleTicker(article: {
   body?: string;
 }): string {
   const stored = article.ticker?.trim().toUpperCase() ?? "";
-  const inferred = inferTickerFromText(
-    [article.headline, article.subheading ?? "", article.body ?? ""].join(" ")
-  ).ticker;
+  if (!isDeprecatedTicker(stored)) return stored;
+  return inferTickerFromText(articleInferenceText(article)).ticker;
+}
 
-  if (!isGenericTicker(stored)) return stored;
-  if (!isGenericTicker(inferred)) return inferred;
-  return stored || inferred;
+/** Display ticker for feed cards and UI */
+export function getArticleDisplayTicker(article: {
+  ticker: string;
+  headline: string;
+  subheading?: string;
+  body?: string;
+}): string {
+  return resolveArticleTicker(article);
 }
 
 /** Display ticker for a saved watchlist row — always inferred from title, never from DB */
@@ -335,6 +374,6 @@ export function getTickerMetaBySymbol(ticker: string): TickerMeta {
     market: "NYSE",
     sector: "Finance",
     tags: [upper],
-    logoColor: "#3B6EF5",
+    logoColor: "#6b7280",
   };
 }
