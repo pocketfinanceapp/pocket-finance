@@ -135,26 +135,87 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
 
 const DEFAULT_PROFILE = STOCK_PROFILES.NVDA;
 
+const CRYPTO_TICKERS = new Set(["BTC", "ETH"]);
+
+function isMissingFinancial(value: string): boolean {
+  const v = value.trim();
+  return !v || v === "—" || v === "-" || v === "N/A";
+}
+
+/** Plausible demo financials when live data isn't available */
+function demoFinancials(seed: string, isCrypto: boolean) {
+  if (isCrypto) {
+    const capT = pseudoRandom(`${seed}-cap`, 0.5, 2.5);
+    return {
+      marketCap: `$${capT.toFixed(2)}T`,
+      revenue: `$${pseudoRandom(`${seed}-rev`, 8, 120).toFixed(1)}B`,
+      peRatio: pseudoRandom(`${seed}-pe`, 12, 45).toFixed(2),
+      eps: `$${pseudoRandom(`${seed}-eps`, 0.5, 8).toFixed(2)}`,
+      ebitda: `$${pseudoRandom(`${seed}-ebitda`, 2, 40).toFixed(1)}B`,
+      dividendYield: `${pseudoRandom(`${seed}-div`, 0, 1.5).toFixed(2)}%`,
+    };
+  }
+
+  const capB = pseudoRandom(`${seed}-cap`, 15, 3200);
+  const marketCap =
+    capB >= 1000
+      ? `$${(capB / 1000).toFixed(2)}T`
+      : `$${capB.toFixed(1)}B`;
+
+  return {
+    marketCap,
+    revenue: `$${pseudoRandom(`${seed}-rev`, 8, 420).toFixed(1)}B`,
+    peRatio: pseudoRandom(`${seed}-pe`, 8, 72).toFixed(2),
+    eps: `$${pseudoRandom(`${seed}-eps`, 0.8, 22).toFixed(2)}`,
+    ebitda: `$${pseudoRandom(`${seed}-ebitda`, 12, 180).toFixed(1)}B`,
+    dividendYield: `${pseudoRandom(`${seed}-div`, 0, 3.2).toFixed(2)}%`,
+  };
+}
+
+function withDemoFinancials(
+  profile: Omit<StockProfile, "chartData">,
+  seed: string
+): Omit<StockProfile, "chartData"> {
+  const demo = demoFinancials(seed, CRYPTO_TICKERS.has(profile.ticker));
+  return {
+    ...profile,
+    marketCap: isMissingFinancial(profile.marketCap)
+      ? demo.marketCap
+      : profile.marketCap,
+    revenue: isMissingFinancial(profile.revenue)
+      ? demo.revenue
+      : profile.revenue,
+    peRatio: isMissingFinancial(profile.peRatio) ? demo.peRatio : profile.peRatio,
+    eps: isMissingFinancial(profile.eps) ? demo.eps : profile.eps,
+    ebitda: isMissingFinancial(profile.ebitda) ? demo.ebitda : profile.ebitda,
+    dividendYield: isMissingFinancial(profile.dividendYield)
+      ? demo.dividendYield
+      : profile.dividendYield,
+  };
+}
+
 export function getStockProfile(ticker: string): StockProfile {
   const upper = ticker.toUpperCase();
   const meta = getTickerMetaBySymbol(upper);
   const stored = STOCK_PROFILES[upper];
 
-  const base: Omit<StockProfile, "chartData"> = stored ?? {
+  const raw: Omit<StockProfile, "chartData"> = stored ?? {
     ticker: upper,
     name: meta.companyName,
     logoColor: meta.logoColor,
     price: pseudoRandom(upper, 50, 500),
     change: pseudoRandom(`${upper}-c`, 0.5, 15),
     changePercent: pseudoRandom(`${upper}-p`, -2, 4),
-    marketCap: "—",
-    revenue: "—",
-    peRatio: "—",
-    eps: "—",
-    ebitda: "—",
-    dividendYield: "—",
+    marketCap: DEFAULT_PROFILE.marketCap,
+    revenue: DEFAULT_PROFILE.revenue,
+    peRatio: DEFAULT_PROFILE.peRatio,
+    eps: DEFAULT_PROFILE.eps,
+    ebitda: DEFAULT_PROFILE.ebitda,
+    dividendYield: DEFAULT_PROFILE.dividendYield,
     competitors: DEFAULT_PROFILE.competitors,
   };
+
+  const base = withDemoFinancials(raw, upper);
 
   const chartData = {} as Record<ChartRange, ChartPoint[]>;
   (Object.keys(CHART_LABELS) as ChartRange[]).forEach((range) => {

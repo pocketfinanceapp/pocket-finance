@@ -87,16 +87,9 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
           </div>
         </div>
 
-        <div className="mt-1 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold">{stock.ticker}</h1>
-            <p className="text-sm text-zinc-400">{stock.name}</p>
-          </div>
-          <CompanyLogo
-            ticker={stock.ticker}
-            color={stock.logoColor}
-            size={44}
-          />
+        <div className="mt-1">
+          <h1 className="text-xl font-bold">{stock.ticker}</h1>
+          <p className="text-sm text-zinc-400">{stock.name}</p>
         </div>
 
         <nav className="mt-4 flex gap-5 border-b border-white/[0.08]">

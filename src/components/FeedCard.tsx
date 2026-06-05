@@ -13,7 +13,8 @@ import type { FeedMode } from "@/lib/filterArticles";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
-import { PocketMarkIcon, PocketPublisherBadge } from "./PocketLogo";
+import { PocketMarkIcon } from "./PocketLogo";
+import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import {
   getExplicitFilterLabels,
@@ -248,7 +249,13 @@ export function FeedCard({
         </div>
 
         <div className="mt-3">
-          <PocketPublisherBadge timeLabel={timeAgo(article.publishedAt)} />
+          <SourceBadge
+            sourceName={article.sourceName}
+            sourceId={article.sourceId}
+            sourceUrl={article.sourceUrl}
+            publishedAt={article.publishedAt}
+            timeLabel={timeAgo(article.publishedAt)}
+          />
         </div>
 
         <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-3 py-1 text-[11px] font-medium text-white/80 backdrop-blur-md">
