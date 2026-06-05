@@ -15,7 +15,7 @@ export function WatchlistPage({ onClose }: WatchlistPageProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#0a0a0a]">
       <ScreenHeader title="Watchlist" onBack={onClose} />
-      <div className="flex-1 overflow-y-auto px-4 pb-28">
+      <div className="flex-1 overflow-y-auto px-4 pb-3">
         {savedArticles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-zinc-400">No saved articles yet</p>

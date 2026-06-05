@@ -41,7 +41,7 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#0a0a0a]">
       <ScreenHeader title="Profile" onBack={onClose} />
-      <div className="flex-1 overflow-y-auto px-4 pb-28">
+      <div className="flex-1 overflow-y-auto px-4 pb-3">
         <div className="flex flex-col items-center py-8">
           <PocketBrand layout="vertical" iconSize={80} glow="strong" showTagline />
           <h2 className="mt-6 text-xl font-bold text-white">{displayName}</h2>

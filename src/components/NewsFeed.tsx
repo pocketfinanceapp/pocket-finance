@@ -491,27 +491,33 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       </div>
 
       {overlay === "markets" && (
-        <div
-          className="absolute inset-x-0 top-0 z-40 flex flex-col bg-black"
-          style={{ bottom: BOTTOM_NAV_HEIGHT }}
-        >
-          <MarketsPage onOpenMarketFeed={openMarketFeed} />
+        <div className="absolute inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0a0a]">
+          <div
+            className="flex min-h-0 flex-1 flex-col"
+            style={{ paddingBottom: BOTTOM_NAV_HEIGHT }}
+          >
+            <MarketsPage onOpenMarketFeed={openMarketFeed} />
+          </div>
         </div>
       )}
       {overlay === "watchlist" && (
-        <div
-          className="absolute inset-x-0 top-0 z-40 flex flex-col bg-[#0a0a0a]"
-          style={{ bottom: BOTTOM_NAV_HEIGHT }}
-        >
-          <WatchlistPage onClose={() => setOverlay(null)} />
+        <div className="absolute inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0a0a]">
+          <div
+            className="flex min-h-0 flex-1 flex-col"
+            style={{ paddingBottom: BOTTOM_NAV_HEIGHT }}
+          >
+            <WatchlistPage onClose={() => setOverlay(null)} />
+          </div>
         </div>
       )}
       {overlay === "profile" && (
-        <div
-          className="absolute inset-x-0 top-0 z-40 flex flex-col bg-[#0a0a0a]"
-          style={{ bottom: BOTTOM_NAV_HEIGHT }}
-        >
-          <ProfilePage onClose={() => setOverlay(null)} />
+        <div className="absolute inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0a0a]">
+          <div
+            className="flex min-h-0 flex-1 flex-col"
+            style={{ paddingBottom: BOTTOM_NAV_HEIGHT }}
+          >
+            <ProfilePage onClose={() => setOverlay(null)} />
+          </div>
         </div>
       )}
 
