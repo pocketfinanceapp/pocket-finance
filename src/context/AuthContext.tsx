@@ -6,19 +6,26 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { getEmailConfirmRedirectUrl } from "@/lib/authRedirect";
 import { getSupabase } from "@/lib/supabase";
 
 interface AuthResult {
   error: string | null;
+  /** True when sign-up succeeded but email confirmation is required */
+  needsConfirmation?: boolean;
 }
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  /** Shown on the login screen after email confirmation redirect */
+  authBanner: string | null;
+  clearAuthBanner: () => void;
   signUp: (
     email: string,
     password: string,
@@ -32,30 +39,86 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const CONFIRMED_BANNER = "Email confirmed! You can now log in.";
+
+function isEmailConfirmationUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("email_confirmed") === "1") return true;
+  const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+  const type = hash.get("type");
+  return type === "signup" || type === "email" || type === "email_change";
+}
+
+function cleanConfirmationParams(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("email_confirmed");
+  url.hash = "";
+  const search = url.searchParams.toString();
+  const next = url.pathname + (search ? `?${search}` : "");
+  window.history.replaceState({}, "", next);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authBanner, setAuthBanner] = useState<string | null>(null);
+  const handlingConfirmation = useRef(false);
 
   useEffect(() => {
     const supabase = getSupabase();
+    let mounted = true;
 
-    supabase.auth.getSession().then(({ data: { session: initial } }) => {
-      setSession(initial);
-      setUser(initial?.user ?? null);
-      setLoading(false);
-    });
+    const init = async () => {
+      const confirmationRedirect = isEmailConfirmationUrl();
+      if (confirmationRedirect) {
+        handlingConfirmation.current = true;
+      }
+
+      const {
+        data: { session: initial },
+      } = await supabase.auth.getSession();
+
+      if (!mounted) return;
+
+      if (confirmationRedirect) {
+        if (initial) {
+          await supabase.auth.signOut();
+        }
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setAuthBanner(CONFIRMED_BANNER);
+          cleanConfirmationParams();
+        }
+        handlingConfirmation.current = false;
+      } else {
+        setSession(initial);
+        setUser(initial?.user ?? null);
+      }
+
+      if (mounted) setLoading(false);
+    };
+
+    void init();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (handlingConfirmation.current) return;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const clearAuthBanner = useCallback(() => setAuthBanner(null), []);
 
   const signUp = useCallback(
     async (
@@ -64,14 +127,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       displayName: string
     ): Promise<AuthResult> => {
       const supabase = getSupabase();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: { display_name: displayName.trim() },
+          emailRedirectTo: getEmailConfirmRedirectUrl(),
         },
       });
-      return { error: error?.message ?? null };
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      const needsConfirmation = Boolean(data.user && !data.session);
+      return { error: null, needsConfirmation };
     },
     []
   );
@@ -93,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
+    setAuthBanner(null);
   }, []);
 
   const signInWithOAuth = useCallback(
@@ -101,8 +172,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo:
-            typeof window !== "undefined" ? window.location.origin : undefined,
+          redirectTo: getEmailConfirmRedirectUrl().replace(
+            "/?email_confirmed=1",
+            "/"
+          ),
         },
       });
       return { error: error?.message ?? null };
@@ -125,6 +198,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       session,
       loading,
+      authBanner,
+      clearAuthBanner,
       signUp,
       signIn,
       signOut,
@@ -135,6 +210,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       session,
       loading,
+      authBanner,
+      clearAuthBanner,
       signUp,
       signIn,
       signOut,

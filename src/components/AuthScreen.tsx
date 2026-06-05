@@ -1,33 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Mail } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { useAuth } from "@/context/AuthContext";
 
 type AuthMode = "signIn" | "signUp";
+type AuthView = "form" | "checkInbox";
 
 export function AuthScreen() {
-  const { signIn, signUp, signInWithApple, signInWithGoogle } = useAuth();
+  const {
+    signIn,
+    signUp,
+    signInWithApple,
+    signInWithGoogle,
+    authBanner,
+    clearAuthBanner,
+  } = useAuth();
+  const [view, setView] = useState<AuthView>("form");
   const [mode, setMode] = useState<AuthMode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [confirmedEmail, setConfirmedEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const isSignUp = mode === "signUp";
 
+  useEffect(() => {
+    if (authBanner) {
+      setView("form");
+      setMode("signIn");
+      setError(null);
+    }
+  }, [authBanner]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    clearAuthBanner();
     setSubmitting(true);
 
     try {
-      const result = isSignUp
-        ? await signUp(email.trim(), password, displayName)
-        : await signIn(email.trim(), password);
-
-      if (result.error) setError(result.error);
+      if (isSignUp) {
+        const result = await signUp(email.trim(), password, displayName);
+        if (result.error) {
+          setError(result.error);
+        } else if (result.needsConfirmation) {
+          setConfirmedEmail(email.trim());
+          setView("checkInbox");
+        }
+      } else {
+        const result = await signIn(email.trim(), password);
+        if (result.error) setError(result.error);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -37,6 +64,7 @@ export function AuthScreen() {
 
   const handleOAuth = async (provider: "apple" | "google") => {
     setError(null);
+    clearAuthBanner();
     setSubmitting(true);
     try {
       const result =
@@ -51,11 +79,49 @@ export function AuthScreen() {
     }
   };
 
+  const backToLogin = () => {
+    setView("form");
+    setMode("signIn");
+    setError(null);
+    clearAuthBanner();
+  };
+
+  if (view === "checkInbox") {
+    return (
+      <AuthShell>
+        <div className="flex flex-1 flex-col justify-center">
+          <div className="mb-8 flex justify-center">
+            <PocketBrand layout="vertical" iconSize={72} glow="none" />
+          </div>
+
+          <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl border border-[#3B6EF5]/30 bg-gradient-to-br from-[#3B6EF5]/20 to-[#00C6C6]/15">
+            <Mail className="h-12 w-12 text-[#00C6C6]" strokeWidth={1.5} />
+          </div>
+
+          <h1 className="text-center text-2xl font-bold tracking-tight">
+            Check your inbox
+          </h1>
+          <p className="mt-4 text-center text-sm leading-relaxed text-zinc-400">
+            We&apos;ve sent a confirmation link to{" "}
+            <span className="font-medium text-white">{confirmedEmail}</span>.
+            Click the link in the email to activate your account, then come back
+            here to log in.
+          </p>
+
+          <button
+            type="button"
+            onClick={backToLogin}
+            className="mt-10 w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-opacity active:scale-[0.99]"
+          >
+            Back to Log In
+          </button>
+        </div>
+      </AuthShell>
+    );
+  }
+
   return (
-    <div
-      className="mx-auto flex min-h-[100dvh] w-full max-w-mobile flex-col bg-[#0a0a0a] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white"
-      style={{ backgroundColor: "#0a0a0a", minHeight: "100dvh" }}
-    >
+    <AuthShell>
       <div className="flex flex-1 flex-col justify-center">
         <div className="mb-8 flex justify-center">
           <PocketBrand layout="vertical" iconSize={72} glow="none" />
@@ -74,6 +140,7 @@ export function AuthScreen() {
             onClick={() => {
               setMode("signIn");
               setError(null);
+              clearAuthBanner();
             }}
             className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
               mode === "signIn"
@@ -88,6 +155,7 @@ export function AuthScreen() {
             onClick={() => {
               setMode("signUp");
               setError(null);
+              clearAuthBanner();
             }}
             className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
               mode === "signUp"
@@ -98,6 +166,12 @@ export function AuthScreen() {
             Sign Up
           </button>
         </div>
+
+        {authBanner && (
+          <p className="mt-6 rounded-lg border border-[#00C6C6]/30 bg-[#00C6C6]/10 px-3 py-2.5 text-center text-sm text-[#00C6C6]">
+            {authBanner}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           {isSignUp && (
@@ -194,6 +268,17 @@ export function AuthScreen() {
           />
         </div>
       </div>
+    </AuthShell>
+  );
+}
+
+function AuthShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="mx-auto flex min-h-[100dvh] w-full max-w-mobile flex-col bg-[#0a0a0a] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white"
+      style={{ backgroundColor: "#0a0a0a", minHeight: "100dvh" }}
+    >
+      {children}
     </div>
   );
 }
