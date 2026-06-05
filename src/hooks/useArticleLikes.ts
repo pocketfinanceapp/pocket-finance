@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import {
   fetchLikeCount,
@@ -11,6 +12,7 @@ import {
 import type { NewsArticle } from "@/lib/types";
 
 export function useArticleLikes(article: NewsArticle, active: boolean) {
+  const { reloadProfileStats } = useApp();
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(article.likes);
@@ -46,10 +48,12 @@ export function useArticleLikes(article: NewsArticle, active: boolean) {
     if (!ok) {
       setLiked(wasLiked);
       setLikeCount((c) => (wasLiked ? c + 1 : Math.max(0, c - 1)));
+    } else {
+      void reloadProfileStats();
     }
 
     setToggling(false);
-  }, [user, toggling, liked, article]);
+  }, [user, toggling, liked, article, reloadProfileStats]);
 
   return { liked, likeCount, toggleLike, toggling };
 }

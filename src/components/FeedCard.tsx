@@ -37,6 +37,9 @@ interface FeedCardProps {
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80";
 
+const CINEMATIC_OVERLAY =
+  "linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.12) 28%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.78) 78%, rgba(0,0,0,0.94) 100%)";
+
 export function FeedCard({
   article,
   active,
@@ -71,6 +74,7 @@ export function FeedCard({
   const saved = isArticleSaved(article.id);
   const [commentCount, setCommentCount] = useState(article.comments);
   const [toast, setToast] = useState<string | null>(null);
+  const displayTicker = getArticleDisplayTicker(article);
 
   useEffect(() => {
     if (!active) return;
@@ -94,7 +98,7 @@ export function FeedCard({
           src={imgSrc}
           alt=""
           fill
-          className="object-cover"
+          className="object-cover brightness-[0.92] contrast-[1.05]"
           sizes="100vw"
           unoptimized
           priority={active}
@@ -102,22 +106,17 @@ export function FeedCard({
         />
       </div>
 
-      {/* Bottom-half scrim for text — top 50% stays clear */}
+      {/* Cinematic overlay — consistent dark grade on every card */}
       <div
-        className="pointer-events-none absolute inset-x-0 z-[1]"
-        style={{
-          top: "50%",
-          bottom: 0,
-          background:
-            "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0.8) 100%)",
-        }}
+        className="pointer-events-none absolute inset-0 z-[1]"
+        style={{ background: CINEMATIC_OVERLAY }}
       />
 
       {/* Top tabs + optional filter strip */}
       <header className="absolute left-0 right-0 top-0 z-20 flex flex-col pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between px-4 pb-1">
           <div className="flex w-10 shrink-0 items-center justify-start" data-no-drag>
-            <PocketMarkIcon size={28} glow="normal" />
+            <PocketMarkIcon size={28} glow="none" />
           </div>
           <nav className="flex gap-7 text-[13px] font-semibold tracking-wide">
             <button
@@ -252,20 +251,20 @@ export function FeedCard({
         </ActionButton>
       </aside>
 
-      {/* Bottom-left content — logo + headline */}
-      <div className="absolute bottom-[4.75rem] left-0 right-16 z-20 px-4">
-        <h1 className="text-[1.55rem] font-bold leading-[1.15] tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+      {/* Bottom-left content */}
+      <div className="absolute bottom-[4.75rem] left-0 right-16 z-20 px-5">
+        <h1 className="line-clamp-3 text-[1.6rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
           {article.headline}
         </h1>
-        <p className="mt-2 max-w-[92%] text-[13px] leading-snug text-white/65">
+        <p className="mt-2.5 line-clamp-2 max-w-[94%] text-[14px] leading-snug text-white/70">
           {article.subheading}
         </p>
 
-        <div className="mt-3">
+        <div className="mt-4">
           <MarketBadge market={article.market} size="sm" />
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3.5">
           <SourceBadge
             sourceName={article.sourceName}
             sourceId={article.sourceId}
@@ -275,7 +274,7 @@ export function FeedCard({
           />
         </div>
 
-        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-3 py-1 text-[11px] font-medium text-white/80 backdrop-blur-md">
+        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
           <svg className="h-3 w-3 text-pocket-teal" viewBox="0 0 24 24" fill="none">
             <path
               d="M3 17 L8 12 L12 15 L16 8 L21 14"
@@ -284,10 +283,10 @@ export function FeedCard({
               strokeLinecap="round"
             />
           </svg>
-          {getArticleDisplayTicker(article)}
+          {displayTicker}
         </div>
 
-        <div className="mt-4 flex items-center gap-1 text-white/30">
+        <div className="mt-5 flex items-center gap-1 text-white/30">
           <ChevronUp className="h-3.5 w-3.5 animate-bounce" />
           <span className="text-[10px] tracking-wider">Swipe up for more</span>
         </div>

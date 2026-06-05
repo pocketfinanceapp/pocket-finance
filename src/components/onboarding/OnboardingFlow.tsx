@@ -158,11 +158,11 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-8 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4">
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="onboarding-enter onboarding-enter-d1 relative mb-10 flex h-[148px] w-[148px] items-center justify-center">
-            <PocketMarkIcon size={120} glow="none" />
+          <div className="onboarding-enter onboarding-enter-d1 mb-10">
+            <PocketMarkIcon size={120} glow="none" className="mx-auto" />
           </div>
 
-          <h1 className="onboarding-enter onboarding-enter-d2 text-[32px] font-bold leading-tight tracking-tight text-white">
+          <h1 className="onboarding-enter onboarding-enter-d2 text-[34px] font-extrabold leading-tight tracking-tight text-white antialiased">
             Pocket Finance
           </h1>
 

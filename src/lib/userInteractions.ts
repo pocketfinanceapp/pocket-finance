@@ -29,6 +29,83 @@ function initials(name: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// User stats
+// ---------------------------------------------------------------------------
+
+export async function fetchUserStoriesRead(userId: string): Promise<number> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("user_stats")
+    .select("stories_read")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("fetchUserStoriesRead:", error.message);
+    return 0;
+  }
+  return data?.stories_read ?? 0;
+}
+
+export async function setUserStoriesRead(
+  userId: string,
+  count: number
+): Promise<boolean> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from("user_stats").upsert(
+    {
+      user_id: userId,
+      stories_read: count,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    console.error("setUserStoriesRead:", error.message);
+    return false;
+  }
+  return true;
+}
+
+export async function incrementUserStoriesRead(
+  userId: string
+): Promise<number | null> {
+  const supabase = getSupabase();
+  const current = await fetchUserStoriesRead(userId);
+  const next = current + 1;
+
+  const { error } = await supabase.from("user_stats").upsert(
+    {
+      user_id: userId,
+      stories_read: next,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    console.error("incrementUserStoriesRead:", error.message);
+    return null;
+  }
+  return next;
+}
+
+export async function fetchUserLikedCount(userId: string): Promise<number> {
+  const supabase = getSupabase();
+  const { count, error } = await supabase
+    .from("liked_articles")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("fetchUserLikedCount:", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+// ---------------------------------------------------------------------------
 // Likes
 // ---------------------------------------------------------------------------
 

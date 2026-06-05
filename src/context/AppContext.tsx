@@ -20,6 +20,10 @@ import {
 } from "@/lib/sectorPreferences";
 import {
   fetchSavedArticles,
+  fetchUserLikedCount,
+  fetchUserStoriesRead,
+  incrementUserStoriesRead,
+  setUserStoriesRead,
   saveArticle as dbSaveArticle,
   unsaveArticle as dbUnsaveArticle,
 } from "@/lib/userInteractions";
@@ -46,7 +50,9 @@ interface AppContextValue {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   storiesRead: number;
+  likedArticlesCount: number;
   incrementStoriesRead: () => void;
+  reloadProfileStats: () => Promise<void>;
   onboardingComplete: boolean;
   completeOnboarding: (
     markets: MarketFilter[],
@@ -70,19 +76,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [sectorFilters, setSectorFiltersState] = useState<SectorFilter[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [storiesRead, setStoriesRead] = useState(0);
+  const [likedArticlesCount, setLikedArticlesCount] = useState(0);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appUserId, setAppUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("pocket-stories-read");
-      if (saved) setStoriesRead(parseInt(saved, 10) || 0);
-    } catch {
-      /* storage blocked */
-    } finally {
-      setReady(true);
-    }
+    setReady(true);
   }, []);
+
+  const reloadProfileStats = useCallback(async () => {
+    if (!appUserId) {
+      setStoriesRead(0);
+      setLikedArticlesCount(0);
+      return;
+    }
+    const [stories, liked] = await Promise.all([
+      fetchUserStoriesRead(appUserId),
+      fetchUserLikedCount(appUserId),
+    ]);
+    setStoriesRead(stories);
+    setLikedArticlesCount(liked);
+  }, [appUserId]);
 
   const reloadSavedArticles = useCallback(async () => {
     if (!appUserId) {
@@ -99,6 +113,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!userId) {
         setOnboardingComplete(false);
         setSavedArticles([]);
+        setStoriesRead(0);
+        setLikedArticlesCount(0);
         return;
       }
       try {
@@ -116,6 +132,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       const articles = await fetchSavedArticles(userId);
       setSavedArticles(articles);
+
+      let stories = await fetchUserStoriesRead(userId);
+      try {
+        const legacy = localStorage.getItem("pocket-stories-read");
+        const legacyCount = legacy ? parseInt(legacy, 10) || 0 : 0;
+        if (legacyCount > stories) {
+          await setUserStoriesRead(userId, legacyCount);
+          stories = legacyCount;
+          localStorage.removeItem("pocket-stories-read");
+        }
+      } catch {
+        /* storage blocked */
+      }
+      const liked = await fetchUserLikedCount(userId);
+      setStoriesRead(stories);
+      setLikedArticlesCount(liked);
     },
     []
   );
@@ -209,16 +241,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const incrementStoriesRead = useCallback(() => {
-    setStoriesRead((n) => {
-      const next = n + 1;
-      try {
-        localStorage.setItem("pocket-stories-read", String(next));
-      } catch {
-        /* ignore */
-      }
-      return next;
+    setStoriesRead((n) => n + 1);
+    if (!appUserId) return;
+    void incrementUserStoriesRead(appUserId).then((next) => {
+      if (next !== null) setStoriesRead(next);
     });
-  }, []);
+  }, [appUserId]);
 
   const value = useMemo(
     () => ({
@@ -242,7 +270,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       searchQuery,
       setSearchQuery,
       storiesRead,
+      likedArticlesCount,
       incrementStoriesRead,
+      reloadProfileStats,
       onboardingComplete,
       completeOnboarding,
       syncAppUser,
@@ -266,7 +296,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       clearFilters,
       searchQuery,
       storiesRead,
+      likedArticlesCount,
       incrementStoriesRead,
+      reloadProfileStats,
       onboardingComplete,
       completeOnboarding,
       syncAppUser,

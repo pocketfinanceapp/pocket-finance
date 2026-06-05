@@ -36,6 +36,25 @@ const CHART_LABELS: Record<ChartRange, string[]> = {
 };
 
 const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
+  AAPL: {
+    ticker: "AAPL",
+    name: "Apple Inc.",
+    price: 227.52,
+    change: 2.18,
+    changePercent: 0.97,
+    logoColor: "#555555",
+    marketCap: "$3.1T",
+    revenue: "$391.0B",
+    peRatio: "28.5",
+    eps: "$6.42",
+    ebitda: "$134.8B",
+    dividendYield: "0.44%",
+    competitors: [
+      { ticker: "MSFT", name: "Microsoft Corporation", price: 425.18, changePercent: 0.68, color: "#00a4ef" },
+      { ticker: "GOOGL", name: "Alphabet Inc.", price: 178.92, changePercent: 1.12, color: "#4285f4" },
+      { ticker: "SAM", name: "Samsung Electronics", price: 58.4, changePercent: -0.22, color: "#1428a0" },
+    ],
+  },
   NVDA: {
     ticker: "NVDA",
     name: "NVIDIA Corporation",
@@ -43,10 +62,10 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     change: 24.37,
     changePercent: 2.34,
     logoColor: "#76b900",
-    marketCap: "$2.63T",
+    marketCap: "$2.8T",
     revenue: "$60.9B",
-    peRatio: "71.45",
-    eps: "$14.96",
+    peRatio: "35.2",
+    eps: "$11.93",
     ebitda: "$36.1B",
     dividendYield: "0.03%",
     competitors: [
@@ -55,23 +74,23 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
       { ticker: "INTC", name: "Intel Corporation", price: 31.86, changePercent: -0.31, color: "#0071c5" },
     ],
   },
-  AAPL: {
-    ticker: "AAPL",
-    name: "Apple Inc.",
-    price: 227.52,
-    change: 2.18,
-    changePercent: 0.97,
-    logoColor: "#555555",
-    marketCap: "$3.48T",
-    revenue: "$391.0B",
-    peRatio: "35.12",
-    eps: "$6.47",
-    ebitda: "$134.8B",
-    dividendYield: "0.44%",
+  META: {
+    ticker: "META",
+    name: "Meta Platforms, Inc.",
+    price: 512.4,
+    change: 8.12,
+    changePercent: 1.61,
+    logoColor: "#0668e1",
+    marketCap: "$1.4T",
+    revenue: "$156.2B",
+    peRatio: "24.1",
+    eps: "$21.08",
+    ebitda: "$72.4B",
+    dividendYield: "0.38%",
     competitors: [
-      { ticker: "MSFT", name: "Microsoft Corporation", price: 425.18, changePercent: 0.68, color: "#00a4ef" },
       { ticker: "GOOGL", name: "Alphabet Inc.", price: 178.92, changePercent: 1.12, color: "#4285f4" },
-      { ticker: "SAM", name: "Samsung Electronics", price: 58.4, changePercent: -0.22, color: "#1428a0" },
+      { ticker: "SNAP", name: "Snap Inc.", price: 11.42, changePercent: -0.8, color: "#fffc00" },
+      { ticker: "PINS", name: "Pinterest, Inc.", price: 34.18, changePercent: 0.55, color: "#e60023" },
     ],
   },
   GOOGL: {
@@ -81,16 +100,35 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     change: 1.98,
     changePercent: 1.12,
     logoColor: "#4285f4",
-    marketCap: "$2.21T",
+    marketCap: "$2.1T",
     revenue: "$339.9B",
-    peRatio: "26.84",
-    eps: "$6.67",
+    peRatio: "22.3",
+    eps: "$7.91",
     ebitda: "$112.4B",
     dividendYield: "0.48%",
     competitors: [
       { ticker: "META", name: "Meta Platforms, Inc.", price: 512.4, changePercent: 0.88, color: "#0668e1" },
       { ticker: "MSFT", name: "Microsoft Corporation", price: 425.18, changePercent: 0.68, color: "#00a4ef" },
       { ticker: "AMZN", name: "Amazon.com, Inc.", price: 198.5, changePercent: 0.45, color: "#ff9900" },
+    ],
+  },
+  TSLA: {
+    ticker: "TSLA",
+    name: "Tesla, Inc.",
+    price: 248.42,
+    change: -3.18,
+    changePercent: -1.26,
+    logoColor: "#cc0000",
+    marketCap: "$890B",
+    revenue: "$96.8B",
+    peRatio: "45.2",
+    eps: "$3.12",
+    ebitda: "$14.2B",
+    dividendYield: "—",
+    competitors: [
+      { ticker: "F", name: "Ford Motor Company", price: 11.24, changePercent: 0.32, color: "#003478" },
+      { ticker: "GM", name: "General Motors", price: 44.82, changePercent: -0.15, color: "#0070c9" },
+      { ticker: "RIVN", name: "Rivian Automotive", price: 12.68, changePercent: 2.1, color: "#1a1a1a" },
     ],
   },
   BTC: {
@@ -100,10 +138,10 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     change: 1240.2,
     changePercent: 1.88,
     logoColor: "#f7931a",
-    marketCap: "$1.32T",
+    marketCap: "$1.9T",
     revenue: "—",
-    peRatio: "—",
-    eps: "—",
+    peRatio: "N/A",
+    eps: "N/A",
     ebitda: "—",
     dividendYield: "—",
     competitors: [
@@ -133,8 +171,6 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
   },
 };
 
-const DEFAULT_PROFILE = STOCK_PROFILES.NVDA;
-
 const CRYPTO_TICKERS = new Set(["BTC", "ETH"]);
 
 function isMissingFinancial(value: string): boolean {
@@ -142,17 +178,17 @@ function isMissingFinancial(value: string): boolean {
   return !v || v === "—" || v === "-" || v === "N/A";
 }
 
-/** Plausible demo financials when live data isn't available */
+/** Plausible demo financials for unknown tickers */
 function demoFinancials(seed: string, isCrypto: boolean) {
   if (isCrypto) {
     const capT = pseudoRandom(`${seed}-cap`, 0.5, 2.5);
     return {
       marketCap: `$${capT.toFixed(2)}T`,
-      revenue: `$${pseudoRandom(`${seed}-rev`, 8, 120).toFixed(1)}B`,
-      peRatio: pseudoRandom(`${seed}-pe`, 12, 45).toFixed(2),
-      eps: `$${pseudoRandom(`${seed}-eps`, 0.5, 8).toFixed(2)}`,
-      ebitda: `$${pseudoRandom(`${seed}-ebitda`, 2, 40).toFixed(1)}B`,
-      dividendYield: `${pseudoRandom(`${seed}-div`, 0, 1.5).toFixed(2)}%`,
+      revenue: "—",
+      peRatio: "N/A",
+      eps: "N/A",
+      ebitda: "—",
+      dividendYield: "—",
     };
   }
 
@@ -160,12 +196,12 @@ function demoFinancials(seed: string, isCrypto: boolean) {
   const marketCap =
     capB >= 1000
       ? `$${(capB / 1000).toFixed(2)}T`
-      : `$${capB.toFixed(1)}B`;
+      : `$${capB.toFixed(0)}B`;
 
   return {
     marketCap,
     revenue: `$${pseudoRandom(`${seed}-rev`, 8, 420).toFixed(1)}B`,
-    peRatio: pseudoRandom(`${seed}-pe`, 8, 72).toFixed(2),
+    peRatio: pseudoRandom(`${seed}-pe`, 8, 72).toFixed(1),
     eps: `$${pseudoRandom(`${seed}-eps`, 0.8, 22).toFixed(2)}`,
     ebitda: `$${pseudoRandom(`${seed}-ebitda`, 12, 180).toFixed(1)}B`,
     dividendYield: `${pseudoRandom(`${seed}-div`, 0, 3.2).toFixed(2)}%`,
@@ -206,13 +242,13 @@ export function getStockProfile(ticker: string): StockProfile {
     price: pseudoRandom(upper, 50, 500),
     change: pseudoRandom(`${upper}-c`, 0.5, 15),
     changePercent: pseudoRandom(`${upper}-p`, -2, 4),
-    marketCap: DEFAULT_PROFILE.marketCap,
-    revenue: DEFAULT_PROFILE.revenue,
-    peRatio: DEFAULT_PROFILE.peRatio,
-    eps: DEFAULT_PROFILE.eps,
-    ebitda: DEFAULT_PROFILE.ebitda,
-    dividendYield: DEFAULT_PROFILE.dividendYield,
-    competitors: DEFAULT_PROFILE.competitors,
+    marketCap: "",
+    revenue: "",
+    peRatio: "",
+    eps: "",
+    ebitda: "",
+    dividendYield: "",
+    competitors: [],
   };
 
   const base = withDemoFinancials(raw, upper);

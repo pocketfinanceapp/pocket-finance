@@ -5,6 +5,7 @@ import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { ChartRange, NewsArticle } from "@/lib/types";
 import { getStockProfile } from "@/lib/stockData";
+import { getArticleDisplayTicker } from "@/lib/tickerMap";
 import { CompanyLogo } from "./CompanyLogo";
 import { PriceChart } from "./PriceChart";
 
@@ -18,7 +19,7 @@ const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 const ETORO_URL = "https://www.etoro.com/";
 
 export function StockPanel({ article, onBack }: StockPanelProps) {
-  const stock = getStockProfile(article.ticker);
+  const stock = getStockProfile(getArticleDisplayTicker(article));
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const saved = isArticleSaved(article.id);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");

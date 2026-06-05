@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { ArrowLeft, Bookmark, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Bookmark, ExternalLink } from "lucide-react";
+import { useApp } from "@/context/AppContext";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
@@ -14,14 +14,23 @@ interface ArticlePanelProps {
 }
 
 export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
+  const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const paragraphs = article.body.split(/\n\n+/).filter(Boolean);
-  const [saved, setSaved] = useState(false);
+  const saved = isArticleSaved(article.id);
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
+  const toggleSave = async () => {
+    if (saved) {
+      await unsaveArticle(article.id);
+    } else {
+      await saveArticle(article);
+    }
+  };
+
   return (
-    <div className="flex h-full flex-col bg-pocket-bg text-white">
-      <header className="flex shrink-0 items-center justify-between px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <div className="flex h-full flex-col bg-black text-white">
+      <header className="flex shrink-0 items-center justify-between px-5 py-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <button
           type="button"
           data-no-drag
@@ -33,41 +42,33 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
         >
           <ArrowLeft className="h-6 w-6" />
         </button>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            data-no-drag
-            onPointerDown={stop}
-            onClick={() => setSaved((v) => !v)}
-            className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
-            aria-label={saved ? "Remove bookmark" : "Save article"}
-            style={{ touchAction: "manipulation" }}
-          >
-            <Bookmark
-              className={`h-5 w-5 ${saved ? "fill-white text-white" : ""}`}
-            />
-          </button>
-          <button
-            type="button"
-            data-no-drag
-            onPointerDown={stop}
-            onClick={() => {}}
-            className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
-            aria-label="Menu"
-            style={{ touchAction: "manipulation" }}
-          >
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          data-no-drag
+          onPointerDown={stop}
+          onClick={() => void toggleSave()}
+          className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+          aria-label={saved ? "Remove bookmark" : "Save article"}
+          style={{ touchAction: "manipulation" }}
+        >
+          <Bookmark
+            className={`h-5 w-5 ${saved ? "fill-white text-white" : ""}`}
+          />
+        </button>
       </header>
 
-      <article className="flex-1 overflow-y-auto px-4 pb-28">
+      <article className="flex-1 overflow-y-auto px-5 pb-32">
         <MarketBadge market={article.market} />
-        <h1 className="mt-3 text-2xl font-bold leading-tight">
+
+        <h1 className="mt-4 text-[1.75rem] font-bold leading-[1.2] tracking-tight">
           {article.headline}
         </h1>
 
-        <div className="mt-4">
+        <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
+          {article.subheading}
+        </p>
+
+        <div className="mt-4 opacity-80">
           <SourceBadge
             sourceName={article.sourceName}
             sourceId={article.sourceId}
@@ -78,7 +79,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           />
         </div>
 
-        <div className="relative mt-5 aspect-[16/10] w-full overflow-hidden rounded-2xl">
+        <div className="relative mt-6 aspect-[16/10] w-full overflow-hidden rounded-2xl">
           <Image
             src={article.imageUrl}
             alt=""
@@ -89,7 +90,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           />
         </div>
 
-        <div className="mt-6 space-y-4 text-[15px] leading-relaxed text-zinc-200">
+        <div className="mt-8 space-y-5 text-[18px] leading-[1.65] text-zinc-100">
           {paragraphs.map((p, i) => (
             <p key={i}>{p}</p>
           ))}
@@ -99,12 +100,24 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           {article.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-pocket-border bg-pocket-surface px-4 py-2 text-sm font-medium text-zinc-300"
+              className="rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-zinc-300"
             >
               {tag}
             </span>
           ))}
         </div>
+
+        <a
+          href={article.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-no-drag
+          className="mt-10 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-[15px] font-semibold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
+          style={{ touchAction: "manipulation" }}
+        >
+          Read full article
+          <ExternalLink className="h-4 w-4" />
+        </a>
       </article>
     </div>
   );
