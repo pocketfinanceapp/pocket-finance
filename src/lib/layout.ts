@@ -1,3 +1,7 @@
-/** Height reserved for fixed bottom navigation (matches BottomNav) */
-export const BOTTOM_NAV_HEIGHT =
-  "calc(58px + max(0.5rem, env(safe-area-inset-bottom)))";
+/** Bottom navigation bar height — fixed, matches BottomNav + MobilePageShell */
+export const BOTTOM_NAV_PX = 65;
+
+export const BOTTOM_NAV_HEIGHT = `${BOTTOM_NAV_PX}px`;
+
+/** Feed viewport / card height — pure CSS, no JS measurement */
+export const FEED_VIEWPORT_HEIGHT = `calc(100dvh - ${BOTTOM_NAV_PX}px)`;

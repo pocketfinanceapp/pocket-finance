@@ -9,8 +9,9 @@ import {
   type FeedMode,
 } from "@/lib/filterArticles";
 import { isInteractiveTarget } from "@/lib/gesture";
-import { animateSpring, SPRING_SNAP } from "@/lib/spring";
-import { resolveSnapIndex } from "@/lib/snap";
+import { BOTTOM_NAV_PX, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
+
+const FEED_SLOT_HEIGHT = `(100dvh - ${BOTTOM_NAV_PX}px)`;
 import type { NewsArticle } from "@/lib/types";
 import type { NavTab } from "./BottomNav";
 import { CommentSheet } from "./CommentSheet";
@@ -28,10 +29,10 @@ interface NewsFeedProps {
 
 const PANEL_FEED = 1;
 const AXIS_LOCK = 6;
-const RUBBER = 0.1;
+const SWIPE_THRESHOLD_PX = 55;
+const SWIPE_VELOCITY = 0.35;
 
 type Overlay = "profile" | null;
-
 type LockedAxis = "x" | "y" | null;
 
 export function NewsFeed({ initialArticles }: NewsFeedProps) {
@@ -80,15 +81,11 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const feedColumnRef = useRef<HTMLDivElement>(null);
-
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const [hTranslate, setHTranslate] = useState(0);
-  const [vTranslate, setVTranslate] = useState(0);
-
   const dragging = useRef(false);
   const axis = useRef<LockedAxis>(null);
   const startedInFeed = useRef(false);
@@ -97,16 +94,10 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   const last = useRef({ x: 0, y: 0, t: 0 });
   const panelIndexRef = useRef(panelIndex);
   const feedIndexRef = useRef(feedIndex);
-  const hTranslateRef = useRef(0);
-  const vTranslateRef = useRef(0);
-  const cancelHSpring = useRef<(() => void) | null>(null);
-  const cancelVSpring = useRef<(() => void) | null>(null);
   const prevFeedIndex = useRef(-1);
 
   panelIndexRef.current = panelIndex;
   feedIndexRef.current = feedIndex;
-  hTranslateRef.current = hTranslate;
-  vTranslateRef.current = vTranslate;
 
   const article = filteredArticles[feedIndex] ?? filteredArticles[0];
   const gesturesEnabled = overlay === null && !filterOpen && !commentsOpen && !createOpen;
@@ -123,59 +114,14 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   }, [searchParams, router]);
 
   useEffect(() => {
-    const viewport = viewportRef.current;
-    const feedCol = feedColumnRef.current;
-    if (!viewport) return;
-
-    const measure = () => {
-      const w = viewport.offsetWidth;
-      // Viewport is constrained by MobilePageShell (above bottom nav) — never use window.innerHeight
-      const h = viewport.clientHeight;
-      if (w > 0 && h > 0) setSize({ w, h });
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(viewport);
-    if (feedCol) ro.observe(feedCol);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  useEffect(() => {
     setFeedIndex(0);
-    setVTranslate(0);
-    vTranslateRef.current = 0;
+    setDragY(0);
   }, [marketFilters, sectorFilters, searchQuery, feedMode]);
 
   useEffect(() => {
     const max = Math.max(0, filteredArticles.length - 1);
-    if (feedIndex > max) {
-      setFeedIndex(max);
-      if (size.h) {
-        const y = -max * size.h;
-        setVTranslate(y);
-        vTranslateRef.current = y;
-      }
-    }
-  }, [filteredArticles.length, feedIndex, size.h]);
-
-  useEffect(() => {
-    if (!size.w || dragging.current) return;
-    const x = -panelIndex * size.w;
-    setHTranslate(x);
-    hTranslateRef.current = x;
-  }, [panelIndex, size.w]);
-
-  useEffect(() => {
-    if (!size.h || dragging.current) return;
-    const y = -feedIndex * size.h;
-    setVTranslate(y);
-    vTranslateRef.current = y;
-  }, [feedIndex, size.h]);
+    if (feedIndex > max) setFeedIndex(max);
+  }, [filteredArticles.length, feedIndex]);
 
   useEffect(() => {
     if (
@@ -188,57 +134,10 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     prevFeedIndex.current = feedIndex;
   }, [feedIndex, filteredArticles.length, incrementStoriesRead]);
 
-  const rubberBand = useCallback(
-    (offset: number, min: number, max: number) => {
-      if (offset > max) return max + (offset - max) * RUBBER;
-      if (offset < min) return min + (offset - min) * RUBBER;
-      return offset;
-    },
-    []
-  );
-
-  const springHTo = useCallback((target: number, onDone?: () => void) => {
-    cancelHSpring.current?.();
-    cancelHSpring.current = animateSpring(
-      hTranslateRef.current,
-      target,
-      (v) => {
-        hTranslateRef.current = v;
-        setHTranslate(v);
-      },
-      () => {
-        cancelHSpring.current = null;
-        onDone?.();
-      },
-      SPRING_SNAP
-    );
+  const goToPanel = useCallback((index: number) => {
+    setPanelIndex(index);
+    setDragX(0);
   }, []);
-
-  const springVTo = useCallback((target: number, onDone?: () => void) => {
-    cancelVSpring.current?.();
-    cancelVSpring.current = animateSpring(
-      vTranslateRef.current,
-      target,
-      (v) => {
-        vTranslateRef.current = v;
-        setVTranslate(v);
-      },
-      () => {
-        cancelVSpring.current = null;
-        onDone?.();
-      },
-      { ...SPRING_SNAP, stiffness: 960, damping: 34 }
-    );
-  }, []);
-
-  const goToPanel = useCallback(
-    (index: number) => {
-      if (!size.w) return;
-      const target = -index * size.w;
-      springHTo(target, () => setPanelIndex(index));
-    },
-    [size.w, springHTo]
-  );
 
   const goToFeed = useCallback(() => {
     goToPanel(PANEL_FEED);
@@ -266,18 +165,18 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       if (!gesturesEnabled || e.button !== 0 || isInteractiveTarget(e.target))
         return;
 
-      cancelHSpring.current?.();
-      cancelVSpring.current?.();
-
       dragging.current = true;
+      setIsDragging(true);
       axis.current = null;
       activePointer.current = e.pointerId;
       startedInFeed.current =
-        feedColumnRef.current?.contains(e.target as Node) ?? false;
+        (e.target as HTMLElement).closest("[data-feed-column]") !== null;
 
       const sample = { x: e.clientX, y: e.clientY, t: Date.now() };
       start.current = sample;
       last.current = sample;
+      setDragX(0);
+      setDragY(0);
     },
     [gesturesEnabled]
   );
@@ -306,6 +205,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
           trackRef.current?.setPointerCapture(e.pointerId);
         } else {
           dragging.current = false;
+          setIsDragging(false);
           releaseCapture();
           return;
         }
@@ -313,19 +213,15 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
 
       last.current = { x: e.clientX, y: e.clientY, t: Date.now() };
 
-      if (axis.current === "x" && size.w) {
+      if (axis.current === "x") {
         e.preventDefault();
-        const next = -panelIndexRef.current * size.w + dx;
-        hTranslateRef.current = next;
-        setHTranslate(next);
-      } else if (axis.current === "y" && size.h) {
+        setDragX(dx);
+      } else if (axis.current === "y") {
         e.preventDefault();
-        const next = -feedIndexRef.current * size.h + dy;
-        vTranslateRef.current = next;
-        setVTranslate(next);
+        setDragY(dy);
       }
     },
-    [releaseCapture, size.h, size.w]
+    [releaseCapture]
   );
 
   const onPointerUp = useCallback(
@@ -333,6 +229,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       if (activePointer.current !== e.pointerId) return;
 
       dragging.current = false;
+      setIsDragging(false);
       releaseCapture();
 
       const locked = axis.current;
@@ -340,28 +237,43 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       if (!locked) return;
 
       const dt = Math.max(1, last.current.t - start.current.t);
+      const dx = last.current.x - start.current.x;
+      const dy = last.current.y - start.current.y;
 
-      if (locked === "x" && size.w) {
-        const velocity = (last.current.x - start.current.x) / dt;
-        const offset = rubberBand(hTranslateRef.current, -2 * size.w, 0);
-        const next = resolveSnapIndex(offset, size.w, velocity, 2);
-        springHTo(-next * size.w, () => setPanelIndex(next));
-      } else if (locked === "y" && size.h) {
-        const velocity = (last.current.y - start.current.y) / dt;
+      if (locked === "x") {
+        const velocity = dx / dt;
+        let next = panelIndexRef.current;
+        if (velocity < -SWIPE_VELOCITY || dx < -SWIPE_THRESHOLD_PX) {
+          next = Math.min(2, next + 1);
+        } else if (velocity > SWIPE_VELOCITY || dx > SWIPE_THRESHOLD_PX) {
+          next = Math.max(0, next - 1);
+        }
+        setPanelIndex(next);
+        setDragX(0);
+      } else if (locked === "y") {
+        const velocity = dy / dt;
         const maxIdx = Math.max(0, filteredArticles.length - 1);
-        const offset = rubberBand(
-          vTranslateRef.current,
-          -maxIdx * size.h,
-          0
-        );
-        const next = resolveSnapIndex(offset, size.h, velocity, maxIdx);
-        springVTo(-next * size.h, () => setFeedIndex(next));
+        let next = feedIndexRef.current;
+        if (velocity < -SWIPE_VELOCITY || dy < -SWIPE_THRESHOLD_PX) {
+          next = Math.min(maxIdx, next + 1);
+        } else if (velocity > SWIPE_VELOCITY || dy > SWIPE_THRESHOLD_PX) {
+          next = Math.max(0, next - 1);
+        }
+        setFeedIndex(next);
+        setDragY(0);
       }
     },
-    [filteredArticles.length, releaseCapture, rubberBand, size.h, size.w, springHTo, springVTo]
+    [filteredArticles.length, releaseCapture]
   );
 
   const navTab: NavTab = overlay === "profile" ? "profile" : "home";
+
+  const trackTransition = isDragging
+    ? ""
+    : "transition-transform duration-300 ease-out";
+
+  const hTransform = `translate3d(calc(-${panelIndex} * 33.333% + ${dragX}px), 0, 0)`;
+  const vTransform = `translate3d(0, calc(-${feedIndex} * ${FEED_SLOT_HEIGHT} + ${dragY}px), 0)`;
 
   return (
     <MobilePageShell
@@ -372,93 +284,98 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       }}
     >
       <div
-        ref={viewportRef}
-        className={`relative h-full overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
+        className={`relative overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
+        style={{ height: FEED_VIEWPORT_HEIGHT }}
       >
         <div
           ref={trackRef}
-          className={`gpu-layer flex h-full touch-none ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
+          className={`gpu-layer flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
           style={{
-            width: size.w ? size.w * 3 : "300%",
-            transform: `translate3d(${hTranslate}px, 0, 0)`,
+            height: FEED_VIEWPORT_HEIGHT,
+            width: "300%",
+            transform: hTransform,
           }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
         >
-        <div
-          className="h-full shrink-0 overflow-y-auto overscroll-contain"
-          style={{ width: size.w || "33.333%", touchAction: "pan-y" }}
-        >
-          {article && <StockPanel article={article} onBack={goToFeed} />}
-        </div>
+          <div
+            className="h-full shrink-0 overflow-y-auto overscroll-contain"
+            style={{ width: "33.333%", touchAction: "pan-y" }}
+          >
+            {article && <StockPanel article={article} onBack={goToFeed} />}
+          </div>
 
-        <div
-          ref={feedColumnRef}
-          className="relative h-full shrink-0 touch-none overflow-hidden"
-          style={{ width: size.w || "33.333%", touchAction: "none" }}
-        >
-          {filteredArticles.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-              <p className="text-lg font-semibold text-white">
-                {feedMode === "following"
-                  ? "No markets followed yet"
-                  : "No stories match"}
-              </p>
-              <p className="mt-2 text-sm text-zinc-500">
-                {feedMode === "following"
-                  ? "Follow markets in the Markets tab to build your feed."
-                  : "Adjust filters or search to see more news."}
-              </p>
-              <button
-                type="button"
-                data-no-drag
-                onClick={() =>
-                  feedMode === "following"
-                    ? router.push("/markets")
-                    : setFilterOpen(true)
-                }
-                className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
-              >
-                {feedMode === "following" ? "Explore markets" : "Open filters"}
-              </button>
-            </div>
-          ) : (
-            <div
-              className="gpu-layer w-full touch-none"
-              style={{
-                height: size.h > 0 ? size.h * filteredArticles.length : "100%",
-                transform: `translate3d(0, ${vTranslate}px, 0)`,
-              }}
-            >
-              {filteredArticles.map((a, i) => (
-                <div
-                  key={a.id}
-                  className="w-full shrink-0"
-                  style={{ height: size.h > 0 ? size.h : "100%" }}
+          <div
+            data-feed-column
+            className={`relative shrink-0 touch-none overflow-hidden ${trackTransition}`}
+            style={{
+              width: "33.333%",
+              height: FEED_VIEWPORT_HEIGHT,
+              touchAction: "none",
+            }}
+          >
+            {filteredArticles.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+                <p className="text-lg font-semibold text-white">
+                  {feedMode === "following"
+                    ? "No markets followed yet"
+                    : "No stories match"}
+                </p>
+                <p className="mt-2 text-sm text-zinc-500">
+                  {feedMode === "following"
+                    ? "Follow markets in the Markets tab to build your feed."
+                    : "Adjust filters or search to see more news."}
+                </p>
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={() =>
+                    feedMode === "following"
+                      ? router.push("/markets")
+                      : setFilterOpen(true)
+                  }
+                  className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
                 >
-                  <FeedCard
-                    article={a}
-                    active={i === feedIndex}
-                    feedMode={feedMode}
-                    onFeedModeChange={setFeedMode}
-                    onOpenComments={() => setCommentsOpen(true)}
-                    onOpenFilter={() => setFilterOpen(true)}
-                    commentRefreshKey={commentRefreshKey}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                  {feedMode === "following" ? "Explore markets" : "Open filters"}
+                </button>
+              </div>
+            ) : (
+              <div
+                className={`gpu-layer w-full touch-none ${trackTransition}`}
+                style={{
+                  height: `calc(${filteredArticles.length} * ${FEED_SLOT_HEIGHT})`,
+                  transform: vTransform,
+                }}
+              >
+                {filteredArticles.map((a, i) => (
+                  <div
+                    key={a.id}
+                    className="w-full shrink-0"
+                    style={{ height: FEED_VIEWPORT_HEIGHT }}
+                  >
+                    <FeedCard
+                      article={a}
+                      active={i === feedIndex}
+                      feedMode={feedMode}
+                      onFeedModeChange={setFeedMode}
+                      onOpenComments={() => setCommentsOpen(true)}
+                      onOpenFilter={() => setFilterOpen(true)}
+                      commentRefreshKey={commentRefreshKey}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        <div
-          className="h-full shrink-0 overflow-y-auto overscroll-contain"
-          style={{ width: size.w || "33.333%", touchAction: "pan-y" }}
-        >
-          {article && <ArticlePanel article={article} onBack={goToFeed} />}
-        </div>
+          <div
+            className="h-full shrink-0 overflow-y-auto overscroll-contain"
+            style={{ width: "33.333%", touchAction: "pan-y" }}
+          >
+            {article && <ArticlePanel article={article} onBack={goToFeed} />}
+          </div>
         </div>
 
         {overlay === "profile" && (

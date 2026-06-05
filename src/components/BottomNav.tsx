@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart2, Bookmark, Plus, User } from "lucide-react";
+import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 
 export type NavTab = "home" | "markets" | "create" | "watchlist" | "profile";
 
@@ -52,12 +53,12 @@ export function BottomNav({ active, onCreate }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-mobile -translate-x-1/2 border-t border-white/[0.06] bg-black"
+      className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-mobile -translate-x-1/2 flex-col justify-end border-t border-white/[0.06] bg-black"
       data-no-drag
       data-interactive
-      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      style={{ height: BOTTOM_NAV_HEIGHT }}
     >
-      <div className="relative flex h-[58px] items-end justify-around px-2 pb-1">
+      <div className="relative flex h-full items-end justify-around px-2 pb-1">
         <NavItem
           label="Home"
           active={homeActive}

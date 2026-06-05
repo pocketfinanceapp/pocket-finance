@@ -37,8 +37,8 @@ interface FeedCardProps {
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80";
 
-const CINEMATIC_OVERLAY =
-  "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.9) 100%)";
+const CARD_OVERLAY =
+  "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.92) 100%)";
 
 export function FeedCard({
   article,
@@ -89,30 +89,23 @@ export function FeedCard({
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
-    <section
-      className="relative h-full w-full overflow-hidden bg-black"
-      aria-hidden={!active}
-    >
-      {/* Background image — full card height */}
-      <div className="absolute inset-0">
-        <Image
-          src={imgSrc}
-          alt=""
-          fill
-          className="object-cover brightness-[0.92] contrast-[1.05]"
-          sizes="100vw"
-          unoptimized
-          priority={active}
-          onError={() => setImgSrc(FALLBACK_IMAGE)}
-        />
-      </div>
+    <div className="relative h-full w-full overflow-hidden bg-black">
+      <Image
+        src={imgSrc}
+        alt=""
+        fill
+        className="absolute inset-0 h-full w-full object-cover brightness-[0.92] contrast-[1.05]"
+        sizes="100vw"
+        unoptimized
+        priority={active}
+        onError={() => setImgSrc(FALLBACK_IMAGE)}
+      />
 
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
-        style={{ background: CINEMATIC_OVERLAY }}
+        style={{ background: CARD_OVERLAY }}
       />
 
-      {/* Header — pinned to top, does not shrink the image layout */}
       <header className="absolute left-0 right-0 top-0 z-20 border-b border-white/[0.06] bg-black/90 backdrop-blur-md">
         <div
           className="flex items-center justify-between px-4 pb-1.5"
@@ -181,7 +174,7 @@ export function FeedCard({
       </header>
 
       <aside
-        className="absolute bottom-[120px] right-2 z-30 flex flex-col items-center gap-5"
+        className="absolute bottom-4 right-4 z-30 flex flex-col items-center gap-5"
         data-no-drag
         data-interactive
       >
@@ -253,11 +246,14 @@ export function FeedCard({
         </ActionButton>
       </aside>
 
-      <div className="absolute bottom-0 left-0 right-0 z-20 px-5 pb-[120px] pr-16">
+      <div
+        className="absolute bottom-4 left-0 right-0 z-20"
+        style={{ padding: "0 20px", paddingRight: "72px" }}
+      >
         <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
           {article.headline}
         </h1>
-        <p className="mt-2 line-clamp-2 max-w-[94%] text-[14px] leading-snug text-white/70">
+        <p className="mt-2 line-clamp-2 text-[14px] leading-snug text-white/70">
           {article.subheading}
         </p>
 
@@ -301,7 +297,7 @@ export function FeedCard({
           {toast}
         </div>
       )}
-    </section>
+    </div>
   );
 }
 

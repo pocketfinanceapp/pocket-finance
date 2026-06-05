@@ -1,6 +1,6 @@
 "use client";
 
-import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
+import { FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 import { BottomNav, type NavTab } from "./BottomNav";
 
 interface MobilePageShellProps {
@@ -9,7 +9,7 @@ interface MobilePageShellProps {
   onCreate?: () => void;
 }
 
-/** Full-screen mobile page with fixed bottom nav — no feed or overlays underneath */
+/** Full-screen shell — feed area above a fixed 65px bottom nav */
 export function MobilePageShell({
   activeTab,
   children,
@@ -19,7 +19,7 @@ export function MobilePageShell({
     <div className="relative mx-auto h-[100dvh] w-full max-w-mobile overflow-hidden bg-black">
       <div
         className="absolute inset-x-0 top-0 overflow-hidden bg-black"
-        style={{ bottom: BOTTOM_NAV_HEIGHT }}
+        style={{ height: FEED_VIEWPORT_HEIGHT }}
       >
         {children}
       </div>
