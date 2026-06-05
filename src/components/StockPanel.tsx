@@ -19,8 +19,8 @@ const ETORO_URL = "https://www.etoro.com/";
 
 export function StockPanel({ article, onBack }: StockPanelProps) {
   const stock = getStockProfile(article.ticker);
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useApp();
-  const saved = isInWatchlist(stock.ticker);
+  const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
+  const saved = isArticleSaved(article.id);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
   const [toast, setToast] = useState<string | null>(null);
@@ -28,13 +28,13 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
-  const toggleSave = () => {
+  const toggleSave = async () => {
     if (saved) {
-      removeFromWatchlist(stock.ticker);
-      setToast("Removed from watchlist");
+      const ok = await unsaveArticle(article.id);
+      setToast(ok ? "Removed from watchlist" : "Could not remove");
     } else {
-      addToWatchlist(stock.ticker);
-      setToast("Added to watchlist");
+      const ok = await saveArticle(article);
+      setToast(ok ? "Added to watchlist" : "Could not save");
     }
     setTimeout(() => setToast(null), 1500);
   };

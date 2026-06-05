@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Bookmark,
   ChevronUp,
@@ -16,6 +16,8 @@ import { MarketBadge } from "./MarketBadge";
 import { PocketMarkIcon } from "./PocketLogo";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
+import { useArticleLikes } from "@/hooks/useArticleLikes";
+import { fetchCommentCount } from "@/lib/userInteractions";
 import {
   getExplicitFilterLabels,
   hasExplicitFilters,
@@ -28,6 +30,7 @@ interface FeedCardProps {
   onFeedModeChange: (mode: FeedMode) => void;
   onOpenComments: () => void;
   onOpenFilter: () => void;
+  commentRefreshKey?: number;
 }
 
 const FALLBACK_IMAGE =
@@ -40,16 +43,18 @@ export function FeedCard({
   onFeedModeChange,
   onOpenComments,
   onOpenFilter,
+  commentRefreshKey = 0,
 }: FeedCardProps) {
   const {
-    addToWatchlist,
-    removeFromWatchlist,
-    isInWatchlist,
+    saveArticle,
+    unsaveArticle,
+    isArticleSaved,
     marketFilters,
     sectorFilters,
     searchQuery,
     clearFilters,
   } = useApp();
+  const { liked, likeCount, toggleLike } = useArticleLikes(article, active);
 
   const filterLabels = getExplicitFilterLabels(
     marketFilters,
@@ -62,10 +67,14 @@ export function FeedCard({
     searchQuery
   );
   const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
-  const [liked, setLiked] = useState(false);
-  const saved = isInWatchlist(article.ticker);
-  const [likeCount, setLikeCount] = useState(article.likes);
+  const saved = isArticleSaved(article.id);
+  const [commentCount, setCommentCount] = useState(article.comments);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!active) return;
+    void fetchCommentCount(article.id).then(setCommentCount);
+  }, [active, article.id, commentRefreshKey]);
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -176,10 +185,7 @@ export function FeedCard({
       >
         <ActionButton
           label={liked ? "Unlike" : "Like"}
-          onClick={() => {
-            setLiked((v) => !v);
-            setLikeCount((c) => (liked ? c - 1 : c + 1));
-          }}
+          onClick={() => void toggleLike()}
         >
           <Heart
             className={`h-[26px] w-[26px] transition-colors ${
@@ -194,7 +200,7 @@ export function FeedCard({
         <ActionButton label="Comment" onClick={onOpenComments}>
           <MessageCircle className="h-[26px] w-[26px] text-white" />
           <span className="text-[11px] font-semibold text-white/90">
-            {formatCount(article.comments)}
+            {formatCount(commentCount)}
           </span>
         </ActionButton>
 
@@ -226,13 +232,13 @@ export function FeedCard({
 
         <ActionButton
           label={saved ? "Unsave" : "Save"}
-          onClick={() => {
+          onClick={async () => {
             if (saved) {
-              removeFromWatchlist(article.ticker);
-              flash("Removed from watchlist");
+              const ok = await unsaveArticle(article.id);
+              flash(ok ? "Removed from watchlist" : "Could not remove");
             } else {
-              addToWatchlist(article.ticker);
-              flash("Saved to watchlist");
+              const ok = await saveArticle(article);
+              flash(ok ? "Saved to watchlist" : "Could not save");
             }
           }}
         >

@@ -19,29 +19,27 @@ import {
   saveSectorInterests,
 } from "@/lib/sectorPreferences";
 import {
-  entryFromTicker,
-  loadWatchlist,
-  saveWatchlist,
-} from "@/lib/watchlist";
-import type { WatchlistEntry } from "@/lib/types";
+  fetchSavedArticles,
+  saveArticle as dbSaveArticle,
+  unsaveArticle as dbUnsaveArticle,
+} from "@/lib/userInteractions";
+import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
 
 interface AppContextValue {
-  /** False until localStorage has been read on the client */
   ready: boolean;
-  watchlist: WatchlistEntry[];
-  addToWatchlist: (ticker: string) => void;
-  removeFromWatchlist: (ticker: string) => void;
-  isInWatchlist: (ticker: string) => boolean;
+  savedArticles: SavedArticleEntry[];
+  saveArticle: (article: NewsArticle) => Promise<boolean>;
+  unsaveArticle: (articleId: string) => Promise<boolean>;
+  isArticleSaved: (articleId: string) => boolean;
+  reloadSavedArticles: () => Promise<void>;
   followedMarkets: MarketFilter[];
   toggleFollowMarket: (m: MarketFilter) => void;
   isFollowingMarket: (m: MarketFilter) => boolean;
   setFollowedMarkets: (markets: MarketFilter[]) => void;
-  /** Onboarding preferences — feed ranking only, not shown as active filters */
   sectorInterests: SectorFilter[];
   marketFilters: MarketFilter[];
   setMarketFilters: (filters: MarketFilter[]) => void;
   toggleMarketFilter: (m: MarketFilter) => void;
-  /** Explicit filters from Discover — shown in filter pill */
   sectorFilters: SectorFilter[];
   toggleSectorFilter: (s: SectorFilter) => void;
   clearFilters: () => void;
@@ -54,7 +52,6 @@ interface AppContextValue {
     markets: MarketFilter[],
     sectors: SectorFilter[]
   ) => void;
-  /** Reload onboarding state when auth user changes */
   syncAppUser: (userId: string | null) => void;
 }
 
@@ -62,7 +59,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [watchlist, setWatchlist] = useState<WatchlistEntry[]>([]);
+  const [savedArticles, setSavedArticles] = useState<SavedArticleEntry[]>([]);
   const [followedMarkets, setFollowedMarketsState] = useState<MarketFilter[]>(
     []
   );
@@ -78,7 +75,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      setWatchlist(loadWatchlist());
       const saved = localStorage.getItem("pocket-stories-read");
       if (saved) setStoriesRead(parseInt(saved, 10) || 0);
     } catch {
@@ -88,53 +84,81 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const syncAppUser = useCallback((userId: string | null) => {
-    setAppUserId(userId);
-    if (!userId) {
-      setOnboardingComplete(false);
+  const reloadSavedArticles = useCallback(async () => {
+    if (!appUserId) {
+      setSavedArticles([]);
       return;
     }
-    try {
-      const complete = isOnboardingComplete(userId);
-      setOnboardingComplete(complete);
-      if (complete) {
-        setFollowedMarketsState(loadFollowedMarkets());
-        setSectorInterestsState(loadSectorInterests());
-      } else {
-        setFollowedMarketsState([]);
-        setSectorInterestsState([]);
+    const articles = await fetchSavedArticles(appUserId);
+    setSavedArticles(articles);
+  }, [appUserId]);
+
+  const syncAppUser = useCallback(
+    async (userId: string | null) => {
+      setAppUserId(userId);
+      if (!userId) {
+        setOnboardingComplete(false);
+        setSavedArticles([]);
+        return;
       }
-    } catch {
-      setOnboardingComplete(false);
-    }
-  }, []);
+      try {
+        const complete = isOnboardingComplete(userId);
+        setOnboardingComplete(complete);
+        if (complete) {
+          setFollowedMarketsState(loadFollowedMarkets());
+          setSectorInterestsState(loadSectorInterests());
+        } else {
+          setFollowedMarketsState([]);
+          setSectorInterestsState([]);
+        }
+      } catch {
+        setOnboardingComplete(false);
+      }
+      const articles = await fetchSavedArticles(userId);
+      setSavedArticles(articles);
+    },
+    []
+  );
+
+  const saveArticle = useCallback(
+    async (article: NewsArticle) => {
+      if (!appUserId) return false;
+      if (savedArticles.some((s) => s.articleId === article.id)) return true;
+
+      const ok = await dbSaveArticle(appUserId, article);
+      if (ok) {
+        const articles = await fetchSavedArticles(appUserId);
+        setSavedArticles(articles);
+      }
+      return ok;
+    },
+    [appUserId, savedArticles]
+  );
+
+  const unsaveArticle = useCallback(
+    async (articleId: string) => {
+      if (!appUserId) return false;
+      const ok = await dbUnsaveArticle(appUserId, articleId);
+      if (ok) {
+        setSavedArticles((prev) =>
+          prev.filter((s) => s.articleId !== articleId)
+        );
+      }
+      return ok;
+    },
+    [appUserId]
+  );
+
+  const isArticleSaved = useCallback(
+    (articleId: string) =>
+      savedArticles.some((s) => s.articleId === articleId),
+    [savedArticles]
+  );
 
   const setFollowedMarkets = useCallback((markets: MarketFilter[]) => {
     setFollowedMarketsState(markets);
     saveFollowedMarkets(markets);
   }, []);
-
-  const addToWatchlist = useCallback((ticker: string) => {
-    setWatchlist((prev) => {
-      if (prev.some((e) => e.ticker === ticker)) return prev;
-      const next = [...prev, entryFromTicker(ticker)];
-      saveWatchlist(next);
-      return next;
-    });
-  }, []);
-
-  const removeFromWatchlist = useCallback((ticker: string) => {
-    setWatchlist((prev) => {
-      const next = prev.filter((e) => e.ticker !== ticker);
-      saveWatchlist(next);
-      return next;
-    });
-  }, []);
-
-  const isInWatchlist = useCallback(
-    (ticker: string) => watchlist.some((e) => e.ticker === ticker),
-    [watchlist]
-  );
 
   const toggleFollowMarket = useCallback((m: MarketFilter) => {
     setFollowedMarketsState((prev) => {
@@ -199,10 +223,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       ready,
-      watchlist,
-      addToWatchlist,
-      removeFromWatchlist,
-      isInWatchlist,
+      savedArticles,
+      saveArticle,
+      unsaveArticle,
+      isArticleSaved,
+      reloadSavedArticles,
       followedMarkets,
       toggleFollowMarket,
       isFollowingMarket,
@@ -224,10 +249,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       ready,
-      watchlist,
-      addToWatchlist,
-      removeFromWatchlist,
-      isInWatchlist,
+      savedArticles,
+      saveArticle,
+      unsaveArticle,
+      isArticleSaved,
+      reloadSavedArticles,
       followedMarkets,
       toggleFollowMarket,
       isFollowingMarket,

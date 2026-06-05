@@ -20,7 +20,7 @@ export function AppShell({ initialArticles }: AppShellProps) {
 
   useEffect(() => {
     if (!authLoading) {
-      syncAppUser(user?.id ?? null);
+      void syncAppUser(user?.id ?? null);
     }
   }, [user?.id, authLoading, syncAppUser]);
 

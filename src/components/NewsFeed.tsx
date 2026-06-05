@@ -80,6 +80,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   const [navTab, setNavTab] = useState<NavTab>("home");
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentRefreshKey, setCommentRefreshKey] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -473,6 +474,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
                     onFeedModeChange={setFeedMode}
                     onOpenComments={() => setCommentsOpen(true)}
                     onOpenFilter={() => setFilterOpen(true)}
+                    commentRefreshKey={commentRefreshKey}
                   />
                 </div>
               ))}
@@ -517,6 +519,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
         open={commentsOpen}
         onClose={() => setCommentsOpen(false)}
         article={article ?? null}
+        onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
       />
       <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
       <CreateThoughtSheet

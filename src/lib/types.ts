@@ -52,12 +52,22 @@ export interface Comment {
   timeAgo: string;
 }
 
+/** @deprecated Use SavedArticleEntry — kept for stock panel helpers */
 export interface WatchlistEntry {
   ticker: string;
   name: string;
   price: number;
   changePercent: number;
   logoColor: string;
+  savedAt: string;
+}
+
+export interface SavedArticleEntry {
+  id: string;
+  articleId: string;
+  articleTitle: string;
+  articleUrl: string;
+  ticker: string;
   savedAt: string;
 }
 

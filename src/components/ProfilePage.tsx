@@ -12,7 +12,7 @@ interface ProfilePageProps {
 }
 
 export function ProfilePage({ onClose }: ProfilePageProps) {
-  const { storiesRead, watchlist } = useApp();
+  const { storiesRead, savedArticles } = useApp();
   const { user, signOut } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -53,7 +53,7 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard label="Stories read" value={String(storiesRead)} />
-          <StatCard label="Watchlist" value={String(watchlist.length)} />
+          <StatCard label="Watchlist" value={String(savedArticles.length)} />
         </div>
 
         <button
