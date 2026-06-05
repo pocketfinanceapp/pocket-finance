@@ -8,13 +8,14 @@ import {
   countMarketMovers,
   formatIndexValue,
   getGlobalMarketStatus,
+  getMarketById,
   getMarketSparkline,
   getMarketsByRegion,
   type GlobalMarket,
 } from "@/lib/markets";
 import { MarketSparkline } from "./MarketSparkline";
 
-export const MARKETS_LIST_VERSION = "premium-regions-v4";
+export const MARKETS_LIST_VERSION = "following-cards-v5";
 
 interface MarketsPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
@@ -25,6 +26,14 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
 
   const movers = useMemo(() => countMarketMovers(), []);
   const session = useMemo(() => getGlobalMarketStatus(), []);
+
+  const followingMarkets = useMemo(
+    () =>
+      followedMarkets
+        .map((id) => getMarketById(id))
+        .filter((m): m is GlobalMarket => m !== undefined),
+    [followedMarkets]
+  );
 
   const regions = useMemo(
     () =>
@@ -54,6 +63,27 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
           <MarketSummaryBar movers={movers} session={session} />
         </div>
 
+        {followingMarkets.length > 0 && (
+          <section className="mt-4">
+            <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+              Following
+            </h2>
+            <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
+              {followingMarkets.map((market) => (
+                <FollowingMarketCard
+                  key={market.id}
+                  market={market}
+                  onOpen={() => onOpenMarketFeed(market.id)}
+                />
+              ))}
+            </div>
+            <div
+              className="mx-4 mt-4 h-px bg-gradient-to-r from-transparent via-[#3B6EF5]/50 to-transparent"
+              aria-hidden
+            />
+          </section>
+        )}
+
         {regions.map((region, index) => (
           <section key={region.id} className="mt-4">
             {index > 0 && (
@@ -80,6 +110,45 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
         ))}
       </div>
     </div>
+  );
+}
+
+function FollowingMarketCard({
+  market,
+  onOpen,
+}: {
+  market: GlobalMarket;
+  onOpen: () => void;
+}) {
+  const up = market.changePercent >= 0;
+  const sparkline = useMemo(() => getMarketSparkline(market), [market]);
+
+  return (
+    <button
+      type="button"
+      data-no-drag
+      onClick={onOpen}
+      className="w-[160px] shrink-0 rounded-xl border border-white/10 bg-[#111111] p-3 text-left transition-colors active:bg-[#161616]"
+    >
+      <div className="flex items-center gap-1.5">
+        <span className="text-base leading-none">{market.flag}</span>
+        <span className="text-sm font-semibold text-white">{market.name}</span>
+      </div>
+      <p className="mt-2.5 truncate text-[20px] font-bold leading-tight tabular-nums text-white">
+        {formatIndexValue(market.value)}
+      </p>
+      <p
+        className={`mt-0.5 text-[13px] font-medium tabular-nums ${
+          up ? "text-[#34c759]" : "text-[#ff453a]"
+        }`}
+      >
+        {up ? "+" : ""}
+        {market.changePercent.toFixed(2)}%
+      </p>
+      <div className="mt-2.5 flex justify-start">
+        <MarketSparkline points={sparkline} up={up} width={128} height={24} />
+      </div>
+    </button>
   );
 }
 
