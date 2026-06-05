@@ -82,17 +82,15 @@ export function FeedCard({
         src={imgSrc}
         alt=""
         fill
-        className="object-cover brightness-[0.70] contrast-[1.05] saturate-[0.95]"
+        className="object-cover"
         sizes="100vw"
         unoptimized
         priority={active}
         onError={() => setImgSrc(FALLBACK_IMAGE)}
       />
 
-      {/* Uniform base + vignette — consistent on photos, charts, screenshots */}
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-black/45" />
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/65 via-black/40 to-black/80" />
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-black/35 via-black/25 to-black/35" />
+      {/* Bottom-half scrim only — top 50% stays clear like Stories */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 top-1/2 z-[1] bg-gradient-to-b from-transparent via-black/20 to-black/80" />
 
       {/* Top tabs + optional filter strip */}
       <header className="absolute left-0 right-0 top-0 z-20 flex flex-col pt-[max(0.75rem,env(safe-area-inset-top))]">
