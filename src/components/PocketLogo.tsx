@@ -1,9 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useId } from "react";
 
 const BLUE = "#3B6EF5";
 const TEAL = "#00C6C6";
+
+const LOGO_SRC = "/pocket-logo.png";
 
 interface PocketMarkIconProps {
   size?: number;
@@ -12,86 +15,30 @@ interface PocketMarkIconProps {
   glow?: "none" | "normal" | "strong" | "hero";
 }
 
-/** Stylised P with rising chart bars inside the bowl */
+const glowClass: Record<NonNullable<PocketMarkIconProps["glow"]>, string> = {
+  none: "",
+  normal: "drop-shadow-[0_0_8px_rgba(59,110,245,0.35)]",
+  strong: "drop-shadow-[0_0_14px_rgba(59,110,245,0.5)]",
+  hero: "drop-shadow-[0_0_24px_rgba(0,198,198,0.45)] drop-shadow-[0_0_12px_rgba(59,110,245,0.55)]",
+};
+
+/** Pocket Finance mark — brand P logo */
 export function PocketMarkIcon({
   size = 32,
   className = "",
   glow = "normal",
 }: PocketMarkIconProps) {
-  const uid = useId().replace(/:/g, "");
-  const gradId = `pocket-grad-${uid}`;
-  const glowId = `pocket-glow-${uid}`;
-  const useGlow = glow !== "none";
-  const blur = glow === "hero" ? 11 : glow === "strong" ? 6 : 3.5;
-
-  const mark = (
-    <>
-      <path
-        d="M22 14V86M22 14H50C72 14 80 28 80 46C80 64 70 78 48 78H34"
-        stroke={`url(#${gradId})`}
-        strokeWidth="12"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <rect x="52" y="60" width="6" height="12" rx="1.5" fill={`url(#${gradId})`} />
-      <rect x="61" y="52" width="6" height="20" rx="1.5" fill={`url(#${gradId})`} />
-      <rect x="70" y="42" width="6" height="30" rx="1.5" fill={`url(#${gradId})`} />
-    </>
-  );
-
   return (
-    <svg
+    <Image
+      src={LOGO_SRC}
+      alt=""
       width={size}
       height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      unoptimized
+      className={`shrink-0 object-contain ${glowClass[glow]} ${className}`}
+      style={{ width: size, height: size }}
       aria-hidden
-    >
-      <defs>
-        <linearGradient
-          id={gradId}
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="100%"
-        >
-          <stop offset="0%" stopColor={BLUE} />
-          <stop offset="100%" stopColor={TEAL} />
-        </linearGradient>
-        {useGlow && (
-          <filter
-            id={glowId}
-            x={glow === "hero" ? "-80%" : "-40%"}
-            y={glow === "hero" ? "-80%" : "-40%"}
-            width={glow === "hero" ? "260%" : "180%"}
-            height={glow === "hero" ? "260%" : "180%"}
-            colorInterpolationFilters="sRGB"
-          >
-            <feGaussianBlur stdDeviation={blur} result="blur" />
-            <feColorMatrix
-              in="blur"
-              type="matrix"
-              values={
-                glow === "hero"
-                  ? "0 0 0 0 0.2  0 0 0 0 0.65  0 0 0 0 0.95  0 0 0 1 0"
-                  : "0 0 0 0 0.15  0 0 0 0 0.55  0 0 0 0 0.85  0 0 0 0.85 0"
-              }
-              result="glowColor"
-            />
-            <feMerge>
-              <feMergeNode in="glowColor" />
-              <feMergeNode in="glowColor" />
-              <feMergeNode in="glowColor" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        )}
-      </defs>
-
-      <g filter={useGlow ? `url(#${glowId})` : undefined}>{mark}</g>
-    </svg>
+    />
   );
 }
 

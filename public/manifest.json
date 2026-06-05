@@ -3,9 +3,9 @@
   "short_name": "Pocket",
   "icons": [
     {
-      "src": "/pocket-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/pocket-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],

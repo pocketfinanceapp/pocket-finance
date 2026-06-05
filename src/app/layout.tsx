@@ -34,7 +34,8 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/pocket-icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/pocket-logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/pocket-logo.png" />
       </head>
       <body className="min-h-screen bg-pocket-bg antialiased">{children}</body>
     </html>
