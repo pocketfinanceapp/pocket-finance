@@ -28,7 +28,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           active={homeActive}
           onClick={() => onNavigate("home")}
         >
-          <HomeIcon active={homeActive} />
+          <NavHomeIcon filled={homeActive} />
         </NavItem>
 
         <NavItem
@@ -78,26 +78,42 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
   );
 }
 
-function HomeIcon({ active }: { active: boolean }) {
+/** Inline house icon — not lucide */
+function NavHomeIcon({ filled }: { filled: boolean }) {
+  if (filled) {
+    return (
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden
+      >
+        <path
+          d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-7H10v7H6a1 1 0 01-1-1v-9.5z"
+          fill="#FFFFFF"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg
-      className="h-[22px] w-[22px] shrink-0 text-white"
+      width="22"
+      height="22"
       viewBox="0 0 24 24"
-      fill={active ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth={active ? 0 : 2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      {active ? (
-        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z" />
-      ) : (
-        <>
-          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </>
-      )}
+      <path
+        d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-7H10v7H6a1 1 0 01-1-1v-9.5z"
+        stroke="#FFFFFF"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+        fill="none"
+      />
     </svg>
   );
 }

@@ -84,6 +84,7 @@ export function buildFeedArticles(
   followedMarkets: MarketFilter[],
   marketFilters: MarketFilter[],
   sectorFilters: SectorFilter[],
+  sectorInterests: SectorFilter[],
   searchQuery: string
 ): NewsArticle[] {
   if (mode === "following") {
@@ -106,13 +107,22 @@ export function buildFeedArticles(
     );
   }
 
-  // For You: always show the full article pool (search only hard-filters)
+  // Explicit sector/search filters from Discover
+  if (sectorFilters.length > 0 || searchQuery.trim()) {
+    let result = filterArticles(articles, [], sectorFilters, searchQuery);
+    if (followedMarkets.length > 0) {
+      result = prioritizeByFollowed(result, followedMarkets);
+    }
+    return result;
+  }
+
+  // For You: full pool; onboarding interests only affect ranking
   let result = filterArticles(articles, [], [], searchQuery);
   if (followedMarkets.length > 0) {
     result = prioritizeByFollowed(result, followedMarkets);
   }
-  if (sectorFilters.length > 0) {
-    result = prioritizeBySectors(result, sectorFilters);
+  if (sectorInterests.length > 0) {
+    result = prioritizeBySectors(result, sectorInterests);
   }
   return result;
 }

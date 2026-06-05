@@ -16,7 +16,10 @@ import { CompanyLogo } from "./CompanyLogo";
 import { PocketMarkIcon } from "./PocketLogo";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
-import { getMarketById } from "@/lib/markets";
+import {
+  getExplicitFilterLabels,
+  hasExplicitFilters,
+} from "@/lib/activeFilters";
 import { getStockProfile } from "@/lib/stockData";
 
 interface FeedCardProps {
@@ -50,12 +53,16 @@ export function FeedCard({
     clearFilters,
   } = useApp();
 
-  const filterLabels = [
-    ...sectorFilters,
-    ...marketFilters.map((m) => getMarketById(m)?.name ?? m),
-    ...(searchQuery.trim() ? [searchQuery.trim()] : []),
-  ];
-  const hasActiveFilters = filterLabels.length > 0;
+  const filterLabels = getExplicitFilterLabels(
+    marketFilters,
+    sectorFilters,
+    searchQuery
+  );
+  const showFilterPill = hasExplicitFilters(
+    marketFilters,
+    sectorFilters,
+    searchQuery
+  );
   const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
   const [liked, setLiked] = useState(false);
   const saved = isInWatchlist(article.ticker);
@@ -137,7 +144,7 @@ export function FeedCard({
             </svg>
           </button>
         </div>
-        {hasActiveFilters && (
+        {showFilterPill && (
           <div className="flex justify-center px-4 pb-2" data-no-drag>
             <button
               type="button"
@@ -155,7 +162,7 @@ export function FeedCard({
       {/* Market badge */}
       <div
         className={`absolute left-4 z-20 flex items-center gap-2 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur-md ${
-          hasActiveFilters
+          showFilterPill
             ? "top-[max(5.75rem,calc(env(safe-area-inset-top)+4.75rem))]"
             : "top-[max(4.25rem,calc(env(safe-area-inset-top)+3.25rem))]"
         }`}

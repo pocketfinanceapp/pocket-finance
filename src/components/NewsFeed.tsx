@@ -45,6 +45,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     followedMarkets,
     marketFilters,
     sectorFilters,
+    sectorInterests,
     searchQuery,
     setMarketFilters,
     incrementStoriesRead,
@@ -60,6 +61,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
         followedMarkets,
         marketFilters,
         sectorFilters,
+        sectorInterests,
         searchQuery
       ),
     [
@@ -68,6 +70,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       followedMarkets,
       marketFilters,
       sectorFilters,
+      sectorInterests,
       searchQuery,
     ]
   );

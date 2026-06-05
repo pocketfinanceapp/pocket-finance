@@ -36,11 +36,13 @@ interface AppContextValue {
   toggleFollowMarket: (m: MarketFilter) => void;
   isFollowingMarket: (m: MarketFilter) => boolean;
   setFollowedMarkets: (markets: MarketFilter[]) => void;
+  /** Onboarding preferences — feed ranking only, not shown as active filters */
+  sectorInterests: SectorFilter[];
   marketFilters: MarketFilter[];
   setMarketFilters: (filters: MarketFilter[]) => void;
   toggleMarketFilter: (m: MarketFilter) => void;
+  /** Explicit filters from Discover — shown in filter pill */
   sectorFilters: SectorFilter[];
-  setSectorFilters: (sectors: SectorFilter[]) => void;
   toggleSectorFilter: (s: SectorFilter) => void;
   clearFilters: () => void;
   searchQuery: string;
@@ -62,6 +64,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [followedMarkets, setFollowedMarketsState] = useState<MarketFilter[]>(
     []
   );
+  const [sectorInterests, setSectorInterestsState] = useState<SectorFilter[]>(
+    []
+  );
   const [marketFilters, setMarketFilters] = useState<MarketFilter[]>([]);
   const [sectorFilters, setSectorFiltersState] = useState<SectorFilter[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,7 +80,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setOnboardingComplete(complete);
       if (complete) {
         setFollowedMarketsState(loadFollowedMarkets());
-        setSectorFiltersState(loadSectorInterests());
+        setSectorInterestsState(loadSectorInterests());
       }
       const saved = localStorage.getItem("pocket-stories-read");
       if (saved) setStoriesRead(parseInt(saved, 10) || 0);
@@ -89,11 +94,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setFollowedMarkets = useCallback((markets: MarketFilter[]) => {
     setFollowedMarketsState(markets);
     saveFollowedMarkets(markets);
-  }, []);
-
-  const setSectorFilters = useCallback((sectors: SectorFilter[]) => {
-    setSectorFiltersState(sectors);
-    saveSectorInterests(sectors);
   }, []);
 
   const addToWatchlist = useCallback((ticker: string) => {
@@ -140,34 +140,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleSectorFilter = useCallback((s: SectorFilter) => {
-    setSectorFiltersState((prev) => {
-      const next = prev.includes(s)
-        ? prev.filter((x) => x !== s)
-        : [...prev, s];
-      saveSectorInterests(next);
-      return next;
-    });
+    setSectorFiltersState((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
   }, []);
 
   const clearFilters = useCallback(() => {
     setMarketFilters([]);
     setSectorFiltersState([]);
-    saveSectorInterests([]);
     setSearchQuery("");
   }, []);
 
   const completeOnboarding = useCallback(
     (markets: MarketFilter[], sectors: SectorFilter[]) => {
       setFollowedMarkets(markets);
-      setSectorFilters(sectors);
+      setSectorInterestsState(sectors);
+      saveSectorInterests(sectors);
       setOnboardingComplete(true);
       try {
         markOnboardingComplete();
       } catch {
-        /* storage blocked — in-memory state still applies this session */
+        /* storage blocked */
       }
     },
-    [setFollowedMarkets, setSectorFilters]
+    [setFollowedMarkets]
   );
 
   const incrementStoriesRead = useCallback(() => {
@@ -193,11 +189,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toggleFollowMarket,
       isFollowingMarket,
       setFollowedMarkets,
+      sectorInterests,
       marketFilters,
       setMarketFilters,
       toggleMarketFilter,
       sectorFilters,
-      setSectorFilters,
       toggleSectorFilter,
       clearFilters,
       searchQuery,
@@ -217,10 +213,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toggleFollowMarket,
       isFollowingMarket,
       setFollowedMarkets,
+      sectorInterests,
       marketFilters,
       toggleMarketFilter,
       sectorFilters,
-      setSectorFilters,
       toggleSectorFilter,
       clearFilters,
       searchQuery,
