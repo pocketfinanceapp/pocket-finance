@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Markets tab (BottomNav → NewsFeed overlay).
+ * Slim list rows only — no cards, no gradients.
+ */
 import { useApp } from "@/context/AppContext";
 import type { MarketFilter } from "@/lib/filters";
 import {
@@ -8,68 +12,108 @@ import {
   type GlobalMarket,
 } from "@/lib/markets";
 
+export const MARKETS_LIST_VERSION = "slim-rows-v3";
+
 interface MarketsPageProps {
   onClose: () => void;
   onOpenMarketFeed: (market: MarketFilter) => void;
 }
 
 export function MarketsPage({ onClose, onOpenMarketFeed }: MarketsPageProps) {
-  const { toggleFollowMarket, isFollowingMarket } = useApp();
+  const { followedMarkets, toggleFollowMarket, isFollowingMarket } = useApp();
+
+  const following = GLOBAL_MARKETS.filter((m) => followedMarkets.includes(m.id));
+  const rest = GLOBAL_MARKETS.filter((m) => !followedMarkets.includes(m.id));
 
   return (
-    <div className="flex h-full flex-col bg-black text-white">
-      <div className="border-b border-neutral-800 px-4 py-3 pt-[max(12px,env(safe-area-inset-top))]">
-        <button type="button" onClick={onClose} className="text-sm text-neutral-400">
-          ← Back
+    <div
+      data-markets-list={MARKETS_LIST_VERSION}
+      className="flex h-full min-h-0 flex-col bg-black text-white"
+    >
+      <header className="shrink-0 border-b border-white/10 px-4 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          data-no-drag
+          onClick={onClose}
+          className="text-[15px] text-[#0a84ff]"
+        >
+          Back
         </button>
-        <h1 className="mt-2 text-xl font-bold">Markets</h1>
-      </div>
+        <h1 className="mt-2 text-[28px] font-bold tracking-tight">Markets</h1>
+      </header>
 
-      <ul className="flex-1 overflow-y-auto pb-24">
-        {GLOBAL_MARKETS.map((market) => (
-          <MarketListRow
-            key={market.id}
-            market={market}
-            following={isFollowingMarket(market.id)}
-            onOpen={() => onOpenMarketFeed(market.id)}
-            onToggleFollow={() => toggleFollowMarket(market.id)}
-          />
-        ))}
-      </ul>
+      <div className="min-h-0 flex-1 overflow-y-auto pb-28">
+        {following.length > 0 && (
+          <>
+            <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Following
+            </p>
+            <ul>
+              {following.map((m) => (
+                <MarketRow
+                  key={m.id}
+                  market={m}
+                  isFollowing
+                  onOpen={() => onOpenMarketFeed(m.id)}
+                  onFollow={() => toggleFollowMarket(m.id)}
+                />
+              ))}
+            </ul>
+          </>
+        )}
+
+        <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          {following.length > 0 ? "All markets" : "Markets"}
+        </p>
+        <ul>
+          {rest.map((m) => (
+            <MarketRow
+              key={m.id}
+              market={m}
+              isFollowing={isFollowingMarket(m.id)}
+              onOpen={() => onOpenMarketFeed(m.id)}
+              onFollow={() => toggleFollowMarket(m.id)}
+            />
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
 
-function MarketListRow({
+function MarketRow({
   market,
-  following,
+  isFollowing,
   onOpen,
-  onToggleFollow,
+  onFollow,
 }: {
   market: GlobalMarket;
-  following: boolean;
+  isFollowing: boolean;
   onOpen: () => void;
-  onToggleFollow: () => void;
+  onFollow: () => void;
 }) {
   const up = market.changePercent >= 0;
 
   return (
-    <li className="flex items-center gap-3 border-b border-neutral-900 px-4 py-3">
+    <li className="flex h-11 items-center gap-2 border-b border-white/[0.06] px-4">
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        data-no-drag
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
         onClick={onOpen}
       >
-        <span className="text-lg">{market.flag}</span>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+        <span className="w-6 shrink-0 text-center text-base leading-none">
+          {market.flag}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-white">
           {market.name}
         </span>
-        <span className="shrink-0 text-sm tabular-nums text-white">
+        <span className="shrink-0 text-[15px] tabular-nums text-white">
           {formatIndexValue(market.value)}
         </span>
         <span
-          className={`w-14 shrink-0 text-right text-sm tabular-nums ${
-            up ? "text-green-500" : "text-red-500"
+          className={`w-[52px] shrink-0 text-right text-[13px] tabular-nums ${
+            up ? "text-[#34c759]" : "text-[#ff453a]"
           }`}
         >
           {up ? "+" : ""}
@@ -78,10 +122,18 @@ function MarketListRow({
       </button>
       <button
         type="button"
-        onClick={onToggleFollow}
-        className="shrink-0 border border-neutral-600 px-2 py-0.5 text-xs text-neutral-300"
+        data-no-drag
+        onClick={(e) => {
+          e.stopPropagation();
+          onFollow();
+        }}
+        className={`h-6 shrink-0 rounded-full border px-2 text-[11px] font-medium ${
+          isFollowing
+            ? "border-white/30 text-white"
+            : "border-white/20 text-zinc-400"
+        }`}
       >
-        {following ? "Following" : "Follow"}
+        {isFollowing ? "Following" : "Follow"}
       </button>
     </li>
   );
