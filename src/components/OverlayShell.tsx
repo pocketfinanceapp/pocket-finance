@@ -2,17 +2,19 @@
 
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 
-/** Full-screen opaque overlay — blocks feed bleed, reserves space for bottom nav */
+/** Full-viewport opaque overlay — solid black, no gaps, feed cannot bleed through */
 export function OverlayShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute inset-0 z-40 flex flex-col bg-black">
-      <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
-      {/* Solid black fill behind the nav so the feed never shows through */}
+    <div
+      className="absolute inset-0 z-[45] bg-black"
+      style={{ height: "100dvh", minHeight: "100dvh" }}
+    >
       <div
-        className="shrink-0 bg-black"
-        style={{ height: BOTTOM_NAV_HEIGHT }}
-        aria-hidden
-      />
+        className="absolute inset-x-0 top-0 flex flex-col overflow-hidden bg-black"
+        style={{ bottom: BOTTOM_NAV_HEIGHT }}
+      >
+        {children}
+      </div>
     </div>
   );
 }

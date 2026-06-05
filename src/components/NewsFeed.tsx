@@ -399,11 +399,11 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   return (
     <div
       ref={viewportRef}
-      className="relative mx-auto h-[100dvh] w-full max-w-mobile overflow-hidden bg-[#0a0a0a]"
+      className={`relative mx-auto h-[100dvh] w-full max-w-mobile overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
     >
       <div
         ref={trackRef}
-        className={`gpu-layer flex h-full touch-none ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "invisible" : ""}`}
+        className={`gpu-layer flex h-full touch-none ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
         style={{
           width: size.w ? size.w * 3 : "300%",
           transform: `translate3d(${hTranslate}px, 0, 0)`,

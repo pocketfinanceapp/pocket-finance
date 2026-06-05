@@ -2,6 +2,7 @@
 
 import { useApp } from "@/context/AppContext";
 import { getStockProfile } from "@/lib/stockData";
+import { getTickerMetaBySymbol, resolveSavedTicker } from "@/lib/tickerMap";
 import { CompanyLogo } from "./CompanyLogo";
 import { ScreenHeader } from "./ScreenHeader";
 
@@ -26,21 +27,21 @@ export function WatchlistPage({ onClose }: WatchlistPageProps) {
         ) : (
           <ul className="divide-y divide-white/[0.06]">
             {savedArticles.map((item) => {
-              const stock = getStockProfile(item.ticker);
+              const ticker = resolveSavedTicker(item);
+              const meta = getTickerMetaBySymbol(ticker);
+              const stock = getStockProfile(ticker);
               const up = stock.changePercent >= 0;
               return (
                 <li key={item.id} className="py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 flex-1 items-start gap-3">
                       <CompanyLogo
-                        ticker={item.ticker}
-                        color={stock.logoColor}
+                        ticker={ticker}
+                        color={meta.logoColor}
                         size={40}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-white">
-                          {item.ticker}
-                        </p>
+                        <p className="font-semibold text-white">{ticker}</p>
                         <p className="line-clamp-2 text-sm leading-snug text-zinc-300">
                           {item.articleTitle}
                         </p>

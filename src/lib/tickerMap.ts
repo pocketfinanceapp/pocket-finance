@@ -295,6 +295,43 @@ export function inferTickerFromText(text: string): TickerMeta {
   return DEFAULT_META;
 }
 
+const GENERIC_TICKER = "SPY";
+
+function isGenericTicker(ticker: string | null | undefined): boolean {
+  const upper = ticker?.trim().toUpperCase() ?? "";
+  return !upper || upper === GENERIC_TICKER;
+}
+
+/** Best ticker for a feed article — avoids saving/displaying the generic SPY fallback */
+export function resolveArticleTicker(article: {
+  ticker: string;
+  headline: string;
+  subheading?: string;
+  body?: string;
+}): string {
+  const stored = article.ticker?.trim().toUpperCase() ?? "";
+  const inferred = inferTickerFromText(
+    [article.headline, article.subheading ?? "", article.body ?? ""].join(" ")
+  ).ticker;
+
+  if (!isGenericTicker(stored)) return stored;
+  if (!isGenericTicker(inferred)) return inferred;
+  return stored || inferred;
+}
+
+/** Best ticker for a saved watchlist row — re-infers from title when DB has generic SPY */
+export function resolveSavedTicker(entry: {
+  ticker: string;
+  articleTitle: string;
+}): string {
+  const stored = entry.ticker?.trim().toUpperCase() ?? "";
+  const inferred = inferTickerFromText(entry.articleTitle).ticker;
+
+  if (!isGenericTicker(stored)) return stored;
+  if (!isGenericTicker(inferred)) return inferred;
+  return stored || inferred;
+}
+
 /** Resolve company name & logo for a ticker symbol */
 export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   const upper = ticker.toUpperCase();

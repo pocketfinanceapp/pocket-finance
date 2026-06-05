@@ -1,4 +1,5 @@
 import { getSupabase } from "@/lib/supabase";
+import { resolveArticleTicker, resolveSavedTicker } from "@/lib/tickerMap";
 import type { Comment, NewsArticle, SavedArticleEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 
@@ -71,7 +72,7 @@ export async function likeArticle(
     article_id: article.id,
     article_title: article.headline,
     article_url: article.sourceUrl,
-    ticker: article.ticker,
+    ticker: resolveArticleTicker(article),
   });
 
   if (error) {
@@ -118,14 +119,20 @@ export async function fetchSavedArticles(
     return [];
   }
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    articleId: row.article_id,
-    articleTitle: row.article_title,
-    articleUrl: row.article_url,
-    ticker: row.ticker,
-    savedAt: row.created_at,
-  }));
+  return (data ?? []).map((row) => {
+    const entry = {
+      ticker: row.ticker,
+      articleTitle: row.article_title,
+    };
+    return {
+      id: row.id,
+      articleId: row.article_id,
+      articleTitle: row.article_title,
+      articleUrl: row.article_url,
+      ticker: resolveSavedTicker(entry),
+      savedAt: row.created_at,
+    };
+  });
 }
 
 export async function saveArticle(
@@ -138,7 +145,7 @@ export async function saveArticle(
     article_id: article.id,
     article_title: article.headline,
     article_url: article.sourceUrl,
-    ticker: article.ticker,
+    ticker: resolveArticleTicker(article),
   });
 
   if (error) {
