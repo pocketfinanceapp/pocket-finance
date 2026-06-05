@@ -319,17 +319,9 @@ export function resolveArticleTicker(article: {
   return stored || inferred;
 }
 
-/** Best ticker for a saved watchlist row — re-infers from title when DB has generic SPY */
-export function resolveSavedTicker(entry: {
-  ticker: string;
-  articleTitle: string;
-}): string {
-  const stored = entry.ticker?.trim().toUpperCase() ?? "";
-  const inferred = inferTickerFromText(entry.articleTitle).ticker;
-
-  if (!isGenericTicker(stored)) return stored;
-  if (!isGenericTicker(inferred)) return inferred;
-  return stored || inferred;
+/** Display ticker for a saved watchlist row — always inferred from title, never from DB */
+export function resolveSavedTicker(entry: { articleTitle: string }): string {
+  return inferTickerFromText(entry.articleTitle).ticker;
 }
 
 /** Resolve company name & logo for a ticker symbol */
