@@ -129,10 +129,8 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
 
     const measure = () => {
       const w = viewport.offsetWidth;
-      const h =
-        feedCol?.clientHeight ||
-        viewport.clientHeight ||
-        window.innerHeight;
+      // Viewport is constrained by MobilePageShell (above bottom nav) — never use window.innerHeight
+      const h = viewport.clientHeight;
       if (w > 0 && h > 0) setSize({ w, h });
     };
 
@@ -430,18 +428,15 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
             <div
               className="gpu-layer w-full touch-none"
               style={{
-                height:
-                  size.h > 0
-                    ? size.h * filteredArticles.length
-                    : `${filteredArticles.length * 100}dvh`,
+                height: size.h > 0 ? size.h * filteredArticles.length : "100%",
                 transform: `translate3d(0, ${vTranslate}px, 0)`,
               }}
             >
               {filteredArticles.map((a, i) => (
                 <div
                   key={a.id}
-                  className="h-full w-full shrink-0"
-                  style={size.h > 0 ? { height: size.h } : { height: "100%" }}
+                  className="w-full shrink-0"
+                  style={{ height: size.h > 0 ? size.h : "100%" }}
                 >
                   <FeedCard
                     article={a}

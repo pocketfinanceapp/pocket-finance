@@ -10,7 +10,6 @@ import {
   Share2,
 } from "lucide-react";
 import type { FeedMode } from "@/lib/filterArticles";
-import { FEED_CONTENT_BOTTOM_PADDING } from "@/lib/layout";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
@@ -38,9 +37,8 @@ interface FeedCardProps {
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80";
 
-/** Text-readability scrim — concentrated at the bottom, not the whole lower half */
 const CINEMATIC_OVERLAY =
-  "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.45) 72%, rgba(0,0,0,0.88) 100%)";
+  "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.9) 100%)";
 
 export function FeedCard({
   article,
@@ -92,11 +90,30 @@ export function FeedCard({
 
   return (
     <section
-      className="flex h-full w-full flex-col overflow-hidden bg-black"
+      className="relative h-full w-full overflow-hidden bg-black"
       aria-hidden={!active}
     >
-      {/* Header — sits above the image, never overlaps card media */}
-      <header className="relative z-20 shrink-0 border-b border-white/[0.06] bg-black/90 backdrop-blur-md">
+      {/* Background image — full card height */}
+      <div className="absolute inset-0">
+        <Image
+          src={imgSrc}
+          alt=""
+          fill
+          className="object-cover brightness-[0.92] contrast-[1.05]"
+          sizes="100vw"
+          unoptimized
+          priority={active}
+          onError={() => setImgSrc(FALLBACK_IMAGE)}
+        />
+      </div>
+
+      <div
+        className="pointer-events-none absolute inset-0 z-[1]"
+        style={{ background: CINEMATIC_OVERLAY }}
+      />
+
+      {/* Header — pinned to top, does not shrink the image layout */}
+      <header className="absolute left-0 right-0 top-0 z-20 border-b border-white/[0.06] bg-black/90 backdrop-blur-md">
         <div
           className="flex items-center justify-between px-4 pb-1.5"
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
@@ -163,152 +180,127 @@ export function FeedCard({
         )}
       </header>
 
-      {/* Image + overlays + bottom content */}
-      <div className="relative min-h-0 flex-1 overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src={imgSrc}
-            alt=""
-            fill
-            className="object-cover brightness-[0.92] contrast-[1.05]"
-            sizes="100vw"
-            unoptimized
-            priority={active}
-            onError={() => setImgSrc(FALLBACK_IMAGE)}
+      <aside
+        className="absolute bottom-[120px] right-2 z-30 flex flex-col items-center gap-5"
+        data-no-drag
+        data-interactive
+      >
+        <ActionButton
+          label={liked ? "Unlike" : "Like"}
+          onClick={() => void toggleLike()}
+        >
+          <Heart
+            className={`h-[26px] w-[26px] transition-colors ${
+              liked ? "fill-red-500 text-red-500" : "text-white"
+            }`}
+          />
+          <span className="text-[11px] font-semibold text-white/90">
+            {formatCount(likeCount)}
+          </span>
+        </ActionButton>
+
+        <ActionButton label="Comment" onClick={onOpenComments}>
+          <MessageCircle className="h-[26px] w-[26px] text-white" />
+          <span className="text-[11px] font-semibold text-white/90">
+            {formatCount(commentCount)}
+          </span>
+        </ActionButton>
+
+        <ActionButton
+          label="Share"
+          onClick={async () => {
+            const payload = {
+              title: article.headline,
+              text: article.subheading,
+              url: article.sourceUrl,
+            };
+            if (navigator.share) {
+              try {
+                await navigator.share(payload);
+                return;
+              } catch {
+                /* cancelled */
+              }
+            }
+            flash("Link copied to clipboard");
+            void navigator.clipboard?.writeText(article.sourceUrl);
+          }}
+        >
+          <Share2 className="h-[25px] w-[25px] text-white" />
+          <span className="text-[11px] font-semibold text-white/90">
+            {formatCount(article.shares)}
+          </span>
+        </ActionButton>
+
+        <ActionButton
+          label={saved ? "Unsave" : "Save"}
+          onClick={async () => {
+            if (saved) {
+              const ok = await unsaveArticle(article.id);
+              flash(ok ? "Removed from watchlist" : "Could not remove");
+            } else {
+              const ok = await saveArticle(article);
+              flash(ok ? "Saved to watchlist" : "Could not save");
+            }
+          }}
+        >
+          <Bookmark
+            className={`h-[25px] w-[25px] transition-colors ${
+              saved ? "fill-white text-white" : "text-white"
+            }`}
+          />
+          <span className="text-[11px] font-semibold text-white/90">Save</span>
+        </ActionButton>
+      </aside>
+
+      <div className="absolute bottom-0 left-0 right-0 z-20 px-5 pb-[120px] pr-16">
+        <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
+          {article.headline}
+        </h1>
+        <p className="mt-2 line-clamp-2 max-w-[94%] text-[14px] leading-snug text-white/70">
+          {article.subheading}
+        </p>
+
+        <div className="mt-3">
+          <MarketBadge market={article.market} size="sm" />
+        </div>
+
+        <div className="mt-2.5">
+          <SourceBadge
+            sourceName={article.sourceName}
+            sourceId={article.sourceId}
+            sourceUrl={article.sourceUrl}
+            publishedAt={article.publishedAt}
+            timeLabel={timeAgo(article.publishedAt)}
           />
         </div>
 
-        <div
-          className="pointer-events-none absolute inset-0 z-[1]"
-          style={{ background: CINEMATIC_OVERLAY }}
-        />
-
-        <aside
-          className="absolute right-2 z-30 flex flex-col items-center gap-5"
-          style={{ bottom: FEED_CONTENT_BOTTOM_PADDING }}
-          data-no-drag
-          data-interactive
-        >
-          <ActionButton
-            label={liked ? "Unlike" : "Like"}
-            onClick={() => void toggleLike()}
-          >
-            <Heart
-              className={`h-[26px] w-[26px] transition-colors ${
-                liked ? "fill-red-500 text-red-500" : "text-white"
-              }`}
+        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
+          <svg className="h-3 w-3 text-pocket-teal" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M3 17 L8 12 L12 15 L16 8 L21 14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
             />
-            <span className="text-[11px] font-semibold text-white/90">
-              {formatCount(likeCount)}
-            </span>
-          </ActionButton>
-
-          <ActionButton label="Comment" onClick={onOpenComments}>
-            <MessageCircle className="h-[26px] w-[26px] text-white" />
-            <span className="text-[11px] font-semibold text-white/90">
-              {formatCount(commentCount)}
-            </span>
-          </ActionButton>
-
-          <ActionButton
-            label="Share"
-            onClick={async () => {
-              const payload = {
-                title: article.headline,
-                text: article.subheading,
-                url: article.sourceUrl,
-              };
-              if (navigator.share) {
-                try {
-                  await navigator.share(payload);
-                  return;
-                } catch {
-                  /* cancelled */
-                }
-              }
-              flash("Link copied to clipboard");
-              void navigator.clipboard?.writeText(article.sourceUrl);
-            }}
-          >
-            <Share2 className="h-[25px] w-[25px] text-white" />
-            <span className="text-[11px] font-semibold text-white/90">
-              {formatCount(article.shares)}
-            </span>
-          </ActionButton>
-
-          <ActionButton
-            label={saved ? "Unsave" : "Save"}
-            onClick={async () => {
-              if (saved) {
-                const ok = await unsaveArticle(article.id);
-                flash(ok ? "Removed from watchlist" : "Could not remove");
-              } else {
-                const ok = await saveArticle(article);
-                flash(ok ? "Saved to watchlist" : "Could not save");
-              }
-            }}
-          >
-            <Bookmark
-              className={`h-[25px] w-[25px] transition-colors ${
-                saved ? "fill-white text-white" : "text-white"
-              }`}
-            />
-            <span className="text-[11px] font-semibold text-white/90">Save</span>
-          </ActionButton>
-        </aside>
-
-        <div
-          className="absolute inset-x-0 bottom-0 left-0 z-20 px-5 pr-16"
-          style={{ paddingBottom: FEED_CONTENT_BOTTOM_PADDING }}
-        >
-          <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
-            {article.headline}
-          </h1>
-          <p className="mt-2 line-clamp-2 max-w-[94%] text-[14px] leading-snug text-white/70">
-            {article.subheading}
-          </p>
-
-          <div className="mt-3">
-            <MarketBadge market={article.market} size="sm" />
-          </div>
-
-          <div className="mt-2.5">
-            <SourceBadge
-              sourceName={article.sourceName}
-              sourceId={article.sourceId}
-              sourceUrl={article.sourceUrl}
-              publishedAt={article.publishedAt}
-              timeLabel={timeAgo(article.publishedAt)}
-            />
-          </div>
-
-          <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
-            <svg className="h-3 w-3 text-pocket-teal" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M3 17 L8 12 L12 15 L16 8 L21 14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            {displayTicker}
-          </div>
-
-          <div className="mt-3 flex items-center gap-1 text-white/30">
-            <ChevronUp className="h-3.5 w-3.5 animate-bounce" />
-            <span className="text-[10px] tracking-wider">Swipe up for more</span>
-          </div>
+          </svg>
+          {displayTicker}
         </div>
 
-        {toast && (
-          <div
-            className="pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/75 px-4 py-2 text-sm font-medium text-white backdrop-blur-md"
-            data-no-drag
-          >
-            {toast}
-          </div>
-        )}
+        <div className="mt-3 flex items-center gap-1 text-white/30">
+          <ChevronUp className="h-3.5 w-3.5 animate-bounce" />
+          <span className="text-[10px] tracking-wider">Swipe up for more</span>
+        </div>
       </div>
+
+      {toast && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/75 px-4 py-2 text-sm font-medium text-white backdrop-blur-md"
+          data-no-drag
+        >
+          {toast}
+        </div>
+      )}
     </section>
   );
 }
