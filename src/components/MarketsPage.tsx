@@ -1,9 +1,6 @@
 "use client";
 
-/**
- * Markets tab (BottomNav → NewsFeed overlay).
- * Slim list rows only — no cards, no gradients.
- */
+/** Markets page (/markets) — slim list rows, no cards */
 import { useApp } from "@/context/AppContext";
 import type { MarketFilter } from "@/lib/filters";
 import {

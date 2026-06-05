@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DEMO_ARTICLES } from "@/lib/newsMapper";
 import { useApp } from "@/context/AppContext";
 import {
@@ -10,19 +11,15 @@ import {
 import { isInteractiveTarget } from "@/lib/gesture";
 import { animateSpring, SPRING_SNAP } from "@/lib/spring";
 import { resolveSnapIndex } from "@/lib/snap";
-import type { MarketFilter } from "@/lib/filters";
 import type { NewsArticle } from "@/lib/types";
-import { BottomNav, type NavTab } from "./BottomNav";
-import { OverlayShell } from "./OverlayShell";
+import type { NavTab } from "./BottomNav";
 import { CommentSheet } from "./CommentSheet";
 import { CreateThoughtSheet } from "./CreateThoughtSheet";
 import { FeedCard } from "./FeedCard";
 import { FilterPanel } from "./FilterPanel";
 import { ArticlePanel } from "./ArticlePanel";
 import { StockPanel } from "./StockPanel";
-/** Markets bottom-nav tab → overlay uses src/components/MarketsPage.tsx */
-import { MarketsPage } from "./MarketsPage";
-import { WatchlistPage } from "./WatchlistPage";
+import { MobilePageShell } from "./MobilePageShell";
 import { ProfilePage } from "./ProfilePage";
 
 interface NewsFeedProps {
@@ -33,7 +30,7 @@ const PANEL_FEED = 1;
 const AXIS_LOCK = 6;
 const RUBBER = 0.1;
 
-type Overlay = "markets" | "watchlist" | "profile" | null;
+type Overlay = "profile" | null;
 
 type LockedAxis = "x" | "y" | null;
 
@@ -47,7 +44,6 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     sectorFilters,
     sectorInterests,
     searchQuery,
-    setMarketFilters,
     incrementStoriesRead,
   } = useApp();
 
@@ -77,8 +73,9 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
 
   const [feedIndex, setFeedIndex] = useState(0);
   const [panelIndex, setPanelIndex] = useState(PANEL_FEED);
-  const [navTab, setNavTab] = useState<NavTab>("home");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -113,6 +110,17 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
 
   const article = filteredArticles[feedIndex] ?? filteredArticles[0];
   const gesturesEnabled = overlay === null && !filterOpen && !commentsOpen && !createOpen;
+
+  useEffect(() => {
+    setOverlay(searchParams.get("tab") === "profile" ? "profile" : null);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("sheet") === "create") {
+      setCreateOpen(true);
+      router.replace("/", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -235,53 +243,12 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   );
 
   const goToFeed = useCallback(() => {
-    setOverlay(null);
-    setNavTab("home");
     goToPanel(PANEL_FEED);
   }, [goToPanel]);
 
-  const openMarketFeed = useCallback(
-    (market: MarketFilter) => {
-      setMarketFilters([market]);
-      setFeedMode("forYou");
-      setOverlay(null);
-      setNavTab("home");
-      goToPanel(PANEL_FEED);
-      setFeedIndex(0);
-      setVTranslate(0);
-      vTranslateRef.current = 0;
-    },
-    [goToPanel, setMarketFilters]
-  );
-
-  const handleNav = useCallback(
-    (tab: NavTab) => {
-      setNavTab(tab);
-      setOverlay(null);
-      switch (tab) {
-        case "home":
-          goToPanel(PANEL_FEED);
-          break;
-        case "markets":
-          setOverlay("markets");
-          goToPanel(PANEL_FEED);
-          break;
-        case "watchlist":
-          setOverlay("watchlist");
-          goToPanel(PANEL_FEED);
-          break;
-        case "profile":
-          setOverlay("profile");
-          goToPanel(PANEL_FEED);
-          break;
-        case "create":
-          goToPanel(PANEL_FEED);
-          setCreateOpen(true);
-          break;
-      }
-    },
-    [goToPanel]
-  );
+  const closeProfile = useCallback(() => {
+    router.replace("/", { scroll: false });
+  }, [router]);
 
   const releaseCapture = useCallback(() => {
     const el = trackRef.current;
@@ -396,23 +363,32 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     [filteredArticles.length, releaseCapture, rubberBand, size.h, size.w, springHTo, springVTo]
   );
 
+  const navTab: NavTab = overlay === "profile" ? "profile" : "home";
+
   return (
-    <div
-      ref={viewportRef}
-      className={`relative mx-auto h-[100dvh] w-full max-w-mobile overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
+    <MobilePageShell
+      activeTab={navTab}
+      onCreate={() => {
+        goToPanel(PANEL_FEED);
+        setCreateOpen(true);
+      }}
     >
       <div
-        ref={trackRef}
-        className={`gpu-layer flex h-full touch-none ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
-        style={{
-          width: size.w ? size.w * 3 : "300%",
-          transform: `translate3d(${hTranslate}px, 0, 0)`,
-        }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        ref={viewportRef}
+        className={`relative h-full overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
       >
+        <div
+          ref={trackRef}
+          className={`gpu-layer flex h-full touch-none ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
+          style={{
+            width: size.w ? size.w * 3 : "300%",
+            transform: `translate3d(${hTranslate}px, 0, 0)`,
+          }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
         <div
           className="h-full shrink-0 overflow-y-auto overscroll-contain"
           style={{ width: size.w || "33.333%", touchAction: "pan-y" }}
@@ -442,7 +418,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
                 data-no-drag
                 onClick={() =>
                   feedMode === "following"
-                    ? handleNav("markets")
+                    ? router.push("/markets")
                     : setFilterOpen(true)
                 }
                 className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
@@ -488,38 +464,27 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
         >
           {article && <ArticlePanel article={article} onBack={goToFeed} />}
         </div>
+        </div>
+
+        {overlay === "profile" && (
+          <div className="absolute inset-0 z-40 bg-black">
+            <ProfilePage onClose={closeProfile} />
+          </div>
+        )}
+
+        <CommentSheet
+          open={commentsOpen}
+          onClose={() => setCommentsOpen(false)}
+          article={article ?? null}
+          onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
+        />
+        <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
+        <CreateThoughtSheet
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          defaultTicker={article?.ticker}
+        />
       </div>
-
-      {overlay === "markets" && (
-        <OverlayShell>
-          <MarketsPage onOpenMarketFeed={openMarketFeed} />
-        </OverlayShell>
-      )}
-      {overlay === "watchlist" && (
-        <OverlayShell>
-          <WatchlistPage onClose={() => setOverlay(null)} />
-        </OverlayShell>
-      )}
-      {overlay === "profile" && (
-        <OverlayShell>
-          <ProfilePage onClose={() => setOverlay(null)} />
-        </OverlayShell>
-      )}
-
-      <CommentSheet
-        open={commentsOpen}
-        onClose={() => setCommentsOpen(false)}
-        article={article ?? null}
-        onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
-      />
-      <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
-      <CreateThoughtSheet
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        defaultTicker={article?.ticker}
-      />
-
-      <BottomNav active={navTab} onNavigate={handleNav} />
-    </div>
+    </MobilePageShell>
   );
 }

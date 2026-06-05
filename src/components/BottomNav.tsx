@@ -1,19 +1,54 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
 import { BarChart2, Bookmark, Plus, User } from "lucide-react";
 
 export type NavTab = "home" | "markets" | "create" | "watchlist" | "profile";
 
 interface BottomNavProps {
   active: NavTab;
-  onNavigate: (tab: NavTab) => void;
+  onCreate?: () => void;
 }
 
-export function BottomNav({ active, onNavigate }: BottomNavProps) {
-  const homeActive = active === "home";
-  const marketsActive = active === "markets";
-  const watchlistActive = active === "watchlist";
-  const profileActive = active === "profile";
+function tabFromPath(pathname: string): NavTab {
+  if (pathname === "/markets") return "markets";
+  if (pathname === "/watchlist") return "watchlist";
+  return "home";
+}
+
+export function BottomNav({ active, onCreate }: BottomNavProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const resolvedActive = active ?? tabFromPath(pathname);
+
+  const homeActive = resolvedActive === "home";
+  const marketsActive = resolvedActive === "markets";
+  const watchlistActive = resolvedActive === "watchlist";
+  const profileActive = resolvedActive === "profile";
+
+  const navigate = (tab: NavTab) => {
+    switch (tab) {
+      case "home":
+        router.push("/");
+        break;
+      case "markets":
+        router.push("/markets");
+        break;
+      case "watchlist":
+        router.push("/watchlist");
+        break;
+      case "profile":
+        router.push("/?tab=profile");
+        break;
+      case "create":
+        if (pathname === "/" && onCreate) {
+          onCreate();
+        } else {
+          router.push("/?sheet=create");
+        }
+        break;
+    }
+  };
 
   return (
     <nav
@@ -26,7 +61,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
         <NavItem
           label="Home"
           active={homeActive}
-          onClick={() => onNavigate("home")}
+          onClick={() => navigate("home")}
         >
           <HomeIcon active={homeActive} />
         </NavItem>
@@ -34,7 +69,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
         <NavItem
           label="Markets"
           active={marketsActive}
-          onClick={() => onNavigate("markets")}
+          onClick={() => navigate("markets")}
         >
           <BarChart2
             className={`h-[22px] w-[22px] ${marketsActive ? "text-[#00C6C6]" : "text-white/45"}`}
@@ -46,7 +81,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           type="button"
           aria-label="Create"
           data-no-drag
-          onClick={() => onNavigate("create")}
+          onClick={() => navigate("create")}
           className="relative -top-3 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-black shadow-[0_4px_24px_rgba(255,255,255,0.18)] transition-transform active:scale-95"
         >
           <Plus className="h-7 w-7" strokeWidth={2.25} />
@@ -55,7 +90,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
         <NavItem
           label="Watchlist"
           active={watchlistActive}
-          onClick={() => onNavigate("watchlist")}
+          onClick={() => navigate("watchlist")}
         >
           <Bookmark
             className={`h-[22px] w-[22px] ${watchlistActive ? "text-[#00C6C6]" : "text-white/45"}`}
@@ -66,7 +101,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
         <NavItem
           label="Profile"
           active={profileActive}
-          onClick={() => onNavigate("profile")}
+          onClick={() => navigate("profile")}
         >
           <User
             className={`h-[22px] w-[22px] ${profileActive ? "text-[#00C6C6]" : "text-white/45"}`}

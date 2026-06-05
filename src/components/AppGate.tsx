@@ -3,18 +3,12 @@
 import { useEffect } from "react";
 import { AppBootSplash } from "@/components/AppBootSplash";
 import { AuthScreen } from "@/components/AuthScreen";
-import { FeedErrorBoundary } from "@/components/FeedErrorBoundary";
-import { NewsFeed } from "@/components/NewsFeed";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
-import type { NewsArticle } from "@/lib/types";
 
-interface AppShellProps {
-  initialArticles: NewsArticle[];
-}
-
-export function AppShell({ initialArticles }: AppShellProps) {
+/** Auth + onboarding gate — renders children only when the user can use the app */
+export function AppGate({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { ready, onboardingComplete, syncAppUser } = useApp();
 
@@ -36,9 +30,5 @@ export function AppShell({ initialArticles }: AppShellProps) {
     return <OnboardingFlow />;
   }
 
-  return (
-    <FeedErrorBoundary>
-      <NewsFeed initialArticles={initialArticles} />
-    </FeedErrorBoundary>
-  );
+  return <>{children}</>;
 }
