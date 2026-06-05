@@ -1,0 +1,57 @@
+"use client";
+
+import { ChevronRight, Settings } from "lucide-react";
+import { useApp } from "@/context/AppContext";
+import { PocketBrand } from "./PocketLogo";
+import { ScreenHeader } from "./ScreenHeader";
+
+interface ProfilePageProps {
+  onClose: () => void;
+}
+
+export function ProfilePage({ onClose }: ProfilePageProps) {
+  const { storiesRead, watchlist } = useApp();
+
+  return (
+    <div className="absolute inset-0 z-40 flex flex-col bg-[#0a0a0a]">
+      <ScreenHeader title="Profile" onBack={onClose} />
+      <div className="flex-1 overflow-y-auto px-4 pb-28">
+        <div className="flex flex-col items-center py-8">
+          <PocketBrand layout="vertical" iconSize={80} glow="strong" showTagline />
+          <h2 className="mt-6 text-xl font-bold text-white">@pocket_investor</h2>
+          <p className="mt-1 text-sm text-zinc-500">Joined March 2024</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="Stories read" value={String(storiesRead)} />
+          <StatCard label="Watchlist" value={String(watchlist.length)} />
+        </div>
+
+        <button
+          type="button"
+          data-no-drag
+          className="mt-6 flex w-full items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4 active:bg-white/[0.08]"
+        >
+          <div className="flex items-center gap-3">
+            <Settings className="h-5 w-5 text-zinc-400" />
+            <span className="font-medium text-white">Settings</span>
+          </div>
+          <ChevronRight className="h-5 w-5 text-zinc-500" />
+        </button>
+
+        <p className="mt-8 text-center text-xs text-zinc-600">
+          Pocket Finance v1.0 · Bold news. Smarter moves.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 text-center">
+      <p className="text-2xl font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs text-zinc-500">{label}</p>
+    </div>
+  );
+}
