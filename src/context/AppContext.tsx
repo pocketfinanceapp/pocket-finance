@@ -54,6 +54,8 @@ interface AppContextValue {
     markets: MarketFilter[],
     sectors: SectorFilter[]
   ) => void;
+  /** Reload onboarding state when auth user changes */
+  syncAppUser: (userId: string | null) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -72,22 +74,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [storiesRead, setStoriesRead] = useState(0);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [appUserId, setAppUserId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       setWatchlist(loadWatchlist());
-      const complete = isOnboardingComplete();
+      const saved = localStorage.getItem("pocket-stories-read");
+      if (saved) setStoriesRead(parseInt(saved, 10) || 0);
+    } catch {
+      /* storage blocked */
+    } finally {
+      setReady(true);
+    }
+  }, []);
+
+  const syncAppUser = useCallback((userId: string | null) => {
+    setAppUserId(userId);
+    if (!userId) {
+      setOnboardingComplete(false);
+      return;
+    }
+    try {
+      const complete = isOnboardingComplete(userId);
       setOnboardingComplete(complete);
       if (complete) {
         setFollowedMarketsState(loadFollowedMarkets());
         setSectorInterestsState(loadSectorInterests());
+      } else {
+        setFollowedMarketsState([]);
+        setSectorInterestsState([]);
       }
-      const saved = localStorage.getItem("pocket-stories-read");
-      if (saved) setStoriesRead(parseInt(saved, 10) || 0);
     } catch {
       setOnboardingComplete(false);
-    } finally {
-      setReady(true);
     }
   }, []);
 
@@ -158,12 +176,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveSectorInterests(sectors);
       setOnboardingComplete(true);
       try {
-        markOnboardingComplete();
+        markOnboardingComplete(appUserId ?? undefined);
       } catch {
         /* storage blocked */
       }
     },
-    [setFollowedMarkets]
+    [setFollowedMarkets, appUserId]
   );
 
   const incrementStoriesRead = useCallback(() => {
@@ -202,6 +220,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       incrementStoriesRead,
       onboardingComplete,
       completeOnboarding,
+      syncAppUser,
     }),
     [
       ready,
@@ -224,6 +243,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       incrementStoriesRead,
       onboardingComplete,
       completeOnboarding,
+      syncAppUser,
     ]
   );
 

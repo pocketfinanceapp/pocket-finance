@@ -99,7 +99,7 @@ interface PocketBrandProps {
   /** Icon dimension in px */
   iconSize?: number;
   layout?: "horizontal" | "vertical" | "icon";
-  glow?: "normal" | "strong";
+  glow?: "none" | "normal" | "strong";
   showTagline?: boolean;
   className?: string;
   wordmarkClassName?: string;
