@@ -48,7 +48,13 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
   const title = rawTitle.replace(/\s[-–—]\s[^-–—]+$/, "").trim() || rawTitle;
   const description =
     raw.description ?? "Latest developments shaping global markets.";
-  const meta = inferTickerFromText(`${title} ${description}`);
+  const inferenceText = [
+    title,
+    description,
+    raw.content ?? "",
+    raw.source?.name ?? "",
+  ].join(" ");
+  const meta = inferTickerFromText(inferenceText);
   const id = hashId((raw.url ?? title) + index);
   const body =
     raw.content?.replace(/\[\+\d+ chars\]$/, "").trim() ||
@@ -139,8 +145,8 @@ const DEMO_SEEDS: Omit<NewsArticle, "id" | "likes" | "comments" | "shares" | "pu
     imageUrl: "https://images.unsplash.com/photo-1518546305927-5a555bb7020e?w=1200&q=80",
     market: "NASDAQ",
     sector: "Crypto",
-    ticker: "COIN",
-    companyName: "Coinbase",
+    ticker: "BTC",
+    companyName: "Bitcoin",
     tags: ["BTC", "ETF"],
     sourceName: "CoinDesk",
     sourceId: "coindesk",

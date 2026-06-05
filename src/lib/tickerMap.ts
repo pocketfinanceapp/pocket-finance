@@ -94,7 +94,7 @@ const TICKER_MAP: Record<string, TickerMeta> = {
     ticker: "BTC",
     companyName: "Bitcoin",
     market: "NASDAQ",
-    sector: "Technology",
+    sector: "Crypto",
     tags: ["BTC", "Crypto", "Digital Assets"],
     logoColor: "#f7931a",
   },
@@ -102,7 +102,7 @@ const TICKER_MAP: Record<string, TickerMeta> = {
     ticker: "ETH",
     companyName: "Ethereum",
     market: "NASDAQ",
-    sector: "Technology",
+    sector: "Crypto",
     tags: ["ETH", "Crypto", "DeFi"],
     logoColor: "#627eea",
   },
@@ -122,6 +122,103 @@ const TICKER_MAP: Record<string, TickerMeta> = {
     tags: ["GS", "Banks", "Wall Street"],
     logoColor: "#6cace4",
   },
+  exxon: {
+    ticker: "XOM",
+    companyName: "Exxon Mobil Corporation",
+    market: "NYSE",
+    sector: "Energy",
+    tags: ["XOM", "Oil", "Energy"],
+    logoColor: "#e4002b",
+  },
+  bhp: {
+    ticker: "BHP",
+    companyName: "BHP Group",
+    market: "ASX",
+    sector: "Mining",
+    tags: ["BHP", "Mining", "ASX"],
+    logoColor: "#e3530d",
+  },
+  coinbase: {
+    ticker: "COIN",
+    companyName: "Coinbase Global, Inc.",
+    market: "NASDAQ",
+    sector: "Crypto",
+    tags: ["COIN", "Crypto", "Exchange"],
+    logoColor: "#0052ff",
+  },
+  "johnson & johnson": {
+    ticker: "JNJ",
+    companyName: "Johnson & Johnson",
+    market: "NYSE",
+    sector: "Healthcare",
+    tags: ["JNJ", "Pharma", "Healthcare"],
+    logoColor: "#d51900",
+  },
+  sony: {
+    ticker: "SONY",
+    companyName: "Sony Group Corporation",
+    market: "Nikkei",
+    sector: "Technology",
+    tags: ["SONY", "Japan", "Electronics"],
+    logoColor: "#000000",
+  },
+};
+
+/** Symbols referenced in demo / news that aren't keyed by company name */
+const SYMBOL_OVERRIDES: Record<string, TickerMeta> = {
+  SPY: {
+    ticker: "SPY",
+    companyName: "S&P 500 ETF",
+    market: "NYSE",
+    sector: "Finance",
+    tags: ["Markets", "ETF"],
+    logoColor: "#3B6EF5",
+  },
+  XOM: TICKER_MAP.exxon,
+  BHP: TICKER_MAP.bhp,
+  COIN: TICKER_MAP.coinbase,
+  JNJ: TICKER_MAP["johnson & johnson"],
+  SONY: TICKER_MAP.sony,
+  RY: {
+    ticker: "RY",
+    companyName: "Royal Bank of Canada",
+    market: "TSX",
+    sector: "Finance",
+    tags: ["RY", "Canada", "Banks"],
+    logoColor: "#0051a5",
+  },
+  BNP: {
+    ticker: "BNP",
+    companyName: "BNP Paribas",
+    market: "Euronext",
+    sector: "Finance",
+    tags: ["BNP", "Europe", "Banks"],
+    logoColor: "#00915a",
+  },
+  LVMH: {
+    ticker: "LVMH",
+    companyName: "LVMH",
+    market: "LSE",
+    sector: "Consumer",
+    tags: ["LVMH", "Luxury", "Retail"],
+    logoColor: "#1a1a1a",
+  },
+  CKA: {
+    ticker: "CKA",
+    companyName: "CK Asset Holdings",
+    market: "HKEX",
+    sector: "Real Estate",
+    tags: ["CKA", "HKEX", "Property"],
+    logoColor: "#c41230",
+  },
+  CAPL: {
+    ticker: "CAPL",
+    companyName: "CapitaLand",
+    market: "SGX",
+    sector: "Real Estate",
+    tags: ["CAPL", "SGX", "REIT"],
+    logoColor: "#003366",
+  },
 };
 
 const DEFAULT_META: TickerMeta = {
@@ -130,33 +227,85 @@ const DEFAULT_META: TickerMeta = {
   market: "NYSE",
   sector: "Finance",
   tags: ["Markets", "Stocks", "Economy"],
-  logoColor: "#00c9b7",
+  logoColor: "#3B6EF5",
 };
 
-export function inferTickerFromText(text: string): TickerMeta {
-  const lower = text.toLowerCase();
-  for (const [key, meta] of Object.entries(TICKER_MAP)) {
-    if (lower.includes(key)) return meta;
-  }
-  return DEFAULT_META;
+const TICKER_BY_SYMBOL: Record<string, TickerMeta> = {
+  ...SYMBOL_OVERRIDES,
+  ...Object.values(TICKER_MAP).reduce(
+    (acc, meta) => {
+      acc[meta.ticker] = meta;
+      return acc;
+    },
+    {} as Record<string, TickerMeta>
+  ),
+};
+
+const NAME_KEYS = Object.entries(TICKER_MAP).sort(
+  (a, b) => b[0].length - a[0].length
+);
+
+const KNOWN_SYMBOLS = Object.keys(TICKER_BY_SYMBOL).sort(
+  (a, b) => b.length - a.length
+);
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const TICKER_BY_SYMBOL = Object.values(TICKER_MAP).reduce(
-  (acc, meta) => {
-    acc[meta.ticker] = meta;
-    return acc;
-  },
-  {} as Record<string, TickerMeta>
-);
+function matchSymbol(text: string, symbol: string): boolean {
+  const re = new RegExp(`(?:\\$|\\()${escapeRegex(symbol)}\\b|\\b${escapeRegex(symbol)}\\b`, "i");
+  return re.test(text);
+}
+
+function matchName(text: string, name: string): boolean {
+  const re = new RegExp(`\\b${escapeRegex(name)}\\b`, "i");
+  return re.test(text);
+}
+
+/** Extract the most relevant ticker from article text */
+export function inferTickerFromText(text: string): TickerMeta {
+  if (!text.trim()) return DEFAULT_META;
+
+  // 1. Explicit ticker symbols ($AAPL, NVDA, (BTC))
+  for (const symbol of KNOWN_SYMBOLS) {
+    if (symbol === "SPY") continue;
+    if (matchSymbol(text, symbol)) {
+      return TICKER_BY_SYMBOL[symbol];
+    }
+  }
+
+  // 2. Company / product names (longest keys first, word boundaries)
+  for (const [key, meta] of NAME_KEYS) {
+    if (matchName(text, key)) return meta;
+  }
+
+  // 3. Common aliases not stored as map keys
+  if (/\bbitcoin\b|\bbtc\b/i.test(text)) return TICKER_MAP.bitcoin;
+  if (/\bethereum\b|\beth\b/i.test(text)) return TICKER_MAP.ethereum;
+  if (/\bexxon\b|\boil prices?\b/i.test(text)) return TICKER_MAP.exxon;
+  if (/\bbhp\b|\biron ore\b/i.test(text)) return TICKER_MAP.bhp;
+  if (/\bcoinbase\b/i.test(text)) return TICKER_MAP.coinbase;
+  if (/\bsony\b|\bnikkei\b/i.test(text)) return TICKER_MAP.sony;
+  if (/\bjohnson\s*&\s*johnson\b|\bjnj\b/i.test(text))
+    return TICKER_MAP["johnson & johnson"];
+  if (/\bfed\b|\bfederal reserve\b|\binterest rates?\b/i.test(text))
+    return TICKER_MAP.jpmorgan;
+
+  return DEFAULT_META;
+}
 
 /** Resolve company name & logo for a ticker symbol */
 export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   const upper = ticker.toUpperCase();
   if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];
+
   return {
-    ...DEFAULT_META,
     ticker: upper,
     companyName: upper,
+    market: "NYSE",
+    sector: "Finance",
+    tags: [upper],
     logoColor: "#3B6EF5",
   };
 }

@@ -19,8 +19,6 @@ import {
   getExplicitFilterLabels,
   hasExplicitFilters,
 } from "@/lib/activeFilters";
-import { getStockProfile } from "@/lib/stockData";
-
 interface FeedCardProps {
   article: NewsArticle;
   active: boolean;
@@ -41,7 +39,6 @@ export function FeedCard({
   onOpenComments,
   onOpenFilter,
 }: FeedCardProps) {
-  const stock = getStockProfile(article.ticker);
   const {
     addToWatchlist,
     removeFromWatchlist,
@@ -84,7 +81,7 @@ export function FeedCard({
         src={imgSrc}
         alt=""
         fill
-        className="object-cover brightness-[0.52] contrast-[1.08] saturate-[0.92]"
+        className="object-cover brightness-[0.70] contrast-[1.05] saturate-[0.95]"
         sizes="100vw"
         unoptimized
         priority={active}
@@ -92,9 +89,8 @@ export function FeedCard({
       />
 
       {/* Premium vignette */}
-      <div className="pointer-events-none absolute inset-0 bg-black/35" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/35 to-black/[0.97]" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-transparent to-black/40" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-black/75" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/20" />
 
       {/* Top tabs + optional filter strip */}
       <header className="absolute left-0 right-0 top-0 z-20 flex flex-col pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -248,12 +244,7 @@ export function FeedCard({
         </p>
 
         <div className="mt-3">
-          <MarketBadge
-            market={article.market}
-            ticker={article.ticker}
-            logoColor={stock.logoColor}
-            size="sm"
-          />
+          <MarketBadge market={article.market} size="sm" />
         </div>
 
         <div className="mt-3">

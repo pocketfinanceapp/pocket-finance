@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /** Hides the circular Next.js "N" dev indicator during onboarding */
+  devIndicators: false,
   images: {
     unoptimized: true,
   },

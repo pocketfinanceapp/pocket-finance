@@ -6,7 +6,6 @@ import { ArrowLeft, Bookmark, MoreHorizontal } from "lucide-react";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
-import { getStockProfile } from "@/lib/stockData";
 import { PocketPublisherBadge } from "./PocketLogo";
 
 interface ArticlePanelProps {
@@ -16,7 +15,6 @@ interface ArticlePanelProps {
 
 export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
   const paragraphs = article.body.split(/\n\n+/).filter(Boolean);
-  const stock = getStockProfile(article.ticker);
   const [saved, setSaved] = useState(false);
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
@@ -64,11 +62,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
       </header>
 
       <article className="flex-1 overflow-y-auto px-4 pb-28">
-        <MarketBadge
-          market={article.market}
-          ticker={article.ticker}
-          logoColor={stock.logoColor}
-        />
+        <MarketBadge market={article.market} />
         <h1 className="mt-3 text-2xl font-bold leading-tight">
           {article.headline}
         </h1>

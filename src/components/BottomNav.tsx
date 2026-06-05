@@ -28,7 +28,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           active={homeActive}
           onClick={() => onNavigate("home")}
         >
-          <NavHomeIcon filled={homeActive} />
+          <HomeIcon active={homeActive} />
         </NavItem>
 
         <NavItem
@@ -37,7 +37,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate("markets")}
         >
           <BarChart2
-            className={`h-[22px] w-[22px] ${marketsActive ? "text-[#00C6C6]" : ""}`}
+            className={`h-[22px] w-[22px] ${marketsActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={marketsActive ? 2.5 : 2}
           />
         </NavItem>
@@ -58,7 +58,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate("watchlist")}
         >
           <Bookmark
-            className={`h-[22px] w-[22px] ${watchlistActive ? "text-[#00C6C6]" : ""}`}
+            className={`h-[22px] w-[22px] ${watchlistActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={watchlistActive ? 2.5 : 2}
           />
         </NavItem>
@@ -69,7 +69,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate("profile")}
         >
           <User
-            className={`h-[22px] w-[22px] ${profileActive ? "text-[#00C6C6]" : ""}`}
+            className={`h-[22px] w-[22px] ${profileActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={profileActive ? 2.5 : 2}
           />
         </NavItem>
@@ -78,31 +78,10 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
   );
 }
 
-/** Inline house icon — not lucide */
-function NavHomeIcon({ filled }: { filled: boolean }) {
-  if (filled) {
-    return (
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        <defs>
-          <linearGradient id="nav-home-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3B6EF5" />
-            <stop offset="100%" stopColor="#00C6C6" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-7H10v7H6a1 1 0 01-1-1v-9.5z"
-          fill="url(#nav-home-grad)"
-        />
-      </svg>
-    );
-  }
+/** Simple inline house icon — no external icon libraries */
+function HomeIcon({ active }: { active: boolean }) {
+  const stroke = active ? "#00C6C6" : "rgba(255,255,255,0.45)";
+  const fill = active ? "#3B6EF5" : "none";
 
   return (
     <svg
@@ -114,11 +93,11 @@ function NavHomeIcon({ filled }: { filled: boolean }) {
       aria-hidden
     >
       <path
-        d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-7H10v7H6a1 1 0 01-1-1v-9.5z"
-        stroke="#FFFFFF"
+        d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 01-1.5 1.5H15v-7.5H9V21.5H4.5A1.5 1.5 0 013 20V10.5z"
+        fill={fill}
+        stroke={stroke}
         strokeWidth="1.75"
         strokeLinejoin="round"
-        fill="none"
       />
     </svg>
   );
@@ -140,14 +119,18 @@ function NavItem({
       type="button"
       data-no-drag
       onClick={onClick}
-      className={`flex min-w-[56px] flex-col items-center gap-0.5 pb-0.5 transition-opacity active:opacity-70 ${
-        active
-          ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-transparent [&_svg]:text-[#00C6C6]"
-          : "text-white/45"
-      }`}
+      className="flex min-w-[56px] flex-col items-center gap-0.5 pb-0.5 transition-opacity active:opacity-70"
     >
       {children}
-      <span className="text-[10px] font-medium tracking-wide">{label}</span>
+      <span
+        className={`text-[10px] font-medium tracking-wide ${
+          active
+            ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-transparent"
+            : "text-white/45"
+        }`}
+      >
+        {label}
+      </span>
     </button>
   );
 }

@@ -136,23 +136,30 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
 const DEFAULT_PROFILE = STOCK_PROFILES.NVDA;
 
 export function getStockProfile(ticker: string): StockProfile {
-  const meta = getTickerMetaBySymbol(ticker);
-  const stored = STOCK_PROFILES[ticker];
+  const upper = ticker.toUpperCase();
+  const meta = getTickerMetaBySymbol(upper);
+  const stored = STOCK_PROFILES[upper];
 
-  const base = stored ?? {
-    ...DEFAULT_PROFILE,
-    ticker,
+  const base: Omit<StockProfile, "chartData"> = stored ?? {
+    ticker: upper,
     name: meta.companyName,
     logoColor: meta.logoColor,
-    price: pseudoRandom(ticker, 50, 500),
-    change: pseudoRandom(`${ticker}-c`, 0.5, 15),
-    changePercent: pseudoRandom(`${ticker}-p`, -2, 4),
+    price: pseudoRandom(upper, 50, 500),
+    change: pseudoRandom(`${upper}-c`, 0.5, 15),
+    changePercent: pseudoRandom(`${upper}-p`, -2, 4),
+    marketCap: "—",
+    revenue: "—",
+    peRatio: "—",
+    eps: "—",
+    ebitda: "—",
+    dividendYield: "—",
+    competitors: DEFAULT_PROFILE.competitors,
   };
 
   const chartData = {} as Record<ChartRange, ChartPoint[]>;
   (Object.keys(CHART_LABELS) as ChartRange[]).forEach((range) => {
     chartData[range] = generateChart(
-      `${ticker}-${range}`,
+      `${upper}-${range}`,
       base.price,
       CHART_LABELS[range].length,
       CHART_LABELS[range]
