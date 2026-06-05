@@ -27,7 +27,7 @@ function Pill({
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-sm font-medium transition-colors active:scale-95 ${
         active
-          ? "bg-white text-black"
+          ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white shadow-[0_4px_16px_rgba(59,110,245,0.25)]"
           : "border border-white/15 bg-white/5 text-zinc-300"
       }`}
     >

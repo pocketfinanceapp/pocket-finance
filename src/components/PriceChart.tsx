@@ -33,7 +33,7 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
             onClick={() => onRangeChange(r)}
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               range === r
-                ? "bg-pocket-blue text-white"
+                ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
                 : "bg-pocket-surface text-zinc-400"
             }`}
           >
@@ -46,9 +46,13 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
             <defs>
-              <linearGradient id="tealGlow" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00c9b7" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="#00c9b7" stopOpacity={0} />
+              <linearGradient id="chartLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#3B6EF5" />
+                <stop offset="100%" stopColor="#00C6C6" />
+              </linearGradient>
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3B6EF5" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#00C6C6" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="#1f1f1f" strokeDasharray="3 3" vertical={false} />
@@ -79,11 +83,11 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
             <Area
               type="monotone"
               dataKey="price"
-              stroke="#00c9b7"
+              stroke="url(#chartLine)"
               strokeWidth={2}
-              fill="url(#tealGlow)"
+              fill="url(#chartFill)"
               dot={false}
-              activeDot={{ r: 4, fill: "#00f5a0", stroke: "#00c9b7" }}
+              activeDot={{ r: 4, fill: "#00C6C6", stroke: "#3B6EF5" }}
             />
           </AreaChart>
         </ResponsiveContainer>

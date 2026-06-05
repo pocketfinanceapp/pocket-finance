@@ -1,4 +1,5 @@
 import type { ChartPoint, ChartRange, StockProfile } from "./types";
+import { getTickerMetaBySymbol } from "./tickerMap";
 import { pseudoRandom } from "./utils";
 
 function generateChart(
@@ -49,27 +50,9 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     ebitda: "$36.1B",
     dividendYield: "0.03%",
     competitors: [
-      {
-        ticker: "AMD",
-        name: "Advanced Micro Devices",
-        price: 168.32,
-        changePercent: 1.45,
-        color: "#ed1c24",
-      },
-      {
-        ticker: "QCOM",
-        name: "Qualcomm Incorporated",
-        price: 195.41,
-        changePercent: 0.92,
-        color: "#3253dc",
-      },
-      {
-        ticker: "INTC",
-        name: "Intel Corporation",
-        price: 31.86,
-        changePercent: -0.31,
-        color: "#0071c5",
-      },
+      { ticker: "AMD", name: "Advanced Micro Devices", price: 168.32, changePercent: 1.45, color: "#ed1c24" },
+      { ticker: "QCOM", name: "Qualcomm Incorporated", price: 195.41, changePercent: 0.92, color: "#3253dc" },
+      { ticker: "INTC", name: "Intel Corporation", price: 31.86, changePercent: -0.31, color: "#0071c5" },
     ],
   },
   AAPL: {
@@ -86,27 +69,66 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     ebitda: "$134.8B",
     dividendYield: "0.44%",
     competitors: [
-      {
-        ticker: "MSFT",
-        name: "Microsoft Corporation",
-        price: 425.18,
-        changePercent: 0.68,
-        color: "#00a4ef",
-      },
-      {
-        ticker: "GOOGL",
-        name: "Alphabet Inc.",
-        price: 178.92,
-        changePercent: 1.12,
-        color: "#4285f4",
-      },
-      {
-        ticker: "SAM",
-        name: "Samsung Electronics",
-        price: 58.4,
-        changePercent: -0.22,
-        color: "#1428a0",
-      },
+      { ticker: "MSFT", name: "Microsoft Corporation", price: 425.18, changePercent: 0.68, color: "#00a4ef" },
+      { ticker: "GOOGL", name: "Alphabet Inc.", price: 178.92, changePercent: 1.12, color: "#4285f4" },
+      { ticker: "SAM", name: "Samsung Electronics", price: 58.4, changePercent: -0.22, color: "#1428a0" },
+    ],
+  },
+  GOOGL: {
+    ticker: "GOOGL",
+    name: "Alphabet Inc.",
+    price: 178.92,
+    change: 1.98,
+    changePercent: 1.12,
+    logoColor: "#4285f4",
+    marketCap: "$2.21T",
+    revenue: "$339.9B",
+    peRatio: "26.84",
+    eps: "$6.67",
+    ebitda: "$112.4B",
+    dividendYield: "0.48%",
+    competitors: [
+      { ticker: "META", name: "Meta Platforms, Inc.", price: 512.4, changePercent: 0.88, color: "#0668e1" },
+      { ticker: "MSFT", name: "Microsoft Corporation", price: 425.18, changePercent: 0.68, color: "#00a4ef" },
+      { ticker: "AMZN", name: "Amazon.com, Inc.", price: 198.5, changePercent: 0.45, color: "#ff9900" },
+    ],
+  },
+  BTC: {
+    ticker: "BTC",
+    name: "Bitcoin",
+    price: 67240.5,
+    change: 1240.2,
+    changePercent: 1.88,
+    logoColor: "#f7931a",
+    marketCap: "$1.32T",
+    revenue: "—",
+    peRatio: "—",
+    eps: "—",
+    ebitda: "—",
+    dividendYield: "—",
+    competitors: [
+      { ticker: "ETH", name: "Ethereum", price: 3421.8, changePercent: 2.1, color: "#627eea" },
+      { ticker: "COIN", name: "Coinbase Global", price: 245.6, changePercent: 1.4, color: "#0052ff" },
+      { ticker: "MSTR", name: "MicroStrategy", price: 1680.2, changePercent: 3.2, color: "#d9232e" },
+    ],
+  },
+  MSFT: {
+    ticker: "MSFT",
+    name: "Microsoft Corporation",
+    price: 425.18,
+    change: 2.87,
+    changePercent: 0.68,
+    logoColor: "#00a4ef",
+    marketCap: "$3.16T",
+    revenue: "$245.1B",
+    peRatio: "36.21",
+    eps: "$11.75",
+    ebitda: "$128.5B",
+    dividendYield: "0.72%",
+    competitors: [
+      { ticker: "GOOGL", name: "Alphabet Inc.", price: 178.92, changePercent: 1.12, color: "#4285f4" },
+      { ticker: "AAPL", name: "Apple Inc.", price: 227.52, changePercent: 0.97, color: "#555555" },
+      { ticker: "ORCL", name: "Oracle Corporation", price: 128.4, changePercent: 0.32, color: "#f80000" },
     ],
   },
 };
@@ -114,10 +136,14 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
 const DEFAULT_PROFILE = STOCK_PROFILES.NVDA;
 
 export function getStockProfile(ticker: string): StockProfile {
-  const base = STOCK_PROFILES[ticker] ?? {
+  const meta = getTickerMetaBySymbol(ticker);
+  const stored = STOCK_PROFILES[ticker];
+
+  const base = stored ?? {
     ...DEFAULT_PROFILE,
     ticker,
-    name: `${ticker} Corporation`,
+    name: meta.companyName,
+    logoColor: meta.logoColor,
     price: pseudoRandom(ticker, 50, 500),
     change: pseudoRandom(`${ticker}-c`, 0.5, 15),
     changePercent: pseudoRandom(`${ticker}-p`, -2, 4),

@@ -8,8 +8,8 @@ const TEAL = "#00C6C6";
 interface PocketMarkIconProps {
   size?: number;
   className?: string;
-  /** Glow intensity — hero for onboarding welcome */
-  glow?: "normal" | "strong" | "hero";
+  /** Glow intensity — use "none" for sharp/crisp marks */
+  glow?: "none" | "normal" | "strong" | "hero";
 }
 
 /** Stylised P with rising chart bars inside the bowl */
@@ -21,7 +21,23 @@ export function PocketMarkIcon({
   const uid = useId().replace(/:/g, "");
   const gradId = `pocket-grad-${uid}`;
   const glowId = `pocket-glow-${uid}`;
+  const useGlow = glow !== "none";
   const blur = glow === "hero" ? 11 : glow === "strong" ? 6 : 3.5;
+
+  const mark = (
+    <>
+      <path
+        d="M22 14V86M22 14H50C72 14 80 28 80 46C80 64 70 78 48 78H34"
+        stroke={`url(#${gradId})`}
+        strokeWidth="12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect x="52" y="60" width="6" height="12" rx="1.5" fill={`url(#${gradId})`} />
+      <rect x="61" y="52" width="6" height="20" rx="1.5" fill={`url(#${gradId})`} />
+      <rect x="70" y="42" width="6" height="30" rx="1.5" fill={`url(#${gradId})`} />
+    </>
+  );
 
   return (
     <svg
@@ -44,69 +60,37 @@ export function PocketMarkIcon({
           <stop offset="0%" stopColor={BLUE} />
           <stop offset="100%" stopColor={TEAL} />
         </linearGradient>
-        <filter
-          id={glowId}
-          x={glow === "hero" ? "-80%" : "-40%"}
-          y={glow === "hero" ? "-80%" : "-40%"}
-          width={glow === "hero" ? "260%" : "180%"}
-          height={glow === "hero" ? "260%" : "180%"}
-          colorInterpolationFilters="sRGB"
-        >
-          <feGaussianBlur stdDeviation={blur} result="blur" />
-          <feColorMatrix
-            in="blur"
-            type="matrix"
-            values={
-              glow === "hero"
-                ? "0 0 0 0 0.2  0 0 0 0 0.65  0 0 0 0 0.95  0 0 0 1 0"
-                : "0 0 0 0 0.15  0 0 0 0 0.55  0 0 0 0 0.85  0 0 0 0.85 0"
-            }
-            result="glowColor"
-          />
-          <feMerge>
-            <feMergeNode in="glowColor" />
-            <feMergeNode in="glowColor" />
-            <feMergeNode in="glowColor" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
+        {useGlow && (
+          <filter
+            id={glowId}
+            x={glow === "hero" ? "-80%" : "-40%"}
+            y={glow === "hero" ? "-80%" : "-40%"}
+            width={glow === "hero" ? "260%" : "180%"}
+            height={glow === "hero" ? "260%" : "180%"}
+            colorInterpolationFilters="sRGB"
+          >
+            <feGaussianBlur stdDeviation={blur} result="blur" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values={
+                glow === "hero"
+                  ? "0 0 0 0 0.2  0 0 0 0 0.65  0 0 0 0 0.95  0 0 0 1 0"
+                  : "0 0 0 0 0.15  0 0 0 0 0.55  0 0 0 0 0.85  0 0 0 0.85 0"
+              }
+              result="glowColor"
+            />
+            <feMerge>
+              <feMergeNode in="glowColor" />
+              <feMergeNode in="glowColor" />
+              <feMergeNode in="glowColor" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        )}
       </defs>
 
-      <g filter={`url(#${glowId})`}>
-        {/* Letter P — modern thick form with open bowl */}
-        <path
-          d="M22 14V86M22 14H50C72 14 80 28 80 46C80 64 70 78 48 78H34"
-          stroke={`url(#${gradId})`}
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Rising bars inside the bowl */}
-        <rect
-          x="52"
-          y="60"
-          width="6"
-          height="12"
-          rx="1.5"
-          fill={`url(#${gradId})`}
-        />
-        <rect
-          x="61"
-          y="52"
-          width="6"
-          height="20"
-          rx="1.5"
-          fill={`url(#${gradId})`}
-        />
-        <rect
-          x="70"
-          y="42"
-          width="6"
-          height="30"
-          rx="1.5"
-          fill={`url(#${gradId})`}
-        />
-      </g>
+      <g filter={useGlow ? `url(#${glowId})` : undefined}>{mark}</g>
     </svg>
   );
 }
@@ -183,15 +167,56 @@ export function PocketLogo({
   return <PocketMarkIcon size={size} glow={glow} />;
 }
 
-export function VerifiedBadge() {
+export function VerifiedBadge({ size = 16 }: { size?: number }) {
+  const uid = useId().replace(/:/g, "");
+  const gradId = `verified-grad-${uid}`;
   return (
     <svg
-      className="h-4 w-4 shrink-0 text-[#3B6EF5]"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
-      fill="currentColor"
+      fill="none"
+      className="shrink-0"
       aria-label="Verified"
     >
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.59l-4.24-4.24 1.41-1.41L11 13.76l6.34-6.34 1.41 1.41L11 16.59z" />
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={BLUE} />
+          <stop offset="100%" stopColor={TEAL} />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="10" fill={`url(#${gradId})`} />
+      <path
+        d="M8 12.5l2.5 2.5L16 9"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
+  );
+}
+
+/** Pocket Finance publisher row for feed & article */
+export function PocketPublisherBadge({
+  timeLabel,
+  compact,
+}: {
+  timeLabel?: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <PocketMarkIcon size={compact ? 22 : 26} glow="none" />
+      <span
+        className={`font-semibold text-white ${compact ? "text-xs" : "text-sm"}`}
+      >
+        Pocket Finance
+      </span>
+      <VerifiedBadge size={compact ? 14 : 16} />
+      {timeLabel && (
+        <span className="text-xs text-zinc-500">· {timeLabel}</span>
+      )}
+    </div>
   );
 }

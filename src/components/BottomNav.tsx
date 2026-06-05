@@ -37,7 +37,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate("markets")}
         >
           <BarChart2
-            className="h-[22px] w-[22px]"
+            className={`h-[22px] w-[22px] ${marketsActive ? "text-[#00C6C6]" : ""}`}
             strokeWidth={marketsActive ? 2.5 : 2}
           />
         </NavItem>
@@ -58,7 +58,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate("watchlist")}
         >
           <Bookmark
-            className="h-[22px] w-[22px]"
+            className={`h-[22px] w-[22px] ${watchlistActive ? "text-[#00C6C6]" : ""}`}
             strokeWidth={watchlistActive ? 2.5 : 2}
           />
         </NavItem>
@@ -69,7 +69,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate("profile")}
         >
           <User
-            className="h-[22px] w-[22px]"
+            className={`h-[22px] w-[22px] ${profileActive ? "text-[#00C6C6]" : ""}`}
             strokeWidth={profileActive ? 2.5 : 2}
           />
         </NavItem>
@@ -90,9 +90,15 @@ function NavHomeIcon({ filled }: { filled: boolean }) {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden
       >
+        <defs>
+          <linearGradient id="nav-home-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3B6EF5" />
+            <stop offset="100%" stopColor="#00C6C6" />
+          </linearGradient>
+        </defs>
         <path
           d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-7H10v7H6a1 1 0 01-1-1v-9.5z"
-          fill="#FFFFFF"
+          fill="url(#nav-home-grad)"
         />
       </svg>
     );
@@ -135,7 +141,9 @@ function NavItem({
       data-no-drag
       onClick={onClick}
       className={`flex min-w-[56px] flex-col items-center gap-0.5 pb-0.5 transition-opacity active:opacity-70 ${
-        active ? "text-white" : "text-white/45"
+        active
+          ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-transparent [&_svg]:text-[#00C6C6]"
+          : "text-white/45"
       }`}
     >
       {children}

@@ -140,3 +140,23 @@ export function inferTickerFromText(text: string): TickerMeta {
   }
   return DEFAULT_META;
 }
+
+const TICKER_BY_SYMBOL = Object.values(TICKER_MAP).reduce(
+  (acc, meta) => {
+    acc[meta.ticker] = meta;
+    return acc;
+  },
+  {} as Record<string, TickerMeta>
+);
+
+/** Resolve company name & logo for a ticker symbol */
+export function getTickerMetaBySymbol(ticker: string): TickerMeta {
+  const upper = ticker.toUpperCase();
+  if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];
+  return {
+    ...DEFAULT_META,
+    ticker: upper,
+    companyName: upper,
+    logoColor: "#3B6EF5",
+  };
+}

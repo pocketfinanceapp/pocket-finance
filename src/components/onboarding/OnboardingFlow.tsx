@@ -159,9 +159,7 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-8 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4">
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="onboarding-enter onboarding-enter-d1 relative mb-10 flex h-[148px] w-[148px] items-center justify-center">
-            <div className="absolute inset-0 scale-110 rounded-full bg-gradient-to-br from-[#3B6EF5]/55 via-[#00C6C6]/35 to-transparent blur-[52px]" />
-            <div className="absolute inset-3 rounded-full bg-[#3B6EF5]/25 blur-[36px]" />
-            <PocketMarkIcon size={120} glow="hero" className="relative z-10" />
+            <PocketMarkIcon size={120} glow="none" />
           </div>
 
           <h1 className="onboarding-enter onboarding-enter-d2 text-[32px] font-bold leading-tight tracking-tight text-white">
@@ -372,7 +370,7 @@ function SelectTile({
       onClick={onClick}
       className={`flex flex-col items-start rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 active:scale-[0.98] ${
         active
-          ? "border-[#00C6C6] bg-[#00C6C6]/10 shadow-[0_0_20px_rgba(0,198,198,0.15)]"
+          ? "border-[#3B6EF5]/50 bg-gradient-to-br from-[#3B6EF5]/15 to-[#00C6C6]/10 shadow-[0_0_20px_rgba(59,110,245,0.12)]"
           : "border-white/[0.1] bg-white/[0.03]"
       }`}
     >

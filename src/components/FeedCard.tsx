@@ -12,9 +12,8 @@ import {
 import type { FeedMode } from "@/lib/filterArticles";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
-import { CompanyLogo } from "./CompanyLogo";
-import { PocketMarkIcon } from "./PocketLogo";
-import { SourceBadge } from "./SourceBadge";
+import { MarketBadge } from "./MarketBadge";
+import { PocketMarkIcon, PocketPublisherBadge } from "./PocketLogo";
 import { useApp } from "@/context/AppContext";
 import {
   getExplicitFilterLabels,
@@ -85,7 +84,7 @@ export function FeedCard({
         src={imgSrc}
         alt=""
         fill
-        className="object-cover brightness-[0.72] contrast-[1.05]"
+        className="object-cover brightness-[0.52] contrast-[1.08] saturate-[0.92]"
         sizes="100vw"
         unoptimized
         priority={active}
@@ -93,8 +92,9 @@ export function FeedCard({
       />
 
       {/* Premium vignette */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/65 via-black/10 to-black/95" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/25" />
+      <div className="pointer-events-none absolute inset-0 bg-black/35" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/35 to-black/[0.97]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/55 via-transparent to-black/40" />
 
       {/* Top tabs + optional filter strip */}
       <header className="absolute left-0 right-0 top-0 z-20 flex flex-col pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -108,26 +108,28 @@ export function FeedCard({
               data-no-drag
               onPointerDown={stop}
               onClick={() => onFeedModeChange("forYou")}
-              className={`pb-1 ${
-                feedMode === "forYou"
-                  ? "border-b-2 border-white text-white"
-                  : "text-white/40"
+              className={`relative pb-2 ${
+                feedMode === "forYou" ? "text-white" : "text-white/40"
               }`}
             >
               For You
+              {feedMode === "forYou" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
+              )}
             </button>
             <button
               type="button"
               data-no-drag
               onPointerDown={stop}
               onClick={() => onFeedModeChange("following")}
-              className={`pb-1 ${
-                feedMode === "following"
-                  ? "border-b-2 border-white text-white"
-                  : "text-white/40"
+              className={`relative pb-2 ${
+                feedMode === "following" ? "text-white" : "text-white/40"
               }`}
             >
               Following
+              {feedMode === "following" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
+              )}
             </button>
           </nav>
           <button
@@ -158,20 +160,6 @@ export function FeedCard({
           </div>
         )}
       </header>
-
-      {/* Market badge */}
-      <div
-        className={`absolute left-4 z-20 flex items-center gap-2 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur-md ${
-          showFilterPill
-            ? "top-[max(5.75rem,calc(env(safe-area-inset-top)+4.75rem))]"
-            : "top-[max(4.25rem,calc(env(safe-area-inset-top)+3.25rem))]"
-        }`}
-      >
-        <span className="text-xs font-bold tracking-widest text-pocket-blue">
-          {article.market}
-        </span>
-        <CompanyLogo ticker={article.ticker} color={stock.logoColor} size={20} />
-      </div>
 
       {/* Right actions — above bottom nav */}
       <aside
@@ -259,14 +247,17 @@ export function FeedCard({
           {article.subheading}
         </p>
 
-        <div className="mt-4">
-          <SourceBadge
-            sourceName={article.sourceName}
-            sourceId={article.sourceId}
-            sourceUrl={article.sourceUrl}
-            publishedAt={article.publishedAt}
-            timeLabel={timeAgo(article.publishedAt)}
+        <div className="mt-3">
+          <MarketBadge
+            market={article.market}
+            ticker={article.ticker}
+            logoColor={stock.logoColor}
+            size="sm"
           />
+        </div>
+
+        <div className="mt-3">
+          <PocketPublisherBadge timeLabel={timeAgo(article.publishedAt)} />
         </div>
 
         <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-3 py-1 text-[11px] font-medium text-white/80 backdrop-blur-md">
