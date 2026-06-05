@@ -53,10 +53,16 @@ export function BottomNav({ active, onCreate }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-mobile -translate-x-1/2 flex-col justify-end border-t border-white/[0.06] bg-black"
+      className="fixed bottom-0 left-0 right-0 z-50 flex flex-col justify-end border-t border-white/[0.06] bg-black"
       data-no-drag
       data-interactive
-      style={{ height: BOTTOM_NAV_HEIGHT }}
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: BOTTOM_NAV_HEIGHT,
+      }}
     >
       <div className="relative flex h-full items-end justify-around px-2 pb-1">
         <NavItem

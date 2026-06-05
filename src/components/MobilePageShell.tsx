@@ -16,7 +16,10 @@ export function MobilePageShell({
   onCreate,
 }: MobilePageShellProps) {
   return (
-    <div className="relative mx-auto h-[100dvh] w-full max-w-mobile overflow-hidden bg-black">
+    <div
+      className="relative mx-auto w-full max-w-mobile overflow-hidden bg-black"
+      style={{ height: "100svh", maxHeight: "100svh" }}
+    >
       <div
         className="absolute inset-x-0 top-0 overflow-hidden bg-black"
         style={{ height: FEED_VIEWPORT_HEIGHT }}

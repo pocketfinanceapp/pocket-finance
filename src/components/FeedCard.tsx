@@ -247,8 +247,14 @@ export function FeedCard({
       </aside>
 
       <div
-        className="absolute bottom-4 left-0 right-0 z-20"
-        style={{ padding: "0 20px", paddingRight: "72px" }}
+        className="z-20"
+        style={{
+          position: "absolute",
+          bottom: "16px",
+          left: 0,
+          right: 0,
+          padding: "0 20px",
+        }}
       >
         <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
           {article.headline}

@@ -11,7 +11,7 @@ import {
 import { isInteractiveTarget } from "@/lib/gesture";
 import { BOTTOM_NAV_PX, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 
-const FEED_SLOT_HEIGHT = `(100dvh - ${BOTTOM_NAV_PX}px)`;
+const FEED_SLOT_HEIGHT = `(100svh - ${BOTTOM_NAV_PX}px)`;
 import type { NewsArticle } from "@/lib/types";
 import type { NavTab } from "./BottomNav";
 import { CommentSheet } from "./CommentSheet";
