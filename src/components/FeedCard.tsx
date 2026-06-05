@@ -20,6 +20,7 @@ import {
   getExplicitFilterLabels,
   hasExplicitFilters,
 } from "@/lib/activeFilters";
+
 interface FeedCardProps {
   article: NewsArticle;
   active: boolean;
@@ -78,19 +79,29 @@ export function FeedCard({
       className="relative h-full w-full overflow-hidden bg-black"
       aria-hidden={!active}
     >
-      <Image
-        src={imgSrc}
-        alt=""
-        fill
-        className="object-cover"
-        sizes="100vw"
-        unoptimized
-        priority={active}
-        onError={() => setImgSrc(FALLBACK_IMAGE)}
-      />
+      <div className="absolute inset-0">
+        <Image
+          src={imgSrc}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+          unoptimized
+          priority={active}
+          onError={() => setImgSrc(FALLBACK_IMAGE)}
+        />
+      </div>
 
-      {/* Bottom-half scrim only — top 50% stays clear like Stories */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 top-1/2 z-[1] bg-gradient-to-b from-transparent via-black/20 to-black/80" />
+      {/* Bottom-half scrim for text — top 50% stays clear */}
+      <div
+        className="pointer-events-none absolute inset-x-0 z-[1]"
+        style={{
+          top: "50%",
+          bottom: 0,
+          background:
+            "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0.8) 100%)",
+        }}
+      />
 
       {/* Top tabs + optional filter strip */}
       <header className="absolute left-0 right-0 top-0 z-20 flex flex-col pt-[max(0.75rem,env(safe-area-inset-top))]">

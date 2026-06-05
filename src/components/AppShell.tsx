@@ -1,6 +1,7 @@
 "use client";
 
 import { AppBootSplash } from "@/components/AppBootSplash";
+import { FeedErrorBoundary } from "@/components/FeedErrorBoundary";
 import { NewsFeed } from "@/components/NewsFeed";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { useApp } from "@/context/AppContext";
@@ -21,5 +22,9 @@ export function AppShell({ initialArticles }: AppShellProps) {
     return <OnboardingFlow />;
   }
 
-  return <NewsFeed initialArticles={initialArticles} />;
+  return (
+    <FeedErrorBoundary>
+      <NewsFeed initialArticles={initialArticles} />
+    </FeedErrorBoundary>
+  );
 }

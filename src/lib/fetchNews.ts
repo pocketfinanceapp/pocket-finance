@@ -15,7 +15,10 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
     url.searchParams.set("pageSize", "20");
     url.searchParams.set("apiKey", apiKey);
 
-    let res = await fetch(url.toString(), { next: { revalidate: 300 } });
+    let res = await fetch(url.toString(), {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(8000),
+    });
 
     if (!res.ok) {
       const backup = new URL("https://newsapi.org/v2/everything");
@@ -24,7 +27,10 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       backup.searchParams.set("sortBy", "publishedAt");
       backup.searchParams.set("pageSize", "20");
       backup.searchParams.set("apiKey", apiKey);
-      res = await fetch(backup.toString(), { next: { revalidate: 300 } });
+      res = await fetch(backup.toString(), {
+        next: { revalidate: 300 },
+        signal: AbortSignal.timeout(8000),
+      });
     }
 
     if (!res.ok) return mergeWithDemo([]);
