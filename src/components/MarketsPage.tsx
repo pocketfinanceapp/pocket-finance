@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useApp } from "@/context/AppContext";
 import type { MarketFilter } from "@/lib/filters";
 import {
@@ -13,6 +13,7 @@ import {
   getMarketsByRegion,
   type GlobalMarket,
 } from "@/lib/markets";
+import type { MarketsSnapshot } from "@/context/AppContext";
 import { MarketSparkline } from "./MarketSparkline";
 
 export const MARKETS_LIST_VERSION = "following-cards-v5";
@@ -22,10 +23,26 @@ interface MarketsPageProps {
 }
 
 export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
-  const { followedMarkets, toggleFollowMarket, isFollowingMarket } = useApp();
+  const {
+    followedMarkets,
+    toggleFollowMarket,
+    isFollowingMarket,
+    marketsSnapshot,
+    ensureMarketsLoaded,
+  } = useApp();
 
-  const movers = useMemo(() => countMarketMovers(), []);
-  const session = useMemo(() => getGlobalMarketStatus(), []);
+  useEffect(() => {
+    ensureMarketsLoaded();
+  }, [ensureMarketsLoaded]);
+
+  const snapshot: MarketsSnapshot = marketsSnapshot ?? {
+    markets: [],
+    movers: countMarketMovers(),
+    session: getGlobalMarketStatus(),
+    loaded: false,
+  };
+  const movers = snapshot.movers;
+  const session = snapshot.session;
 
   const followingMarkets = useMemo(
     () =>

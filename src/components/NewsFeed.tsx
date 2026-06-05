@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DEMO_ARTICLES } from "@/lib/newsMapper";
 import { useApp } from "@/context/AppContext";
+import { useNavigationOptional } from "@/context/NavigationContext";
 import {
   buildFeedArticles,
   type FeedMode,
@@ -25,6 +26,9 @@ import { ProfilePage } from "./ProfilePage";
 
 interface NewsFeedProps {
   initialArticles: NewsArticle[];
+  /** When true, shell + bottom nav are provided by TabAppShell */
+  embedded?: boolean;
+  onRegisterCreate?: (openCreate: () => void) => (() => void) | void;
 }
 
 const PANEL_FEED = 1;
@@ -36,7 +40,11 @@ const PULL_REFRESH_PX = 72;
 type Overlay = "profile" | null;
 type LockedAxis = "x" | "y" | null;
 
-export function NewsFeed({ initialArticles }: NewsFeedProps) {
+export function NewsFeed({
+  initialArticles,
+  embedded = false,
+  onRegisterCreate,
+}: NewsFeedProps) {
   const [allArticles] = useState(
     initialArticles.length > 0 ? initialArticles : DEMO_ARTICLES
   );
@@ -79,6 +87,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   const [panelIndex, setPanelIndex] = useState(PANEL_FEED);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const router = useRouter();
+  const navigation = useNavigationOptional();
   const searchParams = useSearchParams();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
@@ -140,6 +149,16 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   const goToFeed = useCallback(() => {
     goToPanel(PANEL_FEED);
   }, [goToPanel]);
+
+  const openCreateSheet = useCallback(() => {
+    goToPanel(PANEL_FEED);
+    setCreateOpen(true);
+  }, [goToPanel]);
+
+  useEffect(() => {
+    if (!onRegisterCreate) return;
+    return onRegisterCreate(openCreateSheet) ?? undefined;
+  }, [onRegisterCreate, openCreateSheet]);
 
   const closeProfile = useCallback(() => {
     router.replace("/", { scroll: false });
@@ -272,8 +291,6 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     [filteredArticles.length, releaseCapture, resetFeedIndex, setFeedIndex]
   );
 
-  const navTab: NavTab = overlay === "profile" ? "profile" : "home";
-
   const trackTransition = isDragging
     ? ""
     : "transition-transform duration-300 ease-out";
@@ -281,18 +298,11 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   const hTransform = `translate3d(calc(-${panelIndex} * 33.333% + ${dragX}px), 0, 0)`;
   const vTransform = `translate3d(0, calc(-${feedIndex} * ${FEED_SLOT_HEIGHT} + ${dragY}px), 0)`;
 
-  return (
-    <MobilePageShell
-      activeTab={navTab}
-      onCreate={() => {
-        goToPanel(PANEL_FEED);
-        setCreateOpen(true);
-      }}
+  const feedContent = (
+    <div
+      className={`relative overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
+      style={{ height: FEED_VIEWPORT_HEIGHT }}
     >
-      <div
-        className={`relative overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
-        style={{ height: FEED_VIEWPORT_HEIGHT }}
-      >
         <div
           ref={trackRef}
           className={`gpu-layer flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
@@ -339,7 +349,8 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
                   data-no-drag
                   onClick={() =>
                     feedMode === "following"
-                      ? router.push("/markets")
+                      ? navigation?.navigate("markets") ??
+                        router.replace("/markets", { scroll: false })
                       : setFilterOpen(true)
                   }
                   className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
@@ -402,7 +413,21 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
           onClose={() => setCreateOpen(false)}
           defaultTicker={article?.ticker}
         />
-      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return feedContent;
+  }
+
+  const navTab: NavTab = overlay === "profile" ? "profile" : "home";
+
+  return (
+    <MobilePageShell
+      activeTab={navTab}
+      onCreate={openCreateSheet}
+    >
+      {feedContent}
     </MobilePageShell>
   );
 }

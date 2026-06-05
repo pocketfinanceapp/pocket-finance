@@ -27,7 +27,21 @@ import {
   saveArticle as dbSaveArticle,
   unsaveArticle as dbUnsaveArticle,
 } from "@/lib/userInteractions";
+import {
+  countMarketMovers,
+  getGlobalMarketStatus,
+  type GlobalMarket,
+  GLOBAL_MARKETS,
+} from "@/lib/markets";
+import { resolveArticleTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
+
+export interface MarketsSnapshot {
+  markets: GlobalMarket[];
+  movers: { up: number; down: number };
+  session: { open: boolean; label: "Markets open" | "Markets closed" };
+  loaded: boolean;
+}
 
 interface AppContextValue {
   ready: boolean;
@@ -35,7 +49,11 @@ interface AppContextValue {
   saveArticle: (article: NewsArticle) => Promise<boolean>;
   unsaveArticle: (articleId: string) => Promise<boolean>;
   isArticleSaved: (articleId: string) => boolean;
-  reloadSavedArticles: () => Promise<void>;
+  reloadSavedArticles: (force?: boolean) => Promise<void>;
+  watchlistLoaded: boolean;
+  ensureWatchlistLoaded: () => void;
+  marketsSnapshot: MarketsSnapshot | null;
+  ensureMarketsLoaded: () => void;
   followedMarkets: MarketFilter[];
   toggleFollowMarket: (m: MarketFilter) => void;
   isFollowingMarket: (m: MarketFilter) => boolean;
@@ -83,10 +101,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [feedIndex, setFeedIndexState] = useState(0);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appUserId, setAppUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setReady(true);
-  }, []);
+  const [watchlistLoaded, setWatchlistLoaded] = useState(false);
+  const [marketsSnapshot, setMarketsSnapshot] =
+    useState<MarketsSnapshot | null>(null);
 
   const reloadProfileStats = useCallback(async () => {
     if (!appUserId) {
@@ -102,25 +119,58 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLikedArticlesCount(liked);
   }, [appUserId]);
 
-  const reloadSavedArticles = useCallback(async () => {
-    if (!appUserId) {
-      setSavedArticles([]);
-      return;
-    }
-    const articles = await fetchSavedArticles(appUserId);
-    setSavedArticles(articles);
-  }, [appUserId]);
+  const reloadSavedArticles = useCallback(
+    async (force = false) => {
+      if (!appUserId) {
+        setSavedArticles([]);
+        setWatchlistLoaded(false);
+        return;
+      }
+      if (!force && watchlistLoaded) return;
+      const articles = await fetchSavedArticles(appUserId);
+      setSavedArticles(articles);
+      setWatchlistLoaded(true);
+    },
+    [appUserId, watchlistLoaded]
+  );
+
+  const ensureWatchlistLoaded = useCallback(() => {
+    if (!appUserId || watchlistLoaded) return;
+    void reloadSavedArticles(true);
+  }, [appUserId, watchlistLoaded, reloadSavedArticles]);
+
+  const ensureMarketsLoaded = useCallback(() => {
+    setMarketsSnapshot((prev) => {
+      if (prev?.loaded) return prev;
+      return {
+        markets: GLOBAL_MARKETS,
+        movers: countMarketMovers(),
+        session: getGlobalMarketStatus(),
+        loaded: true,
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    setReady(true);
+    ensureMarketsLoaded();
+  }, [ensureMarketsLoaded]);
 
   const syncAppUser = useCallback(
     async (userId: string | null) => {
-      setAppUserId(userId);
       if (!userId) {
+        setAppUserId(null);
         setOnboardingComplete(false);
         setSavedArticles([]);
+        setWatchlistLoaded(false);
         setStoriesRead(0);
         setLikedArticlesCount(0);
         return;
       }
+
+      const alreadySynced = appUserId === userId && watchlistLoaded;
+      setAppUserId(userId);
+
       try {
         const complete = isOnboardingComplete(userId);
         setOnboardingComplete(complete);
@@ -134,8 +184,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch {
         setOnboardingComplete(false);
       }
+
+      if (alreadySynced) return;
+
       const articles = await fetchSavedArticles(userId);
       setSavedArticles(articles);
+      setWatchlistLoaded(true);
 
       let stories = await fetchUserStoriesRead(userId);
       try {
@@ -153,7 +207,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setStoriesRead(stories);
       setLikedArticlesCount(liked);
     },
-    []
+    [appUserId, watchlistLoaded]
   );
 
   const saveArticle = useCallback(
@@ -161,10 +215,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!appUserId) return false;
       if (savedArticles.some((s) => s.articleId === article.id)) return true;
 
+      const optimistic: SavedArticleEntry = {
+        id: `optimistic-${article.id}`,
+        articleId: article.id,
+        articleTitle: article.headline,
+        articleUrl: article.sourceUrl,
+        ticker: resolveArticleTicker(article),
+        savedAt: new Date().toISOString(),
+      };
+      setSavedArticles((prev) => [optimistic, ...prev]);
+      setWatchlistLoaded(true);
+
       const ok = await dbSaveArticle(appUserId, article);
-      if (ok) {
-        const articles = await fetchSavedArticles(appUserId);
-        setSavedArticles(articles);
+      if (!ok) {
+        setSavedArticles((prev) =>
+          prev.filter((s) => s.articleId !== article.id)
+        );
       }
       return ok;
     },
@@ -268,6 +334,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       unsaveArticle,
       isArticleSaved,
       reloadSavedArticles,
+      watchlistLoaded,
+      ensureWatchlistLoaded,
+      marketsSnapshot,
+      ensureMarketsLoaded,
       followedMarkets,
       toggleFollowMarket,
       isFollowingMarket,
@@ -299,6 +369,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       unsaveArticle,
       isArticleSaved,
       reloadSavedArticles,
+      watchlistLoaded,
+      ensureWatchlistLoaded,
+      marketsSnapshot,
+      ensureMarketsLoaded,
       followedMarkets,
       toggleFollowMarket,
       isFollowingMarket,

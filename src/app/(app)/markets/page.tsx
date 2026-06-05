@@ -1,5 +1,4 @@
-import { MarketsScreen } from "@/components/MarketsScreen";
-
+/** Markets content is rendered by TabAppShell in the app layout */
 export default function MarketsRoute() {
-  return <MarketsScreen />;
+  return null;
 }

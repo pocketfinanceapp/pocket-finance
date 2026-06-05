@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart2, Bookmark, Plus, User } from "lucide-react";
+import { useNavigationOptional } from "@/context/NavigationContext";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 
 export type NavTab = "home" | "markets" | "create" | "watchlist" | "profile";
@@ -20,7 +21,8 @@ function tabFromPath(pathname: string): NavTab {
 export function BottomNav({ active, onCreate }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const resolvedActive = active ?? tabFromPath(pathname);
+  const navigation = useNavigationOptional();
+  const resolvedActive = active ?? navigation?.navTab ?? tabFromPath(pathname);
 
   const homeActive = resolvedActive === "home";
   const marketsActive = resolvedActive === "markets";
@@ -28,24 +30,29 @@ export function BottomNav({ active, onCreate }: BottomNavProps) {
   const profileActive = resolvedActive === "profile";
 
   const navigate = (tab: NavTab) => {
+    if (navigation) {
+      navigation.navigate(tab);
+      return;
+    }
+
     switch (tab) {
       case "home":
-        router.push("/");
+        router.replace("/", { scroll: false });
         break;
       case "markets":
-        router.push("/markets");
+        router.replace("/markets", { scroll: false });
         break;
       case "watchlist":
-        router.push("/watchlist");
+        router.replace("/watchlist", { scroll: false });
         break;
       case "profile":
-        router.push("/?tab=profile");
+        router.replace("/?tab=profile", { scroll: false });
         break;
       case "create":
         if (pathname === "/" && onCreate) {
           onCreate();
         } else {
-          router.push("/?sheet=create");
+          router.replace("/?sheet=create", { scroll: false });
         }
         break;
     }
