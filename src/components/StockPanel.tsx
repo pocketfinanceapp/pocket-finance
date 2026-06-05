@@ -92,7 +92,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
           <p className="text-sm text-zinc-400">{stock.name}</p>
         </div>
 
-        <nav className="mt-4 flex gap-5 border-b border-white/[0.08]">
+        <nav className="mt-4 flex w-full border-b border-white/[0.08]">
           {TABS.map((tab) => (
             <button
               key={tab}
@@ -100,7 +100,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
               data-no-drag
               onPointerDown={stop}
               onClick={() => setActiveTab(tab)}
-              className={`relative pb-2.5 text-sm font-medium ${
+              className={`relative flex-1 pb-2.5 text-center text-sm font-medium ${
                 activeTab === tab ? "text-white" : "text-zinc-500"
               }`}
             >

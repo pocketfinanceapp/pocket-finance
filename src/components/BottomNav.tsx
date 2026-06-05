@@ -17,7 +17,7 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-mobile -translate-x-1/2 border-t border-white/[0.06] bg-[#0a0a0a]/95 backdrop-blur-xl"
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-mobile -translate-x-1/2 border-t border-white/[0.06] bg-black"
       data-no-drag
       data-interactive
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}

@@ -7,13 +7,13 @@ import {
   buildFeedArticles,
   type FeedMode,
 } from "@/lib/filterArticles";
-import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 import { isInteractiveTarget } from "@/lib/gesture";
 import { animateSpring, SPRING_SNAP } from "@/lib/spring";
 import { resolveSnapIndex } from "@/lib/snap";
 import type { MarketFilter } from "@/lib/filters";
 import type { NewsArticle } from "@/lib/types";
 import { BottomNav, type NavTab } from "./BottomNav";
+import { OverlayShell } from "./OverlayShell";
 import { CommentSheet } from "./CommentSheet";
 import { CreateThoughtSheet } from "./CreateThoughtSheet";
 import { FeedCard } from "./FeedCard";
@@ -403,7 +403,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     >
       <div
         ref={trackRef}
-        className={`gpu-layer flex h-full touch-none ${!gesturesEnabled ? "pointer-events-none" : ""}`}
+        className={`gpu-layer flex h-full touch-none ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "invisible" : ""}`}
         style={{
           width: size.w ? size.w * 3 : "300%",
           transform: `translate3d(${hTranslate}px, 0, 0)`,
@@ -491,34 +491,19 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       </div>
 
       {overlay === "markets" && (
-        <div className="absolute inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0a0a]">
-          <div
-            className="flex min-h-0 flex-1 flex-col"
-            style={{ paddingBottom: BOTTOM_NAV_HEIGHT }}
-          >
-            <MarketsPage onOpenMarketFeed={openMarketFeed} />
-          </div>
-        </div>
+        <OverlayShell>
+          <MarketsPage onOpenMarketFeed={openMarketFeed} />
+        </OverlayShell>
       )}
       {overlay === "watchlist" && (
-        <div className="absolute inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0a0a]">
-          <div
-            className="flex min-h-0 flex-1 flex-col"
-            style={{ paddingBottom: BOTTOM_NAV_HEIGHT }}
-          >
-            <WatchlistPage onClose={() => setOverlay(null)} />
-          </div>
-        </div>
+        <OverlayShell>
+          <WatchlistPage onClose={() => setOverlay(null)} />
+        </OverlayShell>
       )}
       {overlay === "profile" && (
-        <div className="absolute inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0a0a]">
-          <div
-            className="flex min-h-0 flex-1 flex-col"
-            style={{ paddingBottom: BOTTOM_NAV_HEIGHT }}
-          >
-            <ProfilePage onClose={() => setOverlay(null)} />
-          </div>
-        </div>
+        <OverlayShell>
+          <ProfilePage onClose={() => setOverlay(null)} />
+        </OverlayShell>
       )}
 
       <CommentSheet

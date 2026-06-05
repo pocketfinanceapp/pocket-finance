@@ -27,7 +27,7 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
   return (
     <div
       data-markets-list={MARKETS_LIST_VERSION}
-      className="flex h-full min-h-0 flex-col bg-[#0a0a0a] text-white"
+      className="flex h-full min-h-0 flex-col bg-black text-white"
     >
       <header className="shrink-0 border-b border-white/10 px-4 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
         <h1 className="text-[28px] font-bold tracking-tight">Markets</h1>
