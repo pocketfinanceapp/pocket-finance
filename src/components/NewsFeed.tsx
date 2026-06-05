@@ -440,8 +440,8 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
               {filteredArticles.map((a, i) => (
                 <div
                   key={a.id}
-                  className="h-[100dvh] w-full shrink-0"
-                  style={size.h > 0 ? { height: size.h } : undefined}
+                  className="h-full w-full shrink-0"
+                  style={size.h > 0 ? { height: size.h } : { height: "100%" }}
                 >
                   <FeedCard
                     article={a}
