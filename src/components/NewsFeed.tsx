@@ -31,6 +31,7 @@ const PANEL_FEED = 1;
 const AXIS_LOCK = 6;
 const SWIPE_THRESHOLD_PX = 55;
 const SWIPE_VELOCITY = 0.35;
+const PULL_REFRESH_PX = 72;
 
 type Overlay = "profile" | null;
 type LockedAxis = "x" | "y" | null;
@@ -45,6 +46,9 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     sectorFilters,
     sectorInterests,
     searchQuery,
+    feedIndex,
+    setFeedIndex,
+    resetFeedIndex,
     incrementStoriesRead,
   } = useApp();
 
@@ -72,7 +76,6 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     ]
   );
 
-  const [feedIndex, setFeedIndex] = useState(0);
   const [panelIndex, setPanelIndex] = useState(PANEL_FEED);
   const [overlay, setOverlay] = useState<Overlay>(null);
   const router = useRouter();
@@ -94,7 +97,7 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   const last = useRef({ x: 0, y: 0, t: 0 });
   const panelIndexRef = useRef(panelIndex);
   const feedIndexRef = useRef(feedIndex);
-  const prevFeedIndex = useRef(-1);
+  const prevFeedIndex = useRef(feedIndex);
 
   panelIndexRef.current = panelIndex;
   feedIndexRef.current = feedIndex;
@@ -114,14 +117,9 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
   }, [searchParams, router]);
 
   useEffect(() => {
-    setFeedIndex(0);
-    setDragY(0);
-  }, [marketFilters, sectorFilters, searchQuery, feedMode]);
-
-  useEffect(() => {
     const max = Math.max(0, filteredArticles.length - 1);
     if (feedIndex > max) setFeedIndex(max);
-  }, [filteredArticles.length, feedIndex]);
+  }, [filteredArticles.length, feedIndex, setFeedIndex]);
 
   useEffect(() => {
     if (
@@ -254,16 +252,24 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
         const velocity = dy / dt;
         const maxIdx = Math.max(0, filteredArticles.length - 1);
         let next = feedIndexRef.current;
-        if (velocity < -SWIPE_VELOCITY || dy < -SWIPE_THRESHOLD_PX) {
+
+        if (
+          next === 0 &&
+          panelIndexRef.current === PANEL_FEED &&
+          (dy > PULL_REFRESH_PX || velocity > SWIPE_VELOCITY * 1.5)
+        ) {
+          resetFeedIndex();
+        } else if (velocity < -SWIPE_VELOCITY || dy < -SWIPE_THRESHOLD_PX) {
           next = Math.min(maxIdx, next + 1);
+          setFeedIndex(next);
         } else if (velocity > SWIPE_VELOCITY || dy > SWIPE_THRESHOLD_PX) {
           next = Math.max(0, next - 1);
+          setFeedIndex(next);
         }
-        setFeedIndex(next);
         setDragY(0);
       }
     },
-    [filteredArticles.length, releaseCapture]
+    [filteredArticles.length, releaseCapture, resetFeedIndex, setFeedIndex]
   );
 
   const navTab: NavTab = overlay === "profile" ? "profile" : "home";

@@ -51,6 +51,9 @@ interface AppContextValue {
   setSearchQuery: (q: string) => void;
   storiesRead: number;
   likedArticlesCount: number;
+  feedIndex: number;
+  setFeedIndex: (index: number) => void;
+  resetFeedIndex: () => void;
   incrementStoriesRead: () => void;
   reloadProfileStats: () => Promise<void>;
   onboardingComplete: boolean;
@@ -77,6 +80,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [storiesRead, setStoriesRead] = useState(0);
   const [likedArticlesCount, setLikedArticlesCount] = useState(0);
+  const [feedIndex, setFeedIndexState] = useState(0);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appUserId, setAppUserId] = useState<string | null>(null);
 
@@ -240,6 +244,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [setFollowedMarkets, appUserId]
   );
 
+  const setFeedIndex = useCallback((index: number) => {
+    setFeedIndexState(Math.max(0, index));
+  }, []);
+
+  const resetFeedIndex = useCallback(() => {
+    setFeedIndexState(0);
+  }, []);
+
   const incrementStoriesRead = useCallback(() => {
     setStoriesRead((n) => n + 1);
     if (!appUserId) return;
@@ -271,6 +283,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSearchQuery,
       storiesRead,
       likedArticlesCount,
+      feedIndex,
+      setFeedIndex,
+      resetFeedIndex,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,
@@ -297,6 +312,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       searchQuery,
       storiesRead,
       likedArticlesCount,
+      feedIndex,
+      setFeedIndex,
+      resetFeedIndex,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,
