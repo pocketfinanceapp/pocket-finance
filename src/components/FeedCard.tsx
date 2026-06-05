@@ -89,9 +89,10 @@ export function FeedCard({
         onError={() => setImgSrc(FALLBACK_IMAGE)}
       />
 
-      {/* Premium vignette */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-black/75" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/20" />
+      {/* Uniform base + vignette — consistent on photos, charts, screenshots */}
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-black/45" />
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/65 via-black/40 to-black/80" />
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-black/35 via-black/25 to-black/35" />
 
       {/* Top tabs + optional filter strip */}
       <header className="absolute left-0 right-0 top-0 z-20 flex flex-col pt-[max(0.75rem,env(safe-area-inset-top))]">

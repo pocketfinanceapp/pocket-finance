@@ -6,7 +6,7 @@ import { ArrowLeft, Bookmark, MoreHorizontal } from "lucide-react";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
-import { PocketPublisherBadge } from "./PocketLogo";
+import { SourceBadge } from "./SourceBadge";
 
 interface ArticlePanelProps {
   article: NewsArticle;
@@ -68,9 +68,13 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
         </h1>
 
         <div className="mt-4">
-          <PocketPublisherBadge
-            compact
+          <SourceBadge
+            sourceName={article.sourceName}
+            sourceId={article.sourceId}
+            sourceUrl={article.sourceUrl}
+            publishedAt={article.publishedAt}
             timeLabel={`${formatDate(article.publishedAt)} · ${readTime(article.body)}`}
+            size="sm"
           />
         </div>
 
