@@ -15,11 +15,10 @@ import {
 export const MARKETS_LIST_VERSION = "slim-rows-v3";
 
 interface MarketsPageProps {
-  onClose: () => void;
   onOpenMarketFeed: (market: MarketFilter) => void;
 }
 
-export function MarketsPage({ onClose, onOpenMarketFeed }: MarketsPageProps) {
+export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
   const { followedMarkets, toggleFollowMarket, isFollowingMarket } = useApp();
 
   const following = GLOBAL_MARKETS.filter((m) => followedMarkets.includes(m.id));
@@ -31,18 +30,10 @@ export function MarketsPage({ onClose, onOpenMarketFeed }: MarketsPageProps) {
       className="flex h-full min-h-0 flex-col bg-black text-white"
     >
       <header className="shrink-0 border-b border-white/10 px-4 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
-        <button
-          type="button"
-          data-no-drag
-          onClick={onClose}
-          className="text-[15px] text-[#0a84ff]"
-        >
-          Back
-        </button>
-        <h1 className="mt-2 text-[28px] font-bold tracking-tight">Markets</h1>
+        <h1 className="text-[28px] font-bold tracking-tight">Markets</h1>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pb-28">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-2">
         {following.length > 0 && (
           <>
             <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">

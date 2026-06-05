@@ -7,7 +7,7 @@ import {
   buildFeedArticles,
   type FeedMode,
 } from "@/lib/filterArticles";
-import { getMarketById } from "@/lib/markets";
+import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 import { isInteractiveTarget } from "@/lib/gesture";
 import { animateSpring, SPRING_SNAP } from "@/lib/spring";
 import { resolveSnapIndex } from "@/lib/snap";
@@ -392,11 +392,6 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
     [filteredArticles.length, releaseCapture, rubberBand, size.h, size.w, springHTo, springVTo]
   );
 
-  const hasFilters =
-    marketFilters.length > 0 ||
-    sectorFilters.length > 0 ||
-    searchQuery.length > 0;
-
   return (
     <div
       ref={viewportRef}
@@ -426,38 +421,6 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
           className="relative h-full shrink-0 touch-none overflow-hidden"
           style={{ width: size.w || "33.333%", touchAction: "none" }}
         >
-          {hasFilters && (
-            <div
-              className="absolute left-0 right-0 top-[max(3.5rem,env(safe-area-inset-top))] z-30 flex gap-1.5 overflow-x-auto px-3 py-1 scrollbar-hide"
-              data-no-drag
-            >
-              {searchQuery && (
-                <span className="shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs text-white">
-                  &quot;{searchQuery}&quot;
-                </span>
-              )}
-              {marketFilters.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  data-no-drag
-                  onClick={() => setMarketFilters([])}
-                  className="shrink-0 rounded-full bg-pocket-blue/30 px-3 py-1 text-xs font-medium text-white active:bg-pocket-blue/50"
-                >
-                  {getMarketById(m)?.name ?? m} ×
-                </button>
-              ))}
-              {sectorFilters.map((s) => (
-                <span
-                  key={s}
-                  className="shrink-0 rounded-full bg-pocket-teal/20 px-3 py-1 text-xs font-medium text-pocket-teal"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          )}
-
           {filteredArticles.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center px-8 text-center">
               <p className="text-lg font-semibold text-white">
@@ -523,21 +486,28 @@ export function NewsFeed({ initialArticles }: NewsFeedProps) {
       </div>
 
       {overlay === "markets" && (
-        <div className="absolute inset-0 z-[60] flex flex-col bg-black">
-          <MarketsPage
-            onClose={() => {
-              setOverlay(null);
-              setNavTab("home");
-            }}
-            onOpenMarketFeed={openMarketFeed}
-          />
+        <div
+          className="absolute inset-x-0 top-0 z-40 flex flex-col bg-black"
+          style={{ bottom: BOTTOM_NAV_HEIGHT }}
+        >
+          <MarketsPage onOpenMarketFeed={openMarketFeed} />
         </div>
       )}
       {overlay === "watchlist" && (
-        <WatchlistPage onClose={() => { setOverlay(null); setNavTab("home"); }} />
+        <div
+          className="absolute inset-x-0 top-0 z-40 flex flex-col bg-[#0a0a0a]"
+          style={{ bottom: BOTTOM_NAV_HEIGHT }}
+        >
+          <WatchlistPage onClose={() => setOverlay(null)} />
+        </div>
       )}
       {overlay === "profile" && (
-        <ProfilePage onClose={() => { setOverlay(null); setNavTab("home"); }} />
+        <div
+          className="absolute inset-x-0 top-0 z-40 flex flex-col bg-[#0a0a0a]"
+          style={{ bottom: BOTTOM_NAV_HEIGHT }}
+        >
+          <ProfilePage onClose={() => setOverlay(null)} />
+        </div>
       )}
 
       <CommentSheet

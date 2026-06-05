@@ -16,6 +16,7 @@ import { CompanyLogo } from "./CompanyLogo";
 import { PocketMarkIcon } from "./PocketLogo";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
+import { getMarketById } from "@/lib/markets";
 import { getStockProfile } from "@/lib/stockData";
 
 interface FeedCardProps {
@@ -39,7 +40,22 @@ export function FeedCard({
   onOpenFilter,
 }: FeedCardProps) {
   const stock = getStockProfile(article.ticker);
-  const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useApp();
+  const {
+    addToWatchlist,
+    removeFromWatchlist,
+    isInWatchlist,
+    marketFilters,
+    sectorFilters,
+    searchQuery,
+    clearFilters,
+  } = useApp();
+
+  const filterLabels = [
+    ...sectorFilters,
+    ...marketFilters.map((m) => getMarketById(m)?.name ?? m),
+    ...(searchQuery.trim() ? [searchQuery.trim()] : []),
+  ];
+  const hasActiveFilters = filterLabels.length > 0;
   const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
   const [liked, setLiked] = useState(false);
   const saved = isInWatchlist(article.ticker);
@@ -73,56 +89,77 @@ export function FeedCard({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/65 via-black/10 to-black/95" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/25" />
 
-      {/* Top tabs */}
-      <header className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="flex w-10 shrink-0 items-center justify-start" data-no-drag>
-          <PocketMarkIcon size={28} glow="normal" />
+      {/* Top tabs + optional filter strip */}
+      <header className="absolute left-0 right-0 top-0 z-20 flex flex-col pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="flex items-center justify-between px-4 pb-1">
+          <div className="flex w-10 shrink-0 items-center justify-start" data-no-drag>
+            <PocketMarkIcon size={28} glow="normal" />
+          </div>
+          <nav className="flex gap-7 text-[13px] font-semibold tracking-wide">
+            <button
+              type="button"
+              data-no-drag
+              onPointerDown={stop}
+              onClick={() => onFeedModeChange("forYou")}
+              className={`pb-1 ${
+                feedMode === "forYou"
+                  ? "border-b-2 border-white text-white"
+                  : "text-white/40"
+              }`}
+            >
+              For You
+            </button>
+            <button
+              type="button"
+              data-no-drag
+              onPointerDown={stop}
+              onClick={() => onFeedModeChange("following")}
+              className={`pb-1 ${
+                feedMode === "following"
+                  ? "border-b-2 border-white text-white"
+                  : "text-white/40"
+              }`}
+            >
+              Following
+            </button>
+          </nav>
+          <button
+            type="button"
+            data-no-drag
+            onPointerDown={stop}
+            onClick={onOpenFilter}
+            className="flex h-11 w-11 items-center justify-center rounded-full text-white/90 active:bg-white/10"
+            aria-label="Search"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7" strokeWidth="2" />
+              <path strokeWidth="2" d="M20 20l-4-4" />
+            </svg>
+          </button>
         </div>
-        <nav className="flex gap-7 text-[13px] font-semibold tracking-wide">
-          <button
-            type="button"
-            data-no-drag
-            onPointerDown={stop}
-            onClick={() => onFeedModeChange("forYou")}
-            className={`pb-1 ${
-              feedMode === "forYou"
-                ? "border-b-2 border-white text-white"
-                : "text-white/40"
-            }`}
-          >
-            For You
-          </button>
-          <button
-            type="button"
-            data-no-drag
-            onPointerDown={stop}
-            onClick={() => onFeedModeChange("following")}
-            className={`pb-1 ${
-              feedMode === "following"
-                ? "border-b-2 border-white text-white"
-                : "text-white/40"
-            }`}
-          >
-            Following
-          </button>
-        </nav>
-        <button
-          type="button"
-          data-no-drag
-          onPointerDown={stop}
-          onClick={onOpenFilter}
-          className="flex h-11 w-11 items-center justify-center rounded-full text-white/90 active:bg-white/10"
-          aria-label="Search"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="7" strokeWidth="2" />
-            <path strokeWidth="2" d="M20 20l-4-4" />
-          </svg>
-        </button>
+        {hasActiveFilters && (
+          <div className="flex justify-center px-4 pb-2" data-no-drag>
+            <button
+              type="button"
+              onPointerDown={stop}
+              onClick={clearFilters}
+              className="max-w-full truncate rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[11px] font-medium text-zinc-400 backdrop-blur-sm active:bg-white/10"
+            >
+              {filterLabels.join(" · ")}
+              <span className="ml-1.5 text-zinc-500">×</span>
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Market badge */}
-      <div className="absolute left-4 top-[max(4.25rem,calc(env(safe-area-inset-top)+3.25rem))] z-20 flex items-center gap-2 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur-md">
+      <div
+        className={`absolute left-4 z-20 flex items-center gap-2 rounded-full bg-black/35 px-2.5 py-1 backdrop-blur-md ${
+          hasActiveFilters
+            ? "top-[max(5.75rem,calc(env(safe-area-inset-top)+4.75rem))]"
+            : "top-[max(4.25rem,calc(env(safe-area-inset-top)+3.25rem))]"
+        }`}
+      >
         <span className="text-xs font-bold tracking-widest text-pocket-blue">
           {article.market}
         </span>
