@@ -14,7 +14,12 @@ import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
 import { PocketMarkIcon } from "./PocketLogo";
-import { cleanArticleTitle } from "@/lib/sourceBranding";
+import {
+  hasUsableFeedImage,
+  isPlainFeedImage,
+  sourceGradientBackground,
+} from "@/lib/feedImage";
+import { cleanArticleTitle, resolveSourceBrand } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
@@ -34,9 +39,6 @@ interface FeedCardProps {
   onOpenFilter: () => void;
   commentRefreshKey?: number;
 }
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80";
 
 const CARD_OVERLAY =
   "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.92) 100%)";
@@ -71,16 +73,40 @@ export function FeedCard({
     sectorFilters,
     searchQuery
   );
-  const [imgSrc, setImgSrc] = useState(article.imageUrl || FALLBACK_IMAGE);
+  const sourceBrand = resolveSourceBrand(
+    article.sourceName,
+    article.sourceId,
+    article.sourceUrl
+  );
+  const usableInitial = hasUsableFeedImage(article.imageUrl);
+  const [useGradient, setUseGradient] = useState(!usableInitial);
+  const [imgSrc, setImgSrc] = useState(
+    usableInitial ? article.imageUrl : ""
+  );
   const saved = isArticleSaved(article.id);
   const [commentCount, setCommentCount] = useState(article.comments);
   const [toast, setToast] = useState<string | null>(null);
   const displayTicker = getArticleDisplayTicker(article);
 
   useEffect(() => {
+    const usable = hasUsableFeedImage(article.imageUrl);
+    setUseGradient(!usable);
+    setImgSrc(usable ? article.imageUrl : "");
+  }, [article.id, article.imageUrl]);
+
+  useEffect(() => {
     if (!active) return;
     void fetchCommentCount(article.id).then(setCommentCount);
   }, [active, article.id, commentRefreshKey]);
+
+  const handleImageLoad = useCallback(
+    async (img: HTMLImageElement) => {
+      if (useGradient) return;
+      const plain = await isPlainFeedImage(img);
+      if (plain) setUseGradient(true);
+    },
+    [useGradient]
+  );
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -91,16 +117,28 @@ export function FeedCard({
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
-      <Image
-        src={imgSrc}
-        alt=""
-        fill
-        className="absolute inset-0 h-full w-full object-cover brightness-[0.92] contrast-[1.05]"
-        sizes="100vw"
-        unoptimized
-        priority={active}
-        onError={() => setImgSrc(FALLBACK_IMAGE)}
-      />
+      {useGradient ? (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: sourceGradientBackground(sourceBrand.color),
+          }}
+        />
+      ) : (
+        <Image
+          src={imgSrc}
+          alt=""
+          fill
+          className="absolute inset-0 h-full w-full object-cover brightness-[0.92] contrast-[1.05]"
+          sizes="100vw"
+          unoptimized
+          priority={active}
+          onLoad={(e) => {
+            void handleImageLoad(e.currentTarget);
+          }}
+          onError={() => setUseGradient(true)}
+        />
+      )}
 
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
@@ -254,16 +292,13 @@ export function FeedCard({
           bottom: "16px",
           left: 0,
           right: 0,
-          padding: "0 20px",
+          padding: "0 80px 0 20px",
         }}
       >
         <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
           {cleanArticleTitle(article.headline)}
         </h1>
-        <p
-          className="mt-2 line-clamp-2 text-[14px] leading-snug text-white/70"
-          style={{ paddingRight: "80px" }}
-        >
+        <p className="mt-2 line-clamp-2 text-[14px] leading-snug text-white/70">
           {article.subheading}
         </p>
 

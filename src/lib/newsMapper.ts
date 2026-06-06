@@ -1,5 +1,6 @@
 import { SECTOR_FILTERS } from "./filters";
 import type { MarketExchange, NewsArticle, Sector } from "./types";
+import { hasUsableFeedImage } from "./feedImage";
 import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
 import { inferTickerFromText } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
@@ -65,7 +66,7 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
     headline: title,
     subheading: description,
     body,
-    imageUrl: raw.urlToImage || FALLBACK_IMAGE,
+    imageUrl: hasUsableFeedImage(raw.urlToImage) ? raw.urlToImage! : "",
     market: ROTATING_MARKETS[index % ROTATING_MARKETS.length] ?? meta.market,
     sector: assignSector(meta.sector, index),
     ticker: meta.ticker,
