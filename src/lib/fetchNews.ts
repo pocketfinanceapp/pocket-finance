@@ -6,18 +6,25 @@ const FINANCE_QUERY =
   "stocks OR markets OR earnings OR Fed OR investing OR shares OR NYSE OR NASDAQ OR ASX OR economy OR finance OR trading OR crypto OR bitcoin";
 
 const EXCLUDED_QUERY =
-  "accident OR accidents OR crime OR sports OR entertainment OR weather OR NFL OR NBA OR MLB OR NHL OR FIFA OR soccer OR football OR basketball OR baseball OR hockey OR tennis OR golf OR Olympics OR quarterback OR touchdown OR MVP OR playoff OR championship";
+  "accident OR accidents OR crime OR sports OR entertainment OR weather OR NFL OR NBA OR MLB OR NHL OR FIFA OR soccer OR football OR basketball OR baseball OR hockey OR tennis OR golf OR Olympics OR quarterback OR touchdown OR MVP OR playoff OR championship OR military OR troops OR war OR missile OR earthquake OR hurricane OR shooting OR gov.uk OR researchbuzz OR buzzfeed OR gizmodo OR mashable";
 
 interface NewsApiArticle {
   title?: string;
   description?: string | null;
+  url?: string;
+  content?: string | null;
+  source?: { id?: string | null; name?: string };
 }
 
 function isFinanceArticle(article: NewsApiArticle): boolean {
-  return !isExcludedArticle(
-    article.title ?? "",
-    article.description ?? ""
-  );
+  return !isExcludedArticle({
+    title: article.title ?? "",
+    description: article.description ?? "",
+    url: article.url ?? "",
+    sourceName: article.source?.name ?? "",
+    sourceId: article.source?.id ?? null,
+    content: article.content ?? "",
+  });
 }
 
 export async function fetchNewsArticles(): Promise<NewsArticle[]> {
