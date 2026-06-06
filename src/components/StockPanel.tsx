@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { ChartRange, NewsArticle } from "@/lib/types";
 import { getStockProfile } from "@/lib/stockData";
-import { getArticleDisplayTicker } from "@/lib/tickerMap";
+import { isPrivateTicker } from "@/lib/privateTickers";
+import { getArticleDisplayTicker, getTickerMetaBySymbol } from "@/lib/tickerMap";
+import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { PriceChart } from "./PriceChart";
+import { SourceBadge } from "./SourceBadge";
 
 interface StockPanelProps {
   article: NewsArticle;
@@ -19,13 +23,16 @@ const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 const ETORO_URL = "https://www.etoro.com/";
 
 export function StockPanel({ article, onBack }: StockPanelProps) {
-  const stock = getStockProfile(getArticleDisplayTicker(article));
+  const ticker = getArticleDisplayTicker(article);
+  const privateCompany = isPrivateTicker(ticker);
+  const stock = privateCompany ? null : getStockProfile(ticker);
+  const meta = getTickerMetaBySymbol(ticker);
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const saved = isArticleSaved(article.id);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
   const [toast, setToast] = useState<string | null>(null);
-  const isUp = stock.changePercent >= 0;
+  const isUp = stock ? stock.changePercent >= 0 : false;
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -75,8 +82,8 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
               onPointerDown={stop}
               onClick={() => {
                 void navigator.share?.({
-                  title: stock.ticker,
-                  url: ETORO_URL,
+                  title: ticker,
+                  url: article.sourceUrl,
                 });
               }}
               className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
@@ -88,34 +95,49 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
           </div>
         </div>
 
-        <div className="mt-1">
-          <h1 className="text-xl font-bold">{stock.ticker}</h1>
-          <p className="text-sm text-zinc-400">{stock.name}</p>
+        <div className="mt-1 flex items-start gap-3">
+          <CompanyLogo ticker={ticker} color={meta.logoColor} size={44} />
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-bold">{ticker}</h1>
+            <p className="text-sm text-zinc-400">{meta.companyName}</p>
+            {privateCompany && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-zinc-700/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-zinc-300">
+                  Private Company
+                </span>
+                <span className="text-sm text-zinc-500">Not publicly traded</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <nav className="mt-4 flex w-full border-b border-white/[0.08]">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              data-no-drag
-              onPointerDown={stop}
-              onClick={() => setActiveTab(tab)}
-              className={`relative flex-1 pb-2.5 text-center text-sm font-medium ${
-                activeTab === tab ? "text-white" : "text-zinc-500"
-              }`}
-            >
-              {tab}
-              {activeTab === tab && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
-              )}
-            </button>
-          ))}
-        </nav>
+        {!privateCompany && (
+          <nav className="mt-4 flex w-full border-b border-white/[0.08]">
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                data-no-drag
+                onPointerDown={stop}
+                onClick={() => setActiveTab(tab)}
+                className={`relative flex-1 pb-2.5 text-center text-sm font-medium ${
+                  activeTab === tab ? "text-white" : "text-zinc-500"
+                }`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
+                )}
+              </button>
+            ))}
+          </nav>
+        )}
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 pb-32">
-        {activeTab === "Overview" ? (
+        {privateCompany ? (
+          <PrivateCompanyNews article={article} />
+        ) : activeTab === "Overview" && stock ? (
           <>
             <div className="mt-4">
               <p className="text-3xl font-bold tracking-tight">
@@ -222,6 +244,62 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         </div>
       )}
     </div>
+  );
+}
+
+function PrivateCompanyNews({ article }: { article: NewsArticle }) {
+  return (
+    <section className="mt-6">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        News
+      </h2>
+
+      <article className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+        <h3 className="text-lg font-bold leading-snug">{article.headline}</h3>
+
+        {article.subheading && (
+          <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+            {article.subheading}
+          </p>
+        )}
+
+        <div className="mt-3 opacity-80">
+          <SourceBadge
+            sourceName={article.sourceName}
+            sourceId={article.sourceId}
+            sourceUrl={article.sourceUrl}
+            publishedAt={article.publishedAt}
+            timeLabel={`${formatDate(article.publishedAt)} · ${readTime(article.body)}`}
+            size="sm"
+          />
+        </div>
+
+        {article.imageUrl && (
+          <div className="relative mt-4 aspect-[16/10] w-full overflow-hidden rounded-xl">
+            <Image
+              src={article.imageUrl}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="(max-width: 430px) 100vw"
+              unoptimized
+            />
+          </div>
+        )}
+
+        <a
+          href={article.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-no-drag
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.04] py-3 text-sm font-semibold text-white transition-colors active:scale-[0.98] active:bg-white/[0.08]"
+          style={{ touchAction: "manipulation" }}
+        >
+          Read full article
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      </article>
+    </section>
   );
 }
 
