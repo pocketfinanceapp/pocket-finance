@@ -165,47 +165,49 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
               <Stat label="Dividend Yield" value={stock.dividendYield} />
             </div>
 
-            <div className="mt-8">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold">Competitors</h2>
-                <span className="bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-sm font-medium text-transparent">
-                  View all
-                </span>
-              </div>
-              <ul className="mt-3 divide-y divide-white/[0.08]">
-                {stock.competitors.map((c) => (
-                  <li
-                    key={c.ticker}
-                    className="flex items-center justify-between py-3.5"
-                  >
-                    <div className="flex items-center gap-3">
-                      <CompanyLogo
-                        ticker={c.ticker}
-                        color={c.color}
-                        size={36}
-                      />
-                      <div>
-                        <p className="font-semibold">{c.ticker}</p>
-                        <p className="text-xs text-zinc-500">{c.name}</p>
+            {stock.competitors.length > 0 && (
+              <div className="mt-8">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold">Competitors</h2>
+                  <span className="bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-sm font-medium text-transparent">
+                    View all
+                  </span>
+                </div>
+                <ul className="mt-3 divide-y divide-white/[0.08]">
+                  {stock.competitors.map((c) => (
+                    <li
+                      key={c.ticker}
+                      className="flex items-center justify-between py-3.5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <CompanyLogo
+                          ticker={c.ticker}
+                          color={c.color}
+                          size={36}
+                        />
+                        <div>
+                          <p className="font-semibold">{c.ticker}</p>
+                          <p className="text-xs text-zinc-500">{c.name}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{c.price.toFixed(2)}</p>
-                      <p
-                        className={`text-xs font-medium ${
-                          c.changePercent >= 0
-                            ? "text-pocket-green"
-                            : "text-pocket-red"
-                        }`}
-                      >
-                        {c.changePercent >= 0 ? "▲" : "▼"}{" "}
-                        {Math.abs(c.changePercent).toFixed(2)}%
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{c.price.toFixed(2)}</p>
+                        <p
+                          className={`text-xs font-medium ${
+                            c.changePercent >= 0
+                              ? "text-pocket-green"
+                              : "text-pocket-red"
+                          }`}
+                        >
+                          {c.changePercent >= 0 ? "▲" : "▼"}{" "}
+                          {Math.abs(c.changePercent).toFixed(2)}%
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex h-48 items-center justify-center text-zinc-500">

@@ -260,7 +260,10 @@ export function FeedCard({
         <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
           {cleanArticleTitle(article.headline)}
         </h1>
-        <p className="mt-2 line-clamp-2 text-[14px] leading-snug text-white/70">
+        <p
+          className="mt-2 line-clamp-2 text-[14px] leading-snug text-white/70"
+          style={{ paddingRight: "80px" }}
+        >
           {article.subheading}
         </p>
 
