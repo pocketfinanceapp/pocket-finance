@@ -36,6 +36,18 @@ body {
   -webkit-backface-visibility: hidden;
 }
 
+.feed-card-shell {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.feed-panel-track {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -65,35 +77,6 @@ body {
   opacity: 0;
   pointer-events: none;
   z-index: 0;
-}
-
-@keyframes feed-gradient-shimmer {
-  0% {
-    transform: translateX(-120%) skewX(-14deg);
-    opacity: 0;
-  }
-  18% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(140%) skewX(-14deg);
-    opacity: 0;
-  }
-}
-
-.feed-gradient-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: -20% -40%;
-  background: linear-gradient(
-    105deg,
-    transparent 38%,
-    rgba(59, 110, 245, 0.1) 46%,
-    rgba(0, 198, 198, 0.14) 50%,
-    rgba(255, 255, 255, 0.08) 54%,
-    transparent 62%
-  );
-  animation: feed-gradient-shimmer 5.5s ease-in-out infinite;
 }
 
 .feed-gradient-pattern {

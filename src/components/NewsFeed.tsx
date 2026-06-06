@@ -305,11 +305,12 @@ export function NewsFeed({
     >
         <div
           ref={trackRef}
-          className={`gpu-layer flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
+          className={`feed-panel-track gpu-layer flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
           style={{
             height: FEED_VIEWPORT_HEIGHT,
             width: "300%",
             transform: hTransform,
+            willChange: "transform",
           }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -360,17 +361,18 @@ export function NewsFeed({
               </div>
             ) : (
               <div
-                className={`gpu-layer w-full touch-none ${trackTransition}`}
+                className={`feed-panel-track gpu-layer w-full touch-none ${trackTransition}`}
                 style={{
                   height: `calc(${filteredArticles.length} * ${FEED_SLOT_HEIGHT})`,
                   transform: vTransform,
+                  willChange: "transform",
                 }}
               >
                 {filteredArticles.map((a, i) => (
                   <div
                     key={a.id}
-                    className="w-full shrink-0"
-                    style={{ height: FEED_VIEWPORT_HEIGHT }}
+                    className="feed-card-shell w-full shrink-0"
+                    style={{ height: FEED_VIEWPORT_HEIGHT, willChange: "transform" }}
                   >
                     <FeedCard
                       article={a}

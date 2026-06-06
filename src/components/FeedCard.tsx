@@ -116,7 +116,7 @@ export function FeedCard({
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-black">
+    <div className="feed-card-shell relative h-full w-full overflow-hidden bg-black">
       {useGradient ? (
         <FeedGradientBackdrop
           accentColor={sourceBrand.color}
@@ -329,7 +329,7 @@ export function FeedCard({
         </div>
 
         <div className="mt-3 flex items-center gap-1 text-white/30">
-          <ChevronUp className="h-3.5 w-3.5 animate-bounce" />
+          <ChevronUp className="h-3.5 w-3.5" />
           <span className="text-[10px] tracking-wider">Swipe up for more</span>
         </div>
       </div>
@@ -360,7 +360,6 @@ function FeedGradientBackdrop({
         style={{ background: sourceGradientBackground(accentColor) }}
       />
       <div className="feed-gradient-pattern absolute inset-0 opacity-90" />
-      <div className="feed-gradient-shimmer absolute inset-0" aria-hidden />
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <span
           className="select-none font-black uppercase tracking-tighter text-white/20"
