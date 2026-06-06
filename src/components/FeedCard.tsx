@@ -10,16 +10,12 @@ import {
   Share2,
 } from "lucide-react";
 import type { FeedMode } from "@/lib/filterArticles";
+import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
 import { PocketMarkIcon } from "./PocketLogo";
-import {
-  hasUsableFeedImage,
-  isPlainFeedImage,
-  sourceGradientBackground,
-} from "@/lib/feedImage";
-import { cleanArticleTitle, resolveSourceBrand } from "@/lib/sourceBranding";
+import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
@@ -73,16 +69,10 @@ export function FeedCard({
     sectorFilters,
     searchQuery
   );
-  const sourceBrand = resolveSourceBrand(
-    article.sourceName,
-    article.sourceId,
-    article.sourceUrl
-  );
+
   const usableInitial = hasUsableFeedImage(article.imageUrl);
-  const [useGradient, setUseGradient] = useState(!usableInitial);
-  const [imgSrc, setImgSrc] = useState(
-    usableInitial ? article.imageUrl : ""
-  );
+  const [showImage, setShowImage] = useState(usableInitial);
+  const [imgSrc, setImgSrc] = useState(usableInitial ? article.imageUrl : "");
   const saved = isArticleSaved(article.id);
   const [commentCount, setCommentCount] = useState(article.comments);
   const [toast, setToast] = useState<string | null>(null);
@@ -90,7 +80,7 @@ export function FeedCard({
 
   useEffect(() => {
     const usable = hasUsableFeedImage(article.imageUrl);
-    setUseGradient(!usable);
+    setShowImage(usable);
     setImgSrc(usable ? article.imageUrl : "");
   }, [article.id, article.imageUrl]);
 
@@ -98,15 +88,6 @@ export function FeedCard({
     if (!active) return;
     void fetchCommentCount(article.id).then(setCommentCount);
   }, [active, article.id, commentRefreshKey]);
-
-  const handleImageLoad = useCallback(
-    async (img: HTMLImageElement) => {
-      if (useGradient) return;
-      const plain = await isPlainFeedImage(img);
-      if (plain) setUseGradient(true);
-    },
-    [useGradient]
-  );
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -116,32 +97,25 @@ export function FeedCard({
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
-    <div className="feed-card-shell relative h-full w-full overflow-hidden bg-black">
-      {useGradient ? (
-        <FeedGradientBackdrop
-          accentColor={sourceBrand.color}
-          watermark={displayTicker}
-        />
-      ) : (
-        <Image
-          src={imgSrc}
-          alt=""
-          fill
-          className="absolute inset-0 h-full w-full object-cover brightness-[0.92] contrast-[1.05]"
-          sizes="100vw"
-          unoptimized
-          priority={active}
-          onLoad={(e) => {
-            void handleImageLoad(e.currentTarget);
-          }}
-          onError={() => setUseGradient(true)}
-        />
-      )}
-
-      <div
-        className="pointer-events-none absolute inset-0 z-[1]"
-        style={{ background: CARD_OVERLAY }}
-      />
+    <div className="relative h-full w-full overflow-hidden bg-[#0a0a0a]">
+      {showImage && imgSrc ? (
+        <>
+          <Image
+            src={imgSrc}
+            alt=""
+            fill
+            className="absolute inset-0 h-full w-full object-cover brightness-[0.92] contrast-[1.05]"
+            sizes="100vw"
+            unoptimized
+            priority={active}
+            onError={() => setShowImage(false)}
+          />
+          <div
+            className="pointer-events-none absolute inset-0 z-[1]"
+            style={{ background: CARD_OVERLAY }}
+          />
+        </>
+      ) : null}
 
       <header className="absolute left-0 right-0 top-0 z-20 border-b border-white/[0.06] bg-black/90 backdrop-blur-md">
         <div
@@ -342,33 +316,6 @@ export function FeedCard({
           {toast}
         </div>
       )}
-    </div>
-  );
-}
-
-function FeedGradientBackdrop({
-  accentColor,
-  watermark,
-}: {
-  accentColor: string;
-  watermark: string;
-}) {
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      <div
-        className="absolute inset-0"
-        style={{ background: sourceGradientBackground(accentColor) }}
-      />
-      <div className="feed-gradient-pattern absolute inset-0 opacity-90" />
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <span
-          className="select-none font-black uppercase tracking-tighter text-white/20"
-          style={{ fontSize: "clamp(4.5rem, 24vw, 10rem)" }}
-          aria-hidden
-        >
-          {watermark}
-        </span>
-      </div>
     </div>
   );
 }

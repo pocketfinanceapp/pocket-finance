@@ -295,8 +295,8 @@ export function NewsFeed({
     ? ""
     : "transition-transform duration-300 ease-out";
 
-  const hTransform = `translate3d(calc(-${panelIndex} * 33.333% + ${dragX}px), 0, 0)`;
-  const vTransform = `translate3d(0, calc(-${feedIndex} * ${FEED_SLOT_HEIGHT} + ${dragY}px), 0)`;
+  const hTransform = `translateX(calc(-${panelIndex} * 33.333% + ${dragX}px))`;
+  const vTransform = `translateY(calc(-${feedIndex} * ${FEED_SLOT_HEIGHT} + ${dragY}px))`;
 
   const feedContent = (
     <div
@@ -305,12 +305,11 @@ export function NewsFeed({
     >
         <div
           ref={trackRef}
-          className={`feed-panel-track gpu-layer flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
+          className={`flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
           style={{
             height: FEED_VIEWPORT_HEIGHT,
             width: "300%",
             transform: hTransform,
-            willChange: "transform",
           }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -326,7 +325,7 @@ export function NewsFeed({
 
           <div
             data-feed-column
-            className={`relative shrink-0 touch-none overflow-hidden ${trackTransition}`}
+            className="relative shrink-0 touch-none overflow-hidden"
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,
@@ -361,18 +360,17 @@ export function NewsFeed({
               </div>
             ) : (
               <div
-                className={`feed-panel-track gpu-layer w-full touch-none ${trackTransition}`}
+                className={`w-full touch-none ${trackTransition}`}
                 style={{
                   height: `calc(${filteredArticles.length} * ${FEED_SLOT_HEIGHT})`,
                   transform: vTransform,
-                  willChange: "transform",
                 }}
               >
                 {filteredArticles.map((a, i) => (
                   <div
                     key={a.id}
-                    className="feed-card-shell w-full shrink-0"
-                    style={{ height: FEED_VIEWPORT_HEIGHT, willChange: "transform" }}
+                    className="w-full shrink-0"
+                    style={{ height: FEED_VIEWPORT_HEIGHT }}
                   >
                     <FeedCard
                       article={a}
