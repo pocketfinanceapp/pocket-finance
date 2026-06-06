@@ -50,7 +50,20 @@ const TITLE_EXCLUDED_PHRASES = [
   "pm remarks",
   "prime minister remarks",
   "government statement",
+  "plane crash",
+  "flight accident",
+  "jet crash",
 ] as const;
+
+const AVIATION_INCIDENT_WORDS = [
+  "aircraft",
+  "copilot",
+  "runway",
+  "landing gear",
+] as const;
+
+const AVIATION_FINANCE_ALLOW_RE =
+  /\b(airline|aviation)\s+(stocks?|earnings|shares|revenue|profits?|quarter|results|invest(ing|ment|or)?|outlook|forecast)\b/i;
 
 const TITLE_EXCLUDED_WORDS = [
   "troops",
@@ -171,8 +184,26 @@ function isTechcrunchLifestyle(input: ArticleFilterInput): boolean {
   return hasLifestyleTopic && !hasFinanceSignals(title);
 }
 
+function isAviationFinanceTitle(title: string): boolean {
+  if (AVIATION_FINANCE_ALLOW_RE.test(title)) return true;
+  return (
+    hasFinanceSignals(title) &&
+    /\b(airline|aviation)\b/i.test(title) &&
+    !/\b(crash|accident|incident|emergency|wreckage|victim|killed|death)\b/i.test(
+      title
+    )
+  );
+}
+
 function titleContainsExcludedTopic(title: string): boolean {
   const lower = title.toLowerCase();
+
+  if (!isAviationFinanceTitle(title)) {
+    for (const word of AVIATION_INCIDENT_WORDS) {
+      const re = new RegExp(`\\b${escapeRegExp(word)}\\b`, "i");
+      if (re.test(title)) return true;
+    }
+  }
 
   for (const phrase of TITLE_EXCLUDED_PHRASES) {
     if (lower.includes(phrase)) return true;

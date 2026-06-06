@@ -118,11 +118,9 @@ export function FeedCard({
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
       {useGradient ? (
-        <div
-          className="absolute inset-0"
-          style={{
-            background: sourceGradientBackground(sourceBrand.color),
-          }}
+        <FeedGradientBackdrop
+          accentColor={sourceBrand.color}
+          watermark={displayTicker}
         />
       ) : (
         <Image
@@ -344,6 +342,34 @@ export function FeedCard({
           {toast}
         </div>
       )}
+    </div>
+  );
+}
+
+function FeedGradientBackdrop({
+  accentColor,
+  watermark,
+}: {
+  accentColor: string;
+  watermark: string;
+}) {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{ background: sourceGradientBackground(accentColor) }}
+      />
+      <div className="feed-gradient-pattern absolute inset-0 opacity-90" />
+      <div className="feed-gradient-shimmer absolute inset-0" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <span
+          className="select-none font-black uppercase tracking-tighter text-white/20"
+          style={{ fontSize: "clamp(4.5rem, 24vw, 10rem)" }}
+          aria-hidden
+        >
+          {watermark}
+        </span>
+      </div>
     </div>
   );
 }
