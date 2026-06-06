@@ -1,3 +1,4 @@
+import { isExcludedArticle } from "./articleText";
 import { mapNewsApiArticle, DEMO_ARTICLES } from "./newsMapper";
 import type { NewsArticle } from "./types";
 
@@ -5,10 +6,7 @@ const FINANCE_QUERY =
   "stocks OR markets OR earnings OR Fed OR investing OR shares OR NYSE OR NASDAQ OR ASX OR economy OR finance OR trading OR crypto OR bitcoin";
 
 const EXCLUDED_QUERY =
-  "accident OR accidents OR crime OR sports OR entertainment OR weather";
-
-const EXCLUDED_TOPIC_RE =
-  /\b(accident|accidents|crime|sports?|entertainment|weather|murder|shooting|football|basketball|baseball|soccer|celebrity|concert|storm|hurricane|tornado)\b/i;
+  "accident OR accidents OR crime OR sports OR entertainment OR weather OR NFL OR NBA OR MLB OR NHL OR FIFA OR soccer OR football OR basketball OR baseball OR hockey OR tennis OR golf OR Olympics OR quarterback OR touchdown OR MVP OR playoff OR championship";
 
 interface NewsApiArticle {
   title?: string;
@@ -16,9 +14,10 @@ interface NewsApiArticle {
 }
 
 function isFinanceArticle(article: NewsApiArticle): boolean {
-  const text = `${article.title ?? ""} ${article.description ?? ""}`;
-  if (EXCLUDED_TOPIC_RE.test(text)) return false;
-  return true;
+  return !isExcludedArticle(
+    article.title ?? "",
+    article.description ?? ""
+  );
 }
 
 export async function fetchNewsArticles(): Promise<NewsArticle[]> {

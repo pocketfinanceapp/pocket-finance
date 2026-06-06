@@ -1,6 +1,7 @@
 import { SECTOR_FILTERS } from "./filters";
 import type { MarketExchange, NewsArticle, Sector } from "./types";
 import { hasUsableFeedImage } from "./feedImage";
+import { cleanArticleDescription } from "./articleText";
 import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
 import { inferTickerFromText } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
@@ -47,11 +48,10 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
     raw.source?.name?.trim() || fromTitle || "Financial News";
   const sourceId = raw.source?.id ?? null;
   const title = cleanArticleTitle(rawTitle);
-  const description =
-    raw.description ?? "Latest developments shaping global markets.";
+  const description = cleanArticleDescription(raw.description ?? "");
   const inferenceText = [
     title,
-    description,
+    description || raw.description || "",
     raw.content ?? "",
     raw.source?.name ?? "",
   ].join(" ");
@@ -59,7 +59,7 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
   const id = hashId((raw.url ?? title) + index);
   const body =
     raw.content?.replace(/\[\+\d+ chars\]$/, "").trim() ||
-    `${description}\n\nInvestors are watching closely as ${meta.companyName} and peers react to shifting macro conditions. Analysts note that sentiment remains mixed amid rate expectations and earnings season positioning.\n\nTrading volumes have picked up across major indices, with technology and financials leading sector moves. Market participants continue to balance growth exposure against defensive positioning.`;
+    `${description || "Latest developments shaping global markets."}\n\nInvestors are watching closely as ${meta.companyName} and peers react to shifting macro conditions. Analysts note that sentiment remains mixed amid rate expectations and earnings season positioning.\n\nTrading volumes have picked up across major indices, with technology and financials leading sector moves. Market participants continue to balance growth exposure against defensive positioning.`;
 
   return {
     id,
