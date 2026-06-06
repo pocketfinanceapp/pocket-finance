@@ -9,346 +9,360 @@ export interface TickerMeta {
   logoColor: string;
 }
 
-const TICKER_MAP: Record<string, TickerMeta> = {
-  nvidia: {
-    ticker: "NVDA",
-    companyName: "NVIDIA Corporation",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["NVDA", "AI", "Semiconductors"],
-    logoColor: "#76b900",
-  },
-  apple: {
-    ticker: "AAPL",
-    companyName: "Apple Inc.",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["AAPL", "Tech", "Consumer"],
-    logoColor: "#555555",
-  },
-  microsoft: {
-    ticker: "MSFT",
-    companyName: "Microsoft Corporation",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["MSFT", "Cloud", "AI"],
-    logoColor: "#00a4ef",
-  },
-  tesla: {
-    ticker: "TSLA",
-    companyName: "Tesla, Inc.",
-    market: "NASDAQ",
-    sector: "Consumer",
-    tags: ["TSLA", "EV", "Auto"],
-    logoColor: "#cc0000",
-  },
-  amazon: {
-    ticker: "AMZN",
-    companyName: "Amazon.com, Inc.",
-    market: "NASDAQ",
-    sector: "Consumer",
-    tags: ["AMZN", "E-commerce", "Cloud"],
-    logoColor: "#ff9900",
-  },
-  google: {
-    ticker: "GOOGL",
-    companyName: "Alphabet Inc.",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["GOOGL", "AI", "Search"],
-    logoColor: "#4285f4",
-  },
-  alphabet: {
-    ticker: "GOOGL",
-    companyName: "Alphabet Inc.",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["GOOGL", "AI", "Search"],
-    logoColor: "#4285f4",
-  },
-  meta: {
-    ticker: "META",
-    companyName: "Meta Platforms, Inc.",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["META", "Social", "AI"],
-    logoColor: "#0668e1",
-  },
-  amd: {
-    ticker: "AMD",
-    companyName: "Advanced Micro Devices",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["AMD", "Chips", "Semiconductors"],
-    logoColor: "#ed1c24",
-  },
-  intel: {
-    ticker: "INTC",
-    companyName: "Intel Corporation",
-    market: "NASDAQ",
-    sector: "Technology",
-    tags: ["INTC", "Chips", "Semiconductors"],
-    logoColor: "#0071c5",
-  },
-  bitcoin: {
-    ticker: "BTC",
-    companyName: "Bitcoin",
-    market: "NASDAQ",
-    sector: "Crypto",
-    tags: ["BTC", "Crypto", "Digital Assets"],
-    logoColor: "#f7931a",
-  },
-  ethereum: {
-    ticker: "ETH",
-    companyName: "Ethereum",
-    market: "NASDAQ",
-    sector: "Crypto",
-    tags: ["ETH", "Crypto", "DeFi"],
-    logoColor: "#627eea",
-  },
-  jpmorgan: {
-    ticker: "JPM",
-    companyName: "JPMorgan Chase & Co.",
-    market: "NYSE",
-    sector: "Finance",
-    tags: ["JPM", "Banks", "Finance"],
-    logoColor: "#006747",
-  },
-  goldman: {
-    ticker: "GS",
-    companyName: "The Goldman Sachs Group",
-    market: "NYSE",
-    sector: "Finance",
-    tags: ["GS", "Banks", "Wall Street"],
-    logoColor: "#6cace4",
-  },
-  exxon: {
-    ticker: "XOM",
-    companyName: "Exxon Mobil Corporation",
-    market: "NYSE",
-    sector: "Energy",
-    tags: ["XOM", "Oil", "Energy"],
-    logoColor: "#e4002b",
-  },
-  bhp: {
-    ticker: "BHP",
-    companyName: "BHP Group",
-    market: "ASX",
-    sector: "Mining",
-    tags: ["BHP", "Mining", "ASX"],
-    logoColor: "#e3530d",
-  },
-  coinbase: {
-    ticker: "COIN",
-    companyName: "Coinbase Global, Inc.",
-    market: "NASDAQ",
-    sector: "Crypto",
-    tags: ["COIN", "Crypto", "Exchange"],
-    logoColor: "#0052ff",
-  },
-  "johnson & johnson": {
-    ticker: "JNJ",
-    companyName: "Johnson & Johnson",
-    market: "NYSE",
-    sector: "Healthcare",
-    tags: ["JNJ", "Pharma", "Healthcare"],
-    logoColor: "#d51900",
-  },
-  sony: {
-    ticker: "SONY",
-    companyName: "Sony Group Corporation",
-    market: "Nikkei",
-    sector: "Technology",
-    tags: ["SONY", "Japan", "Electronics"],
-    logoColor: "#000000",
-  },
+function meta(
+  ticker: string,
+  companyName: string,
+  market: MarketExchange,
+  sector: Sector,
+  logoColor: string,
+  tags: string[] = [ticker]
+): TickerMeta {
+  return { ticker, companyName, market, sector, tags, logoColor };
+}
+
+/** Canonical metadata keyed by ticker symbol */
+const BASE_METAS: Record<string, TickerMeta> = {
+  AAPL: meta("AAPL", "Apple Inc.", "NASDAQ", "Technology", "#555555"),
+  MSFT: meta("MSFT", "Microsoft Corporation", "NASDAQ", "Technology", "#00a4ef"),
+  GOOGL: meta("GOOGL", "Alphabet Inc.", "NASDAQ", "Technology", "#4285f4"),
+  AMZN: meta("AMZN", "Amazon.com, Inc.", "NASDAQ", "Consumer", "#ff9900"),
+  TSLA: meta("TSLA", "Tesla, Inc.", "NASDAQ", "Consumer", "#cc0000"),
+  META: meta("META", "Meta Platforms, Inc.", "NASDAQ", "Technology", "#0668e1"),
+  NVDA: meta("NVDA", "NVIDIA Corporation", "NASDAQ", "Technology", "#76b900"),
+  NFLX: meta("NFLX", "Netflix, Inc.", "NASDAQ", "Technology", "#e50914"),
+  AMD: meta("AMD", "Advanced Micro Devices", "NASDAQ", "Technology", "#ed1c24"),
+  INTC: meta("INTC", "Intel Corporation", "NASDAQ", "Technology", "#0071c5"),
+  AVGO: meta("AVGO", "Broadcom Inc.", "NASDAQ", "Technology", "#cc092f"),
+  LULU: meta("LULU", "Lululemon Athletica", "NASDAQ", "Consumer", "#d31334"),
+  BTC: meta("BTC", "Bitcoin", "NASDAQ", "Crypto", "#f7931a", ["BTC", "Crypto"]),
+  ETH: meta("ETH", "Ethereum", "NASDAQ", "Crypto", "#627eea", ["ETH", "Crypto"]),
+  JPM: meta("JPM", "JPMorgan Chase & Co.", "NYSE", "Finance", "#006747"),
+  GS: meta("GS", "Goldman Sachs Group", "NYSE", "Finance", "#6cace4"),
+  XOM: meta("XOM", "Exxon Mobil Corporation", "NYSE", "Energy", "#e4002b"),
+  BHP: meta("BHP", "BHP Group", "ASX", "Mining", "#e3530d"),
+  COIN: meta("COIN", "Coinbase Global, Inc.", "NASDAQ", "Crypto", "#0052ff"),
+  JNJ: meta("JNJ", "Johnson & Johnson", "NYSE", "Healthcare", "#d51900"),
+  SONY: meta("SONY", "Sony Group Corporation", "Nikkei", "Technology", "#000000"),
+  BA: meta("BA", "Boeing Company", "NYSE", "Technology", "#0033a0"),
+  DIS: meta("DIS", "The Walt Disney Company", "NYSE", "Consumer", "#113ccf"),
+  WMT: meta("WMT", "Walmart Inc.", "NYSE", "Consumer", "#0071ce"),
+  KO: meta("KO", "The Coca-Cola Company", "NYSE", "Consumer", "#f40009"),
+  PEP: meta("PEP", "PepsiCo, Inc.", "NASDAQ", "Consumer", "#004b93"),
+  NKE: meta("NKE", "Nike, Inc.", "NYSE", "Consumer", "#111111"),
+  SBUX: meta("SBUX", "Starbucks Corporation", "NASDAQ", "Consumer", "#00704a"),
+  PYPL: meta("PYPL", "PayPal Holdings, Inc.", "NASDAQ", "Finance", "#003087"),
+  CRM: meta("CRM", "Salesforce, Inc.", "NYSE", "Technology", "#00a1e0"),
+  ORCL: meta("ORCL", "Oracle Corporation", "NYSE", "Technology", "#f80000"),
+  ADBE: meta("ADBE", "Adobe Inc.", "NASDAQ", "Technology", "#ff0000"),
+  IBM: meta("IBM", "IBM Corporation", "NYSE", "Technology", "#054ada"),
+  CSCO: meta("CSCO", "Cisco Systems, Inc.", "NASDAQ", "Technology", "#1ba0d7"),
+  QCOM: meta("QCOM", "Qualcomm Incorporated", "NASDAQ", "Technology", "#3253dc"),
+  UBER: meta("UBER", "Uber Technologies, Inc.", "NYSE", "Technology", "#000000"),
+  ABNB: meta("ABNB", "Airbnb, Inc.", "NASDAQ", "Consumer", "#ff5a5f"),
+  SHOP: meta("SHOP", "Shopify Inc.", "NYSE", "Technology", "#96bf48"),
+  PLTR: meta("PLTR", "Palantir Technologies", "NYSE", "Technology", "#101828"),
+  RIVN: meta("RIVN", "Rivian Automotive", "NASDAQ", "Consumer", "#1a1a1a"),
+  F: meta("F", "Ford Motor Company", "NYSE", "Consumer", "#003478"),
+  GM: meta("GM", "General Motors Company", "NYSE", "Consumer", "#0070c9"),
+  TM: meta("TM", "Toyota Motor Corporation", "Nikkei", "Consumer", "#eb0a1e"),
+  V: meta("V", "Visa Inc.", "NYSE", "Finance", "#1a1f71"),
+  MA: meta("MA", "Mastercard Incorporated", "NYSE", "Finance", "#eb001b"),
+  BRK: meta("BRK", "Berkshire Hathaway", "NYSE", "Finance", "#003b7a"),
+  BAC: meta("BAC", "Bank of America Corp.", "NYSE", "Finance", "#012169"),
+  WFC: meta("WFC", "Wells Fargo & Company", "NYSE", "Finance", "#cd1409"),
+  C: meta("C", "Citigroup Inc.", "NYSE", "Finance", "#056dae"),
+  MS: meta("MS", "Morgan Stanley", "NYSE", "Finance", "#002b51"),
+  CVX: meta("CVX", "Chevron Corporation", "NYSE", "Energy", "#0066b2"),
+  SHEL: meta("SHEL", "Shell plc", "LSE", "Energy", "#fbce07"),
+  BP: meta("BP", "BP p.l.c.", "LSE", "Energy", "#009a44"),
+  MRNA: meta("MRNA", "Moderna, Inc.", "NASDAQ", "Healthcare", "#c8102e"),
+  PFE: meta("PFE", "Pfizer Inc.", "NYSE", "Healthcare", "#0093d0"),
+  LLY: meta("LLY", "Eli Lilly and Company", "NYSE", "Healthcare", "#d52b1e"),
+  MU: meta("MU", "Micron Technology, Inc.", "NASDAQ", "Technology", "#0071c5"),
+  SNOW: meta("SNOW", "Snowflake Inc.", "NYSE", "Technology", "#29b5e8"),
+  SPOT: meta("SPOT", "Spotify Technology", "NYSE", "Technology", "#1db954"),
+  HOOD: meta("HOOD", "Robinhood Markets", "NASDAQ", "Finance", "#00c805"),
+  SQ: meta("SQ", "Block, Inc.", "NYSE", "Finance", "#3d3d3d"),
+  ASML: meta("ASML", "ASML Holding", "NASDAQ", "Technology", "#0f238c"),
+  TSM: meta("TSM", "Taiwan Semiconductor", "NYSE", "Technology", "#1a3c8e"),
+  ARM: meta("ARM", "Arm Holdings", "NASDAQ", "Technology", "#0091bd"),
+  SMCI: meta("SMCI", "Super Micro Computer", "NASDAQ", "Technology", "#e31937"),
+  COST: meta("COST", "Costco Wholesale", "NASDAQ", "Consumer", "#e31837"),
+  HD: meta("HD", "The Home Depot", "NYSE", "Consumer", "#f96302"),
+  MCD: meta("MCD", "McDonald's Corporation", "NYSE", "Consumer", "#ffc72c"),
+  UNH: meta("UNH", "UnitedHealth Group", "NYSE", "Healthcare", "#002677"),
+  OPENAI: meta("OPENAI", "OpenAI", "NASDAQ", "Technology", "#412991"),
+  SPACEX: meta("SPACEX", "SpaceX", "NASDAQ", "Technology", "#000000"),
+  TATA: meta("TATA", "Tata Group", "BSE", "Finance", "#486aae"),
+  RY: meta("RY", "Royal Bank of Canada", "TSX", "Finance", "#0051a5"),
+  BNP: meta("BNP", "BNP Paribas", "Euronext", "Finance", "#00915a"),
+  LVMH: meta("LVMH", "LVMH", "LSE", "Consumer", "#1a1a1a"),
 };
 
-/** Themed tickers for broad-market articles with no specific stock */
-export const THEME_SPX: TickerMeta = {
-  ticker: "SPX",
-  companyName: "S&P 500 Index",
-  market: "NYSE",
-  sector: "Finance",
-  tags: ["SPX", "Index", "Markets"],
-  logoColor: "#6b7280",
-};
+/** Themed / index tickers */
+export const THEME_SPX: TickerMeta = meta(
+  "SPX",
+  "S&P 500 Index",
+  "NYSE",
+  "Finance",
+  "#6b7280",
+  ["SPX", "Index"]
+);
+export const THEME_QQQ: TickerMeta = meta(
+  "QQQ",
+  "Nasdaq 100",
+  "NASDAQ",
+  "Finance",
+  "#6b7280",
+  ["QQQ", "Nasdaq"]
+);
+export const THEME_DJI: TickerMeta = meta(
+  "DJI",
+  "Dow Jones Industrial Average",
+  "NYSE",
+  "Finance",
+  "#6b7280",
+  ["DJI", "Dow"]
+);
+export const THEME_OIL: TickerMeta = meta(
+  "OIL",
+  "Crude Oil",
+  "NYSE",
+  "Energy",
+  "#f97316",
+  ["OIL", "Energy"]
+);
+export const THEME_GOLD: TickerMeta = meta(
+  "GOLD",
+  "Gold",
+  "NYSE",
+  "Mining",
+  "#d4af37",
+  ["GOLD", "Commodities"]
+);
+export const THEME_FED: TickerMeta = meta(
+  "FED",
+  "Federal Reserve",
+  "NYSE",
+  "Finance",
+  "#1e3a5f",
+  ["FED", "Rates"]
+);
+export const THEME_MARKET: TickerMeta = meta(
+  "MARKET",
+  "Broad Market",
+  "NYSE",
+  "Finance",
+  "#6b7280",
+  ["MARKET", "Economy"]
+);
 
-export const THEME_OIL: TickerMeta = {
-  ticker: "OIL",
-  companyName: "Crude Oil",
-  market: "NYSE",
-  sector: "Energy",
-  tags: ["OIL", "Energy", "Commodities"],
-  logoColor: "#f97316",
-};
+BASE_METAS.SPX = THEME_SPX;
+BASE_METAS.QQQ = THEME_QQQ;
+BASE_METAS.DJI = THEME_DJI;
+BASE_METAS.OIL = THEME_OIL;
+BASE_METAS.GOLD = THEME_GOLD;
+BASE_METAS.FED = THEME_FED;
+BASE_METAS.MARKET = THEME_MARKET;
 
-export const THEME_MARKET: TickerMeta = {
-  ticker: "MARKET",
-  companyName: "Broad Market",
-  market: "NYSE",
-  sector: "Finance",
-  tags: ["MARKET", "Economy", "News"],
-  logoColor: "#6b7280",
-};
+/** Company name / alias → ticker symbol (60+ entries) */
+const COMPANY_ALIASES: Array<[string, string]> = [
+  ["lululemon", "LULU"],
+  ["apple", "AAPL"],
+  ["microsoft", "MSFT"],
+  ["msft", "MSFT"],
+  ["google", "GOOGL"],
+  ["alphabet", "GOOGL"],
+  ["amazon", "AMZN"],
+  ["tesla", "TSLA"],
+  ["meta platforms", "META"],
+  ["meta", "META"],
+  ["facebook", "META"],
+  ["nvidia", "NVDA"],
+  ["nvda", "NVDA"],
+  ["netflix", "NFLX"],
+  ["openai", "OPENAI"],
+  ["spacex", "SPACEX"],
+  ["tata", "TATA"],
+  ["intel", "INTC"],
+  ["broadcom", "AVGO"],
+  ["advanced micro devices", "AMD"],
+  ["amd", "AMD"],
+  ["bitcoin", "BTC"],
+  ["btc", "BTC"],
+  ["ethereum", "ETH"],
+  ["eth", "ETH"],
+  ["jpmorgan", "JPM"],
+  ["goldman sachs", "GS"],
+  ["exxon", "XOM"],
+  ["exxon mobil", "XOM"],
+  ["bhp", "BHP"],
+  ["coinbase", "COIN"],
+  ["johnson & johnson", "JNJ"],
+  ["sony", "SONY"],
+  ["boeing", "BA"],
+  ["disney", "DIS"],
+  ["walmart", "WMT"],
+  ["coca-cola", "KO"],
+  ["coca cola", "KO"],
+  ["pepsico", "PEP"],
+  ["pepsi", "PEP"],
+  ["nike", "NKE"],
+  ["starbucks", "SBUX"],
+  ["paypal", "PYPL"],
+  ["salesforce", "CRM"],
+  ["oracle", "ORCL"],
+  ["adobe", "ADBE"],
+  ["ibm", "IBM"],
+  ["cisco", "CSCO"],
+  ["qualcomm", "QCOM"],
+  ["uber", "UBER"],
+  ["airbnb", "ABNB"],
+  ["shopify", "SHOP"],
+  ["palantir", "PLTR"],
+  ["rivian", "RIVN"],
+  ["ford motor", "F"],
+  ["ford", "F"],
+  ["general motors", "GM"],
+  ["toyota", "TM"],
+  ["visa", "V"],
+  ["mastercard", "MA"],
+  ["berkshire hathaway", "BRK"],
+  ["bank of america", "BAC"],
+  ["wells fargo", "WFC"],
+  ["citigroup", "C"],
+  ["morgan stanley", "MS"],
+  ["chevron", "CVX"],
+  ["shell", "SHEL"],
+  ["bp", "BP"],
+  ["moderna", "MRNA"],
+  ["pfizer", "PFE"],
+  ["eli lilly", "LLY"],
+  ["micron", "MU"],
+  ["snowflake", "SNOW"],
+  ["spotify", "SPOT"],
+  ["robinhood", "HOOD"],
+  ["block inc", "SQ"],
+  ["square", "SQ"],
+  ["asml", "ASML"],
+  ["taiwan semiconductor", "TSM"],
+  ["tsmc", "TSM"],
+  ["arm holdings", "ARM"],
+  ["super micro", "SMCI"],
+  ["costco", "COST"],
+  ["home depot", "HD"],
+  ["mcdonald's", "MCD"],
+  ["mcdonalds", "MCD"],
+  ["unitedhealth", "UNH"],
+];
 
-/** Symbols referenced in demo / news that aren't keyed by company name */
-const SYMBOL_OVERRIDES: Record<string, TickerMeta> = {
-  SPX: THEME_SPX,
-  OIL: THEME_OIL,
-  MARKET: THEME_MARKET,
-  XOM: TICKER_MAP.exxon,
-  BHP: TICKER_MAP.bhp,
-  COIN: TICKER_MAP.coinbase,
-  JNJ: TICKER_MAP["johnson & johnson"],
-  SONY: TICKER_MAP.sony,
-  RY: {
-    ticker: "RY",
-    companyName: "Royal Bank of Canada",
-    market: "TSX",
-    sector: "Finance",
-    tags: ["RY", "Canada", "Banks"],
-    logoColor: "#0051a5",
-  },
-  BNP: {
-    ticker: "BNP",
-    companyName: "BNP Paribas",
-    market: "Euronext",
-    sector: "Finance",
-    tags: ["BNP", "Europe", "Banks"],
-    logoColor: "#00915a",
-  },
-  LVMH: {
-    ticker: "LVMH",
-    companyName: "LVMH",
-    market: "LSE",
-    sector: "Consumer",
-    tags: ["LVMH", "Luxury", "Retail"],
-    logoColor: "#1a1a1a",
-  },
-  CKA: {
-    ticker: "CKA",
-    companyName: "CK Asset Holdings",
-    market: "HKEX",
-    sector: "Real Estate",
-    tags: ["CKA", "HKEX", "Property"],
-    logoColor: "#c41230",
-  },
-  CAPL: {
-    ticker: "CAPL",
-    companyName: "CapitaLand",
-    market: "SGX",
-    sector: "Real Estate",
-    tags: ["CAPL", "SGX", "REIT"],
-    logoColor: "#003366",
-  },
-};
+const TICKER_MAP: Record<string, TickerMeta> = {};
+for (const [alias, symbol] of COMPANY_ALIASES) {
+  const base = BASE_METAS[symbol];
+  if (base) TICKER_MAP[alias] = base;
+}
 
-const TICKER_BY_SYMBOL: Record<string, TickerMeta> = {
-  ...SYMBOL_OVERRIDES,
-  ...Object.values(TICKER_MAP).reduce(
-    (acc, meta) => {
-      acc[meta.ticker] = meta;
-      return acc;
-    },
-    {} as Record<string, TickerMeta>
-  ),
-};
+const TICKER_BY_SYMBOL: Record<string, TickerMeta> = { ...BASE_METAS };
 
 const NAME_KEYS = Object.entries(TICKER_MAP).sort(
   (a, b) => b[0].length - a[0].length
 );
 
-const KNOWN_SYMBOLS = Object.keys(TICKER_BY_SYMBOL).sort(
-  (a, b) => b.length - a.length
-);
+/** Symbols to scan in text — MARKET excluded (matches common word "market") */
+const SCANNABLE_SYMBOLS = Object.keys(TICKER_BY_SYMBOL)
+  .filter((s) => s !== "MARKET")
+  .sort((a, b) => b.length - a.length);
+
+const DEPRECATED_TICKERS = new Set(["", "SPY", "MARKET"]);
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function matchSymbol(text: string, symbol: string): boolean {
-  const re = new RegExp(`(?:\\$|\\()${escapeRegex(symbol)}\\b|\\b${escapeRegex(symbol)}\\b`, "i");
-  return re.test(text);
+  const sym = escapeRegex(symbol);
+  return new RegExp(
+    `(?:\\$${sym}(?![A-Za-z0-9])|\\(${sym}(?![A-Za-z0-9])|(?<![A-Za-z0-9])${sym}(?![A-Za-z0-9]))`,
+    "i"
+  ).test(text);
 }
 
 function matchName(text: string, name: string): boolean {
-  const re = new RegExp(`\\b${escapeRegex(name)}\\b`, "i");
-  return re.test(text);
+  return new RegExp(`\\b${escapeRegex(name)}\\b`, "i").test(text);
 }
 
-const INDEX_RE =
-  /\bs&p\s*500\b|\bsp\s*500\b|\bspx\b|\bdow\s*jones\b|\bdjia\b|\bnasdaq\s+(composite|index)\b|\brussell\s*2000\b|\bstock\s+(index|indices|market)\b|\bmarket\s+futures\b|\bfutures\s+market\b|\bwall\s+street\b|\bindex\s+futures\b/i;
-
+const SPX_RE =
+  /\bs&p\s*500\b|\bs&p500\b|\bsp\s*500\b|\bspx\b|\bs&p\b/i;
+const QQQ_RE =
+  /\bnasdaq\s*(100|composite|index)\b|\binvesco\s+qqq\b|\bqqq\b/i;
+const DJI_RE = /\bdow\s*jones\b|\bdjia\b|\bdow\s+industrial\b|\bdow\s+30\b/i;
 const OIL_RE =
-  /\boil\s+prices?\b|\bcrude\s+oil\b|\bpetroleum\b|\bbrent\s+crude\b|\bwti\b|\boil\s+market\b|\bopec\b|\bnatural\s+gas\s+prices?\b|\bgas\s+prices?\b/i;
+  /\boil\s+prices?\b|\bcrude\s+oil\b|\bpetroleum\b|\bbrent\s+crude\b|\bwti\b|\bopec\b|\bcrude\b/i;
+const OIL_COMPANY_RE =
+  /\bexxon\b|\bxom\b|\bchevron\b|\bcvx\b|\bshell\b|\bbp\b|\bconocophillips\b/i;
+const GOLD_RE = /\bgold\s+prices?\b|\bgold\s+futures?\b|\bxau\b|\bspot\s+gold\b/i;
+const FED_RE =
+  /\bfederal\s+reserve\b|\bthe\s+fed\b|\bfed\s+(rate|rates|chair|meeting|policy|decision|funds)\b|\bfomc\b/i;
 
-const OIL_COMPANY_RE = /\bexxon\b|\bxom\b|\bchevron\b|\bcvx\b|\bshell\b|\bbp\b|\bconocophillips\b/i;
-
-/** Classify broad-market articles that don't map to a single stock */
-function inferThemedTicker(text: string): TickerMeta {
-  if (INDEX_RE.test(text)) return THEME_SPX;
+function inferThemedTicker(text: string): TickerMeta | null {
+  if (SPX_RE.test(text)) return THEME_SPX;
+  if (QQQ_RE.test(text)) return THEME_QQQ;
+  if (DJI_RE.test(text)) return THEME_DJI;
+  if (GOLD_RE.test(text)) return THEME_GOLD;
+  if (FED_RE.test(text)) return THEME_FED;
   if (OIL_RE.test(text) && !OIL_COMPANY_RE.test(text)) return THEME_OIL;
-  return THEME_MARKET;
+  return null;
 }
 
-/** Extract the most relevant ticker from article text — never returns SPY */
-export function inferTickerFromText(text: string): TickerMeta {
-  if (!text.trim()) return THEME_MARKET;
+function findMatchInText(text: string): TickerMeta | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
 
-  // 1. Explicit ticker symbols ($AAPL, NVDA, (BTC))
-  for (const symbol of KNOWN_SYMBOLS) {
-    if (matchSymbol(text, symbol)) {
+  for (const symbol of SCANNABLE_SYMBOLS) {
+    if (matchSymbol(trimmed, symbol)) {
       return TICKER_BY_SYMBOL[symbol];
     }
   }
 
-  // 2. Company / product names (longest keys first, word boundaries)
-  for (const [key, meta] of NAME_KEYS) {
-    if (matchName(text, key)) return meta;
+  for (const [key, entry] of NAME_KEYS) {
+    if (matchName(trimmed, key)) return entry;
   }
 
-  // 3. Common aliases not stored as map keys
-  if (/\bbitcoin\b|\bbtc\b/i.test(text)) return TICKER_MAP.bitcoin;
-  if (/\bethereum\b|\beth\b/i.test(text)) return TICKER_MAP.ethereum;
-  if (/\bexxon\b|\bxom\b/i.test(text)) return TICKER_MAP.exxon;
-  if (/\bbhp\b|\biron ore\b/i.test(text)) return TICKER_MAP.bhp;
-  if (/\bcoinbase\b/i.test(text)) return TICKER_MAP.coinbase;
-  if (/\bsony\b/i.test(text)) return TICKER_MAP.sony;
-  if (/\bjohnson\s*&\s*johnson\b|\bjnj\b/i.test(text))
-    return TICKER_MAP["johnson & johnson"];
-
-  return inferThemedTicker(text);
+  return inferThemedTicker(trimmed);
 }
 
-const DEPRECATED_TICKER = "SPY";
+/** Scan title then description — first strong match wins */
+export function inferTickerFromFields(
+  title: string,
+  description = ""
+): TickerMeta {
+  const titleHit = findMatchInText(title);
+  if (titleHit) return titleHit;
 
-function isDeprecatedTicker(ticker: string | null | undefined): boolean {
-  const upper = ticker?.trim().toUpperCase() ?? "";
-  return !upper || upper === DEPRECATED_TICKER;
+  const descHit = findMatchInText(description);
+  if (descHit) return descHit;
+
+  return THEME_MARKET;
 }
 
-function articleInferenceText(article: {
-  headline: string;
-  subheading?: string;
-  body?: string;
-}): string {
-  return [article.headline, article.subheading ?? "", article.body ?? ""].join(" ");
+/** @deprecated Use inferTickerFromFields */
+export function inferTickerFromText(text: string): TickerMeta {
+  return inferTickerFromFields(text, "");
 }
 
-/** Display/save ticker for a feed article — re-infers when stored value is SPY or missing */
+/** Resolve ticker from article title + description for display and persistence */
 export function resolveArticleTicker(article: {
   ticker: string;
   headline: string;
   subheading?: string;
   body?: string;
 }): string {
-  const stored = article.ticker?.trim().toUpperCase() ?? "";
-  if (!isDeprecatedTicker(stored)) return stored;
-  return inferTickerFromText(articleInferenceText(article)).ticker;
+  return inferTickerFromFields(
+    article.headline,
+    article.subheading ?? ""
+  ).ticker;
 }
 
-/** Display ticker for feed cards and UI */
 export function getArticleDisplayTicker(article: {
   ticker: string;
   headline: string;
@@ -358,12 +372,16 @@ export function getArticleDisplayTicker(article: {
   return resolveArticleTicker(article);
 }
 
-/** Display ticker for a saved watchlist row — always inferred from title, never from DB */
-export function resolveSavedTicker(entry: { articleTitle: string }): string {
-  return inferTickerFromText(entry.articleTitle).ticker;
+export function resolveSavedTicker(entry: {
+  articleTitle: string;
+  articleDescription?: string;
+}): string {
+  return inferTickerFromFields(
+    entry.articleTitle,
+    entry.articleDescription ?? ""
+  ).ticker;
 }
 
-/** Resolve company name & logo for a ticker symbol */
 export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   const upper = ticker.toUpperCase();
   if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];

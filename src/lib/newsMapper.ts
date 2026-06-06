@@ -3,7 +3,7 @@ import type { MarketExchange, NewsArticle, Sector } from "./types";
 import { hasUsableFeedImage } from "./feedImage";
 import { cleanArticleDescription } from "./articleText";
 import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
-import { inferTickerFromText } from "./tickerMap";
+import { inferTickerFromFields } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
 
 const ROTATING_MARKETS: MarketExchange[] = [
@@ -49,13 +49,10 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
   const sourceId = raw.source?.id ?? null;
   const title = cleanArticleTitle(rawTitle);
   const description = cleanArticleDescription(raw.description ?? "");
-  const inferenceText = [
+  const meta = inferTickerFromFields(
     title,
-    description || raw.description || "",
-    raw.content ?? "",
-    raw.source?.name ?? "",
-  ].join(" ");
-  const meta = inferTickerFromText(inferenceText);
+    description || raw.description || ""
+  );
   const id = hashId((raw.url ?? title) + index);
   const body =
     raw.content?.replace(/\[\+\d+ chars\]$/, "").trim() ||
