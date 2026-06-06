@@ -91,7 +91,7 @@ export function AuthScreen() {
       <AuthShell>
         <div className="flex flex-1 flex-col justify-center">
           <div className="mb-8 flex justify-center">
-            <PocketBrand layout="vertical" iconSize={72} glow="none" />
+            <PocketBrand layout="vertical" iconSize={64} glow="none" />
           </div>
 
           <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl border border-[#3B6EF5]/30 bg-gradient-to-br from-[#3B6EF5]/20 to-[#00C6C6]/15">
@@ -124,7 +124,7 @@ export function AuthScreen() {
     <AuthShell>
       <div className="flex flex-1 flex-col justify-center">
         <div className="mb-8 flex justify-center">
-          <PocketBrand layout="vertical" iconSize={72} glow="none" />
+          <PocketBrand layout="vertical" iconSize={64} glow="none" />
         </div>
 
         <h1 className="text-center text-2xl font-bold tracking-tight">

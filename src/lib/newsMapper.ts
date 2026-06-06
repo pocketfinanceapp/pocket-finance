@@ -1,6 +1,6 @@
 import { SECTOR_FILTERS } from "./filters";
 import type { MarketExchange, NewsArticle, Sector } from "./types";
-import { extractSourceFromTitle } from "./sourceBranding";
+import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
 import { inferTickerFromText } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
 
@@ -45,7 +45,7 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
   const sourceName =
     raw.source?.name?.trim() || fromTitle || "Financial News";
   const sourceId = raw.source?.id ?? null;
-  const title = rawTitle.replace(/\s[-–—]\s[^-–—]+$/, "").trim() || rawTitle;
+  const title = cleanArticleTitle(rawTitle);
   const description =
     raw.description ?? "Latest developments shaping global markets.";
   const inferenceText = [

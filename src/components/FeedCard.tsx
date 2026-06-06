@@ -14,6 +14,7 @@ import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
 import { PocketMarkIcon } from "./PocketLogo";
+import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
@@ -111,8 +112,8 @@ export function FeedCard({
           className="flex items-center justify-between px-4 pb-1.5"
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
         >
-          <div className="flex w-10 shrink-0 items-center justify-start" data-no-drag>
-            <PocketMarkIcon size={28} glow="none" />
+          <div className="flex w-9 shrink-0 items-center justify-start" data-no-drag>
+            <PocketMarkIcon size={36} glow="none" />
           </div>
           <nav className="flex gap-7 text-[13px] font-semibold tracking-wide">
             <button
@@ -257,7 +258,7 @@ export function FeedCard({
         }}
       >
         <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
-          {article.headline}
+          {cleanArticleTitle(article.headline)}
         </h1>
         <p className="mt-2 line-clamp-2 text-[14px] leading-snug text-white/70">
           {article.subheading}
