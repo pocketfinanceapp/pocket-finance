@@ -79,6 +79,32 @@ const TITLE_EXCLUDED_WORDS = [
   "shooting",
 ] as const;
 
+/** Political / legal title signals — excluded only when no finance keyword is present */
+const TITLE_POLITICAL_LEGAL_PHRASES = [
+  "supreme court",
+  "scotus",
+  "federal court",
+  "appeals court",
+  "district court",
+  "lawsuit filed",
+  "congress passed",
+  "senate voted",
+  "house voted",
+  "white house says",
+] as const;
+
+const TITLE_POLITICAL_LEGAL_WORDS = [
+  "ruling",
+  "indicted",
+  "convicted",
+  "sentenced",
+  "impeach",
+] as const;
+
+/** Finance keywords that keep political/legal titles when present in the headline */
+const TITLE_FINANCE_ALLOW_RE =
+  /\b(stocks?|shares|earnings|revenue|market|investors?|trading|ipo|sec\b|fed\b|rates?|inflation)\b/i;
+
 const OTHER_EXCLUDED_WORDS = [
   "accident",
   "accidents",
@@ -152,6 +178,27 @@ function hasFinanceSignals(text: string): boolean {
   return FINANCE_SIGNAL_RE.test(text);
 }
 
+function hasTitleFinanceAllowKeywords(title: string): boolean {
+  return TITLE_FINANCE_ALLOW_RE.test(title);
+}
+
+function isPoliticalLegalNonFinanceTitle(title: string): boolean {
+  if (hasTitleFinanceAllowKeywords(title)) return false;
+
+  const lower = title.toLowerCase();
+
+  for (const phrase of TITLE_POLITICAL_LEGAL_PHRASES) {
+    if (lower.includes(phrase)) return true;
+  }
+
+  for (const word of TITLE_POLITICAL_LEGAL_WORDS) {
+    const re = new RegExp(`\\b${escapeRegExp(word)}(?:ment)?\\b`, "i");
+    if (re.test(title)) return true;
+  }
+
+  return false;
+}
+
 function isNonFinancialPrRelease(input: ArticleFilterInput): boolean {
   const blob = [
     input.title,
@@ -197,6 +244,8 @@ function isAviationFinanceTitle(title: string): boolean {
 
 function titleContainsExcludedTopic(title: string): boolean {
   const lower = title.toLowerCase();
+
+  if (isPoliticalLegalNonFinanceTitle(title)) return true;
 
   if (!isAviationFinanceTitle(title)) {
     for (const word of AVIATION_INCIDENT_WORDS) {
