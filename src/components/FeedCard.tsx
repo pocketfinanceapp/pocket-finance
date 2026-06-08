@@ -263,9 +263,6 @@ export function FeedCard({
           }}
         >
           <Share2 className="h-[25px] w-[25px] text-white" />
-          <span className="text-[11px] font-semibold text-white/90">
-            {formatCount(article.shares)}
-          </span>
         </ActionButton>
 
         <ActionButton

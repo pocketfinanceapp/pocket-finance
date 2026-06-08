@@ -22,12 +22,14 @@ import { FilterPanel } from "./FilterPanel";
 import { ArticlePanel } from "./ArticlePanel";
 import { StockPanel } from "./StockPanel";
 import { MobilePageShell } from "./MobilePageShell";
+import { AddToHomeScreenBanner } from "./AddToHomeScreenBanner";
 import { ProfilePage } from "./ProfilePage";
 
 interface NewsFeedProps {
   initialArticles: NewsArticle[];
   /** When true, shell + bottom nav are provided by TabAppShell */
   embedded?: boolean;
+  showAddToHomeBanner?: boolean;
 }
 
 const PANEL_FEED = 1;
@@ -43,6 +45,7 @@ type LockedAxis = "x" | "y" | null;
 export function NewsFeed({
   initialArticles,
   embedded = false,
+  showAddToHomeBanner = true,
 }: NewsFeedProps) {
   const [allArticles] = useState(
     initialArticles.length > 0 ? initialArticles : DEMO_ARTICLES
@@ -401,6 +404,7 @@ export function NewsFeed({
           onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
         />
         <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
+        {!overlay && showAddToHomeBanner && <AddToHomeScreenBanner />}
     </div>
   );
 

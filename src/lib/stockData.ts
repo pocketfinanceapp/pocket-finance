@@ -169,6 +169,25 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
       { ticker: "ORCL", name: "Oracle Corporation", price: 128.4, changePercent: 0.32, color: "#f80000" },
     ],
   },
+  MU: {
+    ticker: "MU",
+    name: "Micron Technology, Inc.",
+    price: 98.42,
+    change: 1.86,
+    changePercent: 1.93,
+    logoColor: "#0071c5",
+    marketCap: "$180B",
+    revenue: "$25.1B",
+    peRatio: "28.4",
+    eps: "$1.30",
+    ebitda: "$8.2B",
+    dividendYield: "0.45%",
+    competitors: [
+      { ticker: "NVDA", name: "NVIDIA Corporation", price: 1067.98, changePercent: 2.34, color: "#76b900" },
+      { ticker: "AMD", name: "Advanced Micro Devices", price: 168.32, changePercent: 1.45, color: "#ed1c24" },
+      { ticker: "INTC", name: "Intel Corporation", price: 31.86, changePercent: -0.31, color: "#0071c5" },
+    ],
+  },
 };
 
 const CRYPTO_TICKERS = new Set(["BTC", "ETH"]);

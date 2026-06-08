@@ -44,7 +44,12 @@ const BLOCKED_DOMAINS = [
   "people.com",
   "eonline.com",
   "usmagazine.com",
+  "entertainment.yahoo.com",
 ] as const;
+
+const BLOCKED_URL_PATTERNS = ["yahoo.com/entertainment"] as const;
+
+const BLOCKED_SOURCE_NAMES = ["yahoo entertainment"] as const;
 
 const BLOCKED_SOURCE_SLUGS = [
   "researchbuzz",
@@ -58,6 +63,7 @@ const BLOCKED_SOURCE_SLUGS = [
   "people",
   "eonline",
   "usmagazine",
+  "yahoo-entertainment",
 ] as const;
 
 const TITLE_EXCLUDED_PHRASES = [
@@ -181,13 +187,22 @@ function domainFromUrl(url: string): string {
 
 function isBlockedDomain(url: string, sourceName = "", sourceId?: string | null): boolean {
   const domain = domainFromUrl(url);
+  const urlLower = url.toLowerCase();
   const sourceBlob = `${sourceName} ${sourceId ?? ""} ${url}`.toLowerCase();
+
+  for (const pattern of BLOCKED_URL_PATTERNS) {
+    if (urlLower.includes(pattern)) return true;
+  }
 
   for (const blocked of BLOCKED_DOMAINS) {
     if (domain === blocked || domain.endsWith(`.${blocked}`) || domain.includes(blocked)) {
       return true;
     }
     if (sourceBlob.includes(blocked)) return true;
+  }
+
+  for (const name of BLOCKED_SOURCE_NAMES) {
+    if (sourceName.toLowerCase().includes(name)) return true;
   }
 
   for (const slug of BLOCKED_SOURCE_SLUGS) {

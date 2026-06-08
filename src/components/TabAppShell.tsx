@@ -47,7 +47,11 @@ function TabPanels({ initialArticles }: TabAppShellProps) {
       <div className="relative h-full w-full">
         <TabPanel active={activeTab === "home"} fadeKey={fadeKey}>
           <FeedErrorBoundary>
-            <NewsFeed initialArticles={initialArticles} embedded />
+            <NewsFeed
+              initialArticles={initialArticles}
+              embedded
+              showAddToHomeBanner={activeTab === "home"}
+            />
           </FeedErrorBoundary>
         </TabPanel>
 
