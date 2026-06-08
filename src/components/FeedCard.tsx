@@ -82,6 +82,7 @@ export function FeedCard({
   const [toast, setToast] = useState<string | null>(null);
   const displayTicker = getArticleDisplayTicker(article);
   const displayMarket = resolveMarketForTicker(displayTicker);
+  const isFallbackCard = !(showImage && imgSrc);
 
   useEffect(() => {
     const usable = hasUsableFeedImage(article.imageUrl);
@@ -272,11 +273,23 @@ export function FeedCard({
           padding: "0 80px 0 20px",
         }}
       >
-        <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
+        <h1
+          className={`line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white ${
+            isFallbackCard
+              ? "drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
+              : "drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]"
+          }`}
+        >
           {cleanArticleTitle(article.headline)}
         </h1>
         {article.subheading ? (
-          <p className="mt-2 line-clamp-2 text-[14px] leading-snug text-white/70">
+          <p
+            className={`mt-2 line-clamp-2 text-[14px] leading-snug ${
+              isFallbackCard
+                ? "text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
+                : "text-white/70"
+            }`}
+          >
             {article.subheading}
           </p>
         ) : null}
