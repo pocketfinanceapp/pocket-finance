@@ -53,7 +53,7 @@ export function FeedCard({
   const [toast, setToast] = useState<string | null>(null);
   const displayTicker = getArticleDisplayTicker(article);
   const displayMarket = resolveMarketForArticle({
-    ticker: displayTicker,
+    ticker: article.ticker,
     sourceName: article.sourceName,
     sourceId: article.sourceId,
   });

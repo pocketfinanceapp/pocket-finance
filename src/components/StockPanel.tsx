@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
@@ -48,6 +48,18 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
   const [toast, setToast] = useState<string | null>(null);
   const [liveQuote, setLiveQuote] = useState<MassiveStockQuote | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setActiveTab("Overview");
+    scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [article.id, ticker]);
+
+  useEffect(() => {
+    if (activeTab === "Overview") {
+      scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [activeTab, ticker]);
 
   useEffect(() => {
     setLiveQuote(null);
@@ -193,7 +205,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         )}
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-32">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-32">
         {privateCompany && privateProfile ? (
           <PrivateCompanyProfileView
             ticker={ticker}
@@ -203,7 +215,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         ) : activeTab === "Overview" && stock ? (
           showMarketData ? (
             <>
-              <div className="mt-4">
+              <section className="mt-4 shrink-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-3xl font-bold tracking-tight">
                     {displayPrice.toLocaleString("en-US", {
@@ -233,7 +245,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
                   {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
                   {Math.abs(displayChangePercent).toFixed(2)}%) Today
                 </p>
-              </div>
+              </section>
 
               <a
                 href={`${ETORO_URL}?utm_source=pocket_finance`}

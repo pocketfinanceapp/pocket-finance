@@ -433,6 +433,15 @@ function resolveMarketFromSource(
   if (id === "afr" || name.includes("australian financial review"))
     return "AUSTRALIA";
   if (
+    id === "bt" ||
+    id === "business-times" ||
+    blob.includes("business times") ||
+    blob.includes("straits times") ||
+    blob.includes("businesstimes.com")
+  ) {
+    return "SGX";
+  }
+  if (
     id === "ft" ||
     name.includes("financial times") ||
     id === "lse" ||
