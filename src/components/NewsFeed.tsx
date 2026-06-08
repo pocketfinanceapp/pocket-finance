@@ -25,6 +25,7 @@ import { ArticlePanel } from "./ArticlePanel";
 import { StockPanel } from "./StockPanel";
 import { MobilePageShell } from "./MobilePageShell";
 import { AddToHomeScreenBanner } from "./AddToHomeScreenBanner";
+import { FeedHeader } from "./FeedHeader";
 import { TrendingFeed } from "./TrendingFeed";
 
 interface NewsFeedProps {
@@ -401,12 +402,16 @@ export function NewsFeed({
               touchAction: feedMode === "trending" ? "pan-y" : "none",
             }}
           >
+            <FeedHeader
+              feedMode={feedMode}
+              onFeedModeChange={setFeedMode}
+              onOpenSearch={() => setSearchOpen(true)}
+              className="absolute left-0 right-0 top-0 z-30"
+            />
+
             {feedMode === "trending" ? (
               <TrendingFeed
                 articles={trendingArticles}
-                feedMode={feedMode}
-                onFeedModeChange={setFeedMode}
-                onOpenSearch={() => setSearchOpen(true)}
                 onOpenArticle={openArticle}
               />
             ) : filteredArticles.length === 0 ? (
@@ -469,10 +474,7 @@ export function NewsFeed({
                     <FeedCard
                       article={a}
                       active={i === feedIndex}
-                      feedMode={feedMode}
-                      onFeedModeChange={setFeedMode}
                       onOpenComments={() => setCommentsOpen(true)}
-                      onOpenSearch={() => setSearchOpen(true)}
                       commentRefreshKey={commentRefreshKey}
                     />
                   </div>

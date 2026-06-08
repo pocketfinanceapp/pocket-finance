@@ -1,34 +1,24 @@
 "use client";
 
-import type { FeedMode } from "@/lib/filterArticles";
 import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
-import { FeedHeader } from "./FeedHeader";
-
 interface TrendingFeedProps {
   articles: NewsArticle[];
-  feedMode: FeedMode;
-  onFeedModeChange: (mode: FeedMode) => void;
-  onOpenSearch: () => void;
   onOpenArticle: (article: NewsArticle) => void;
 }
 
 export function TrendingFeed({
   articles,
-  feedMode,
-  onFeedModeChange,
-  onOpenSearch,
   onOpenArticle,
 }: TrendingFeedProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#0a0a0a]">
-      <FeedHeader
-        feedMode={feedMode}
-        onFeedModeChange={onFeedModeChange}
-        onOpenSearch={onOpenSearch}
-      />
-
+    <div
+      className="flex h-full min-h-0 flex-col bg-[#0a0a0a]"
+      style={{
+        paddingTop: "calc(max(0.75rem, env(safe-area-inset-top)) + 3.5rem)",
+      }}
+    >
       <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {articles.map((article, index) => (
           <li key={article.id}>

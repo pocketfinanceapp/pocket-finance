@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
-import type { FeedMode } from "@/lib/filterArticles";
 import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
@@ -23,15 +22,10 @@ import {
   getArticleDisplayTicker,
   resolveMarketForArticle,
 } from "@/lib/tickerMap";
-import { FeedHeader } from "./FeedHeader";
-
 interface FeedCardProps {
   article: NewsArticle;
   active: boolean;
-  feedMode: FeedMode;
-  onFeedModeChange: (mode: FeedMode) => void;
   onOpenComments: () => void;
-  onOpenSearch: () => void;
   commentRefreshKey?: number;
 }
 
@@ -41,10 +35,7 @@ const CARD_OVERLAY =
 export function FeedCard({
   article,
   active,
-  feedMode,
-  onFeedModeChange,
   onOpenComments,
-  onOpenSearch,
   commentRefreshKey = 0,
 }: FeedCardProps) {
   const {
@@ -108,13 +99,6 @@ export function FeedCard({
       ) : (
         <FeedCardFallbackBackground />
       )}
-
-      <FeedHeader
-        feedMode={feedMode}
-        onFeedModeChange={onFeedModeChange}
-        onOpenSearch={onOpenSearch}
-        className="absolute left-0 right-0 top-0 z-20"
-      />
 
       <aside
         className="absolute bottom-4 right-4 z-30 flex flex-col items-center gap-5"
