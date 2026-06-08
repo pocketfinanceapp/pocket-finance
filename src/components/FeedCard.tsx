@@ -39,6 +39,10 @@ interface FeedCardProps {
 const CARD_OVERLAY =
   "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.92) 100%)";
 
+/** Bottom-only scrim for gradient fallbacks — top ~70% stays undimmed */
+const FALLBACK_CARD_OVERLAY =
+  "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.28) 85%, rgba(0,0,0,0.55) 100%)";
+
 const FALLBACK_GRADIENT =
   "linear-gradient(145deg, #3B6EF5 0%, #00C6C6 100%)";
 
@@ -139,7 +143,7 @@ export function FeedCard({
           </div>
           <div
             className="pointer-events-none absolute inset-0 z-[1]"
-            style={{ background: CARD_OVERLAY }}
+            style={{ background: FALLBACK_CARD_OVERLAY }}
           />
           {displayTicker === "MARKET" && <PocketGradientMark />}
         </>
