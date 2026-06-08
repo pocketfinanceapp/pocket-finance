@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { ChartRange, NewsArticle } from "@/lib/types";
-import { getChartPointsForPrice, getStockProfile } from "@/lib/stockData";
+import {
+  getChartPointsForPrice,
+  getStockProfile,
+  resolveChartBasePrice,
+} from "@/lib/stockData";
 import {
   getPrivateCompanyProfile,
   isPrivateTicker,
@@ -80,10 +84,23 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const tradeLabel = isCryptoTicker(ticker)
     ? "Trade this crypto"
     : "Trade this stock";
-  const chartPoints =
-    stock && showMarketData
-      ? getChartPointsForPrice(displayPrice, ticker, chartRange)
-      : [];
+  const chartBasePrice = resolveChartBasePrice(
+    displayPrice,
+    stock?.price,
+    ticker
+  );
+  const chartPoints = useMemo(
+    () =>
+      stock && showMarketData && chartBasePrice > 0
+        ? getChartPointsForPrice(
+            chartBasePrice,
+            ticker,
+            chartRange,
+            stock.price
+          )
+        : [],
+    [stock, showMarketData, chartBasePrice, ticker, chartRange]
+  );
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -234,6 +251,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
               </p>
 
               <PriceChart
+                key={`${ticker}-${chartRange}-${Math.round(chartBasePrice)}`}
                 data={chartPoints}
                 range={chartRange}
                 onRangeChange={setChartRange}

@@ -15,6 +15,19 @@ export const PROFILE_TOPICS = [
 
 export type ProfileTopic = (typeof PROFILE_TOPICS)[number];
 
+export const TOPIC_KEYWORDS: Record<ProfileTopic, string[]> = {
+  Tech: ["technology", "software", "semiconductor"],
+  Energy: ["energy", "oil", "gas"],
+  Crypto: ["bitcoin", "crypto", "blockchain", "ethereum"],
+  Markets: ["stocks", "market", "trading", "equities"],
+  Economy: ["economy", "gdp", "inflation", "recession"],
+  AI: ["artificial intelligence", "machine learning", "ai"],
+  Healthcare: ["health", "pharma", "biotech", "drug"],
+  "Real Estate": ["property", "housing", "real estate", "mortgage"],
+  Commodities: ["gold", "silver", "commodities", "copper"],
+  Banking: ["bank", "finance", "lending", "fed", "interest rate"],
+};
+
 export interface RecentlyReadEntry {
   id: string;
   headline: string;

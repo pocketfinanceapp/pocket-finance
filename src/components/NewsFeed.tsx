@@ -11,12 +11,17 @@ import {
 } from "@/lib/filterArticles";
 import { isInteractiveTarget } from "@/lib/gesture";
 import { FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
-import { addRecentlyRead } from "@/lib/profileStorage";
+import {
+  addRecentlyRead,
+  loadFavouriteTopics,
+  type ProfileTopic,
+} from "@/lib/profileStorage";
 import type { NewsArticle } from "@/lib/types";
 import type { NavTab } from "./BottomNav";
 import { CommentSheet } from "./CommentSheet";
 import { FeedCard } from "./FeedCard";
 import { FilterPanel } from "./FilterPanel";
+import { FeedSearchOverlay } from "./FeedSearchOverlay";
 import { ArticlePanel } from "./ArticlePanel";
 import { StockPanel } from "./StockPanel";
 import { MobilePageShell } from "./MobilePageShell";
@@ -65,6 +70,21 @@ export function NewsFeed({
   const [articleOverride, setArticleOverride] = useState<NewsArticle | null>(
     null
   );
+  const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const refreshTopics = () => setFavouriteTopics(loadFavouriteTopics());
+    refreshTopics();
+    window.addEventListener("focus", refreshTopics);
+    return () => window.removeEventListener("focus", refreshTopics);
+  }, []);
+
+  useEffect(() => {
+    if (feedMode === "following") {
+      setFavouriteTopics(loadFavouriteTopics());
+    }
+  }, [feedMode]);
 
   const filteredArticles = useMemo(
     () =>
@@ -75,7 +95,8 @@ export function NewsFeed({
         marketFilters,
         sectorFilters,
         sectorInterests,
-        searchQuery
+        searchQuery,
+        favouriteTopics
       ),
     [
       allArticles,
@@ -85,6 +106,7 @@ export function NewsFeed({
       sectorFilters,
       sectorInterests,
       searchQuery,
+      favouriteTopics,
     ]
   );
 
@@ -119,7 +141,8 @@ export function NewsFeed({
 
   const swipeArticle = filteredArticles[feedIndex] ?? filteredArticles[0];
   const article = articleOverride ?? swipeArticle;
-  const gesturesEnabled = overlay === null && !filterOpen && !commentsOpen;
+  const gesturesEnabled =
+    overlay === null && !filterOpen && !commentsOpen && !searchOpen;
 
   const trendingArticles = useMemo(
     () =>
@@ -185,6 +208,42 @@ export function NewsFeed({
   const closeProfile = useCallback(() => {
     router.replace("/", { scroll: false });
   }, [router]);
+
+  const openProfile = useCallback(() => {
+    navigation?.navigate("profile") ??
+      router.replace("/?tab=profile", { scroll: false });
+  }, [navigation, router]);
+
+  const handleSearchSelect = useCallback(
+    (selected: NewsArticle) => {
+      setSearchOpen(false);
+      const forYouList = buildFeedArticles(
+        allArticles,
+        "forYou",
+        followedMarkets,
+        [],
+        [],
+        sectorInterests,
+        "",
+        favouriteTopics
+      );
+      const idx = forYouList.findIndex((a) => a.id === selected.id);
+      if (idx >= 0) {
+        setFeedMode("forYou");
+        setFeedIndex(idx);
+        setArticleOverride(null);
+        goToPanel(PANEL_FEED);
+      }
+    },
+    [
+      allArticles,
+      followedMarkets,
+      sectorInterests,
+      favouriteTopics,
+      setFeedIndex,
+      goToPanel,
+    ]
+  );
 
   const releaseCapture = useCallback(() => {
     const el = trackRef.current;
@@ -361,34 +420,51 @@ export function NewsFeed({
                 articles={trendingArticles}
                 feedMode={feedMode}
                 onFeedModeChange={setFeedMode}
-                onOpenFilter={() => setFilterOpen(true)}
+                onOpenSearch={() => setSearchOpen(true)}
                 onOpenArticle={openArticle}
               />
             ) : filteredArticles.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-                <p className="text-lg font-semibold text-white">
-                  {feedMode === "following"
-                    ? "No markets followed yet"
-                    : "No stories match"}
-                </p>
-                <p className="mt-2 text-sm text-zinc-500">
-                  {feedMode === "following"
-                    ? "Follow markets in the Markets tab to build your feed."
-                    : "Adjust filters or search to see more news."}
-                </p>
-                <button
-                  type="button"
-                  data-no-drag
-                  onClick={() =>
-                    feedMode === "following"
-                      ? navigation?.navigate("markets") ??
-                        router.replace("/markets", { scroll: false })
-                      : setFilterOpen(true)
-                  }
-                  className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
-                >
-                  {feedMode === "following" ? "Explore markets" : "Open filters"}
-                </button>
+                {feedMode === "following" && favouriteTopics.length === 0 ? (
+                  <>
+                    <p className="text-lg font-semibold text-white">
+                      Personalise your feed — select topics in your Profile
+                    </p>
+                    <button
+                      type="button"
+                      data-no-drag
+                      onClick={openProfile}
+                      className="mt-6 rounded-full bg-[#00C6C6] px-6 py-2.5 text-sm font-bold text-black"
+                    >
+                      Go to Profile
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-semibold text-white">
+                      {feedMode === "following"
+                        ? "No stories match your topics"
+                        : "No stories match"}
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-500">
+                      {feedMode === "following"
+                        ? "Try adding more topics in your Profile."
+                        : "Adjust filters or search to see more news."}
+                    </p>
+                    <button
+                      type="button"
+                      data-no-drag
+                      onClick={() =>
+                        feedMode === "following"
+                          ? openProfile()
+                          : setFilterOpen(true)
+                      }
+                      className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
+                    >
+                      {feedMode === "following" ? "Go to Profile" : "Open filters"}
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <div
@@ -410,7 +486,7 @@ export function NewsFeed({
                       feedMode={feedMode}
                       onFeedModeChange={setFeedMode}
                       onOpenComments={() => setCommentsOpen(true)}
-                      onOpenFilter={() => setFilterOpen(true)}
+                      onOpenSearch={() => setSearchOpen(true)}
                       commentRefreshKey={commentRefreshKey}
                     />
                   </div>
@@ -440,6 +516,12 @@ export function NewsFeed({
           onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
         />
         <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
+        <FeedSearchOverlay
+          open={searchOpen}
+          articles={allArticles}
+          onClose={() => setSearchOpen(false)}
+          onSelectArticle={handleSearchSelect}
+        />
         {!overlay && showAddToHomeBanner && <AddToHomeScreenBanner />}
     </div>
   );

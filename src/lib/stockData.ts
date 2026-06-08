@@ -24,16 +24,35 @@ function generateChart(
   return data;
 }
 
+/** Prefer the live/display price; fall back to profile price for high-value crypto */
+export function resolveChartBasePrice(
+  displayPrice: number,
+  profilePrice: number | undefined,
+  ticker: string
+): number {
+  const upper = ticker.toUpperCase();
+  const profile = profilePrice ?? 0;
+
+  if (displayPrice > 1000) return displayPrice;
+  if ((upper === "BTC" || upper === "ETH") && profile > 1000) return profile;
+  if (displayPrice > 0) return displayPrice;
+  return profile;
+}
+
 /** Chart points within ±2% of the displayed price */
 export function getChartPointsForPrice(
   basePrice: number,
   ticker: string,
-  range: ChartRange
+  range: ChartRange,
+  profilePrice?: number
 ): ChartPoint[] {
+  const resolved = resolveChartBasePrice(basePrice, profilePrice, ticker);
+  if (resolved <= 0) return [];
+
   const labels = CHART_LABELS[range];
   return generateChart(
-    `${ticker}-${range}-${basePrice}`,
-    basePrice,
+    `${ticker}-${range}-${resolved}`,
+    resolved,
     labels.length,
     labels
   );

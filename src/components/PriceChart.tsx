@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import {
   Area,
   AreaChart,
@@ -20,8 +21,15 @@ interface PriceChartProps {
 }
 
 export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
-  const min = Math.min(...data.map((d) => d.price)) * 0.995;
-  const max = Math.max(...data.map((d) => d.price)) * 1.005;
+  const uid = useId().replace(/:/g, "");
+  const lineGradId = `chartLine-${uid}`;
+  const fillGradId = `chartFill-${uid}`;
+
+  const prices = data.map((d) => d.price);
+  const min =
+    prices.length > 0 ? Math.min(...prices) * 0.998 : 0;
+  const max =
+    prices.length > 0 ? Math.max(...prices) * 1.002 : 1;
 
   return (
     <div className="mt-4">
@@ -43,54 +51,71 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
       </div>
 
       <div className="mt-2 h-44 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="chartLine" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#3B6EF5" />
-                <stop offset="100%" stopColor="#00C6C6" />
-              </linearGradient>
-              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3B6EF5" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#00C6C6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="#1f1f1f" strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="time"
-              tick={{ fill: "#71717a", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              domain={[min, max]}
-              tick={{ fill: "#71717a", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              width={48}
-              tickFormatter={(v) => v.toLocaleString()}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "#141414",
-                border: "1px solid #262626",
-                borderRadius: 8,
-                fontSize: 12,
-              }}
-              labelStyle={{ color: "#a1a1aa" }}
-              formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
-            />
-            <Area
-              type="monotone"
-              dataKey="price"
-              stroke="url(#chartLine)"
-              strokeWidth={2}
-              fill="url(#chartFill)"
-              dot={false}
-              activeDot={{ r: 4, fill: "#00C6C6", stroke: "#3B6EF5" }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {prices.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+            Chart unavailable
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={data}
+              margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id={lineGradId} x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3B6EF5" />
+                  <stop offset="100%" stopColor="#00C6C6" />
+                </linearGradient>
+                <linearGradient id={fillGradId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3B6EF5" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#00C6C6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                stroke="#1f1f1f"
+                strokeDasharray="3 3"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="time"
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                domain={[min, max]}
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                width={56}
+                tickFormatter={(v) =>
+                  v >= 1000
+                    ? `${Math.round(v / 1000)}k`
+                    : v.toLocaleString("en-US", { maximumFractionDigits: 0 })
+                }
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "#141414",
+                  border: "1px solid #262626",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: "#a1a1aa" }}
+                formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
+              />
+              <Area
+                type="monotone"
+                dataKey="price"
+                stroke={`url(#${lineGradId})`}
+                strokeWidth={2}
+                fill={`url(#${fillGradId})`}
+                dot={false}
+                activeDot={{ r: 4, fill: "#00C6C6", stroke: "#3B6EF5" }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

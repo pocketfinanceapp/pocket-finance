@@ -31,7 +31,7 @@ interface FeedCardProps {
   feedMode: FeedMode;
   onFeedModeChange: (mode: FeedMode) => void;
   onOpenComments: () => void;
-  onOpenFilter: () => void;
+  onOpenSearch: () => void;
   commentRefreshKey?: number;
 }
 
@@ -44,7 +44,7 @@ export function FeedCard({
   feedMode,
   onFeedModeChange,
   onOpenComments,
-  onOpenFilter,
+  onOpenSearch,
   commentRefreshKey = 0,
 }: FeedCardProps) {
   const {
@@ -112,7 +112,7 @@ export function FeedCard({
       <FeedHeader
         feedMode={feedMode}
         onFeedModeChange={onFeedModeChange}
-        onOpenFilter={onOpenFilter}
+        onOpenSearch={onOpenSearch}
         className="absolute left-0 right-0 top-0 z-20"
       />
 

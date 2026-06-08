@@ -1,5 +1,7 @@
 import type { MarketFilter, SectorFilter } from "./filters";
 import { articleMatchesMarket } from "./filters";
+import type { ProfileTopic } from "./profileStorage";
+import { TOPIC_KEYWORDS } from "./profileStorage";
 import type { NewsArticle } from "./types";
 
 export type FeedMode = "forYou" | "following" | "trending";
@@ -78,6 +80,28 @@ export function prioritizeBySectors(
   return [...priority, ...rest];
 }
 
+export function articleMatchesTopics(
+  article: NewsArticle,
+  topics: ProfileTopic[]
+): boolean {
+  if (topics.length === 0) return false;
+
+  const text = [
+    article.headline,
+    article.subheading,
+    article.body,
+    ...article.tags,
+    article.ticker,
+    article.sector,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return topics.some((topic) =>
+    TOPIC_KEYWORDS[topic].some((keyword) => text.includes(keyword))
+  );
+}
+
 export function buildFeedArticles(
   articles: NewsArticle[],
   mode: FeedMode,
@@ -85,18 +109,17 @@ export function buildFeedArticles(
   marketFilters: MarketFilter[],
   sectorFilters: SectorFilter[],
   sectorInterests: SectorFilter[],
-  searchQuery: string
+  searchQuery: string,
+  favouriteTopics: ProfileTopic[] = []
 ): NewsArticle[] {
   if (mode === "trending") return [];
 
   if (mode === "following") {
-    if (followedMarkets.length === 0) return [];
-    return filterArticles(
-      articles,
-      followedMarkets,
-      sectorFilters,
-      searchQuery
+    if (favouriteTopics.length === 0) return [];
+    const topicMatches = articles.filter((a) =>
+      articleMatchesTopics(a, favouriteTopics)
     );
+    return filterArticles(topicMatches, [], sectorFilters, searchQuery);
   }
 
   // Explicit market drill-down from Markets tab

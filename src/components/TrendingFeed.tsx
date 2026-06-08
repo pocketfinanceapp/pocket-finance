@@ -10,7 +10,7 @@ interface TrendingFeedProps {
   articles: NewsArticle[];
   feedMode: FeedMode;
   onFeedModeChange: (mode: FeedMode) => void;
-  onOpenFilter: () => void;
+  onOpenSearch: () => void;
   onOpenArticle: (article: NewsArticle) => void;
 }
 
@@ -18,7 +18,7 @@ export function TrendingFeed({
   articles,
   feedMode,
   onFeedModeChange,
-  onOpenFilter,
+  onOpenSearch,
   onOpenArticle,
 }: TrendingFeedProps) {
   return (
@@ -26,7 +26,7 @@ export function TrendingFeed({
       <FeedHeader
         feedMode={feedMode}
         onFeedModeChange={onFeedModeChange}
-        onOpenFilter={onOpenFilter}
+        onOpenSearch={onOpenSearch}
       />
 
       <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">

@@ -11,7 +11,7 @@ import {
 interface FeedHeaderProps {
   feedMode: FeedMode;
   onFeedModeChange: (mode: FeedMode) => void;
-  onOpenFilter: () => void;
+  onOpenSearch: () => void;
   className?: string;
 }
 
@@ -24,7 +24,7 @@ const FEED_TABS: { id: FeedMode; label: string }[] = [
 export function FeedHeader({
   feedMode,
   onFeedModeChange,
-  onOpenFilter,
+  onOpenSearch,
   className = "",
 }: FeedHeaderProps) {
   const { marketFilters, sectorFilters, searchQuery, clearFilters } = useApp();
@@ -76,7 +76,7 @@ export function FeedHeader({
           type="button"
           data-no-drag
           onPointerDown={stop}
-          onClick={onOpenFilter}
+          onClick={onOpenSearch}
           className="flex h-11 w-11 items-center justify-center rounded-full text-white/90 active:bg-white/10"
           aria-label="Search"
         >

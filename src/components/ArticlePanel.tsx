@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowLeft, Bookmark, ExternalLink } from "lucide-react";
+import { ArrowLeft, Bookmark } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
@@ -112,11 +112,10 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           target="_blank"
           rel="noopener noreferrer"
           data-no-drag
-          className="mt-10 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-[15px] font-semibold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
+          className="mt-10 block w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] p-4 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
           style={{ touchAction: "manipulation" }}
         >
-          Read full article
-          <ExternalLink className="h-4 w-4" />
+          Read full article →
         </a>
       </article>
     </div>
