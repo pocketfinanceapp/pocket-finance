@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { DEMO_ARTICLES } from "@/lib/newsMapper";
 import { useApp } from "@/context/AppContext";
 import { useNavigationOptional } from "@/context/NavigationContext";
@@ -17,7 +17,6 @@ import {
   type ProfileTopic,
 } from "@/lib/profileStorage";
 import type { NewsArticle } from "@/lib/types";
-import type { NavTab } from "./BottomNav";
 import { CommentSheet } from "./CommentSheet";
 import { FeedCard } from "./FeedCard";
 import { FilterPanel } from "./FilterPanel";
@@ -26,7 +25,6 @@ import { ArticlePanel } from "./ArticlePanel";
 import { StockPanel } from "./StockPanel";
 import { MobilePageShell } from "./MobilePageShell";
 import { AddToHomeScreenBanner } from "./AddToHomeScreenBanner";
-import { ProfilePage } from "./ProfilePage";
 import { TrendingFeed } from "./TrendingFeed";
 
 interface NewsFeedProps {
@@ -43,7 +41,6 @@ const SWIPE_THRESHOLD_PX = 55;
 const SWIPE_VELOCITY = 0.35;
 const PULL_REFRESH_PX = 72;
 
-type Overlay = "profile" | null;
 type LockedAxis = "x" | "y" | null;
 
 export function NewsFeed({
@@ -111,10 +108,8 @@ export function NewsFeed({
   );
 
   const [panelIndex, setPanelIndex] = useState(PANEL_FEED);
-  const [overlay, setOverlay] = useState<Overlay>(null);
   const router = useRouter();
   const navigation = useNavigationOptional();
-  const searchParams = useSearchParams();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -141,8 +136,7 @@ export function NewsFeed({
 
   const swipeArticle = filteredArticles[feedIndex] ?? filteredArticles[0];
   const article = articleOverride ?? swipeArticle;
-  const gesturesEnabled =
-    overlay === null && !filterOpen && !commentsOpen && !searchOpen;
+  const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
 
   const trendingArticles = useMemo(
     () =>
@@ -155,10 +149,6 @@ export function NewsFeed({
         .slice(0, 10),
     [allArticles]
   );
-
-  useEffect(() => {
-    setOverlay(searchParams.get("tab") === "profile" ? "profile" : null);
-  }, [searchParams]);
 
   useEffect(() => {
     const max = Math.max(0, filteredArticles.length - 1);
@@ -205,13 +195,9 @@ export function NewsFeed({
     [goToPanel]
   );
 
-  const closeProfile = useCallback(() => {
-    router.replace("/", { scroll: false });
-  }, [router]);
-
   const openProfile = useCallback(() => {
     navigation?.navigate("profile") ??
-      router.replace("/?tab=profile", { scroll: false });
+      router.replace("/profile", { scroll: false });
   }, [navigation, router]);
 
   const handleSearchSelect = useCallback(
@@ -383,12 +369,12 @@ export function NewsFeed({
 
   const feedContent = (
     <div
-      className={`relative overflow-hidden ${overlay ? "bg-black" : "bg-[#0a0a0a]"}`}
+      className="relative overflow-hidden bg-[#0a0a0a]"
       style={{ height: FEED_VIEWPORT_HEIGHT }}
     >
         <div
           ref={trackRef}
-          className={`flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""} ${overlay ? "hidden" : ""}`}
+          className={`flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""}`}
           style={{
             height: FEED_VIEWPORT_HEIGHT,
             width: "300%",
@@ -503,12 +489,6 @@ export function NewsFeed({
           </div>
         </div>
 
-        {overlay === "profile" && (
-          <div className="absolute inset-0 z-40 bg-black">
-            <ProfilePage onClose={closeProfile} />
-          </div>
-        )}
-
         <CommentSheet
           open={commentsOpen}
           onClose={() => setCommentsOpen(false)}
@@ -522,7 +502,7 @@ export function NewsFeed({
           onClose={() => setSearchOpen(false)}
           onSelectArticle={handleSearchSelect}
         />
-        {!overlay && showAddToHomeBanner && <AddToHomeScreenBanner />}
+        {showAddToHomeBanner && <AddToHomeScreenBanner />}
     </div>
   );
 
@@ -530,9 +510,7 @@ export function NewsFeed({
     return feedContent;
   }
 
-  const navTab: NavTab = overlay === "profile" ? "profile" : "home";
-
   return (
-    <MobilePageShell activeTab={navTab}>{feedContent}</MobilePageShell>
+    <MobilePageShell activeTab="home">{feedContent}</MobilePageShell>
   );
 }

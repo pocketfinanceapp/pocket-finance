@@ -11,7 +11,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import type { NavTab } from "@/components/BottomNav";
 
-type ShellTab = "home" | "markets" | "watchlist";
+type ShellTab = NavTab;
 
 interface NavigationContextValue {
   activeTab: ShellTab;
@@ -24,6 +24,7 @@ const NavigationContext = createContext<NavigationContextValue | null>(null);
 function shellTabFromPath(pathname: string): ShellTab {
   if (pathname === "/markets") return "markets";
   if (pathname === "/watchlist") return "watchlist";
+  if (pathname === "/profile") return "profile";
   return "home";
 }
 
@@ -34,7 +35,7 @@ function pathForTab(tab: NavTab): string {
     case "watchlist":
       return "/watchlist";
     case "profile":
-      return "/?tab=profile";
+      return "/profile";
     default:
       return "/";
   }
@@ -42,10 +43,8 @@ function pathForTab(tab: NavTab): string {
 
 export function NavigationProvider({
   children,
-  profileOpen,
 }: {
   children: React.ReactNode;
-  profileOpen?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -62,24 +61,18 @@ export function NavigationProvider({
     router.prefetch("/");
     router.prefetch("/markets");
     router.prefetch("/watchlist");
+    router.prefetch("/profile");
   }, [router]);
 
   const navigate = useCallback(
     (tab: NavTab) => {
-      if (tab === "home" || tab === "profile") {
-        setActiveTab("home");
-      } else if (tab === "markets") {
-        setActiveTab("markets");
-      } else if (tab === "watchlist") {
-        setActiveTab("watchlist");
-      }
-
+      setActiveTab(tab);
       router.replace(pathForTab(tab), { scroll: false });
     },
     [router]
   );
 
-  const navTab: NavTab = profileOpen ? "profile" : activeTab;
+  const navTab: NavTab = activeTab;
 
   const value = useMemo(
     () => ({

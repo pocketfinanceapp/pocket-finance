@@ -10,31 +10,45 @@ import {
 
 export function MyTopicsSelector() {
   const [topics, setTopics] = useState<ProfileTopic[]>([]);
+  const [pulseTopic, setPulseTopic] = useState<ProfileTopic | null>(null);
 
   useEffect(() => {
     setTopics(loadFavouriteTopics());
   }, []);
 
+  const handleToggle = (topic: ProfileTopic) => {
+    setTopics(toggleFavouriteTopic(topic));
+    setPulseTopic(topic);
+    window.setTimeout(() => setPulseTopic(null), 220);
+  };
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {PROFILE_TOPICS.map((topic) => {
-        const selected = topics.includes(topic);
-        return (
-          <button
-            key={topic}
-            type="button"
-            data-no-drag
-            onClick={() => setTopics(toggleFavouriteTopic(topic))}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
-              selected
-                ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
-                : "border border-white/[0.08] bg-white/[0.06] text-white"
-            }`}
-          >
-            {topic}
-          </button>
-        );
-      })}
+    <div>
+      <p className="mb-3 text-xs text-zinc-500">
+        Tap to personalise your Following feed
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {PROFILE_TOPICS.map((topic) => {
+          const selected = topics.includes(topic);
+          const pulsing = pulseTopic === topic;
+
+          return (
+            <button
+              key={topic}
+              type="button"
+              data-no-drag
+              onClick={() => handleToggle(topic)}
+              className={`rounded-full px-4 py-2 text-sm transition-transform duration-150 active:scale-95 ${
+                selected
+                  ? "bg-[#00C6C6] font-bold text-white shadow-[0_0_14px_rgba(0,198,198,0.35)]"
+                  : "bg-zinc-800 text-zinc-500"
+              } ${pulsing ? "scale-110" : "scale-100"}`}
+            >
+              {topic}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

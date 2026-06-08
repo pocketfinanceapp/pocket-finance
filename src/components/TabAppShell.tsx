@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { NavigationProvider } from "@/context/NavigationContext";
 import type { MarketFilter } from "@/lib/filters";
@@ -11,6 +11,7 @@ import { MarketsPage } from "./MarketsPage";
 import { MobilePageShell } from "./MobilePageShell";
 import { NewsFeed } from "./NewsFeed";
 import { WatchlistPage } from "./WatchlistPage";
+import { ProfilePage } from "./ProfilePage";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
 
@@ -62,6 +63,10 @@ function TabPanels({ initialArticles }: TabAppShellProps) {
         <TabPanel active={activeTab === "watchlist"} fadeKey={fadeKey}>
           <WatchlistPage />
         </TabPanel>
+
+        <TabPanel active={activeTab === "profile"} fadeKey={fadeKey}>
+          <ProfilePage onClose={() => navigate("home")} />
+        </TabPanel>
       </div>
     </MobilePageShell>
   );
@@ -91,10 +96,16 @@ function TabPanel({
 
 export function TabAppShell({ initialArticles }: TabAppShellProps) {
   const searchParams = useSearchParams();
-  const profileOpen = searchParams.get("tab") === "profile";
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get("tab") === "profile") {
+      router.replace("/profile", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   return (
-    <NavigationProvider profileOpen={profileOpen}>
+    <NavigationProvider>
       <TabPanels initialArticles={initialArticles} />
     </NavigationProvider>
   );

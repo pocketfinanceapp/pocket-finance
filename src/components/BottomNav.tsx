@@ -14,6 +14,7 @@ interface BottomNavProps {
 function tabFromPath(pathname: string): NavTab {
   if (pathname === "/markets") return "markets";
   if (pathname === "/watchlist") return "watchlist";
+  if (pathname === "/profile") return "profile";
   return "home";
 }
 
@@ -45,7 +46,7 @@ export function BottomNav({ active }: BottomNavProps) {
         router.replace("/watchlist", { scroll: false });
         break;
       case "profile":
-        router.replace("/?tab=profile", { scroll: false });
+        router.replace("/profile", { scroll: false });
         break;
     }
   };
