@@ -23,11 +23,16 @@ const glowClass: Record<NonNullable<PocketMarkIconProps["glow"]>, string> = {
 };
 
 /** Clean white P — for brand-gradient fallback cards */
-export function PocketGradientMark({ className = "" }: { className?: string }) {
+export function PocketGradientMark() {
   return (
     <div
-      className={`relative flex h-20 w-20 shrink-0 items-center justify-center ${className}`}
+      className="pointer-events-none flex h-20 w-20 items-center justify-center"
       style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 10,
         color: "#FFFFFF",
         fontSize: "72px",
         fontWeight: "800",

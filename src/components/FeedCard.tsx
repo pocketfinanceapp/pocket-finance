@@ -121,7 +121,7 @@ export function FeedCard({
       ) : (
         <>
           <div
-            className="absolute inset-0 z-0 flex items-center justify-center"
+            className="absolute inset-0 z-0"
             style={{ background: FALLBACK_GRADIENT }}
           >
             <div
@@ -131,18 +131,17 @@ export function FeedCard({
                   "radial-gradient(circle at 35% 25%, rgba(255,255,255,0.35), transparent 55%)",
               }}
             />
-            {displayTicker !== "MARKET" ? (
-              <span className="relative z-[1] text-5xl font-bold tracking-tight text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+            {displayTicker !== "MARKET" && (
+              <span className="absolute left-1/2 top-1/2 z-[1] -translate-x-1/2 -translate-y-1/2 text-5xl font-bold tracking-tight text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
                 {displayTicker}
               </span>
-            ) : (
-              <PocketGradientMark className="z-[2]" />
             )}
           </div>
           <div
             className="pointer-events-none absolute inset-0 z-[1]"
             style={{ background: CARD_OVERLAY }}
           />
+          {displayTicker === "MARKET" && <PocketGradientMark />}
         </>
       )}
 
