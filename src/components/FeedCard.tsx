@@ -21,7 +21,7 @@ import { useArticleLikes } from "@/hooks/useArticleLikes";
 import { fetchCommentCount } from "@/lib/userInteractions";
 import {
   getArticleDisplayTicker,
-  resolveMarketForTicker,
+  resolveMarketForArticle,
 } from "@/lib/tickerMap";
 import { FeedHeader } from "./FeedHeader";
 
@@ -61,7 +61,11 @@ export function FeedCard({
   const [commentCount, setCommentCount] = useState(article.comments);
   const [toast, setToast] = useState<string | null>(null);
   const displayTicker = getArticleDisplayTicker(article);
-  const displayMarket = resolveMarketForTicker(displayTicker);
+  const displayMarket = resolveMarketForArticle({
+    ticker: displayTicker,
+    sourceName: article.sourceName,
+    sourceId: article.sourceId,
+  });
   const isFallbackCard = !(showImage && imgSrc);
 
   useEffect(() => {

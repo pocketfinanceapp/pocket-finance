@@ -409,6 +409,41 @@ const US_MARKETS_DISPLAY_TICKERS = new Set([
   "DJI",
 ]);
 
+function isUsListedEquity(ticker: string): boolean {
+  const upper = ticker.toUpperCase();
+  if (isPrivateTicker(upper)) return false;
+  if (CRYPTO_DISPLAY_TICKERS.has(upper)) return false;
+  if (COMMODITY_DISPLAY_TICKERS.has(upper)) return false;
+  if (US_MARKETS_DISPLAY_TICKERS.has(upper)) return false;
+
+  const market = getTickerMetaBySymbol(upper).market;
+  return market === "NASDAQ" || market === "NYSE";
+}
+
+function resolveMarketFromSource(
+  sourceName?: string,
+  sourceId?: string | null
+): MarketExchange | null {
+  const id = (sourceId ?? "").toLowerCase();
+  const name = (sourceName ?? "").toLowerCase();
+  const blob = `${id} ${name}`;
+
+  if (id === "nikkei" || name.includes("nikkei")) return "JAPAN";
+  if (id === "scmp" || blob.includes("south china morning")) return "HONG KONG";
+  if (id === "afr" || name.includes("australian financial review"))
+    return "AUSTRALIA";
+  if (
+    id === "ft" ||
+    name.includes("financial times") ||
+    id === "lse" ||
+    name.includes("london stock exchange")
+  ) {
+    return "EUROPE";
+  }
+
+  return null;
+}
+
 /** Feed card exchange label — derived from ticker, not article index */
 export function resolveMarketForTicker(ticker: string): MarketExchange {
   const upper = ticker.toUpperCase();
@@ -418,5 +453,25 @@ export function resolveMarketForTicker(ticker: string): MarketExchange {
   if (US_MARKETS_DISPLAY_TICKERS.has(upper)) return "US MARKETS";
   if (isPrivateTicker(upper)) return "NASDAQ";
 
-  return getTickerMetaBySymbol(upper).market;
+  const market = getTickerMetaBySymbol(upper).market;
+  if (isUsListedEquity(upper)) {
+    return market === "NASDAQ" || market === "NYSE" ? market : "NYSE";
+  }
+
+  return market;
+}
+
+/** Feed card exchange label — source region + US equity exchanges */
+export function resolveMarketForArticle(article: {
+  ticker: string;
+  sourceName?: string;
+  sourceId?: string | null;
+}): MarketExchange {
+  const fromSource = resolveMarketFromSource(
+    article.sourceName,
+    article.sourceId
+  );
+  if (fromSource) return fromSource;
+
+  return resolveMarketForTicker(article.ticker);
 }

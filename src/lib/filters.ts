@@ -59,6 +59,10 @@ export function marketToFilter(market: string): MarketFilter | null {
   if (m === "CRYPTO") return "NASDAQ";
   if (m === "COMMODITIES") return "NYSE";
   if (m === "US MARKETS" || m === "MARKETS") return "NASDAQ";
+  if (m === "JAPAN") return "Nikkei";
+  if (m === "HONG KONG") return "HKEX";
+  if (m === "AUSTRALIA") return "ASX";
+  if (m === "EUROPE") return "LSE";
 
   if (m === "NASDAQ") return "NASDAQ";
   if (m === "NYSE") return "NYSE";

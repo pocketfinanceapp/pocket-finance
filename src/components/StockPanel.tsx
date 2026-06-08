@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { ChartRange, NewsArticle } from "@/lib/types";
-import { getStockProfile } from "@/lib/stockData";
+import { getChartPointsForPrice, getStockProfile } from "@/lib/stockData";
 import {
   getPrivateCompanyProfile,
   isPrivateTicker,
@@ -80,6 +80,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const tradeLabel = isCryptoTicker(ticker)
     ? "Trade this crypto"
     : "Trade this stock";
+  const chartPoints =
+    stock && showMarketData
+      ? getChartPointsForPrice(displayPrice, ticker, chartRange)
+      : [];
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -180,125 +184,119 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             article={article}
           />
         ) : activeTab === "Overview" && stock ? (
-          <>
-            {showMarketData ? (
-              <>
-                <div className="mt-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-3xl font-bold tracking-tight">
-                      {displayPrice.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{" "}
-                      <span className="text-lg font-normal text-zinc-400">
-                        USD
-                      </span>
-                    </p>
-                    {hasMassiveQuote && (
-                      <div className="flex flex-col gap-0.5">
-                        <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                          Delayed
-                        </span>
-                        <span className="text-[10px] text-zinc-500">
-                          Prices delayed 15min
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <p
-                    className={`mt-1 text-sm font-medium ${
-                      isUp ? "text-pocket-green" : "text-pocket-red"
-                    }`}
-                  >
-                    {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
-                    {Math.abs(displayChangePercent).toFixed(2)}%) Today
+          showMarketData ? (
+            <>
+              <div className="mt-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-3xl font-bold tracking-tight">
+                    {displayPrice.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    <span className="text-lg font-normal text-zinc-400">
+                      USD
+                    </span>
                   </p>
+                  {hasMassiveQuote && (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        Delayed
+                      </span>
+                      <span className="text-[10px] text-zinc-500">
+                        Prices delayed 15min
+                      </span>
+                    </div>
+                  )}
                 </div>
-
-                <a
-                  href={`${ETORO_URL}?utm_source=pocket_finance`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-no-drag
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.04] py-3.5 text-sm font-semibold text-white transition-colors active:scale-[0.98] active:bg-white/[0.08]"
-                  style={{ touchAction: "manipulation" }}
+                <p
+                  className={`mt-1 text-sm font-medium ${
+                    isUp ? "text-pocket-green" : "text-pocket-red"
+                  }`}
                 >
-                  {tradeLabel}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-                <p className="mt-1.5 text-center text-[10px] text-zinc-600">
-                  Affiliate partner · eToro
+                  {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
+                  {Math.abs(displayChangePercent).toFixed(2)}%) Today
                 </p>
-
-                <PriceChart
-                  data={stock.chartData[chartRange]}
-                  range={chartRange}
-                  onRangeChange={setChartRange}
-                />
-              </>
-            ) : (
-              <p className="mt-4 text-sm text-zinc-500">
-                Market data not available for this ticker
-              </p>
-            )}
-
-            <div
-              className={`grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/[0.08] pt-8 ${
-                showMarketData ? "mt-8" : "mt-6"
-              }`}
-            >
-              <Stat label="Market Cap" value={stock.marketCap} />
-              <Stat label="Revenue (TTM)" value={stock.revenue} />
-              <Stat label="P/E Ratio" value={stock.peRatio} />
-              <Stat label="EPS (TTM)" value={stock.eps} />
-              <Stat label="EBITDA" value={stock.ebitda} />
-              <Stat label="Dividend Yield" value={stock.dividendYield} />
-            </div>
-
-            {stock.competitors.length > 0 && (
-              <div className="mt-8">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold">Competitors</h2>
-                  <span className="bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-sm font-medium text-transparent">
-                    View all
-                  </span>
-                </div>
-                <ul className="mt-3 divide-y divide-white/[0.08]">
-                  {stock.competitors.map((c) => (
-                    <li
-                      key={c.ticker}
-                      className="flex items-center justify-between py-3.5"
-                    >
-                      <div className="flex items-center gap-3">
-                        <CompanyLogo
-                          ticker={c.ticker}
-                          color={c.color}
-                          size={36}
-                        />
-                        <div>
-                          <p className="font-semibold">{c.ticker}</p>
-                          <p className="text-xs text-zinc-500">{c.name}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{c.price.toFixed(2)}</p>
-                        <p
-                          className={`text-xs font-medium ${
-                            c.changePercent >= 0
-                              ? "text-pocket-green"
-                              : "text-pocket-red"
-                          }`}
-                        >
-                          {c.changePercent >= 0 ? "▲" : "▼"}{" "}
-                          {Math.abs(c.changePercent).toFixed(2)}%
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
               </div>
-            )}
-          </>
+
+              <a
+                href={`${ETORO_URL}?utm_source=pocket_finance`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-no-drag
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.04] py-3.5 text-sm font-semibold text-white transition-colors active:scale-[0.98] active:bg-white/[0.08]"
+                style={{ touchAction: "manipulation" }}
+              >
+                {tradeLabel}
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <p className="mt-1.5 text-center text-[10px] text-zinc-600">
+                Affiliate partner · eToro
+              </p>
+
+              <PriceChart
+                data={chartPoints}
+                range={chartRange}
+                onRangeChange={setChartRange}
+              />
+
+              <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/[0.08] pt-8">
+                <Stat label="Market Cap" value={stock.marketCap} />
+                <Stat label="Revenue (TTM)" value={stock.revenue} />
+                <Stat label="P/E Ratio" value={stock.peRatio} />
+                <Stat label="EPS (TTM)" value={stock.eps} />
+                <Stat label="EBITDA" value={stock.ebitda} />
+                <Stat label="Dividend Yield" value={stock.dividendYield} />
+              </div>
+
+              {stock.competitors.length > 0 && (
+                <div className="mt-8">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-semibold">Competitors</h2>
+                    <span className="bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-sm font-medium text-transparent">
+                      View all
+                    </span>
+                  </div>
+                  <ul className="mt-3 divide-y divide-white/[0.08]">
+                    {stock.competitors.map((c) => (
+                      <li
+                        key={c.ticker}
+                        className="flex items-center justify-between py-3.5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <CompanyLogo
+                            ticker={c.ticker}
+                            color={c.color}
+                            size={36}
+                          />
+                          <div>
+                            <p className="font-semibold">{c.ticker}</p>
+                            <p className="text-xs text-zinc-500">{c.name}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{c.price.toFixed(2)}</p>
+                          <p
+                            className={`text-xs font-medium ${
+                              c.changePercent >= 0
+                                ? "text-pocket-green"
+                                : "text-pocket-red"
+                            }`}
+                          >
+                            {c.changePercent >= 0 ? "▲" : "▼"}{" "}
+                            {Math.abs(c.changePercent).toFixed(2)}%
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="mt-4 text-sm text-zinc-500">
+              Market data not available for this ticker
+            </p>
+          )
         ) : (
           <div className="flex h-48 items-center justify-center text-zinc-500">
             <p className="text-sm">{activeTab} — coming soon</p>

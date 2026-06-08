@@ -13,7 +13,11 @@ export type MarketExchange =
   | "KRX"
   | "CRYPTO"
   | "COMMODITIES"
-  | "US MARKETS";
+  | "US MARKETS"
+  | "JAPAN"
+  | "HONG KONG"
+  | "AUSTRALIA"
+  | "EUROPE";
 
 export type Sector =
   | "Technology"

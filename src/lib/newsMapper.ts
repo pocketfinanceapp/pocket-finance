@@ -3,7 +3,7 @@ import type { MarketExchange, NewsArticle, Sector } from "./types";
 import { hasUsableFeedImage } from "./feedImage";
 import { cleanArticleDescription } from "./articleText";
 import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
-import { inferTickerFromFields, resolveMarketForTicker } from "./tickerMap";
+import { inferTickerFromFields, resolveMarketForArticle } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
 
 interface NewsApiArticle {
@@ -49,7 +49,11 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
     subheading: description,
     body,
     imageUrl: hasUsableFeedImage(raw.urlToImage) ? raw.urlToImage! : "",
-    market: resolveMarketForTicker(meta.ticker),
+    market: resolveMarketForArticle({
+      ticker: meta.ticker,
+      sourceName,
+      sourceId,
+    }),
     sector: assignSector(meta.sector, index),
     ticker: meta.ticker,
     companyName: meta.companyName,

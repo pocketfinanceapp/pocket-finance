@@ -9,10 +9,9 @@ function generateChart(
   labels: string[]
 ): ChartPoint[] {
   const data: ChartPoint[] = [];
-  let price = basePrice * 0.98;
   for (let i = 0; i < points; i++) {
-    const drift = pseudoRandom(`${seed}-${i}`, -0.008, 0.012);
-    price = price * (1 + drift);
+    const pct = pseudoRandom(`${seed}-${i}`, -0.02, 0.02);
+    const price = basePrice * (1 + pct);
     data.push({
       time: labels[i] ?? `${i}`,
       price: Math.round(price * 100) / 100,
@@ -20,9 +19,24 @@ function generateChart(
   }
   data[data.length - 1] = {
     time: labels[labels.length - 1] ?? "Now",
-    price: basePrice,
+    price: Math.round(basePrice * 100) / 100,
   };
   return data;
+}
+
+/** Chart points within ±2% of the displayed price */
+export function getChartPointsForPrice(
+  basePrice: number,
+  ticker: string,
+  range: ChartRange
+): ChartPoint[] {
+  const labels = CHART_LABELS[range];
+  return generateChart(
+    `${ticker}-${range}-${basePrice}`,
+    basePrice,
+    labels.length,
+    labels
+  );
 }
 
 const CHART_LABELS: Record<ChartRange, string[]> = {
