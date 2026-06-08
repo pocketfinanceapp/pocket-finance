@@ -135,17 +135,12 @@ export function FeedCard({
                   "radial-gradient(circle at 35% 25%, rgba(255,255,255,0.35), transparent 55%)",
               }}
             />
-            {displayTicker !== "MARKET" && (
-              <span className="absolute left-1/2 top-1/2 z-[1] -translate-x-1/2 -translate-y-1/2 text-5xl font-bold tracking-tight text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
-                {displayTicker}
-              </span>
-            )}
           </div>
           <div
             className="pointer-events-none absolute inset-0 z-[1]"
             style={{ background: FALLBACK_CARD_OVERLAY }}
           />
-          {displayTicker === "MARKET" && <PocketGradientMark />}
+          <PocketGradientMark />
         </>
       )}
 
@@ -244,6 +239,7 @@ export function FeedCard({
 
         <ActionButton
           label="Share"
+          iconOnly
           onClick={async () => {
             const payload = {
               title: article.headline,
@@ -353,10 +349,12 @@ function ActionButton({
   children,
   label,
   onClick,
+  iconOnly = false,
 }: {
   children: React.ReactNode;
   label: string;
   onClick: () => void;
+  iconOnly?: boolean;
 }) {
   return (
     <button
@@ -368,7 +366,11 @@ function ActionButton({
         e.stopPropagation();
         onClick();
       }}
-      className="flex flex-col items-center gap-1.5 rounded-lg p-2 text-white transition-transform active:scale-90"
+      className={`rounded-lg p-2 text-white transition-transform active:scale-90 ${
+        iconOnly
+          ? "flex items-center justify-center"
+          : "flex flex-col items-center gap-1.5"
+      }`}
       style={{ touchAction: "manipulation" }}
     >
       {children}

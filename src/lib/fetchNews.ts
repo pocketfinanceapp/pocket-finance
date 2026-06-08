@@ -44,9 +44,10 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
     url.searchParams.set("sortBy", "publishedAt");
     url.searchParams.set("pageSize", "30");
     url.searchParams.set("apiKey", apiKey);
+    url.searchParams.set("_cb", String(Date.now()));
 
     let res = await fetch(url.toString(), {
-      next: { revalidate: 300 },
+      cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
 
@@ -56,8 +57,9 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       backup.searchParams.set("country", "us");
       backup.searchParams.set("pageSize", "30");
       backup.searchParams.set("apiKey", apiKey);
+      backup.searchParams.set("_cb", String(Date.now()));
       res = await fetch(backup.toString(), {
-        next: { revalidate: 300 },
+        cache: "no-store",
         signal: AbortSignal.timeout(8000),
       });
     }
