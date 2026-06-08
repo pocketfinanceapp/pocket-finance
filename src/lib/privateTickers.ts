@@ -53,7 +53,7 @@ const PRIVATE_COMPANY_PROFILES: Record<string, PrivateCompanyProfile> = {
     color: "#412991",
   },
   ANTHROPIC: {
-    fullName: "Anthropic PBC",
+    fullName: "Anthropic",
     founded: "2021",
     headquarters: "San Francisco, California",
     ceo: "Dario Amodei",

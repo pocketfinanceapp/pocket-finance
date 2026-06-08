@@ -1,21 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, ExternalLink, LogOut, Settings } from "lucide-react";
+import { ChevronRight, ExternalLink, Settings } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import {
   getReadingStreak,
-  loadFavouriteTopics,
   loadRecentlyRead,
-  PROFILE_TOPICS,
-  type ProfileTopic,
   type RecentlyReadEntry,
-  toggleFavouriteTopic,
 } from "@/lib/profileStorage";
 import { timeAgo } from "@/lib/utils";
+import { MyTopicsSelector } from "./MyTopicsSelector";
 import { PocketBrand } from "./PocketLogo";
 import { ScreenHeader } from "./ScreenHeader";
+import { SettingsPage } from "./SettingsPage";
 
 interface ProfilePageProps {
   onClose: () => void;
@@ -24,15 +22,13 @@ interface ProfilePageProps {
 export function ProfilePage({ onClose }: ProfilePageProps) {
   const { storiesRead, likedArticlesCount, savedArticles, reloadProfileStats } =
     useApp();
-  const { user, signOut } = useAuth();
-  const [signingOut, setSigningOut] = useState(false);
+  const { user } = useAuth();
+  const [showSettings, setShowSettings] = useState(false);
   const [streak, setStreak] = useState(0);
-  const [topics, setTopics] = useState<ProfileTopic[]>([]);
   const [recentlyRead, setRecentlyRead] = useState<RecentlyReadEntry[]>([]);
 
   const refreshLocalProfile = useCallback(() => {
     setStreak(getReadingStreak());
-    setTopics(loadFavouriteTopics());
     setRecentlyRead(loadRecentlyRead());
   }, []);
 
@@ -40,6 +36,10 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
     void reloadProfileStats();
     refreshLocalProfile();
   }, [reloadProfileStats, refreshLocalProfile]);
+
+  if (showSettings) {
+    return <SettingsPage onBack={() => setShowSettings(false)} />;
+  }
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ||
@@ -52,20 +52,6 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
         year: "numeric",
       })
     : null;
-
-  const handleSignOut = async () => {
-    setSigningOut(true);
-    try {
-      await signOut();
-      onClose();
-    } finally {
-      setSigningOut(false);
-    }
-  };
-
-  const handleTopicToggle = (topic: ProfileTopic) => {
-    setTopics(toggleFavouriteTopic(topic));
-  };
 
   const streakSubtitle =
     streak > 1
@@ -113,29 +99,12 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
           </div>
         </section>
 
-        <section className="mt-8">
+        <section id="profile-my-topics" className="mt-8 scroll-mt-4">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
             My Topics
           </h3>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {PROFILE_TOPICS.map((topic) => {
-              const selected = topics.includes(topic);
-              return (
-                <button
-                  key={topic}
-                  type="button"
-                  data-no-drag
-                  onClick={() => handleTopicToggle(topic)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition-transform active:scale-95 ${
-                    selected
-                      ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
-                      : "border border-white/[0.08] bg-white/[0.06] text-white"
-                  }`}
-                >
-                  {topic}
-                </button>
-              );
-            })}
+          <div className="mt-3">
+            <MyTopicsSelector />
           </div>
         </section>
 
@@ -175,6 +144,7 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
         <button
           type="button"
           data-no-drag
+          onClick={() => setShowSettings(true)}
           className="mt-8 flex w-full items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.04] px-5 py-4 active:bg-white/[0.08]"
         >
           <div className="flex items-center gap-3">
@@ -182,17 +152,6 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
             <span className="font-medium text-white">Settings</span>
           </div>
           <ChevronRight className="h-5 w-5 text-zinc-500" />
-        </button>
-
-        <button
-          type="button"
-          data-no-drag
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/25 bg-red-500/10 px-5 py-4 font-medium text-red-300 active:bg-red-500/15 disabled:opacity-50"
-        >
-          <LogOut className="h-5 w-5" />
-          {signingOut ? "Signing out…" : "Sign Out"}
         </button>
 
         <p className="mt-10 pb-6 text-center text-xs text-zinc-600">

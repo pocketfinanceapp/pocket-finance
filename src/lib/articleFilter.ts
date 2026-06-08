@@ -19,6 +19,7 @@ export const BLOCKED_DOMAINS = [
   "abc13.com",
   "abc11.com",
   "localtvwxyz.com",
+  "liveandletsfly.com",
 ] as const;
 
 export const BLOCKED_URL_PATTERNS = [
@@ -46,6 +47,7 @@ export const BLOCKED_SOURCE_SLUGS = [
   "abc13",
   "abc11",
   "localtvwxyz",
+  "liveandletsfly",
 ] as const;
 
 /** Crime / viral news title signals — excluded only when no finance keyword is present */
@@ -58,6 +60,13 @@ export const TITLE_CRIME_NON_FINANCE_PHRASES = [
   "sentenced to",
 ] as const;
 
+/** Travel scam / stowaway title signals — excluded only when no finance keyword is present */
+export const TITLE_TRAVEL_NON_FINANCE_PHRASES = [
+  "sneaks onto",
+  "fake boarding pass",
+  "flight with fake",
+] as const;
+
 /** Extra terms appended to NewsAPI NOT query */
 export const NEWS_API_BLOCKED_TERMS =
-  "kabc OR abc7 OR abc13 OR abc11 OR localtvwxyz OR nbcnews";
+  "kabc OR abc7 OR abc13 OR abc11 OR localtvwxyz OR nbcnews OR liveandletsfly";

@@ -1,6 +1,11 @@
 import { getSupabase } from "@/lib/supabase";
 import { resolveArticleTicker } from "@/lib/tickerMap";
-import type { Comment, NewsArticle, SavedArticleEntry } from "@/lib/types";
+import type {
+  Comment,
+  LikedArticleEntry,
+  NewsArticle,
+  SavedArticleEntry,
+} from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 
 const AVATAR_COLORS = [
@@ -175,6 +180,31 @@ export async function unlikeArticle(
     return false;
   }
   return true;
+}
+
+export async function fetchLikedArticles(
+  userId: string
+): Promise<LikedArticleEntry[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("liked_articles")
+    .select("id, article_id, article_title, article_url, ticker, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("fetchLikedArticles:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    articleId: row.article_id,
+    articleTitle: row.article_title,
+    articleUrl: row.article_url,
+    ticker: row.ticker,
+    likedAt: row.created_at,
+  }));
 }
 
 // ---------------------------------------------------------------------------

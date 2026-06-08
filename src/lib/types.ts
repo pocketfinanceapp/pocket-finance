@@ -71,6 +71,15 @@ export interface SavedArticleEntry {
   savedAt: string;
 }
 
+export interface LikedArticleEntry {
+  id: string;
+  articleId: string;
+  articleTitle: string;
+  articleUrl: string;
+  ticker: string;
+  likedAt: string;
+}
+
 export type ChartRange = "1D" | "1W" | "1M" | "3M" | "1Y" | "5Y" | "MAX";
 
 export interface ChartPoint {
