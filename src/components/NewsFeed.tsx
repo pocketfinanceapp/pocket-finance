@@ -11,6 +11,7 @@ import {
 } from "@/lib/filterArticles";
 import { isInteractiveTarget } from "@/lib/gesture";
 import { BOTTOM_NAV_PX, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
+import { addRecentlyRead } from "@/lib/profileStorage";
 
 const FEED_SLOT_HEIGHT = `(100svh - ${BOTTOM_NAV_PX}px)`;
 import type { NewsArticle } from "@/lib/types";
@@ -30,6 +31,7 @@ interface NewsFeedProps {
 }
 
 const PANEL_FEED = 1;
+const PANEL_ARTICLE = 2;
 const AXIS_LOCK = 6;
 const SWIPE_THRESHOLD_PX = 55;
 const SWIPE_VELOCITY = 0.35;
@@ -103,6 +105,7 @@ export function NewsFeed({
   const panelIndexRef = useRef(panelIndex);
   const feedIndexRef = useRef(feedIndex);
   const prevFeedIndex = useRef(feedIndex);
+  const prevPanelIndex = useRef(panelIndex);
 
   panelIndexRef.current = panelIndex;
   feedIndexRef.current = feedIndex;
@@ -129,6 +132,17 @@ export function NewsFeed({
     }
     prevFeedIndex.current = feedIndex;
   }, [feedIndex, filteredArticles.length, incrementStoriesRead]);
+
+  useEffect(() => {
+    if (
+      panelIndex === PANEL_ARTICLE &&
+      prevPanelIndex.current !== PANEL_ARTICLE &&
+      article
+    ) {
+      addRecentlyRead(article);
+    }
+    prevPanelIndex.current = panelIndex;
+  }, [panelIndex, article]);
 
   const goToPanel = useCallback((index: number) => {
     setPanelIndex(index);

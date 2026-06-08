@@ -12,6 +12,7 @@ import { MobilePageShell } from "./MobilePageShell";
 import { NewsFeed } from "./NewsFeed";
 import { WatchlistPage } from "./WatchlistPage";
 import { useNavigation } from "@/context/NavigationContext";
+import { recordAppVisit } from "@/lib/profileStorage";
 
 interface TabAppShellProps {
   initialArticles: NewsArticle[];
@@ -26,6 +27,7 @@ function TabPanels({ initialArticles }: TabAppShellProps) {
   useEffect(() => {
     ensureMarketsLoaded();
     ensureWatchlistLoaded();
+    recordAppVisit();
   }, [ensureMarketsLoaded, ensureWatchlistLoaded]);
 
   useEffect(() => {
