@@ -6,14 +6,12 @@ import { BottomNav, type NavTab } from "./BottomNav";
 interface MobilePageShellProps {
   activeTab: NavTab;
   children: React.ReactNode;
-  onCreate?: () => void;
 }
 
 /** Full-screen shell — feed area above a fixed 65px bottom nav */
 export function MobilePageShell({
   activeTab,
   children,
-  onCreate,
 }: MobilePageShellProps) {
   return (
     <div
@@ -26,7 +24,7 @@ export function MobilePageShell({
       >
         {children}
       </div>
-      <BottomNav active={activeTab} onCreate={onCreate} />
+      <BottomNav active={activeTab} />
     </div>
   );
 }

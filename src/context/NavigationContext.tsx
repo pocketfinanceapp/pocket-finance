@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,7 +17,6 @@ interface NavigationContextValue {
   activeTab: ShellTab;
   navTab: NavTab;
   navigate: (tab: NavTab) => void;
-  registerCreateHandler: (handler: (() => void) | null) => void;
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null);
@@ -37,8 +35,6 @@ function pathForTab(tab: NavTab): string {
       return "/watchlist";
     case "profile":
       return "/?tab=profile";
-    case "create":
-      return "/?sheet=create";
     default:
       return "/";
   }
@@ -53,7 +49,6 @@ export function NavigationProvider({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const createHandlerRef = useRef<(() => void) | null>(null);
 
   const [activeTab, setActiveTab] = useState<ShellTab>(() =>
     shellTabFromPath(pathname)
@@ -71,12 +66,7 @@ export function NavigationProvider({
 
   const navigate = useCallback(
     (tab: NavTab) => {
-      if (tab === "create" && pathname === "/" && createHandlerRef.current) {
-        createHandlerRef.current();
-        return;
-      }
-
-      if (tab === "home" || tab === "profile" || tab === "create") {
+      if (tab === "home" || tab === "profile") {
         setActiveTab("home");
       } else if (tab === "markets") {
         setActiveTab("markets");
@@ -86,14 +76,7 @@ export function NavigationProvider({
 
       router.replace(pathForTab(tab), { scroll: false });
     },
-    [pathname, router]
-  );
-
-  const registerCreateHandler = useCallback(
-    (handler: (() => void) | null) => {
-      createHandlerRef.current = handler;
-    },
-    []
+    [router]
   );
 
   const navTab: NavTab = profileOpen ? "profile" : activeTab;
@@ -103,9 +86,8 @@ export function NavigationProvider({
       activeTab,
       navTab,
       navigate,
-      registerCreateHandler,
     }),
-    [activeTab, navTab, navigate, registerCreateHandler]
+    [activeTab, navTab, navigate]
   );
 
   return (

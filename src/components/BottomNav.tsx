@@ -1,15 +1,14 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart2, Bookmark, Plus, User } from "lucide-react";
+import { BarChart2, Bookmark, User } from "lucide-react";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 
-export type NavTab = "home" | "markets" | "create" | "watchlist" | "profile";
+export type NavTab = "home" | "markets" | "watchlist" | "profile";
 
 interface BottomNavProps {
   active: NavTab;
-  onCreate?: () => void;
 }
 
 function tabFromPath(pathname: string): NavTab {
@@ -18,7 +17,7 @@ function tabFromPath(pathname: string): NavTab {
   return "home";
 }
 
-export function BottomNav({ active, onCreate }: BottomNavProps) {
+export function BottomNav({ active }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const navigation = useNavigationOptional();
@@ -48,13 +47,6 @@ export function BottomNav({ active, onCreate }: BottomNavProps) {
       case "profile":
         router.replace("/?tab=profile", { scroll: false });
         break;
-      case "create":
-        if (pathname === "/" && onCreate) {
-          onCreate();
-        } else {
-          router.replace("/?sheet=create", { scroll: false });
-        }
-        break;
     }
   };
 
@@ -71,7 +63,7 @@ export function BottomNav({ active, onCreate }: BottomNavProps) {
         height: BOTTOM_NAV_HEIGHT,
       }}
     >
-      <div className="relative flex h-full items-end justify-around px-2 pb-1">
+      <div className="grid h-full w-full grid-cols-4 items-end pb-1">
         <NavItem
           label="Home"
           active={homeActive}
@@ -90,16 +82,6 @@ export function BottomNav({ active, onCreate }: BottomNavProps) {
             strokeWidth={marketsActive ? 2.5 : 2}
           />
         </NavItem>
-
-        <button
-          type="button"
-          aria-label="Create"
-          data-no-drag
-          onClick={() => navigate("create")}
-          className="relative -top-3 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-black shadow-[0_4px_24px_rgba(255,255,255,0.18)] transition-transform active:scale-95"
-        >
-          <Plus className="h-7 w-7" strokeWidth={2.25} />
-        </button>
 
         <NavItem
           label="Watchlist"
@@ -168,7 +150,7 @@ function NavItem({
       type="button"
       data-no-drag
       onClick={onClick}
-      className="flex min-w-[56px] flex-col items-center gap-0.5 pb-0.5 transition-opacity active:opacity-70"
+      className="flex flex-col items-center justify-end gap-0.5 pb-0.5 transition-opacity active:opacity-70"
     >
       {children}
       <span

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { NavigationProvider } from "@/context/NavigationContext";
 import type { MarketFilter } from "@/lib/filters";
@@ -18,9 +18,7 @@ interface TabAppShellProps {
 }
 
 function TabPanels({ initialArticles }: TabAppShellProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { activeTab, navTab, navigate, registerCreateHandler } = useNavigation();
+  const { activeTab, navTab, navigate } = useNavigation();
   const { setMarketFilters, ensureMarketsLoaded, ensureWatchlistLoaded } =
     useApp();
   const [fadeKey, setFadeKey] = useState(0);
@@ -34,12 +32,6 @@ function TabPanels({ initialArticles }: TabAppShellProps) {
     setFadeKey((k) => k + 1);
   }, [activeTab]);
 
-  useEffect(() => {
-    if (searchParams.get("sheet") === "create" && activeTab !== "home") {
-      router.replace("/?sheet=create", { scroll: false });
-    }
-  }, [searchParams, activeTab, router]);
-
   const openMarketFeed = useCallback(
     (market: MarketFilter) => {
       setMarketFilters([market]);
@@ -48,27 +40,12 @@ function TabPanels({ initialArticles }: TabAppShellProps) {
     [setMarketFilters, navigate]
   );
 
-  const handleRegisterCreate = useCallback(
-    (openCreate: () => void) => {
-      registerCreateHandler(openCreate);
-      return () => registerCreateHandler(null);
-    },
-    [registerCreateHandler]
-  );
-
   return (
-    <MobilePageShell
-      activeTab={navTab}
-      onCreate={() => navigate("create")}
-    >
+    <MobilePageShell activeTab={navTab}>
       <div className="relative h-full w-full">
         <TabPanel active={activeTab === "home"} fadeKey={fadeKey}>
           <FeedErrorBoundary>
-            <NewsFeed
-              initialArticles={initialArticles}
-              embedded
-              onRegisterCreate={handleRegisterCreate}
-            />
+            <NewsFeed initialArticles={initialArticles} embedded />
           </FeedErrorBoundary>
         </TabPanel>
 

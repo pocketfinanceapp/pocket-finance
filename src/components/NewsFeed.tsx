@@ -16,7 +16,6 @@ const FEED_SLOT_HEIGHT = `(100svh - ${BOTTOM_NAV_PX}px)`;
 import type { NewsArticle } from "@/lib/types";
 import type { NavTab } from "./BottomNav";
 import { CommentSheet } from "./CommentSheet";
-import { CreateThoughtSheet } from "./CreateThoughtSheet";
 import { FeedCard } from "./FeedCard";
 import { FilterPanel } from "./FilterPanel";
 import { ArticlePanel } from "./ArticlePanel";
@@ -28,7 +27,6 @@ interface NewsFeedProps {
   initialArticles: NewsArticle[];
   /** When true, shell + bottom nav are provided by TabAppShell */
   embedded?: boolean;
-  onRegisterCreate?: (openCreate: () => void) => (() => void) | void;
 }
 
 const PANEL_FEED = 1;
@@ -43,7 +41,6 @@ type LockedAxis = "x" | "y" | null;
 export function NewsFeed({
   initialArticles,
   embedded = false,
-  onRegisterCreate,
 }: NewsFeedProps) {
   const [allArticles] = useState(
     initialArticles.length > 0 ? initialArticles : DEMO_ARTICLES
@@ -92,7 +89,6 @@ export function NewsFeed({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [dragX, setDragX] = useState(0);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -112,18 +108,11 @@ export function NewsFeed({
   feedIndexRef.current = feedIndex;
 
   const article = filteredArticles[feedIndex] ?? filteredArticles[0];
-  const gesturesEnabled = overlay === null && !filterOpen && !commentsOpen && !createOpen;
+  const gesturesEnabled = overlay === null && !filterOpen && !commentsOpen;
 
   useEffect(() => {
     setOverlay(searchParams.get("tab") === "profile" ? "profile" : null);
   }, [searchParams]);
-
-  useEffect(() => {
-    if (searchParams.get("sheet") === "create") {
-      setCreateOpen(true);
-      router.replace("/", { scroll: false });
-    }
-  }, [searchParams, router]);
 
   useEffect(() => {
     const max = Math.max(0, filteredArticles.length - 1);
@@ -149,16 +138,6 @@ export function NewsFeed({
   const goToFeed = useCallback(() => {
     goToPanel(PANEL_FEED);
   }, [goToPanel]);
-
-  const openCreateSheet = useCallback(() => {
-    goToPanel(PANEL_FEED);
-    setCreateOpen(true);
-  }, [goToPanel]);
-
-  useEffect(() => {
-    if (!onRegisterCreate) return;
-    return onRegisterCreate(openCreateSheet) ?? undefined;
-  }, [onRegisterCreate, openCreateSheet]);
 
   const closeProfile = useCallback(() => {
     router.replace("/", { scroll: false });
@@ -408,11 +387,6 @@ export function NewsFeed({
           onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
         />
         <FilterPanel open={filterOpen} onClose={() => setFilterOpen(false)} />
-        <CreateThoughtSheet
-          open={createOpen}
-          onClose={() => setCreateOpen(false)}
-          defaultTicker={article?.ticker}
-        />
     </div>
   );
 
@@ -423,11 +397,6 @@ export function NewsFeed({
   const navTab: NavTab = overlay === "profile" ? "profile" : "home";
 
   return (
-    <MobilePageShell
-      activeTab={navTab}
-      onCreate={openCreateSheet}
-    >
-      {feedContent}
-    </MobilePageShell>
+    <MobilePageShell activeTab={navTab}>{feedContent}</MobilePageShell>
   );
 }
