@@ -2,7 +2,7 @@ import type { MarketFilter, SectorFilter } from "./filters";
 import { articleMatchesMarket } from "./filters";
 import type { NewsArticle } from "./types";
 
-export type FeedMode = "forYou" | "following";
+export type FeedMode = "forYou" | "following" | "trending";
 
 export function filterArticles(
   articles: NewsArticle[],
@@ -87,6 +87,8 @@ export function buildFeedArticles(
   sectorInterests: SectorFilter[],
   searchQuery: string
 ): NewsArticle[] {
+  if (mode === "trending") return [];
+
   if (mode === "following") {
     if (followedMarkets.length === 0) return [];
     return filterArticles(

@@ -10,7 +10,7 @@ import {
   type FeedMode,
 } from "@/lib/filterArticles";
 import { isInteractiveTarget } from "@/lib/gesture";
-import { FEED_CARD_HEIGHT, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
+import { FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 import { addRecentlyRead } from "@/lib/profileStorage";
 import type { NewsArticle } from "@/lib/types";
 import type { NavTab } from "./BottomNav";
@@ -22,7 +22,7 @@ import { StockPanel } from "./StockPanel";
 import { MobilePageShell } from "./MobilePageShell";
 import { AddToHomeScreenBanner } from "./AddToHomeScreenBanner";
 import { ProfilePage } from "./ProfilePage";
-import { TrendingNowSection } from "./TrendingNowSection";
+import { TrendingFeed } from "./TrendingFeed";
 
 interface NewsFeedProps {
   initialArticles: NewsArticle[];
@@ -62,6 +62,9 @@ export function NewsFeed({
   } = useApp();
 
   const [feedMode, setFeedMode] = useState<FeedMode>("forYou");
+  const [articleOverride, setArticleOverride] = useState<NewsArticle | null>(
+    null
+  );
 
   const filteredArticles = useMemo(
     () =>
@@ -106,13 +109,16 @@ export function NewsFeed({
   const last = useRef({ x: 0, y: 0, t: 0 });
   const panelIndexRef = useRef(panelIndex);
   const feedIndexRef = useRef(feedIndex);
+  const feedModeRef = useRef(feedMode);
   const prevFeedIndex = useRef(feedIndex);
   const prevPanelIndex = useRef(panelIndex);
 
   panelIndexRef.current = panelIndex;
   feedIndexRef.current = feedIndex;
+  feedModeRef.current = feedMode;
 
-  const article = filteredArticles[feedIndex] ?? filteredArticles[0];
+  const swipeArticle = filteredArticles[feedIndex] ?? filteredArticles[0];
+  const article = articleOverride ?? swipeArticle;
   const gesturesEnabled = overlay === null && !filterOpen && !commentsOpen;
 
   const trendingArticles = useMemo(
@@ -123,16 +129,8 @@ export function NewsFeed({
             new Date(b.publishedAt).getTime() -
             new Date(a.publishedAt).getTime()
         )
-        .slice(0, 5),
+        .slice(0, 10),
     [allArticles]
-  );
-
-  const jumpToArticle = useCallback(
-    (articleId: string) => {
-      const idx = filteredArticles.findIndex((a) => a.id === articleId);
-      if (idx >= 0) setFeedIndex(idx);
-    },
-    [filteredArticles, setFeedIndex]
   );
 
   useEffect(() => {
@@ -173,7 +171,16 @@ export function NewsFeed({
 
   const goToFeed = useCallback(() => {
     goToPanel(PANEL_FEED);
+    setArticleOverride(null);
   }, [goToPanel]);
+
+  const openArticle = useCallback(
+    (selected: NewsArticle) => {
+      setArticleOverride(selected);
+      goToPanel(PANEL_ARTICLE);
+    },
+    [goToPanel]
+  );
 
   const closeProfile = useCallback(() => {
     router.replace("/", { scroll: false });
@@ -224,7 +231,9 @@ export function NewsFeed({
         if (Math.hypot(dx, dy) < AXIS_LOCK) return;
 
         const inFeed =
-          startedInFeed.current && panelIndexRef.current === PANEL_FEED;
+          startedInFeed.current &&
+          panelIndexRef.current === PANEL_FEED &&
+          feedModeRef.current !== "trending";
 
         if (inFeed && Math.abs(dy) >= Math.abs(dx)) {
           axis.current = "y";
@@ -311,7 +320,7 @@ export function NewsFeed({
     : "transition-transform duration-300 ease-out";
 
   const hTransform = `translateX(calc(-${panelIndex} * 33.333% + ${dragX}px))`;
-  const vTransform = `translateY(calc(-${feedIndex} * ${FEED_CARD_HEIGHT} + ${dragY}px))`;
+  const vTransform = `translateY(calc(-${feedIndex} * ${FEED_VIEWPORT_HEIGHT} + ${dragY}px))`;
 
   const feedContent = (
     <div
@@ -339,24 +348,23 @@ export function NewsFeed({
           </div>
 
           <div
-            className="relative flex shrink-0 flex-col overflow-hidden"
+            data-feed-column
+            className="relative shrink-0 overflow-hidden"
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,
+              touchAction: feedMode === "trending" ? "pan-y" : "none",
             }}
           >
-            <TrendingNowSection
-              articles={trendingArticles}
-              onSelectArticle={jumpToArticle}
-              onSeeAll={() => setFeedIndex(0)}
-            />
-
-            <div
-              data-feed-column
-              className="relative min-h-0 flex-1 touch-none overflow-hidden"
-              style={{ touchAction: "none" }}
-            >
-            {filteredArticles.length === 0 ? (
+            {feedMode === "trending" ? (
+              <TrendingFeed
+                articles={trendingArticles}
+                feedMode={feedMode}
+                onFeedModeChange={setFeedMode}
+                onOpenFilter={() => setFilterOpen(true)}
+                onOpenArticle={openArticle}
+              />
+            ) : filteredArticles.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center px-8 text-center">
                 <p className="text-lg font-semibold text-white">
                   {feedMode === "following"
@@ -386,7 +394,7 @@ export function NewsFeed({
               <div
                 className={`w-full touch-none ${trackTransition}`}
                 style={{
-                  height: `calc(${filteredArticles.length} * ${FEED_CARD_HEIGHT})`,
+                  height: `calc(${filteredArticles.length} * ${FEED_VIEWPORT_HEIGHT})`,
                   transform: vTransform,
                 }}
               >
@@ -394,7 +402,7 @@ export function NewsFeed({
                   <div
                     key={a.id}
                     className="w-full shrink-0"
-                    style={{ height: FEED_CARD_HEIGHT }}
+                    style={{ height: FEED_VIEWPORT_HEIGHT }}
                   >
                     <FeedCard
                       article={a}
@@ -409,7 +417,6 @@ export function NewsFeed({
                 ))}
               </div>
             )}
-            </div>
           </div>
 
           <div

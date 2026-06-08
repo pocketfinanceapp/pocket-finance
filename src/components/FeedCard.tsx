@@ -15,7 +15,6 @@ import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
-import { PocketMarkIcon } from "./PocketLogo";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
@@ -25,10 +24,7 @@ import {
   getArticleDisplayTicker,
   resolveMarketForTicker,
 } from "@/lib/tickerMap";
-import {
-  getExplicitFilterLabels,
-  hasExplicitFilters,
-} from "@/lib/activeFilters";
+import { FeedHeader } from "./FeedHeader";
 
 interface FeedCardProps {
   article: NewsArticle;
@@ -56,23 +52,8 @@ export function FeedCard({
     saveArticle,
     unsaveArticle,
     isArticleSaved,
-    marketFilters,
-    sectorFilters,
-    searchQuery,
-    clearFilters,
   } = useApp();
   const { liked, likeCount, toggleLike } = useArticleLikes(article, active);
-
-  const filterLabels = getExplicitFilterLabels(
-    marketFilters,
-    sectorFilters,
-    searchQuery
-  );
-  const showFilterPill = hasExplicitFilters(
-    marketFilters,
-    sectorFilters,
-    searchQuery
-  );
 
   const usableInitial = hasUsableFeedImage(article.imageUrl);
   const [showImage, setShowImage] = useState(usableInitial);
@@ -125,72 +106,12 @@ export function FeedCard({
         <FeedCardFallbackBackground />
       )}
 
-      <header className="absolute left-0 right-0 top-0 z-20 border-b border-white/[0.06] bg-black/90 backdrop-blur-md">
-        <div
-          className="flex items-center justify-between px-4 pb-1.5"
-          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
-        >
-          <div className="flex w-9 shrink-0 items-center justify-start" data-no-drag>
-            <PocketMarkIcon size={36} glow="none" />
-          </div>
-          <nav className="flex gap-7 text-[13px] font-semibold tracking-wide">
-            <button
-              type="button"
-              data-no-drag
-              onPointerDown={stop}
-              onClick={() => onFeedModeChange("forYou")}
-              className={`relative pb-2 ${
-                feedMode === "forYou" ? "text-white" : "text-white/40"
-              }`}
-            >
-              For You
-              {feedMode === "forYou" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
-              )}
-            </button>
-            <button
-              type="button"
-              data-no-drag
-              onPointerDown={stop}
-              onClick={() => onFeedModeChange("following")}
-              className={`relative pb-2 ${
-                feedMode === "following" ? "text-white" : "text-white/40"
-              }`}
-            >
-              Following
-              {feedMode === "following" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
-              )}
-            </button>
-          </nav>
-          <button
-            type="button"
-            data-no-drag
-            onPointerDown={stop}
-            onClick={onOpenFilter}
-            className="flex h-11 w-11 items-center justify-center rounded-full text-white/90 active:bg-white/10"
-            aria-label="Search"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="7" strokeWidth="2" />
-              <path strokeWidth="2" d="M20 20l-4-4" />
-            </svg>
-          </button>
-        </div>
-        {showFilterPill && (
-          <div className="flex justify-center px-4 pb-2" data-no-drag>
-            <button
-              type="button"
-              onPointerDown={stop}
-              onClick={clearFilters}
-              className="max-w-full truncate rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[11px] font-medium text-zinc-400 backdrop-blur-sm active:bg-white/10"
-            >
-              {filterLabels.join(" · ")}
-              <span className="ml-1.5 text-zinc-500">×</span>
-            </button>
-          </div>
-        )}
-      </header>
+      <FeedHeader
+        feedMode={feedMode}
+        onFeedModeChange={onFeedModeChange}
+        onOpenFilter={onOpenFilter}
+        className="absolute left-0 right-0 top-0 z-20"
+      />
 
       <aside
         className="absolute bottom-4 right-4 z-30 flex flex-col items-center gap-5"
