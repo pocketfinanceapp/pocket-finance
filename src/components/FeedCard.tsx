@@ -14,7 +14,8 @@ import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
-import { PocketGradientMark, PocketMarkIcon } from "./PocketLogo";
+import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
+import { PocketMarkIcon } from "./PocketLogo";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
@@ -38,13 +39,6 @@ interface FeedCardProps {
 
 const CARD_OVERLAY =
   "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.92) 100%)";
-
-/** Bottom-only scrim for gradient fallbacks — top ~70% stays undimmed */
-const FALLBACK_CARD_OVERLAY =
-  "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.28) 85%, rgba(0,0,0,0.55) 100%)";
-
-const FALLBACK_GRADIENT =
-  "linear-gradient(145deg, #3B6EF5 0%, #00C6C6 100%)";
 
 export function FeedCard({
   article,
@@ -123,25 +117,7 @@ export function FeedCard({
           />
         </>
       ) : (
-        <>
-          <div
-            className="absolute inset-0 z-0"
-            style={{ background: FALLBACK_GRADIENT }}
-          >
-            <div
-              className="absolute inset-0 opacity-40"
-              style={{
-                background:
-                  "radial-gradient(circle at 35% 25%, rgba(255,255,255,0.35), transparent 55%)",
-              }}
-            />
-          </div>
-          <div
-            className="pointer-events-none absolute inset-0 z-[1]"
-            style={{ background: FALLBACK_CARD_OVERLAY }}
-          />
-          <PocketGradientMark />
-        </>
+        <FeedCardFallbackBackground />
       )}
 
       <header className="absolute left-0 right-0 top-0 z-20 border-b border-white/[0.06] bg-black/90 backdrop-blur-md">

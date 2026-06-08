@@ -1,3 +1,11 @@
+import {
+  BLOCKED_DOMAINS,
+  BLOCKED_SOURCE_NAMES,
+  BLOCKED_SOURCE_SLUGS,
+  BLOCKED_URL_PATTERNS,
+  TITLE_CRIME_NON_FINANCE_PHRASES,
+} from "./articleFilter";
+
 const SPORTS_PHRASES = [
   "travis kelce",
   "premier league",
@@ -29,41 +37,6 @@ const SPORTS_WORDS = [
   "lakers",
   "yankees",
   "kelce",
-] as const;
-
-const BLOCKED_DOMAINS = [
-  "gov.uk",
-  "researchbuzz.me",
-  "buzzfeed.com",
-  "gizmodo.com",
-  "mashable.com",
-  "mlive.com",
-  "huffpost.com",
-  "dailymail.co.uk",
-  "tmz.com",
-  "people.com",
-  "eonline.com",
-  "usmagazine.com",
-  "entertainment.yahoo.com",
-] as const;
-
-const BLOCKED_URL_PATTERNS = ["yahoo.com/entertainment"] as const;
-
-const BLOCKED_SOURCE_NAMES = ["yahoo entertainment"] as const;
-
-const BLOCKED_SOURCE_SLUGS = [
-  "researchbuzz",
-  "buzzfeed",
-  "gizmodo",
-  "mashable",
-  "mlive",
-  "huffpost",
-  "dailymail",
-  "tmz",
-  "people",
-  "eonline",
-  "usmagazine",
-  "yahoo-entertainment",
 ] as const;
 
 const TITLE_EXCLUDED_PHRASES = [
@@ -245,6 +218,15 @@ function isConsumerRecallNonFinanceTitle(title: string): boolean {
   return TITLE_CONSUMER_RECALL_PHRASES.some((phrase) => lower.includes(phrase));
 }
 
+function isCrimeNonFinanceTitle(title: string): boolean {
+  if (hasTitleFinanceAllowKeywords(title)) return false;
+
+  const lower = title.toLowerCase();
+  return TITLE_CRIME_NON_FINANCE_PHRASES.some((phrase) =>
+    lower.includes(phrase)
+  );
+}
+
 function isNonFinancialPrRelease(input: ArticleFilterInput): boolean {
   const blob = [
     input.title,
@@ -294,6 +276,8 @@ function titleContainsExcludedTopic(title: string): boolean {
   if (isPoliticalLegalNonFinanceTitle(title)) return true;
 
   if (isConsumerRecallNonFinanceTitle(title)) return true;
+
+  if (isCrimeNonFinanceTitle(title)) return true;
 
   if (!isAviationFinanceTitle(title)) {
     for (const word of AVIATION_INCIDENT_WORDS) {
