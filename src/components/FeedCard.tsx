@@ -39,6 +39,9 @@ interface FeedCardProps {
 const CARD_OVERLAY =
   "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.92) 100%)";
 
+const FALLBACK_GRADIENT =
+  "linear-gradient(145deg, #3B6EF5 0%, #00C6C6 100%)";
+
 export function FeedCard({
   article,
   active,
@@ -115,7 +118,33 @@ export function FeedCard({
             style={{ background: CARD_OVERLAY }}
           />
         </>
-      ) : null}
+      ) : (
+        <>
+          <div
+            className="absolute inset-0 z-0 flex items-center justify-center"
+            style={{ background: FALLBACK_GRADIENT }}
+          >
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{
+                background:
+                  "radial-gradient(circle at 35% 25%, rgba(255,255,255,0.35), transparent 55%)",
+              }}
+            />
+            {displayTicker !== "MARKET" ? (
+              <span className="relative z-[1] text-5xl font-bold tracking-tight text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                {displayTicker}
+              </span>
+            ) : (
+              <PocketMarkIcon size={88} glow="hero" className="relative z-[1]" />
+            )}
+          </div>
+          <div
+            className="pointer-events-none absolute inset-0 z-[1]"
+            style={{ background: CARD_OVERLAY }}
+          />
+        </>
+      )}
 
       <header className="absolute left-0 right-0 top-0 z-20 border-b border-white/[0.06] bg-black/90 backdrop-blur-md">
         <div

@@ -11,10 +11,12 @@ export function CompanyLogo({
   ticker,
   color,
   size = 28,
+  shape = "square",
 }: {
   ticker: string;
   color: string;
   size?: number;
+  shape?: "square" | "circle";
 }) {
   const upper = ticker.toUpperCase();
   const showGlobe = upper === "MARKET";
@@ -22,7 +24,9 @@ export function CompanyLogo({
 
   return (
     <div
-      className="flex shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
+      className={`flex shrink-0 items-center justify-center text-xs font-bold text-white ${
+        shape === "circle" ? "rounded-full" : "rounded-md"
+      }`}
       style={{
         width: size,
         height: size,

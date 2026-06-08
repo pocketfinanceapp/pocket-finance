@@ -265,7 +265,12 @@ function PrivateCompanyProfileView({
   return (
     <div className="mt-2">
       <div className="flex flex-col items-center text-center">
-        <CompanyLogo ticker={ticker} color={profile.color} size={80} />
+        <CompanyLogo
+          ticker={ticker}
+          color={profile.color}
+          size={80}
+          shape="circle"
+        />
         <h1 className="mt-4 text-2xl font-bold tracking-tight">
           {profile.fullName}
         </h1>

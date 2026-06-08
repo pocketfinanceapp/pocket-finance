@@ -34,7 +34,7 @@ const PRIVATE_COMPANY_PROFILES: Record<string, PrivateCompanyProfile> = {
       "2020 — First crewed mission to the ISS via Crew Dragon",
       "2023 — Starship completes first integrated flight test",
     ],
-    color: "#0B0B0B",
+    color: "#374151",
   },
   OPENAI: {
     fullName: "OpenAI, Inc.",
