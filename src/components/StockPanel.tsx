@@ -67,7 +67,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const displayChange = liveQuote?.change ?? stock?.change ?? 0;
   const displayChangePercent =
     liveQuote?.changePercent ?? stock?.changePercent ?? 0;
-  const isLive = liveQuote !== null;
+  const hasMassiveQuote = liveQuote !== null;
   const isUp = displayChangePercent >= 0;
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
@@ -179,10 +179,15 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
                   })}{" "}
                   <span className="text-lg font-normal text-zinc-400">USD</span>
                 </p>
-                {isLive && (
-                  <span className="rounded-full bg-[#34c759]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#34c759]">
-                    Live
-                  </span>
+                {hasMassiveQuote && (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      Delayed
+                    </span>
+                    <span className="text-[10px] text-zinc-500">
+                      Prices delayed 15min
+                    </span>
+                  </div>
                 )}
               </div>
               <p

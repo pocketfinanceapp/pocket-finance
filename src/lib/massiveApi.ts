@@ -83,10 +83,19 @@ export async function fetchStockPrice(
 
     if (price === null || changePercent === null) return null;
 
+    let adjustedPrice = price;
+    let adjustedChange = change ?? (price * changePercent) / 100;
+
+    // NVDA 10-for-1 split (Jun 2024) — some feeds still return pre-split prices
+    if (symbol === "NVDA" && adjustedPrice > 500) {
+      adjustedPrice /= 10;
+      adjustedChange /= 10;
+    }
+
     return {
-      price,
+      price: adjustedPrice,
       changePercent,
-      change: change ?? (price * changePercent) / 100,
+      change: adjustedChange,
       source: "massive",
     };
   } catch {
