@@ -58,9 +58,9 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
   NVDA: {
     ticker: "NVDA",
     name: "NVIDIA Corporation",
-    price: 1067.98,
-    change: 24.37,
-    changePercent: 2.34,
+    price: 131.38,
+    change: -3.07,
+    changePercent: -2.29,
     logoColor: "#76b900",
     marketCap: "$2.8T",
     revenue: "$60.9B",
@@ -183,7 +183,7 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     ebitda: "$8.2B",
     dividendYield: "0.45%",
     competitors: [
-      { ticker: "NVDA", name: "NVIDIA Corporation", price: 1067.98, changePercent: 2.34, color: "#76b900" },
+      { ticker: "NVDA", name: "NVIDIA Corporation", price: 131.38, changePercent: -2.29, color: "#76b900" },
       { ticker: "AMD", name: "Advanced Micro Devices", price: 168.32, changePercent: 1.45, color: "#ed1c24" },
       { ticker: "INTC", name: "Intel Corporation", price: 31.86, changePercent: -0.31, color: "#0071c5" },
     ],
