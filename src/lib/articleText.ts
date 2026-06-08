@@ -37,6 +37,13 @@ const BLOCKED_DOMAINS = [
   "buzzfeed.com",
   "gizmodo.com",
   "mashable.com",
+  "mlive.com",
+  "huffpost.com",
+  "dailymail.co.uk",
+  "tmz.com",
+  "people.com",
+  "eonline.com",
+  "usmagazine.com",
 ] as const;
 
 const BLOCKED_SOURCE_SLUGS = [
@@ -44,6 +51,13 @@ const BLOCKED_SOURCE_SLUGS = [
   "buzzfeed",
   "gizmodo",
   "mashable",
+  "mlive",
+  "huffpost",
+  "dailymail",
+  "tmz",
+  "people",
+  "eonline",
+  "usmagazine",
 ] as const;
 
 const TITLE_EXCLUDED_PHRASES = [
@@ -104,6 +118,16 @@ const TITLE_POLITICAL_LEGAL_WORDS = [
 /** Finance keywords that keep political/legal titles when present in the headline */
 const TITLE_FINANCE_ALLOW_RE =
   /\b(stocks?|shares|earnings|revenue|market|investors?|trading|ipo|sec\b|fed\b|rates?|inflation)\b/i;
+
+/** Consumer / product safety title signals — excluded only when no finance keyword is present */
+const TITLE_CONSUMER_RECALL_PHRASES = [
+  "recalled for",
+  "contamination",
+  "baby wipes",
+  "food recall",
+  "health warning",
+  "product recall",
+] as const;
 
 const OTHER_EXCLUDED_WORDS = [
   "accident",
@@ -199,6 +223,13 @@ function isPoliticalLegalNonFinanceTitle(title: string): boolean {
   return false;
 }
 
+function isConsumerRecallNonFinanceTitle(title: string): boolean {
+  if (hasTitleFinanceAllowKeywords(title)) return false;
+
+  const lower = title.toLowerCase();
+  return TITLE_CONSUMER_RECALL_PHRASES.some((phrase) => lower.includes(phrase));
+}
+
 function isNonFinancialPrRelease(input: ArticleFilterInput): boolean {
   const blob = [
     input.title,
@@ -246,6 +277,8 @@ function titleContainsExcludedTopic(title: string): boolean {
   const lower = title.toLowerCase();
 
   if (isPoliticalLegalNonFinanceTitle(title)) return true;
+
+  if (isConsumerRecallNonFinanceTitle(title)) return true;
 
   if (!isAviationFinanceTitle(title)) {
     for (const word of AVIATION_INCIDENT_WORDS) {

@@ -14,7 +14,7 @@ import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
 import { MarketBadge } from "./MarketBadge";
-import { PocketMarkIcon } from "./PocketLogo";
+import { PocketGradientMark, PocketMarkIcon } from "./PocketLogo";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
@@ -136,7 +136,7 @@ export function FeedCard({
                 {displayTicker}
               </span>
             ) : (
-              <PocketMarkIcon size={88} glow="hero" className="relative z-[1]" />
+              <PocketGradientMark size={88} className="relative z-[1]" />
             )}
           </div>
           <div
