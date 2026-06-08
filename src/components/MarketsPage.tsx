@@ -15,8 +15,10 @@ import {
 } from "@/lib/markets";
 import type { MarketsSnapshot } from "@/context/AppContext";
 import { MarketSparkline } from "./MarketSparkline";
+import { GlobalIndexesSection } from "./GlobalIndexesSection";
+import { TopMoversSection } from "./TopMoversSection";
 
-export const MARKETS_LIST_VERSION = "following-cards-v5";
+export const MARKETS_LIST_VERSION = "global-indexes-movers-v6";
 
 interface MarketsPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
@@ -79,6 +81,20 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
         <div className="px-4 pt-3">
           <MarketSummaryBar movers={movers} session={session} />
         </div>
+
+        <GlobalIndexesSection />
+
+        <div
+          className="mx-4 mt-4 h-px bg-gradient-to-r from-transparent via-[#3B6EF5]/50 to-transparent"
+          aria-hidden
+        />
+
+        <TopMoversSection />
+
+        <div
+          className="mx-4 mt-4 h-px bg-gradient-to-r from-transparent via-[#3B6EF5]/50 to-transparent"
+          aria-hidden
+        />
 
         {followingMarkets.length > 0 && (
           <section className="mt-4">
