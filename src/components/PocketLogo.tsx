@@ -22,7 +22,7 @@ const glowClass: Record<NonNullable<PocketMarkIconProps["glow"]>, string> = {
   hero: "drop-shadow-[0_0_24px_rgba(0,198,198,0.45)] drop-shadow-[0_0_12px_rgba(59,110,245,0.55)]",
 };
 
-/** Transparent P mark (inline SVG) — no background box; for brand-gradient surfaces */
+/** Solid white P mark (inline SVG) — for brand-gradient fallback cards */
 export function PocketGradientMark({
   size = 88,
   className = "",
@@ -30,10 +30,6 @@ export function PocketGradientMark({
   size?: number;
   className?: string;
 }) {
-  const uid = useId().replace(/:/g, "");
-  const gradId = `pocket-mark-grad-${uid}`;
-  const markFill = `url(#${gradId})`;
-
   return (
     <svg
       width={size}
@@ -41,25 +37,19 @@ export function PocketGradientMark({
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`shrink-0 drop-shadow-[0_4px_24px_rgba(0,0,0,0.3)] ${className}`}
+      className={`shrink-0 ${className}`}
       aria-hidden
     >
-      <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={BLUE} />
-          <stop offset="100%" stopColor={TEAL} />
-        </linearGradient>
-      </defs>
       <path
         d="M22 14V86M22 14H50C72 14 80 28 80 46C80 64 70 78 48 78H34"
-        stroke={markFill}
+        stroke="#FFFFFF"
         strokeWidth="12"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <rect x="52" y="60" width="6" height="12" rx="1.5" fill={markFill} />
-      <rect x="61" y="52" width="6" height="20" rx="1.5" fill={markFill} />
-      <rect x="70" y="42" width="6" height="30" rx="1.5" fill={markFill} />
+      <rect x="52" y="60" width="6" height="12" rx="1.5" fill="#FFFFFF" />
+      <rect x="61" y="52" width="6" height="20" rx="1.5" fill="#FFFFFF" />
+      <rect x="70" y="42" width="6" height="30" rx="1.5" fill="#FFFFFF" />
     </svg>
   );
 }
