@@ -1,17 +1,18 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart2, Bookmark, User } from "lucide-react";
+import { BarChart2, Bookmark, Compass, User } from "lucide-react";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 
-export type NavTab = "home" | "markets" | "watchlist" | "profile";
+export type NavTab = "home" | "markets" | "browse" | "watchlist" | "profile";
 
 interface BottomNavProps {
   active: NavTab;
 }
 
 function tabFromPath(pathname: string): NavTab {
+  if (pathname.startsWith("/browse")) return "browse";
   if (pathname === "/markets") return "markets";
   if (pathname === "/watchlist") return "watchlist";
   if (pathname === "/profile") return "profile";
@@ -26,6 +27,7 @@ export function BottomNav({ active }: BottomNavProps) {
 
   const homeActive = resolvedActive === "home";
   const marketsActive = resolvedActive === "markets";
+  const browseActive = resolvedActive === "browse";
   const watchlistActive = resolvedActive === "watchlist";
   const profileActive = resolvedActive === "profile";
 
@@ -41,6 +43,9 @@ export function BottomNav({ active }: BottomNavProps) {
         break;
       case "markets":
         router.replace("/markets", { scroll: false });
+        break;
+      case "browse":
+        router.replace("/browse", { scroll: false });
         break;
       case "watchlist":
         router.replace("/watchlist", { scroll: false });
@@ -64,7 +69,7 @@ export function BottomNav({ active }: BottomNavProps) {
         height: BOTTOM_NAV_HEIGHT,
       }}
     >
-      <div className="grid h-full w-full grid-cols-4 items-end pb-1">
+      <div className="grid h-full w-full grid-cols-5 items-end pb-1">
         <NavItem
           label="Home"
           active={homeActive}
@@ -81,6 +86,17 @@ export function BottomNav({ active }: BottomNavProps) {
           <BarChart2
             className={`h-[22px] w-[22px] ${marketsActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={marketsActive ? 2.5 : 2}
+          />
+        </NavItem>
+
+        <NavItem
+          label="Browse"
+          active={browseActive}
+          onClick={() => navigate("browse")}
+        >
+          <Compass
+            className={`h-[22px] w-[22px] ${browseActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            strokeWidth={browseActive ? 2.5 : 2}
           />
         </NavItem>
 

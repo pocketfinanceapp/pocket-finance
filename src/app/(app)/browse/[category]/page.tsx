@@ -1,0 +1,4 @@
+/** Browse category content is rendered by TabAppShell in the app layout */
+export default function BrowseCategoryRoute() {
+  return null;
+}

@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
+import { getArticleBodyPreview } from "@/lib/articlePreview";
 import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
@@ -58,6 +59,9 @@ export function FeedCard({
     sourceId: article.sourceId,
   });
   const isFallbackCard = !(showImage && imgSrc);
+  const bodyPreview = getArticleBodyPreview(article);
+  const previewClassName =
+    "line-clamp-3 text-[14px] leading-snug text-[#9ca3af]/90";
 
   useEffect(() => {
     const usable = hasUsableFeedImage(article.imageUrl);
@@ -99,10 +103,15 @@ export function FeedCard({
       ) : (
         <>
           <FeedCardFallbackBackground />
-          <div className="absolute inset-0 z-10 flex items-center justify-center px-8 pb-36 pt-20">
-            <h1 className="line-clamp-6 text-center text-[1.85rem] font-bold leading-[1.2] tracking-tight text-white">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8 pb-36 pt-20">
+            <h1 className="line-clamp-4 text-center text-[1.85rem] font-bold leading-[1.2] tracking-tight text-white">
               {cleanArticleTitle(article.headline)}
             </h1>
+            {bodyPreview ? (
+              <p className={`mt-4 max-w-md text-center ${previewClassName}`}>
+                {bodyPreview}
+              </p>
+            ) : null}
           </div>
         </>
       )}
@@ -203,6 +212,10 @@ export function FeedCard({
           >
             {article.subheading}
           </p>
+        ) : null}
+
+        {!isFallbackCard && bodyPreview ? (
+          <p className={`mt-2 ${previewClassName}`}>{bodyPreview}</p>
         ) : null}
 
         <div className={isFallbackCard ? "mt-2" : "mt-3"}>

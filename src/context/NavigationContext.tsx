@@ -22,6 +22,7 @@ interface NavigationContextValue {
 const NavigationContext = createContext<NavigationContextValue | null>(null);
 
 function shellTabFromPath(pathname: string): ShellTab {
+  if (pathname.startsWith("/browse")) return "browse";
   if (pathname === "/markets") return "markets";
   if (pathname === "/watchlist") return "watchlist";
   if (pathname === "/profile") return "profile";
@@ -30,6 +31,8 @@ function shellTabFromPath(pathname: string): ShellTab {
 
 function pathForTab(tab: NavTab): string {
   switch (tab) {
+    case "browse":
+      return "/browse";
     case "markets":
       return "/markets";
     case "watchlist":
@@ -62,6 +65,7 @@ export function NavigationProvider({
     router.prefetch("/markets");
     router.prefetch("/watchlist");
     router.prefetch("/profile");
+    router.prefetch("/browse");
   }, [router]);
 
   const navigate = useCallback(

@@ -64,6 +64,8 @@ export function NewsFeed({
     setFeedIndex,
     resetFeedIndex,
     incrementStoriesRead,
+    feedJumpArticleId,
+    clearFeedJump,
   } = useApp();
   const navigation = useNavigationOptional();
 
@@ -180,16 +182,24 @@ export function NewsFeed({
   const article = articleOverride ?? swipeArticle;
   const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
 
-  const trendingArticles = useMemo(
+  const sortedByRecent = useMemo(
     () =>
-      [...allArticles]
-        .sort(
-          (a, b) =>
-            new Date(b.publishedAt).getTime() -
-            new Date(a.publishedAt).getTime()
-        )
-        .slice(0, 10),
+      [...allArticles].sort(
+        (a, b) =>
+          new Date(b.publishedAt).getTime() -
+          new Date(a.publishedAt).getTime()
+      ),
     [allArticles]
+  );
+
+  const trendingArticles = useMemo(
+    () => sortedByRecent.slice(0, 10),
+    [sortedByRecent]
+  );
+
+  const latestArticles = useMemo(
+    () => sortedByRecent.slice(0, 5),
+    [sortedByRecent]
   );
 
   useEffect(() => {
@@ -242,9 +252,8 @@ export function NewsFeed({
       router.replace("/profile", { scroll: false });
   }, [navigation, router]);
 
-  const handleSearchSelect = useCallback(
+  const jumpToForYouArticle = useCallback(
     (selected: NewsArticle) => {
-      setSearchOpen(false);
       const forYouList = buildFeedArticles(
         allArticles,
         "forYou",
@@ -272,6 +281,26 @@ export function NewsFeed({
       goToPanel,
     ]
   );
+
+  const handleSearchSelect = useCallback(
+    (selected: NewsArticle) => {
+      setSearchOpen(false);
+      jumpToForYouArticle(selected);
+    },
+    [jumpToForYouArticle]
+  );
+
+  useEffect(() => {
+    if (!feedJumpArticleId) return;
+    const article = allArticles.find((a) => a.id === feedJumpArticleId);
+    if (article) jumpToForYouArticle(article);
+    clearFeedJump();
+  }, [
+    feedJumpArticleId,
+    allArticles,
+    jumpToForYouArticle,
+    clearFeedJump,
+  ]);
 
   const releaseCapture = useCallback(() => {
     const el = trackRef.current;
@@ -453,7 +482,9 @@ export function NewsFeed({
             {feedMode === "trending" ? (
               <TrendingFeed
                 articles={trendingArticles}
+                latestArticles={latestArticles}
                 onOpenArticle={openArticle}
+                onJumpToForYou={jumpToForYouArticle}
               />
             ) : filteredArticles.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center px-8 text-center">

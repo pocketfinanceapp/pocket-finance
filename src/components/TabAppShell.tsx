@@ -12,6 +12,7 @@ import { MobilePageShell } from "./MobilePageShell";
 import { NewsFeed } from "./NewsFeed";
 import { WatchlistPage } from "./WatchlistPage";
 import { ProfilePage } from "./ProfilePage";
+import { BrowsePage } from "./BrowsePage";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
 
@@ -58,6 +59,10 @@ function TabPanels({ initialArticles }: TabAppShellProps) {
 
         <TabPanel active={activeTab === "markets"} fadeKey={fadeKey}>
           <MarketsPage onOpenMarketFeed={openMarketFeed} />
+        </TabPanel>
+
+        <TabPanel active={activeTab === "browse"} fadeKey={fadeKey}>
+          <BrowsePage articles={initialArticles} />
         </TabPanel>
 
         <TabPanel active={activeTab === "watchlist"} fadeKey={fadeKey}>

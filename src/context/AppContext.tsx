@@ -72,6 +72,9 @@ interface AppContextValue {
   feedIndex: number;
   setFeedIndex: (index: number) => void;
   resetFeedIndex: () => void;
+  feedJumpArticleId: string | null;
+  requestFeedJump: (articleId: string) => void;
+  clearFeedJump: () => void;
   incrementStoriesRead: () => void;
   reloadProfileStats: () => Promise<void>;
   onboardingComplete: boolean;
@@ -99,6 +102,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [storiesRead, setStoriesRead] = useState(0);
   const [likedArticlesCount, setLikedArticlesCount] = useState(0);
   const [feedIndex, setFeedIndexState] = useState(0);
+  const [feedJumpArticleId, setFeedJumpArticleId] = useState<string | null>(
+    null
+  );
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appUserId, setAppUserId] = useState<string | null>(null);
   const [watchlistLoaded, setWatchlistLoaded] = useState(false);
@@ -318,6 +324,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFeedIndexState(0);
   }, []);
 
+  const requestFeedJump = useCallback((articleId: string) => {
+    setFeedJumpArticleId(articleId);
+  }, []);
+
+  const clearFeedJump = useCallback(() => {
+    setFeedJumpArticleId(null);
+  }, []);
+
   const incrementStoriesRead = useCallback(() => {
     setStoriesRead((n) => n + 1);
     if (!appUserId) return;
@@ -356,6 +370,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       feedIndex,
       setFeedIndex,
       resetFeedIndex,
+      feedJumpArticleId,
+      requestFeedJump,
+      clearFeedJump,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,
@@ -389,6 +406,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       feedIndex,
       setFeedIndex,
       resetFeedIndex,
+      feedJumpArticleId,
+      requestFeedJump,
+      clearFeedJump,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,
