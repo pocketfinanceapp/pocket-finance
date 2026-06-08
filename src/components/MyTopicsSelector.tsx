@@ -17,7 +17,9 @@ export function MyTopicsSelector() {
   }, []);
 
   const handleToggle = (topic: ProfileTopic) => {
-    setTopics(toggleFavouriteTopic(topic));
+    const next = toggleFavouriteTopic(topic);
+    console.log("[pf-topics] MyTopicsSelector toggled:", topic, "→", next);
+    setTopics(next);
     setPulseTopic(topic);
     window.setTimeout(() => setPulseTopic(null), 220);
   };

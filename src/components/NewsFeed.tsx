@@ -72,7 +72,11 @@ export function NewsFeed({
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
-    const refreshTopics = () => setFavouriteTopics(loadFavouriteTopics());
+    const refreshTopics = () => {
+      const topics = loadFavouriteTopics();
+      console.log("[pf-topics] NewsFeed Following filter topics:", topics);
+      setFavouriteTopics(topics);
+    };
     refreshTopics();
     window.addEventListener("focus", refreshTopics);
     return () => window.removeEventListener("focus", refreshTopics);
@@ -80,7 +84,9 @@ export function NewsFeed({
 
   useEffect(() => {
     if (feedMode === "following") {
-      setFavouriteTopics(loadFavouriteTopics());
+      const topics = loadFavouriteTopics();
+      console.log("[pf-topics] NewsFeed Following tab active, topics:", topics);
+      setFavouriteTopics(topics);
     }
   }, [feedMode]);
 

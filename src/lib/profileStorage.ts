@@ -38,7 +38,7 @@ export interface RecentlyReadEntry {
 }
 
 const STREAK_KEY = "pocket-reading-streak";
-const TOPICS_KEY = "pocket-favourite-topics";
+const TOPICS_KEY = "pf-topics";
 const RECENT_KEY = "pocket-recently-read";
 const MAX_RECENT = 5;
 
@@ -109,10 +109,16 @@ export function loadFavouriteTopics(): ProfileTopic[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(TOPICS_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      console.log("[pf-topics] read:", []);
+      return [];
+    }
     const parsed = JSON.parse(raw) as string[];
-    return PROFILE_TOPICS.filter((t) => parsed.includes(t));
+    const topics = PROFILE_TOPICS.filter((t) => parsed.includes(t));
+    console.log("[pf-topics] read:", topics);
+    return topics;
   } catch {
+    console.log("[pf-topics] read:", []);
     return [];
   }
 }
@@ -120,6 +126,7 @@ export function loadFavouriteTopics(): ProfileTopic[] {
 export function saveFavouriteTopics(topics: ProfileTopic[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(TOPICS_KEY, JSON.stringify(topics));
+  console.log("[pf-topics] saved:", topics);
 }
 
 export function toggleFavouriteTopic(topic: ProfileTopic): ProfileTopic[] {
