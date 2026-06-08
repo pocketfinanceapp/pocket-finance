@@ -28,10 +28,24 @@ export function BrowsePage({ articles }: BrowsePageProps) {
   const categorySlug = pathname.match(/^\/browse\/([^/]+)$/)?.[1] ?? null;
   const category = categorySlug ? categoryFromSlug(categorySlug) : null;
 
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of BROWSE_CATEGORIES) {
+      counts.set(
+        item,
+        filterArticlesByBrowseCategory(articles, item).length
+      );
+    }
+    return counts;
+  }, [articles]);
+
   const categoryArticles = useMemo(() => {
     if (!category) return [];
     return filterArticlesByBrowseCategory(articles, category);
   }, [articles, category]);
+
+  const storyCountLabel = (count: number) =>
+    count === 1 ? "1 story" : `${count} stories`;
 
   const openInFeed = (article: NewsArticle) => {
     requestFeedJump(article.id);
@@ -71,6 +85,11 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                   <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-white">
                     {cleanArticleTitle(article.headline)}
                   </p>
+                  {article.subheading ? (
+                    <p className="line-clamp-2 text-[13px] leading-snug text-[#9ca3af]">
+                      {article.subheading}
+                    </p>
+                  ) : null}
                   <p className="text-xs text-zinc-500">
                     {article.sourceName}
                     <span className="mx-1.5 text-zinc-700">·</span>
@@ -106,10 +125,15 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                   scroll: false,
                 })
               }
-              className="flex w-full items-center justify-between px-5 py-4 text-left active:bg-white/[0.04]"
+              className="flex w-full items-center gap-3 px-5 py-4 text-left active:bg-white/[0.04]"
             >
-              <span className="text-[15px] font-medium text-white">{item}</span>
-              <ChevronRight className="h-5 w-5 text-zinc-500" />
+              <span className="min-w-0 flex-1 text-[15px] font-medium text-white">
+                {item}
+              </span>
+              <span className="shrink-0 text-[13px] text-[#6b7280]">
+                {storyCountLabel(categoryCounts.get(item) ?? 0)}
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-zinc-500" />
             </button>
             {index < BROWSE_CATEGORIES.length - 1 && (
               <div className="mx-5 h-px bg-white/[0.06]" aria-hidden />

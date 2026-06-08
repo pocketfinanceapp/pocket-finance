@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import {
   TOP_MOVER_TABS,
-  TOP_MOVERS,
   formatStockPrice,
   getMoverSparkline,
+  getTopMovers,
   type TopMover,
   type TopMoverTab,
 } from "@/lib/topMovers";
@@ -14,7 +14,7 @@ import { SectionTabs } from "./SectionTabs";
 
 export function TopMoversSection() {
   const [tab, setTab] = useState<TopMoverTab>("active");
-  const movers = TOP_MOVERS[tab];
+  const movers = useMemo(() => getTopMovers(tab), [tab]);
 
   return (
     <section className="mt-4">

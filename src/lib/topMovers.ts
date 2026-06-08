@@ -1,3 +1,5 @@
+import { applyPriceOverride } from "./priceOverrides";
+
 export type TopMoverTab = "active" | "gainers" | "losers";
 
 export interface TopMover {
@@ -60,6 +62,22 @@ export function getMoverSparkline(mover: TopMover): number[] {
   else points[7] = Math.min(points[7], points[0] - 5);
 
   return points;
+}
+
+function withPriceOverride(mover: TopMover): TopMover {
+  const resolved = applyPriceOverride(mover.ticker, {
+    price: mover.price,
+    changePercent: mover.changePercent,
+  });
+  return {
+    ...mover,
+    price: resolved.price,
+    changePercent: resolved.changePercent,
+  };
+}
+
+export function getTopMovers(tab: TopMoverTab): TopMover[] {
+  return TOP_MOVERS[tab].map(withPriceOverride);
 }
 
 export function formatStockPrice(price: number): string {
