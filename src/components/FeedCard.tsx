@@ -136,7 +136,7 @@ export function FeedCard({
                 {displayTicker}
               </span>
             ) : (
-              <PocketGradientMark className="relative z-[1]" />
+              <PocketGradientMark className="z-[2]" />
             )}
           </div>
           <div

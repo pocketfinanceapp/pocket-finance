@@ -26,13 +26,14 @@ const glowClass: Record<NonNullable<PocketMarkIconProps["glow"]>, string> = {
 export function PocketGradientMark({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`flex h-20 w-20 shrink-0 items-center justify-center ${className}`}
+      className={`relative flex h-20 w-20 shrink-0 items-center justify-center ${className}`}
       style={{
-        fontFamily: "system-ui, sans-serif",
-        fontSize: "72px",
-        fontWeight: 700,
         color: "#FFFFFF",
+        fontSize: "72px",
+        fontWeight: "800",
+        fontFamily: "system-ui, sans-serif",
         lineHeight: 1,
+        opacity: 1,
       }}
       aria-hidden
     >
