@@ -83,23 +83,10 @@ export async function fetchStockPrice(
 
     if (price === null || changePercent === null) return null;
 
-    let adjustedPrice = price;
-    let adjustedChange = change ?? (price * changePercent) / 100;
-
-    if (symbol === "NVDA" && adjustedPrice > 400) {
-      const before = { price: adjustedPrice, change: adjustedChange };
-      adjustedPrice = Math.round((adjustedPrice / 10) * 100) / 100;
-      adjustedChange = Math.round((adjustedChange / 10) * 100) / 100;
-      console.log("[massiveApi] NVDA split correction applied", {
-        before,
-        after: { price: adjustedPrice, change: adjustedChange },
-      });
-    }
-
     return {
-      price: adjustedPrice,
+      price,
       changePercent,
-      change: adjustedChange,
+      change: change ?? (price * changePercent) / 100,
       source: "massive",
     };
   } catch {

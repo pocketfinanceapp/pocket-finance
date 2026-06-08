@@ -23,6 +23,16 @@ const WATCHLIST_NO_PRICE_TICKERS = new Set([
   "DJI",
 ]);
 
+/** Thematic / index tickers with no real tradeable market price */
+export function isNonStockMarketTicker(ticker: string): boolean {
+  return WATCHLIST_NO_PRICE_TICKERS.has(ticker.toUpperCase());
+}
+
+export function isCryptoTicker(ticker: string): boolean {
+  const upper = ticker.toUpperCase();
+  return upper === "BTC" || upper === "ETH";
+}
+
 /** Show price / % change on watchlist only for real tradeable tickers */
 export function shouldShowWatchlistPrice(ticker: string): boolean {
   const upper = ticker.toUpperCase();

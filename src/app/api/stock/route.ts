@@ -14,5 +14,11 @@ export async function GET(request: Request) {
     return NextResponse.json(null, { status: 404 });
   }
 
+  const symbol = ticker.toUpperCase();
+  if (symbol === "NVDA" && quote.price > 400) {
+    quote.price = Math.round((quote.price / 10) * 100) / 100;
+    quote.change = Math.round((quote.change / 10) * 100) / 100;
+  }
+
   return NextResponse.json(quote);
 }

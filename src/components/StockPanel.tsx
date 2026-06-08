@@ -12,7 +12,11 @@ import {
   type PrivateCompanyProfile,
 } from "@/lib/privateTickers";
 import type { MassiveStockQuote } from "@/lib/massiveApi";
-import { isUsListedStockTicker } from "@/lib/usStockTickers";
+import {
+  isCryptoTicker,
+  isNonStockMarketTicker,
+  isUsListedStockTicker,
+} from "@/lib/usStockTickers";
 import { getArticleDisplayTicker, getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
@@ -69,6 +73,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
     liveQuote?.changePercent ?? stock?.changePercent ?? 0;
   const hasMassiveQuote = liveQuote !== null;
   const isUp = displayChangePercent >= 0;
+  const showMarketData = !isNonStockMarketTicker(ticker);
+  const tradeLabel = isCryptoTicker(ticker)
+    ? "Trade this crypto"
+    : "Trade this stock";
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -170,58 +178,72 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
           />
         ) : activeTab === "Overview" && stock ? (
           <>
-            <div className="mt-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-3xl font-bold tracking-tight">
-                  {displayPrice.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  <span className="text-lg font-normal text-zinc-400">USD</span>
-                </p>
-                {hasMassiveQuote && (
-                  <div className="flex flex-col gap-0.5">
-                    <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                      Delayed
-                    </span>
-                    <span className="text-[10px] text-zinc-500">
-                      Prices delayed 15min
-                    </span>
+            {showMarketData ? (
+              <>
+                <div className="mt-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-3xl font-bold tracking-tight">
+                      {displayPrice.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      <span className="text-lg font-normal text-zinc-400">
+                        USD
+                      </span>
+                    </p>
+                    {hasMassiveQuote && (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                          Delayed
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          Prices delayed 15min
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <p
-                className={`mt-1 text-sm font-medium ${
-                  isUp ? "text-pocket-green" : "text-pocket-red"
-                }`}
-              >
-                {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
-                {Math.abs(displayChangePercent).toFixed(2)}%) Today
+                  <p
+                    className={`mt-1 text-sm font-medium ${
+                      isUp ? "text-pocket-green" : "text-pocket-red"
+                    }`}
+                  >
+                    {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
+                    {Math.abs(displayChangePercent).toFixed(2)}%) Today
+                  </p>
+                </div>
+
+                <a
+                  href={`${ETORO_URL}?utm_source=pocket_finance`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-no-drag
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.04] py-3.5 text-sm font-semibold text-white transition-colors active:scale-[0.98] active:bg-white/[0.08]"
+                  style={{ touchAction: "manipulation" }}
+                >
+                  {tradeLabel}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+                <p className="mt-1.5 text-center text-[10px] text-zinc-600">
+                  Affiliate partner · eToro
+                </p>
+
+                <PriceChart
+                  data={stock.chartData[chartRange]}
+                  range={chartRange}
+                  onRangeChange={setChartRange}
+                />
+              </>
+            ) : (
+              <p className="mt-4 text-sm text-zinc-500">
+                Market data not available for this ticker
               </p>
-            </div>
+            )}
 
-            <a
-              href={`${ETORO_URL}?utm_source=pocket_finance`}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-no-drag
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.04] py-3.5 text-sm font-semibold text-white transition-colors active:scale-[0.98] active:bg-white/[0.08]"
-              style={{ touchAction: "manipulation" }}
+            <div
+              className={`grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/[0.08] pt-8 ${
+                showMarketData ? "mt-8" : "mt-6"
+              }`}
             >
-              Trade this stock
-              <ExternalLink className="h-4 w-4" />
-            </a>
-            <p className="mt-1.5 text-center text-[10px] text-zinc-600">
-              Affiliate partner · eToro
-            </p>
-
-            <PriceChart
-              data={stock.chartData[chartRange]}
-              range={chartRange}
-              onRangeChange={setChartRange}
-            />
-
-            <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/[0.08] pt-8">
               <Stat label="Market Cap" value={stock.marketCap} />
               <Stat label="Revenue (TTM)" value={stock.revenue} />
               <Stat label="P/E Ratio" value={stock.peRatio} />
