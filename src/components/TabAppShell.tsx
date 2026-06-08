@@ -15,6 +15,7 @@ import { ProfilePage } from "./ProfilePage";
 import { BrowsePage } from "./BrowsePage";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
+import { appPath } from "@/lib/appPaths";
 
 interface TabAppShellProps {
   initialArticles: NewsArticle[];
@@ -105,7 +106,7 @@ export function TabAppShell({ initialArticles }: TabAppShellProps) {
 
   useEffect(() => {
     if (searchParams.get("tab") === "profile") {
-      router.replace("/profile", { scroll: false });
+      router.replace(appPath("profile"), { scroll: false });
     }
   }, [searchParams, router]);
 

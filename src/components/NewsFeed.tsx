@@ -9,6 +9,7 @@ import {
   buildFeedArticles,
   type FeedMode,
 } from "@/lib/filterArticles";
+import { appPath } from "@/lib/appPaths";
 import { isInteractiveTarget } from "@/lib/gesture";
 import { FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 import {
@@ -249,7 +250,7 @@ export function NewsFeed({
 
   const openProfile = useCallback(() => {
     navigation?.navigate("profile") ??
-      router.replace("/profile", { scroll: false });
+      router.replace(appPath("profile"), { scroll: false });
   }, [navigation, router]);
 
   const jumpToForYouArticle = useCallback(

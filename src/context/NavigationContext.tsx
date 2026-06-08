@@ -10,6 +10,7 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { NavTab } from "@/components/BottomNav";
+import { APP_BASE, appPath } from "@/lib/appPaths";
 
 type ShellTab = NavTab;
 
@@ -22,25 +23,26 @@ interface NavigationContextValue {
 const NavigationContext = createContext<NavigationContextValue | null>(null);
 
 function shellTabFromPath(pathname: string): ShellTab {
-  if (pathname.startsWith("/browse")) return "browse";
-  if (pathname === "/markets") return "markets";
-  if (pathname === "/watchlist") return "watchlist";
-  if (pathname === "/profile") return "profile";
+  if (!pathname.startsWith(APP_BASE)) return "home";
+  if (pathname.startsWith(appPath("browse"))) return "browse";
+  if (pathname === appPath("markets")) return "markets";
+  if (pathname === appPath("watchlist")) return "watchlist";
+  if (pathname === appPath("profile")) return "profile";
   return "home";
 }
 
 function pathForTab(tab: NavTab): string {
   switch (tab) {
     case "browse":
-      return "/browse";
+      return appPath("browse");
     case "markets":
-      return "/markets";
+      return appPath("markets");
     case "watchlist":
-      return "/watchlist";
+      return appPath("watchlist");
     case "profile":
-      return "/profile";
+      return appPath("profile");
     default:
-      return "/";
+      return APP_BASE;
   }
 }
 
@@ -61,11 +63,11 @@ export function NavigationProvider({
   }, [pathname]);
 
   useEffect(() => {
-    router.prefetch("/");
-    router.prefetch("/markets");
-    router.prefetch("/watchlist");
-    router.prefetch("/profile");
-    router.prefetch("/browse");
+    router.prefetch(APP_BASE);
+    router.prefetch(appPath("markets"));
+    router.prefetch(appPath("watchlist"));
+    router.prefetch(appPath("profile"));
+    router.prefetch(appPath("browse"));
   }, [router]);
 
   const navigate = useCallback(

@@ -14,5 +14,5 @@ export function getSiteUrl(): string {
 
 /** Where Supabase sends users after they confirm their email */
 export function getEmailConfirmRedirectUrl(): string {
-  return `${getSiteUrl()}/?email_confirmed=1`;
+  return `${getSiteUrl()}/app?email_confirmed=1`;
 }

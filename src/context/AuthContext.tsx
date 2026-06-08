@@ -172,10 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: getEmailConfirmRedirectUrl().replace(
-            "/?email_confirmed=1",
-            "/"
-          ),
+          redirectTo: getEmailConfirmRedirectUrl(),
         },
       });
       return { error: error?.message ?? null };

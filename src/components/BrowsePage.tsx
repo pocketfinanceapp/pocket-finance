@@ -14,6 +14,7 @@ import { timeAgo } from "@/lib/utils";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
+import { appPath } from "@/lib/appPaths";
 
 interface BrowsePageProps {
   articles: NewsArticle[];
@@ -25,7 +26,8 @@ export function BrowsePage({ articles }: BrowsePageProps) {
   const navigation = useNavigation();
   const { requestFeedJump } = useApp();
 
-  const categorySlug = pathname.match(/^\/browse\/([^/]+)$/)?.[1] ?? null;
+  const categorySlug =
+    pathname.match(/^\/app\/browse\/([^/]+)$/)?.[1] ?? null;
   const category = categorySlug ? categoryFromSlug(categorySlug) : null;
 
   const categoryCounts = useMemo(() => {
@@ -59,7 +61,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
           <button
             type="button"
             data-no-drag
-            onClick={() => router.replace("/browse", { scroll: false })}
+            onClick={() => router.replace(appPath("browse"), { scroll: false })}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/10"
             aria-label="Back to categories"
           >
@@ -121,7 +123,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               type="button"
               data-no-drag
               onClick={() =>
-                router.replace(`/browse/${categoryToSlug(item)}`, {
+                router.replace(appPath(`browse/${categoryToSlug(item)}`), {
                   scroll: false,
                 })
               }

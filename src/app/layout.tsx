@@ -8,8 +8,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Pocket Finance",
-  description: "Bold news. Smarter moves. Real-time finance news for mobile.",
+  title: "Pocket Finance — Finance news, built for the way you scroll",
+  description:
+    "Swipe through breaking market headlines, read full articles, and check stock intelligence — all in seconds.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart2, Bookmark, Compass, User } from "lucide-react";
 import { useNavigationOptional } from "@/context/NavigationContext";
+import { APP_BASE, appPath } from "@/lib/appPaths";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 
 export type NavTab = "home" | "markets" | "browse" | "watchlist" | "profile";
@@ -12,10 +13,11 @@ interface BottomNavProps {
 }
 
 function tabFromPath(pathname: string): NavTab {
-  if (pathname.startsWith("/browse")) return "browse";
-  if (pathname === "/markets") return "markets";
-  if (pathname === "/watchlist") return "watchlist";
-  if (pathname === "/profile") return "profile";
+  if (!pathname.startsWith(APP_BASE)) return "home";
+  if (pathname.startsWith(appPath("browse"))) return "browse";
+  if (pathname === appPath("markets")) return "markets";
+  if (pathname === appPath("watchlist")) return "watchlist";
+  if (pathname === appPath("profile")) return "profile";
   return "home";
 }
 
@@ -39,19 +41,19 @@ export function BottomNav({ active }: BottomNavProps) {
 
     switch (tab) {
       case "home":
-        router.replace("/", { scroll: false });
+        router.replace(APP_BASE, { scroll: false });
         break;
       case "markets":
-        router.replace("/markets", { scroll: false });
+        router.replace(appPath("markets"), { scroll: false });
         break;
       case "browse":
-        router.replace("/browse", { scroll: false });
+        router.replace(appPath("browse"), { scroll: false });
         break;
       case "watchlist":
-        router.replace("/watchlist", { scroll: false });
+        router.replace(appPath("watchlist"), { scroll: false });
         break;
       case "profile":
-        router.replace("/profile", { scroll: false });
+        router.replace(appPath("profile"), { scroll: false });
         break;
     }
   };
