@@ -20,6 +20,8 @@ export const BLOCKED_DOMAINS = [
   "abc11.com",
   "localtvwxyz.com",
   "liveandletsfly.com",
+  "theurbanist.org",
+  "urbanist.org",
 ] as const;
 
 export const BLOCKED_URL_PATTERNS = [
@@ -65,6 +67,17 @@ export const TITLE_TRAVEL_NON_FINANCE_PHRASES = [
   "sneaks onto",
   "fake boarding pass",
   "flight with fake",
+] as const;
+
+/** Transit / urban planning title signals — excluded only when no finance keyword is present */
+export const TITLE_TRANSIT_NON_FINANCE_PHRASES = [
+  "light rail",
+  "sound transit",
+  "crosslake",
+  "bus route",
+  "transit system",
+  "subway",
+  "commuter rail",
 ] as const;
 
 /** Extra terms appended to NewsAPI NOT query */

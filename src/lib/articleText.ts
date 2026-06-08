@@ -5,6 +5,7 @@ import {
   BLOCKED_URL_PATTERNS,
   TITLE_CRIME_NON_FINANCE_PHRASES,
   TITLE_TRAVEL_NON_FINANCE_PHRASES,
+  TITLE_TRANSIT_NON_FINANCE_PHRASES,
 } from "./articleFilter";
 
 const SPORTS_PHRASES = [
@@ -237,6 +238,15 @@ function isTravelNonFinanceTitle(title: string): boolean {
   );
 }
 
+function isTransitNonFinanceTitle(title: string): boolean {
+  if (hasTitleFinanceAllowKeywords(title)) return false;
+
+  const lower = title.toLowerCase();
+  return TITLE_TRANSIT_NON_FINANCE_PHRASES.some((phrase) =>
+    lower.includes(phrase)
+  );
+}
+
 function isNonFinancialPrRelease(input: ArticleFilterInput): boolean {
   const blob = [
     input.title,
@@ -290,6 +300,8 @@ function titleContainsExcludedTopic(title: string): boolean {
   if (isCrimeNonFinanceTitle(title)) return true;
 
   if (isTravelNonFinanceTitle(title)) return true;
+
+  if (isTransitNonFinanceTitle(title)) return true;
 
   if (!isAviationFinanceTitle(title)) {
     for (const word of AVIATION_INCIDENT_WORDS) {
