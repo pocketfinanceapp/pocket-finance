@@ -6,7 +6,11 @@ import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { ChartRange, NewsArticle } from "@/lib/types";
 import { getStockProfile } from "@/lib/stockData";
-import { isPrivateTicker } from "@/lib/privateTickers";
+import {
+  getPrivateCompanyProfile,
+  isPrivateTicker,
+  type PrivateCompanyProfile,
+} from "@/lib/privateTickers";
 import { getArticleDisplayTicker, getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
@@ -25,6 +29,7 @@ const ETORO_URL = "https://www.etoro.com/";
 export function StockPanel({ article, onBack }: StockPanelProps) {
   const ticker = getArticleDisplayTicker(article);
   const privateCompany = isPrivateTicker(ticker);
+  const privateProfile = privateCompany ? getPrivateCompanyProfile(ticker) : null;
   const stock = privateCompany ? null : getStockProfile(ticker);
   const meta = getTickerMetaBySymbol(ticker);
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
@@ -95,21 +100,12 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
           </div>
         </div>
 
-        <div className="mt-1 flex items-start gap-3">
-          <CompanyLogo ticker={ticker} color={meta.logoColor} size={44} />
-          <div className="min-w-0 flex-1">
+        {!privateCompany && (
+          <div className="mt-1">
             <h1 className="text-xl font-bold">{ticker}</h1>
             <p className="text-sm text-zinc-400">{meta.companyName}</p>
-            {privateCompany && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-zinc-700/60 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-zinc-300">
-                  Private Company
-                </span>
-                <span className="text-sm text-zinc-500">Not publicly traded</span>
-              </div>
-            )}
           </div>
-        </div>
+        )}
 
         {!privateCompany && (
           <nav className="mt-4 flex w-full border-b border-white/[0.08]">
@@ -135,8 +131,12 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 pb-32">
-        {privateCompany ? (
-          <PrivateCompanyNews article={article} />
+        {privateCompany && privateProfile ? (
+          <PrivateCompanyProfileView
+            ticker={ticker}
+            profile={privateProfile}
+            article={article}
+          />
         ) : activeTab === "Overview" && stock ? (
           <>
             <div className="mt-4">
@@ -247,9 +247,84 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   );
 }
 
+function parseMilestone(entry: string): { year: string; text: string } {
+  const match = entry.match(/^(\d{4})\s*[—–-]\s*(.+)$/);
+  if (match) return { year: match[1], text: match[2] };
+  return { year: "", text: entry };
+}
+
+function PrivateCompanyProfileView({
+  ticker,
+  profile,
+  article,
+}: {
+  ticker: string;
+  profile: PrivateCompanyProfile;
+  article: NewsArticle;
+}) {
+  return (
+    <div className="mt-2">
+      <div className="flex flex-col items-center text-center">
+        <CompanyLogo ticker={ticker} color={profile.color} size={80} />
+        <h1 className="mt-4 text-2xl font-bold tracking-tight">
+          {profile.fullName}
+        </h1>
+        <span className="mt-2 rounded-full bg-zinc-700/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-300">
+          Private Company
+        </span>
+        <p className="mt-3 text-sm text-zinc-500">
+          Founded {profile.founded} · {profile.headquarters} · CEO{" "}
+          {profile.ceo}
+        </p>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4 text-center">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+          Last Known Valuation
+        </p>
+        <p className="mt-1.5 text-3xl font-bold tracking-tight text-white">
+          {profile.valuation}
+        </p>
+        <p className="mt-1 text-xs text-zinc-500">Not publicly traded</p>
+      </div>
+
+      <p className="mt-6 text-[15px] leading-relaxed text-zinc-300">
+        {profile.description}
+      </p>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Key Milestones
+        </h2>
+        <ul className="relative mt-4 space-y-0 border-l border-white/[0.1] pl-5">
+          {profile.milestones.map((entry) => {
+            const { year, text } = parseMilestone(entry);
+            return (
+              <li key={entry} className="relative pb-5 last:pb-0">
+                <span
+                  className="absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-[#0a0a0a]"
+                  style={{ backgroundColor: profile.color }}
+                />
+                {year && (
+                  <p className="text-xs font-semibold text-zinc-500">{year}</p>
+                )}
+                <p className="mt-0.5 text-sm leading-snug text-zinc-200">
+                  {text}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <PrivateCompanyNews article={article} />
+    </div>
+  );
+}
+
 function PrivateCompanyNews({ article }: { article: NewsArticle }) {
   return (
-    <section className="mt-6">
+    <section className="mt-8">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
         News
       </h2>
