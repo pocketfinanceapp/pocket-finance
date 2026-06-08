@@ -22,35 +22,22 @@ const glowClass: Record<NonNullable<PocketMarkIconProps["glow"]>, string> = {
   hero: "drop-shadow-[0_0_24px_rgba(0,198,198,0.45)] drop-shadow-[0_0_12px_rgba(59,110,245,0.55)]",
 };
 
-/** Solid white P mark (inline SVG) — for brand-gradient fallback cards */
-export function PocketGradientMark({
-  size = 88,
-  className = "",
-}: {
-  size?: number;
-  className?: string;
-}) {
+/** Clean white P — for brand-gradient fallback cards */
+export function PocketGradientMark({ className = "" }: { className?: string }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`shrink-0 ${className}`}
+    <div
+      className={`flex h-20 w-20 shrink-0 items-center justify-center ${className}`}
+      style={{
+        fontFamily: "system-ui, sans-serif",
+        fontSize: "72px",
+        fontWeight: 700,
+        color: "#FFFFFF",
+        lineHeight: 1,
+      }}
       aria-hidden
     >
-      <path
-        d="M22 14V86M22 14H50C72 14 80 28 80 46C80 64 70 78 48 78H34"
-        stroke="#FFFFFF"
-        strokeWidth="12"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <rect x="52" y="60" width="6" height="12" rx="1.5" fill="#FFFFFF" />
-      <rect x="61" y="52" width="6" height="20" rx="1.5" fill="#FFFFFF" />
-      <rect x="70" y="42" width="6" height="30" rx="1.5" fill="#FFFFFF" />
-    </svg>
+      P
+    </div>
   );
 }
 
