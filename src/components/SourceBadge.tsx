@@ -11,6 +11,8 @@ interface SourceBadgeProps {
   publishedAt: string;
   timeLabel: string;
   size?: "sm" | "md";
+  /** Clean text on brand gradient — no pill/scrim backgrounds */
+  onGradient?: boolean;
 }
 
 export function SourceBadge({
@@ -20,6 +22,7 @@ export function SourceBadge({
   publishedAt,
   timeLabel,
   size = "md",
+  onGradient = false,
 }: SourceBadgeProps) {
   const brand = resolveSourceBrand(sourceName, sourceId, sourceUrl);
   const [logoFailed, setLogoFailed] = useState(false);
@@ -54,11 +57,17 @@ export function SourceBadge({
         <p
           className={`truncate font-semibold text-white ${
             size === "sm" ? "text-xs" : "text-sm"
-          }`}
+          } ${onGradient ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" : ""}`}
         >
           {brand.name}
         </p>
-        <p className="text-xs text-white/50">
+        <p
+          className={`text-xs ${
+            onGradient
+              ? "text-white/75 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
+              : "text-white/50"
+          }`}
+        >
           <time dateTime={publishedAt}>{timeLabel}</time>
         </p>
       </div>

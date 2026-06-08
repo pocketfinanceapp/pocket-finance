@@ -294,7 +294,9 @@ export function FeedCard({
           </p>
         ) : null}
 
-        <div className="mt-3">
+        <div
+          className={`mt-3 ${isFallbackCard ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]" : ""}`}
+        >
           <MarketBadge market={displayMarket} size="sm" />
         </div>
 
@@ -305,10 +307,17 @@ export function FeedCard({
             sourceUrl={article.sourceUrl}
             publishedAt={article.publishedAt}
             timeLabel={timeAgo(article.publishedAt)}
+            onGradient={isFallbackCard}
           />
         </div>
 
-        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
+        <div
+          className={`mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold ${
+            isFallbackCard
+              ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
+              : "rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-white/85 backdrop-blur-md"
+          }`}
+        >
           <svg className="h-3 w-3 text-pocket-teal" viewBox="0 0 24 24" fill="none">
             <path
               d="M3 17 L8 12 L12 15 L16 8 L21 14"
