@@ -54,7 +54,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
     void fetch(`/api/stock?ticker=${encodeURIComponent(ticker)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data: MassiveStockQuote | null) => {
-        if (!cancelled && data?.source === "massive") {
+        if (
+          !cancelled &&
+          (data?.source === "massive" || data?.source === "override")
+        ) {
           setLiveQuote(data);
         }
       })

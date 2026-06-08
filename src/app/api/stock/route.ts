@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { fetchStockPrice } from "@/lib/massiveApi";
 
+/** Manual fixes for stale free-tier Massive data — remove when on paid plan */
+const PRICE_OVERRIDES: Record<
+  string,
+  { price: number; change: number; changePercent: number }
+> = {
+  NVDA: { price: 131.38, change: -3.07, changePercent: -2.29 },
+};
+
 export async function GET(request: Request) {
   const ticker = new URL(request.url).searchParams.get("ticker")?.trim();
 
@@ -15,9 +23,15 @@ export async function GET(request: Request) {
   }
 
   const symbol = ticker.toUpperCase();
-  if (symbol === "NVDA" && quote.price > 400) {
-    quote.price = Math.round((quote.price / 10) * 100) / 100;
-    quote.change = Math.round((quote.change / 10) * 100) / 100;
+  const override = PRICE_OVERRIDES[symbol];
+
+  if (override) {
+    return NextResponse.json({
+      price: override.price,
+      change: override.change,
+      changePercent: override.changePercent,
+      source: "override",
+    });
   }
 
   return NextResponse.json(quote);

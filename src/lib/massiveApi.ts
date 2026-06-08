@@ -6,7 +6,7 @@ export interface MassiveStockQuote {
   price: number;
   changePercent: number;
   change: number;
-  source: "massive";
+  source: "massive" | "override";
 }
 
 interface LastTradeResponse {
