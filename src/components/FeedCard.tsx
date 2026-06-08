@@ -97,7 +97,14 @@ export function FeedCard({
           />
         </>
       ) : (
-        <FeedCardFallbackBackground />
+        <>
+          <FeedCardFallbackBackground />
+          <div className="absolute inset-0 z-10 flex items-center justify-center px-8 pb-36 pt-20">
+            <h1 className="line-clamp-6 text-center text-[1.85rem] font-bold leading-[1.2] tracking-tight text-white">
+              {cleanArticleTitle(article.headline)}
+            </h1>
+          </div>
+        </>
       )}
 
       <aside
@@ -183,30 +190,22 @@ export function FeedCard({
           padding: "0 80px 0 20px",
         }}
       >
-        <h1
-          className={`line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white ${
-            isFallbackCard
-              ? "drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
-              : "drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]"
-          }`}
-        >
-          {cleanArticleTitle(article.headline)}
-        </h1>
+        {!isFallbackCard && (
+          <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
+            {cleanArticleTitle(article.headline)}
+          </h1>
+        )}
         {article.subheading ? (
           <p
-            className={`mt-2 line-clamp-2 text-[14px] leading-snug ${
-              isFallbackCard
-                ? "text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
-                : "text-white/70"
+            className={`line-clamp-2 text-[14px] leading-snug ${
+              isFallbackCard ? "mt-0 text-white/70" : "mt-2 text-white/70"
             }`}
           >
             {article.subheading}
           </p>
         ) : null}
 
-        <div
-          className={`mt-3 ${isFallbackCard ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]" : ""}`}
-        >
+        <div className={isFallbackCard ? "mt-2" : "mt-3"}>
           <MarketBadge market={displayMarket} size="sm" />
         </div>
 
@@ -217,17 +216,10 @@ export function FeedCard({
             sourceUrl={article.sourceUrl}
             publishedAt={article.publishedAt}
             timeLabel={timeAgo(article.publishedAt)}
-            onGradient={isFallbackCard}
           />
         </div>
 
-        <div
-          className={`mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold ${
-            isFallbackCard
-              ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
-              : "rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-white/85 backdrop-blur-md"
-          }`}
-        >
+        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
           <svg className="h-3 w-3 text-pocket-teal" viewBox="0 0 24 24" fill="none">
             <path
               d="M3 17 L8 12 L12 15 L16 8 L21 14"
