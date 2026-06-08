@@ -14,6 +14,8 @@ import { FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 import {
   addRecentlyRead,
   loadFavouriteTopics,
+  PF_TOPICS_CHANGED_EVENT,
+  PF_TOPICS_STORAGE_KEY,
   type ProfileTopic,
 } from "@/lib/profileStorage";
 import type { NewsArticle } from "@/lib/types";
@@ -63,6 +65,7 @@ export function NewsFeed({
     resetFeedIndex,
     incrementStoriesRead,
   } = useApp();
+  const navigation = useNavigationOptional();
 
   const [feedMode, setFeedMode] = useState<FeedMode>("forYou");
   const [articleOverride, setArticleOverride] = useState<NewsArticle | null>(
@@ -70,25 +73,58 @@ export function NewsFeed({
   );
   const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const wasFollowingRef = useRef(false);
+  const prevNavTabRef = useRef(navigation?.navTab);
 
-  useEffect(() => {
-    const refreshTopics = () => {
-      const topics = loadFavouriteTopics();
-      console.log("[pf-topics] NewsFeed Following filter topics:", topics);
-      setFavouriteTopics(topics);
-    };
-    refreshTopics();
-    window.addEventListener("focus", refreshTopics);
-    return () => window.removeEventListener("focus", refreshTopics);
+  const refreshTopics = useCallback(() => {
+    const topics = loadFavouriteTopics();
+    console.log("[pf-topics] NewsFeed Following filter topics:", topics);
+    setFavouriteTopics(topics);
   }, []);
 
   useEffect(() => {
-    if (feedMode === "following") {
-      const topics = loadFavouriteTopics();
-      console.log("[pf-topics] NewsFeed Following tab active, topics:", topics);
-      setFavouriteTopics(topics);
+    refreshTopics();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== PF_TOPICS_STORAGE_KEY) return;
+      console.log("[pf-topics] NewsFeed storage event:", e.newValue);
+      refreshTopics();
+    };
+
+    const onTopicsChanged = () => refreshTopics();
+
+    window.addEventListener("focus", refreshTopics);
+    window.addEventListener("storage", onStorage);
+    window.addEventListener(PF_TOPICS_CHANGED_EVENT, onTopicsChanged);
+
+    return () => {
+      window.removeEventListener("focus", refreshTopics);
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener(PF_TOPICS_CHANGED_EVENT, onTopicsChanged);
+    };
+  }, [refreshTopics]);
+
+  useEffect(() => {
+    const isFollowing = feedMode === "following";
+    if (isFollowing && !wasFollowingRef.current) {
+      console.log("[pf-topics] NewsFeed Following tab became active");
+      refreshTopics();
     }
-  }, [feedMode]);
+    wasFollowingRef.current = isFollowing;
+  }, [feedMode, refreshTopics]);
+
+  useEffect(() => {
+    const navTab = navigation?.navTab;
+    if (
+      navTab === "home" &&
+      prevNavTabRef.current === "profile" &&
+      feedMode === "following"
+    ) {
+      console.log("[pf-topics] NewsFeed refreshed after leaving Profile");
+      refreshTopics();
+    }
+    prevNavTabRef.current = navTab;
+  }, [navigation?.navTab, feedMode, refreshTopics]);
 
   const filteredArticles = useMemo(
     () =>
@@ -116,7 +152,6 @@ export function NewsFeed({
 
   const [panelIndex, setPanelIndex] = useState(PANEL_FEED);
   const router = useRouter();
-  const navigation = useNavigationOptional();
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);

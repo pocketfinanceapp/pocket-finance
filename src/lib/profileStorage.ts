@@ -38,7 +38,9 @@ export interface RecentlyReadEntry {
 }
 
 const STREAK_KEY = "pocket-reading-streak";
-const TOPICS_KEY = "pf-topics";
+export const PF_TOPICS_STORAGE_KEY = "pf-topics";
+const TOPICS_KEY = PF_TOPICS_STORAGE_KEY;
+export const PF_TOPICS_CHANGED_EVENT = "pf-topics-changed";
 const RECENT_KEY = "pocket-recently-read";
 const MAX_RECENT = 5;
 
@@ -127,6 +129,7 @@ export function saveFavouriteTopics(topics: ProfileTopic[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(TOPICS_KEY, JSON.stringify(topics));
   console.log("[pf-topics] saved:", topics);
+  window.dispatchEvent(new CustomEvent(PF_TOPICS_CHANGED_EVENT));
 }
 
 export function toggleFavouriteTopic(topic: ProfileTopic): ProfileTopic[] {
