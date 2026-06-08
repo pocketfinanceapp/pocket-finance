@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
@@ -11,6 +11,8 @@ import {
   isPrivateTicker,
   type PrivateCompanyProfile,
 } from "@/lib/privateTickers";
+import type { MassiveStockQuote } from "@/lib/massiveApi";
+import { isUsListedStockTicker } from "@/lib/usStockTickers";
 import { getArticleDisplayTicker, getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
@@ -37,7 +39,36 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
   const [toast, setToast] = useState<string | null>(null);
-  const isUp = stock ? stock.changePercent >= 0 : false;
+  const [liveQuote, setLiveQuote] = useState<MassiveStockQuote | null>(null);
+
+  useEffect(() => {
+    setLiveQuote(null);
+    if (!stock || privateCompany || !isUsListedStockTicker(ticker)) return;
+
+    let cancelled = false;
+
+    void fetch(`/api/stock?ticker=${encodeURIComponent(ticker)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: MassiveStockQuote | null) => {
+        if (!cancelled && data?.source === "massive") {
+          setLiveQuote(data);
+        }
+      })
+      .catch(() => {
+        /* fall back to demo price */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ticker, stock, privateCompany]);
+
+  const displayPrice = liveQuote?.price ?? stock?.price ?? 0;
+  const displayChange = liveQuote?.change ?? stock?.change ?? 0;
+  const displayChangePercent =
+    liveQuote?.changePercent ?? stock?.changePercent ?? 0;
+  const isLive = liveQuote !== null;
+  const isUp = displayChangePercent >= 0;
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -140,20 +171,27 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         ) : activeTab === "Overview" && stock ? (
           <>
             <div className="mt-4">
-              <p className="text-3xl font-bold tracking-tight">
-                {stock.price.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{" "}
-                <span className="text-lg font-normal text-zinc-400">USD</span>
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-3xl font-bold tracking-tight">
+                  {displayPrice.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  <span className="text-lg font-normal text-zinc-400">USD</span>
+                </p>
+                {isLive && (
+                  <span className="rounded-full bg-[#34c759]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#34c759]">
+                    Live
+                  </span>
+                )}
+              </div>
               <p
                 className={`mt-1 text-sm font-medium ${
                   isUp ? "text-pocket-green" : "text-pocket-red"
                 }`}
               >
-                {isUp ? "▲" : "▼"} {Math.abs(stock.change).toFixed(2)} (
-                {Math.abs(stock.changePercent).toFixed(2)}%) Today
+                {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
+                {Math.abs(displayChangePercent).toFixed(2)}%) Today
               </p>
             </div>
 
