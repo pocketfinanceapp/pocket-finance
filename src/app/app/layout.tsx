@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AppBodyLock } from "@/components/AppBodyLock";
 import { AppGate } from "@/components/AppGate";
 import { AppBootSplash } from "@/components/AppBootSplash";
 import { AppProviders } from "@/components/AppProviders";
@@ -14,6 +15,7 @@ export default async function AppLayout({
 
   return (
     <main className="min-h-[100dvh] bg-black">
+      <AppBodyLock />
       <AppProviders>
         <AppGate>
           <Suspense fallback={<AppBootSplash />}>

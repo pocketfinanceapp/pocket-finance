@@ -48,7 +48,7 @@ const STEPS = [
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="landing-page min-h-screen bg-[#0a0a0a] text-white">
       {/* Hero */}
       <header className="relative overflow-hidden px-5 pb-20 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-8 sm:pb-28 sm:pt-16">
         <div
