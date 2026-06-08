@@ -53,7 +53,7 @@ export function FeedCard({
     unsaveArticle,
     isArticleSaved,
   } = useApp();
-  const { liked, likeCount, toggleLike } = useArticleLikes(article, active);
+  const { liked, likeCount, toggleLike } = useArticleLikes(article);
 
   const usableInitial = hasUsableFeedImage(article.imageUrl);
   const [showImage, setShowImage] = useState(usableInitial);
@@ -127,9 +127,11 @@ export function FeedCard({
               liked ? "fill-red-500 text-red-500" : "text-white"
             }`}
           />
-          <span className="text-[11px] font-semibold text-white/90">
-            {formatCount(likeCount)}
-          </span>
+          {likeCount > 0 ? (
+            <span className="text-[11px] font-semibold text-white/90">
+              {formatCount(likeCount)}
+            </span>
+          ) : null}
         </ActionButton>
 
         <ActionButton label="Comment" onClick={onOpenComments}>

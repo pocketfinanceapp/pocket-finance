@@ -11,11 +11,11 @@ import {
 } from "@/lib/userInteractions";
 import type { NewsArticle } from "@/lib/types";
 
-export function useArticleLikes(article: NewsArticle, active: boolean) {
+export function useArticleLikes(article: NewsArticle) {
   const { reloadProfileStats } = useApp();
   const { user } = useAuth();
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(article.likes);
+  const [likeCount, setLikeCount] = useState(0);
   const [toggling, setToggling] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -30,8 +30,8 @@ export function useArticleLikes(article: NewsArticle, active: boolean) {
   }, [article.id, user]);
 
   useEffect(() => {
-    if (active) void refresh();
-  }, [active, refresh]);
+    void refresh();
+  }, [refresh]);
 
   const toggleLike = useCallback(async () => {
     if (!user || toggling) return;

@@ -58,7 +58,7 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
     sourceName,
     sourceId,
     sourceUrl: raw.url ?? "#",
-    likes: Math.floor(pseudoRandom(id + "likes", 800, 25000)),
+    likes: 0,
     comments: Math.floor(pseudoRandom(id + "comments", 40, 900)),
     shares: Math.floor(pseudoRandom(id + "shares", 200, 5000)),
   };
@@ -241,7 +241,7 @@ export const DEMO_ARTICLES: NewsArticle[] = DEMO_SEEDS.map((seed, i) => {
     ...seed,
     id,
     publishedAt: new Date(Date.now() - i * 45 * 60 * 1000).toISOString(),
-    likes: Math.floor(pseudoRandom(id + "likes", 800, 25000)),
+    likes: 0,
     comments: Math.floor(pseudoRandom(id + "comments", 40, 900)),
     shares: Math.floor(pseudoRandom(id + "shares", 200, 5000)),
   };

@@ -37,7 +37,7 @@ const PRIVATE_COMPANY_PROFILES: Record<string, PrivateCompanyProfile> = {
     color: "#374151",
   },
   OPENAI: {
-    fullName: "OpenAI, Inc.",
+    fullName: "OpenAI",
     founded: "2015",
     headquarters: "San Francisco, California",
     ceo: "Sam Altman",
