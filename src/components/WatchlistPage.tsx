@@ -3,6 +3,7 @@
 import { useApp } from "@/context/AppContext";
 import { getStockProfile } from "@/lib/stockData";
 import { getTickerMetaBySymbol, resolveSavedTicker } from "@/lib/tickerMap";
+import { shouldShowWatchlistPrice } from "@/lib/usStockTickers";
 import { CompanyLogo } from "./CompanyLogo";
 
 export function WatchlistPage() {
@@ -27,8 +28,9 @@ export function WatchlistPage() {
             {savedArticles.map((item) => {
               const ticker = resolveSavedTicker(item);
               const meta = getTickerMetaBySymbol(ticker);
-              const stock = getStockProfile(ticker);
-              const up = stock.changePercent >= 0;
+              const showPrice = shouldShowWatchlistPrice(ticker);
+              const stock = showPrice ? getStockProfile(ticker) : null;
+              const up = stock ? stock.changePercent >= 0 : false;
               return (
                 <li key={item.id} className="px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
@@ -55,19 +57,21 @@ export function WatchlistPage() {
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-2">
-                      <div className="text-right">
-                        <p className="font-semibold tabular-nums text-white">
-                          {stock.price.toFixed(2)}
-                        </p>
-                        <p
-                          className={`text-sm font-medium ${
-                            up ? "text-pocket-green" : "text-pocket-red"
-                          }`}
-                        >
-                          {up ? "▲" : "▼"}{" "}
-                          {Math.abs(stock.changePercent).toFixed(2)}%
-                        </p>
-                      </div>
+                      {showPrice && stock ? (
+                        <div className="text-right">
+                          <p className="font-semibold tabular-nums text-white">
+                            {stock.price.toFixed(2)}
+                          </p>
+                          <p
+                            className={`text-sm font-medium ${
+                              up ? "text-pocket-green" : "text-pocket-red"
+                            }`}
+                          >
+                            {up ? "▲" : "▼"}{" "}
+                            {Math.abs(stock.changePercent).toFixed(2)}%
+                          </p>
+                        </div>
+                      ) : null}
                       <button
                         type="button"
                         data-no-drag

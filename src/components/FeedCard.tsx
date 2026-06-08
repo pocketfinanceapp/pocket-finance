@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import {
   Bookmark,
-  ChevronUp,
   Heart,
   MessageCircle,
   Share2,
@@ -252,10 +251,6 @@ export function FeedCard({
           {displayTicker}
         </div>
 
-        <div className="mt-3 flex items-center gap-1 text-white/30">
-          <ChevronUp className="h-3.5 w-3.5" />
-          <span className="text-[10px] tracking-wider">Swipe up for more</span>
-        </div>
       </div>
 
       {toast && (
