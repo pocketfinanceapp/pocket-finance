@@ -1,4 +1,5 @@
 import type { MarketExchange, Sector } from "./types";
+import { isPrivateTicker } from "./privateTickers";
 
 export interface TickerMeta {
   ticker: string;
@@ -396,4 +397,26 @@ export function getTickerMetaBySymbol(ticker: string): TickerMeta {
     tags: [upper],
     logoColor: "#6b7280",
   };
+}
+
+const CRYPTO_DISPLAY_TICKERS = new Set(["BTC", "ETH"]);
+const COMMODITY_DISPLAY_TICKERS = new Set(["OIL", "GOLD"]);
+const US_MARKETS_DISPLAY_TICKERS = new Set([
+  "FED",
+  "MARKET",
+  "SPX",
+  "QQQ",
+  "DJI",
+]);
+
+/** Feed card exchange label — derived from ticker, not article index */
+export function resolveMarketForTicker(ticker: string): MarketExchange {
+  const upper = ticker.toUpperCase();
+
+  if (CRYPTO_DISPLAY_TICKERS.has(upper)) return "CRYPTO";
+  if (COMMODITY_DISPLAY_TICKERS.has(upper)) return "COMMODITIES";
+  if (US_MARKETS_DISPLAY_TICKERS.has(upper)) return "US MARKETS";
+  if (isPrivateTicker(upper)) return "NASDAQ";
+
+  return getTickerMetaBySymbol(upper).market;
 }

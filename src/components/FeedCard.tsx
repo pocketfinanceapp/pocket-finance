@@ -21,7 +21,10 @@ import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
 import { fetchCommentCount } from "@/lib/userInteractions";
-import { getArticleDisplayTicker } from "@/lib/tickerMap";
+import {
+  getArticleDisplayTicker,
+  resolveMarketForTicker,
+} from "@/lib/tickerMap";
 import {
   getExplicitFilterLabels,
   hasExplicitFilters,
@@ -78,6 +81,7 @@ export function FeedCard({
   const [commentCount, setCommentCount] = useState(article.comments);
   const [toast, setToast] = useState<string | null>(null);
   const displayTicker = getArticleDisplayTicker(article);
+  const displayMarket = resolveMarketForTicker(displayTicker);
 
   useEffect(() => {
     const usable = hasUsableFeedImage(article.imageUrl);
@@ -278,7 +282,7 @@ export function FeedCard({
         ) : null}
 
         <div className="mt-3">
-          <MarketBadge market={article.market} size="sm" />
+          <MarketBadge market={displayMarket} size="sm" />
         </div>
 
         <div className="mt-2.5">

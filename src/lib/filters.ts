@@ -56,6 +56,10 @@ export function marketToFilter(market: string): MarketFilter | null {
 
   const m = market.toUpperCase();
 
+  if (m === "CRYPTO") return "NASDAQ";
+  if (m === "COMMODITIES") return "NYSE";
+  if (m === "US MARKETS" || m === "MARKETS") return "NASDAQ";
+
   if (m === "NASDAQ") return "NASDAQ";
   if (m === "NYSE") return "NYSE";
   if (m.includes("ASX")) return "ASX";

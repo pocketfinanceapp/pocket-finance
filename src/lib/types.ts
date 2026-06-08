@@ -11,7 +11,9 @@ export type MarketExchange =
   | "BSE"
   | "SSE"
   | "KRX"
-  | "MARKETS";
+  | "CRYPTO"
+  | "COMMODITIES"
+  | "US MARKETS";
 
 export type Sector =
   | "Technology"

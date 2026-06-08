@@ -188,6 +188,25 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
       { ticker: "INTC", name: "Intel Corporation", price: 31.86, changePercent: -0.31, color: "#0071c5" },
     ],
   },
+  BAC: {
+    ticker: "BAC",
+    name: "Bank of America Corp.",
+    price: 38.24,
+    change: 0.42,
+    changePercent: 1.11,
+    logoColor: "#012169",
+    marketCap: "$340B",
+    revenue: "$98.6B",
+    peRatio: "14.2",
+    eps: "$3.42",
+    ebitda: "$45.2B",
+    dividendYield: "2.4%",
+    competitors: [
+      { ticker: "JPM", name: "JPMorgan Chase & Co.", price: 198.5, changePercent: 0.65, color: "#006747" },
+      { ticker: "WFC", name: "Wells Fargo & Company", price: 58.12, changePercent: 0.48, color: "#cd1409" },
+      { ticker: "C", name: "Citigroup Inc.", price: 62.4, changePercent: 0.32, color: "#056dae" },
+    ],
+  },
 };
 
 const CRYPTO_TICKERS = new Set(["BTC", "ETH"]);

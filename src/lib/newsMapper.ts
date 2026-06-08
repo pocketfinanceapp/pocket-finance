@@ -3,23 +3,8 @@ import type { MarketExchange, NewsArticle, Sector } from "./types";
 import { hasUsableFeedImage } from "./feedImage";
 import { cleanArticleDescription } from "./articleText";
 import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
-import { inferTickerFromFields } from "./tickerMap";
+import { inferTickerFromFields, resolveMarketForTicker } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
-
-const ROTATING_MARKETS: MarketExchange[] = [
-  "NASDAQ",
-  "NYSE",
-  "ASX",
-  "LSE",
-  "Nikkei",
-  "HKEX",
-  "TSX",
-  "Euronext",
-  "SGX",
-  "BSE",
-  "SSE",
-  "KRX",
-];
 
 interface NewsApiArticle {
   source?: { id?: string | null; name?: string };
@@ -64,7 +49,7 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
     subheading: description,
     body,
     imageUrl: hasUsableFeedImage(raw.urlToImage) ? raw.urlToImage! : "",
-    market: ROTATING_MARKETS[index % ROTATING_MARKETS.length] ?? meta.market,
+    market: resolveMarketForTicker(meta.ticker),
     sector: assignSector(meta.sector, index),
     ticker: meta.ticker,
     companyName: meta.companyName,
