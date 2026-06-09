@@ -2,7 +2,15 @@ import Link from "next/link";
 import { ChartLine, Newspaper, Zap } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { APP_BASE } from "@/lib/appPaths";
+import {
+  ArticleCardPreview,
+  FeedCardPreview,
+  StockCardPreview,
+} from "./FeatureCardPreviews";
+import { PhoneMockup } from "./PhoneMockup";
 import { WaitlistForm } from "./WaitlistForm";
+
+const STATS = ["50+ Sources", "Live Prices", "100% Free"] as const;
 
 const FEATURES = [
   {
@@ -10,18 +18,21 @@ const FEATURES = [
     title: "Live News Feed",
     description:
       "TikTok-style swipe feed of global market headlines — stay on top of breaking news in seconds.",
+    preview: FeedCardPreview,
   },
   {
     icon: Newspaper,
     title: "Full Articles",
     description:
       "Swipe left to read the full story from top sources. No clutter, just the news that matters.",
+    preview: ArticleCardPreview,
   },
   {
     icon: ChartLine,
     title: "Stock Intelligence",
     description:
       "Swipe right for live prices, charts, and financials. Context on every headline, instantly.",
+    preview: StockCardPreview,
   },
 ] as const;
 
@@ -50,55 +61,84 @@ export function LandingPage() {
   return (
     <div className="landing-page min-h-screen bg-[#0a0a0a] text-white">
       {/* Hero */}
-      <header className="relative overflow-hidden px-5 pb-20 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-8 sm:pb-28 sm:pt-16">
-        <div
-          className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[min(100%,720px)] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, rgba(59,110,245,0.35) 0%, rgba(0,198,198,0.2) 45%, transparent 70%)",
-          }}
-          aria-hidden
-        />
-
-        <nav className="relative z-10 mx-auto flex max-w-5xl items-center justify-between">
-          <PocketBrand layout="horizontal" iconSize={36} glow="normal" />
-          <Link
-            href={APP_BASE}
-            className="rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-white/30 hover:text-white"
-          >
-            Try the app
-          </Link>
-        </nav>
-
-        <div className="relative z-10 mx-auto mt-16 max-w-3xl text-center sm:mt-20">
-          <h1 className="text-[2rem] font-bold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1]">
-            Finance news, built for the way you scroll.
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#9ca3af] sm:text-lg">
-            Swipe through breaking market headlines, read full articles, and
-            check stock intelligence — all in seconds.
-          </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-            <a
-              href="#waitlist"
-              className="w-full rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-8 py-4 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.3)] transition-transform active:scale-[0.98] sm:w-auto"
-            >
-              Get Early Access
-            </a>
+      <header className="relative overflow-hidden pb-16 pt-[max(0,env(safe-area-inset-top))] sm:pb-24">
+        <nav className="relative z-10 border-b border-[#1f2937]">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
+            <PocketBrand layout="horizontal" iconSize={36} glow="normal" />
             <Link
               href={APP_BASE}
-              className="w-full rounded-xl border border-white/20 bg-transparent px-8 py-4 text-center text-[15px] font-semibold text-white transition-colors hover:border-white/35 hover:bg-white/[0.04] sm:w-auto"
+              className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-[#00C6C6] transition-colors hover:border-[#3B6EF5] hover:text-[#00C6C6]"
             >
               Try the app
             </Link>
           </div>
+        </nav>
+
+        <div className="relative px-5 pt-12 sm:px-8 sm:pt-16">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2 md:gap-10 lg:gap-16">
+            <div className="text-center md:text-left">
+              <div className="relative mx-auto max-w-xl md:mx-0">
+                <div
+                  className="pointer-events-none absolute -left-6 -right-6 top-1/2 h-48 -translate-y-1/2 rounded-full blur-3xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(59,110,245,0.15) 0%, rgba(0,198,198,0.1) 45%, transparent 70%)",
+                  }}
+                  aria-hidden
+                />
+                <h1 className="relative text-[2rem] font-bold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1]">
+                  Finance news, built for the way you scroll.
+                </h1>
+              </div>
+              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#9ca3af] sm:text-lg md:mx-0">
+                Swipe through breaking market headlines, read full articles, and
+                check stock intelligence — all in seconds.
+              </p>
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 md:justify-start">
+                <a
+                  href="#waitlist"
+                  className="w-full rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-8 py-4 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.3)] transition-transform active:scale-[0.98] sm:w-auto"
+                >
+                  Get Early Access
+                </a>
+                <Link
+                  href={APP_BASE}
+                  className="w-full rounded-xl border border-white/20 bg-transparent px-8 py-4 text-center text-[15px] font-semibold text-white transition-colors hover:border-white/35 hover:bg-white/[0.04] sm:w-auto"
+                >
+                  Try the app
+                </Link>
+              </div>
+            </div>
+
+            <div className="hidden justify-center md:flex">
+              <PhoneMockup />
+            </div>
+          </div>
         </div>
       </header>
 
+      {/* Stats */}
+      <section className="px-5 pb-4 sm:px-8">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-3 sm:grid-cols-3">
+          {STATS.map((stat) => (
+            <div
+              key={stat}
+              className="flex items-center justify-center gap-2 rounded-full border border-white/[0.06] bg-[#111] px-4 py-2.5"
+            >
+              <span
+                className="h-2 w-2 shrink-0 rounded-full bg-[#00C6C6]"
+                aria-hidden
+              />
+              <span className="text-sm font-medium text-white">{stat}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Features */}
       <section className="px-5 py-16 sm:px-8 sm:py-20">
-        <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3">
-          {FEATURES.map(({ icon: Icon, title, description }) => (
+        <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-3">
+          {FEATURES.map(({ icon: Icon, title, description, preview: Preview }) => (
             <article
               key={title}
               className="rounded-2xl border border-white/[0.06] bg-[#111] p-6"
@@ -110,6 +150,7 @@ export function LandingPage() {
               <p className="mt-2 text-sm leading-relaxed text-[#9ca3af]">
                 {description}
               </p>
+              <Preview />
             </article>
           ))}
         </div>
@@ -151,7 +192,7 @@ export function LandingPage() {
           <p className="mt-3 max-w-md text-sm text-[#9ca3af]">
             Join the waitlist for early access to Pocket Finance on iOS and web.
           </p>
-          <div className="mt-8 w-full flex justify-center">
+          <div className="mt-8 flex w-full justify-center">
             <WaitlistForm />
           </div>
         </div>
