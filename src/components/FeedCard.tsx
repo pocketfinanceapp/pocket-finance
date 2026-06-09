@@ -18,6 +18,11 @@ import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
+import {
+  hasSeenSwipeHint,
+  isFeedOnboardingComplete,
+  markSwipeHintSeen,
+} from "@/lib/feedOnboarding";
 import { fetchCommentCount } from "@/lib/userInteractions";
 import {
   getArticleDisplayTicker,
@@ -26,6 +31,7 @@ import {
 interface FeedCardProps {
   article: NewsArticle;
   active: boolean;
+  isFirstCard?: boolean;
   onOpenComments: () => void;
   commentRefreshKey?: number;
 }
@@ -36,6 +42,7 @@ const CARD_OVERLAY =
 export function FeedCard({
   article,
   active,
+  isFirstCard = false,
   onOpenComments,
   commentRefreshKey = 0,
 }: FeedCardProps) {
@@ -52,6 +59,8 @@ export function FeedCard({
   const saved = isArticleSaved(article.id);
   const [commentCount, setCommentCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [swipeHintOpacity, setSwipeHintOpacity] = useState(0);
   const displayTicker = getArticleDisplayTicker(article);
   const displayMarket = resolveMarketForArticle({
     ticker: article.ticker,
@@ -75,6 +84,45 @@ export function FeedCard({
       setCommentCount(Number.isFinite(count) && count > 0 ? count : 0);
     });
   }, [active, article.id, commentRefreshKey]);
+
+  useEffect(() => {
+    if (!isFirstCard || !active) {
+      setShowSwipeHint(false);
+      setSwipeHintOpacity(0);
+      return;
+    }
+
+    const startHint = () => {
+      if (!isFeedOnboardingComplete() || hasSeenSwipeHint()) return;
+
+      setShowSwipeHint(true);
+      setSwipeHintOpacity(1);
+
+      const fadeTimer = window.setTimeout(() => setSwipeHintOpacity(0), 2500);
+      const hideTimer = window.setTimeout(() => {
+        setShowSwipeHint(false);
+        markSwipeHintSeen();
+      }, 3100);
+
+      return () => {
+        window.clearTimeout(fadeTimer);
+        window.clearTimeout(hideTimer);
+      };
+    };
+
+    let cleanup = startHint();
+    const onOnboardingDismissed = () => {
+      cleanup?.();
+      cleanup = startHint();
+    };
+
+    window.addEventListener("pf-onboarding-dismissed", onOnboardingDismissed);
+
+    return () => {
+      cleanup?.();
+      window.removeEventListener("pf-onboarding-dismissed", onOnboardingDismissed);
+    };
+  }, [isFirstCard, active]);
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -225,6 +273,21 @@ export function FeedCard({
         <div className={isFallbackCard ? "mt-2" : "mt-3"}>
           <MarketBadge market={displayMarket} size="sm" />
         </div>
+
+        {showSwipeHint && (
+          <div
+            className="mt-3 flex justify-center gap-2 transition-opacity duration-500 ease-out"
+            style={{ opacity: swipeHintOpacity }}
+            data-no-drag
+          >
+            <span className="rounded-full bg-black/50 px-3 py-1 text-xs text-white backdrop-blur-sm">
+              ← Article
+            </span>
+            <span className="rounded-full bg-black/50 px-3 py-1 text-xs text-white backdrop-blur-sm">
+              Stock →
+            </span>
+          </div>
+        )}
 
         <div className="mt-2.5">
           <SourceBadge

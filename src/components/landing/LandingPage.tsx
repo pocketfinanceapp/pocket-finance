@@ -8,6 +8,7 @@ import {
   StockCardPreview,
 } from "./FeatureCardPreviews";
 import { PhoneMockup } from "./PhoneMockup";
+import { SwipeGestureSection } from "./SwipeGestureSection";
 import { WaitlistForm } from "./WaitlistForm";
 
 const STATS = ["50+ Sources", "Live Prices", "100% Free"] as const;
@@ -136,6 +137,8 @@ export function LandingPage() {
           ))}
         </div>
       </section>
+
+      <SwipeGestureSection />
 
       {/* Features */}
       <section className="px-5 py-16 sm:px-8 sm:py-20">

@@ -548,6 +548,7 @@ export function NewsFeed({
                     <FeedCard
                       article={a}
                       active={i === feedIndex}
+                      isFirstCard={i === 0}
                       onOpenComments={() => setCommentsOpen(true)}
                       commentRefreshKey={commentRefreshKey}
                     />
