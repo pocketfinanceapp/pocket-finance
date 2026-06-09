@@ -1,17 +1,21 @@
 import type { NewsArticle } from "./types";
 
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function normalize(text: string): string {
-  return text.trim().toLowerCase().replace(/\s+/g, " ");
+  return stripHtml(text).toLowerCase();
 }
 
 /** Body preview text that adds info beyond the subheading */
 export function getArticleBodyPreview(article: NewsArticle): string | null {
-  const subheading = article.subheading?.trim() ?? "";
+  const subheading = stripHtml(article.subheading?.trim() ?? "");
   const subNorm = normalize(subheading);
 
   const paragraphs = article.body
     .split(/\n\n+/)
-    .map((p) => p.trim())
+    .map((p) => stripHtml(p))
     .filter(Boolean);
 
   for (const para of paragraphs) {
