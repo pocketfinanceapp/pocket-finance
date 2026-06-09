@@ -30,6 +30,7 @@ import { MobilePageShell } from "./MobilePageShell";
 import { AddToHomeScreenBanner } from "./AddToHomeScreenBanner";
 import { FeedHeader } from "./FeedHeader";
 import { TrendingFeed } from "./TrendingFeed";
+import { FeedOnboardingOverlay } from "./onboarding/FeedOnboardingOverlay";
 
 interface NewsFeedProps {
   initialArticles: NewsArticle[];
@@ -578,6 +579,7 @@ export function NewsFeed({
           onSelectArticle={handleSearchSelect}
         />
         {showAddToHomeBanner && <AddToHomeScreenBanner />}
+        {embedded && <FeedOnboardingOverlay />}
     </div>
   );
 
