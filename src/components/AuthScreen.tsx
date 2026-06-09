@@ -123,19 +123,19 @@ export function AuthScreen() {
 
   return (
     <AuthShell>
-      <div className="flex flex-1 flex-col justify-center">
-        <div className="mb-8 flex justify-center">
-          <PocketBrand layout="vertical" iconSize={64} glow="none" />
+      <div className="flex flex-1 flex-col justify-start pt-1">
+        <div className="mb-3 flex justify-center">
+          <PocketBrand layout="icon" iconSize={60} glow="none" />
         </div>
 
         <h1 className="text-center text-2xl font-bold tracking-tight">
           Welcome to Pocket Finance
         </h1>
-        <p className="mt-2 text-center text-sm text-zinc-500">
+        <p className="mt-1 text-center text-sm text-zinc-500">
           Bold news. Smarter moves.
         </p>
 
-        <div className="mt-8 flex rounded-xl border border-white/10 bg-white/[0.04] p-1">
+        <div className="mt-3 flex rounded-xl border border-white/10 bg-white/[0.04] p-1">
           <button
             type="button"
             onClick={() => {
@@ -143,7 +143,7 @@ export function AuthScreen() {
               setError(null);
               clearAuthBanner();
             }}
-            className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
               mode === "signIn"
                 ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
                 : "text-zinc-400"
@@ -158,7 +158,7 @@ export function AuthScreen() {
               setError(null);
               clearAuthBanner();
             }}
-            className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
               mode === "signUp"
                 ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
                 : "text-zinc-400"
@@ -168,7 +168,7 @@ export function AuthScreen() {
           </button>
         </div>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-4 space-y-2">
           <OAuthButton
             label="Continue with Apple"
             disabled={submitting}
@@ -214,19 +214,19 @@ export function AuthScreen() {
           </button>
         </div>
 
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-white/10" />
           <span className="text-xs text-zinc-500">or</span>
           <div className="h-px flex-1 bg-white/10" />
         </div>
 
         {authBanner && (
-          <p className="mt-6 rounded-lg border border-[#00C6C6]/30 bg-[#00C6C6]/10 px-3 py-2.5 text-center text-sm text-[#00C6C6]">
+          <p className="mt-3 rounded-lg border border-[#00C6C6]/30 bg-[#00C6C6]/10 px-3 py-2.5 text-center text-sm text-[#00C6C6]">
             {authBanner}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
           {isSignUp && (
             <AuthField
               label="Display name"
@@ -284,7 +284,7 @@ export function AuthScreen() {
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="app-shell-height mx-auto flex w-full max-w-mobile flex-col bg-[#0a0a0a] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white"
+      className="app-shell-height mx-auto flex w-full max-w-mobile flex-col bg-[#0a0a0a] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] text-white"
       style={{ backgroundColor: "#0a0a0a" }}
     >
       {children}
@@ -313,7 +313,7 @@ function AuthField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-zinc-400">
+      <span className="mb-1 block text-xs font-medium text-zinc-400">
         {label}
       </span>
       <input
@@ -324,7 +324,7 @@ function AuthField({
         autoComplete={autoComplete}
         required={required}
         minLength={minLength}
-        className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-[#3B6EF5]/50 focus:outline-none"
+        className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:border-[#3B6EF5]/50 focus:outline-none"
       />
     </label>
   );
