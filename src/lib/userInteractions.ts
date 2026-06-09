@@ -301,6 +301,11 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
   }));
 }
 
+function parseCommentCount(count: number | null | undefined): number {
+  if (count == null || !Number.isFinite(count) || count < 0) return 0;
+  return Math.floor(count);
+}
+
 export async function fetchCommentCount(articleId: string): Promise<number> {
   const supabase = getSupabase();
   const { count, error } = await supabase
@@ -312,7 +317,7 @@ export async function fetchCommentCount(articleId: string): Promise<number> {
     console.error("fetchCommentCount:", error.message);
     return 0;
   }
-  return count ?? 0;
+  return parseCommentCount(count);
 }
 
 export async function postComment(

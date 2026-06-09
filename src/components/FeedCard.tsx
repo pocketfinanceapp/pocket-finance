@@ -50,7 +50,7 @@ export function FeedCard({
   const [showImage, setShowImage] = useState(usableInitial);
   const [imgSrc, setImgSrc] = useState(usableInitial ? article.imageUrl : "");
   const saved = isArticleSaved(article.id);
-  const [commentCount, setCommentCount] = useState(article.comments);
+  const [commentCount, setCommentCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const displayTicker = getArticleDisplayTicker(article);
   const displayMarket = resolveMarketForArticle({
@@ -71,7 +71,9 @@ export function FeedCard({
 
   useEffect(() => {
     if (!active) return;
-    void fetchCommentCount(article.id).then(setCommentCount);
+    void fetchCommentCount(article.id).then((count) => {
+      setCommentCount(Number.isFinite(count) && count > 0 ? count : 0);
+    });
   }, [active, article.id, commentRefreshKey]);
 
   const flash = useCallback((msg: string) => {
@@ -139,9 +141,11 @@ export function FeedCard({
 
         <ActionButton label="Comment" onClick={onOpenComments}>
           <MessageCircle className="h-[26px] w-[26px] text-white" />
-          <span className="text-[11px] font-semibold text-white/90">
-            {formatCount(commentCount)}
-          </span>
+          {commentCount > 0 ? (
+            <span className="text-[11px] font-semibold text-white/90">
+              {formatCount(commentCount)}
+            </span>
+          ) : null}
         </ActionButton>
 
         <ActionButton
