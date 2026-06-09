@@ -1,28 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp, BookOpen, TrendingUp, type LucideIcon } from "lucide-react";
 import {
   isFeedOnboardingComplete,
   markFeedOnboardingComplete,
 } from "@/lib/feedOnboarding";
 
-const SLIDES = [
+const SLIDES: {
+  icon: LucideIcon;
+  headline: string;
+  description: string;
+}[] = [
   {
-    icon: "👆",
+    icon: ArrowUp,
     headline: "Swipe up & down",
     description: "Browse through the latest market headlines",
   },
   {
-    icon: "👈",
+    icon: BookOpen,
     headline: "Swipe left to read",
     description: "Open the full article from any headline",
   },
   {
-    icon: "👉",
+    icon: TrendingUp,
     headline: "Swipe right for stocks",
     description: "See live prices, charts and stock intelligence",
   },
-] as const;
+];
 
 const SWIPE_THRESHOLD_PX = 48;
 
@@ -66,75 +71,82 @@ export function FeedOnboardingOverlay() {
 
   if (!open) return null;
 
-  const isLastSlide = slide === SLIDES.length - 1;
-
   return (
     <div
-      className="fixed inset-0 z-[200] flex flex-col bg-black/90 text-white"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 px-5 text-white"
       role="dialog"
       aria-modal="true"
       aria-label="How to use Pocket Finance"
     >
-      <div className="flex shrink-0 justify-end px-5 pt-[max(1rem,env(safe-area-inset-top))]">
-        <button
-          type="button"
-          onClick={dismiss}
-          className="rounded-lg px-2 py-1.5 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
-        >
-          Skip
-        </button>
-      </div>
-
       <div
-        className="relative min-h-0 flex-1 overflow-hidden"
+        className="w-full max-w-[340px] overflow-hidden"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
         <div
-          className="flex h-full transition-transform duration-300 ease-out"
+          className="flex transition-transform duration-300 ease-out"
           style={{ transform: `translateX(-${slide * 100}%)` }}
         >
-          {SLIDES.map((item) => (
-            <div
-              key={item.headline}
-              className="flex h-full w-full shrink-0 flex-col items-center justify-center px-8 text-center"
-            >
-              <span className="text-7xl leading-none" aria-hidden>
-                {item.icon}
-              </span>
-              <h2 className="mt-8 text-2xl font-bold tracking-tight">
-                {item.headline}
-              </h2>
-              <p className="mt-3 max-w-xs text-base leading-relaxed text-[#9ca3af]">
-                {item.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+          {SLIDES.map((item, index) => {
+            const Icon = item.icon;
+            const isLastSlide = index === SLIDES.length - 1;
+            const isActive = index === slide;
 
-      <div className="flex shrink-0 flex-col items-center gap-6 px-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
-        <div className="flex items-center gap-2">
-          {SLIDES.map((item, index) => (
-            <span
-              key={item.headline}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === slide
-                  ? "w-6 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
-                  : "w-2 bg-white/25"
-              }`}
-              aria-hidden
-            />
-          ))}
-        </div>
+            return (
+              <div key={item.headline} className="w-full shrink-0 px-0.5">
+                <div
+                  className={`relative rounded-2xl border border-[#1f2937] bg-[#111] px-6 pb-6 pt-5 ${
+                    isActive ? "feed-onboard-card-active" : ""
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={dismiss}
+                    className="absolute right-4 top-4 text-xs font-medium text-[#9ca3af] transition-colors hover:text-white"
+                  >
+                    Skip
+                  </button>
 
-        <button
-          type="button"
-          onClick={goNext}
-          className="w-full max-w-sm rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-8 py-4 text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-transform active:scale-[0.98]"
-        >
-          {isLastSlide ? "Get Started" : "Next"}
-        </button>
+                  <div className="flex flex-col items-center px-2 pt-6 text-center">
+                    <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] shadow-[0_8px_24px_rgba(59,110,245,0.35)]">
+                      <Icon className="h-7 w-7 text-white" strokeWidth={2.25} />
+                    </div>
+
+                    <h2 className="mt-6 text-[24px] font-bold leading-tight text-white">
+                      {item.headline}
+                    </h2>
+                    <p className="mt-3 max-w-[280px] text-[15px] leading-relaxed text-[#9ca3af]">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  <div className="mt-8 flex items-center justify-center gap-2">
+                    {SLIDES.map((dot, dotIndex) => (
+                      <span
+                        key={dot.headline}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          dotIndex === slide
+                            ? "w-6 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
+                            : "w-2 bg-[#4b5563]"
+                        }`}
+                        aria-hidden
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={isActive ? goNext : undefined}
+                    tabIndex={isActive ? 0 : -1}
+                    className="mt-6 w-full rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-transform active:scale-[0.98]"
+                  >
+                    {isLastSlide ? "Get Started" : "Next"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

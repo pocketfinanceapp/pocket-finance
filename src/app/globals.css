@@ -212,3 +212,35 @@ body {
 .onboarding-cta-glow {
   animation: onboarding-cta-glow 3s ease-in-out infinite;
 }
+
+/* Feed onboarding — subtle shimmer border on active card */
+@keyframes feed-onboard-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.feed-onboard-card-active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(59, 110, 245, 0.15),
+    rgba(0, 198, 198, 0.45),
+    rgba(59, 110, 245, 0.15)
+  );
+  background-size: 200% 100%;
+  animation: feed-onboard-shimmer 5s linear infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
