@@ -3,7 +3,12 @@
 export const BLOCKED_DOMAINS = [
   "gov.uk",
   "researchbuzz.me",
+  "upworthy.com",
   "buzzfeed.com",
+  "buzzfeednews.com",
+  "boredpanda.com",
+  "ladbible.com",
+  "unilad.com",
   "gizmodo.com",
   "mashable.com",
   "mlive.com",
@@ -27,13 +32,19 @@ export const BLOCKED_DOMAINS = [
 export const BLOCKED_URL_PATTERNS = [
   "yahoo.com/entertainment",
   "nbcnews.com/news/us-news",
+  "theguardian.com/lifeandstyle",
 ] as const;
 
 export const BLOCKED_SOURCE_NAMES = ["yahoo entertainment"] as const;
 
 export const BLOCKED_SOURCE_SLUGS = [
   "researchbuzz",
+  "upworthy",
   "buzzfeed",
+  "buzzfeednews",
+  "boredpanda",
+  "ladbible",
+  "unilad",
   "gizmodo",
   "mashable",
   "mlive",

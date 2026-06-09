@@ -1,3 +1,4 @@
+import { isArticleFromBlockedSource } from "./articleText";
 import type { NewsArticle } from "./types";
 
 export const BROWSE_CATEGORIES = [
@@ -142,5 +143,8 @@ export function filterArticlesByBrowseCategory(
   articles: NewsArticle[],
   category: BrowseCategory
 ): NewsArticle[] {
-  return articles.filter((a) => articleMatchesBrowseCategory(a, category));
+  return articles.filter(
+    (a) =>
+      !isArticleFromBlockedSource(a) && articleMatchesBrowseCategory(a, category)
+  );
 }

@@ -322,6 +322,19 @@ function titleContainsExcludedTopic(title: string): boolean {
   return false;
 }
 
+/** True when article URL/source matches a blocked non-finance domain */
+export function isArticleFromBlockedSource(article: {
+  sourceUrl: string;
+  sourceName: string;
+  sourceId?: string | null;
+}): boolean {
+  return isBlockedDomain(
+    article.sourceUrl,
+    article.sourceName,
+    article.sourceId
+  );
+}
+
 /** Client-side filter — drop off-topic, blocked-source, and non-finance articles */
 export function isExcludedArticle(input: ArticleFilterInput): boolean {
   const title = input.title ?? "";
