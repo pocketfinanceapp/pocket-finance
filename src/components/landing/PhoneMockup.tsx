@@ -3,17 +3,15 @@ import { Heart, MessageCircle, Share2 } from "lucide-react";
 export function PhoneMockup() {
   return (
     <div
-      className="relative shrink-0 drop-shadow-[0_24px_64px_rgba(0,0,0,0.55)]"
-      style={{ width: 270, height: 550 }}
+      className="relative h-[450px] w-[220px] shrink-0 drop-shadow-[0_24px_64px_rgba(0,0,0,0.55)] md:h-[550px] md:w-[270px]"
       aria-hidden
     >
       <svg
-        width="270"
-        height="550"
         viewBox="0 0 270 550"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        preserveAspectRatio="xMidYMid meet"
       >
         <rect
           x="1"

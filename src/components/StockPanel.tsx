@@ -252,7 +252,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-no-drag
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.04] py-3.5 text-sm font-semibold text-white transition-colors active:scale-[0.98] active:bg-white/[0.08]"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
                 style={{ touchAction: "manipulation" }}
               >
                 {tradeLabel}

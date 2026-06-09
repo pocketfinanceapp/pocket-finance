@@ -110,7 +110,7 @@ export function LandingPage() {
               </div>
             </div>
 
-            <div className="hidden justify-center md:flex">
+            <div className="mt-8 flex justify-center md:mt-0">
               <PhoneMockup />
             </div>
           </div>
@@ -119,17 +119,19 @@ export function LandingPage() {
 
       {/* Stats */}
       <section className="px-5 pb-4 sm:px-8">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mx-auto flex max-w-6xl flex-nowrap items-center justify-center gap-2">
           {STATS.map((stat) => (
             <div
               key={stat}
-              className="flex items-center justify-center gap-2 rounded-full border border-white/[0.06] bg-[#111] px-4 py-2.5"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.06] bg-[#111] px-3 py-1 text-xs sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
             >
               <span
-                className="h-2 w-2 shrink-0 rounded-full bg-[#00C6C6]"
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#00C6C6] sm:h-2 sm:w-2"
                 aria-hidden
               />
-              <span className="text-sm font-medium text-white">{stat}</span>
+              <span className="whitespace-nowrap font-medium text-white">
+                {stat}
+              </span>
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@ export interface SourceBrand {
   name: string;
   abbr: string;
   color: string;
+  textColor?: string;
   logoUrl?: string;
 }
 
@@ -18,7 +19,11 @@ const KNOWN_SOURCES: Record<string, Omit<SourceBrand, "name">> = {
   "abc-news": { abbr: "ABC", color: "#ffcc00" },
   "cnn": { abbr: "CNN", color: "#cc0000" },
   "bbc-news": { abbr: "BBC", color: "#bb1919" },
-  "fortune": { abbr: "F", color: "#000000" },
+  "fortune": { abbr: "F", color: "#1a1a2e", textColor: "#c9a84c" },
+  "forbes": { abbr: "F", color: "#2d2d2d", textColor: "#c9a84c" },
+  "axios": { abbr: "AX", color: "#ff4136", textColor: "#ffffff" },
+  "thestreet": { abbr: "TS", color: "#003087", textColor: "#ffffff" },
+  "the-street": { abbr: "TS", color: "#003087", textColor: "#ffffff" },
   "techcrunch": { abbr: "TC", color: "#0a8935" },
   "the-washington-post": { abbr: "WP", color: "#231f20" },
   "ars-technica": { abbr: "AT", color: "#ff4500" },
@@ -37,6 +42,7 @@ const NAME_ALIASES: Record<string, string> = {
   "abc news": "abc-news",
   "bbc news": "bbc-news",
   "yahoo finance": "yahoo-finance",
+  "the street": "thestreet",
 };
 
 function slugify(name: string): string {

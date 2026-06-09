@@ -46,8 +46,11 @@ export function SourceBadge({
           />
         ) : (
           <div
-            className="flex h-full w-full items-center justify-center text-[10px] font-bold text-white"
-            style={{ backgroundColor: brand.color }}
+            className="flex h-full w-full items-center justify-center text-[10px] font-bold"
+            style={{
+              backgroundColor: brand.color,
+              color: brand.textColor ?? "#ffffff",
+            }}
           >
             {brand.abbr}
           </div>
