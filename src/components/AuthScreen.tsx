@@ -16,6 +16,7 @@ export function AuthScreen() {
     signInWithGoogle,
     authBanner,
     clearAuthBanner,
+    continueAsGuest,
   } = useAuth();
   const [view, setView] = useState<AuthView>("form");
   const [mode, setMode] = useState<AuthMode>("signIn");
@@ -267,6 +268,14 @@ export function AuthScreen() {
             }
           />
         </div>
+
+        <button
+          type="button"
+          onClick={continueAsGuest}
+          className="mt-6 w-full text-center text-xs text-[#9ca3af] transition-colors hover:text-white"
+        >
+          or continue as guest
+        </button>
       </div>
     </AuthShell>
   );

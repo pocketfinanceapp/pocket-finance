@@ -11,6 +11,11 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { getEmailConfirmRedirectUrl } from "@/lib/authRedirect";
+import {
+  clearGuestMode,
+  enableGuestMode,
+  isGuestMode,
+} from "@/lib/guestMode";
 import { getSupabase } from "@/lib/supabase";
 
 interface AuthResult {
@@ -35,6 +40,9 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<AuthResult>;
   signInWithApple: () => Promise<AuthResult>;
+  isGuest: boolean;
+  continueAsGuest: () => void;
+  requestSignIn: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -64,7 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authBanner, setAuthBanner] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const handlingConfirmation = useRef(false);
+
+  useEffect(() => {
+    setIsGuest(isGuestMode());
+  }, []);
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -103,6 +116,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setSession(initial);
           setUser(initial?.user ?? null);
+          if (initial?.user) {
+            clearGuestMode();
+            setIsGuest(false);
+          }
         }
       } finally {
         window.clearTimeout(authTimeout);
@@ -118,6 +135,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (handlingConfirmation.current) return;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
+      if (nextSession?.user) {
+        clearGuestMode();
+        setIsGuest(false);
+      }
       setLoading(false);
     });
 
@@ -171,9 +192,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     const supabase = getSupabase();
     await supabase.auth.signOut();
+    clearGuestMode();
+    setIsGuest(false);
     setSession(null);
     setUser(null);
     setAuthBanner(null);
+  }, []);
+
+  const continueAsGuest = useCallback(() => {
+    enableGuestMode();
+    setIsGuest(true);
+  }, []);
+
+  const requestSignIn = useCallback(() => {
+    clearGuestMode();
+    setIsGuest(false);
   }, []);
 
   const signInWithOAuth = useCallback(
@@ -212,6 +245,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       signInWithGoogle,
       signInWithApple,
+      isGuest,
+      continueAsGuest,
+      requestSignIn,
     }),
     [
       user,
@@ -224,6 +260,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       signInWithGoogle,
       signInWithApple,
+      isGuest,
+      continueAsGuest,
+      requestSignIn,
     ]
   );
 

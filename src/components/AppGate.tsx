@@ -11,7 +11,7 @@ const SPLASH_MAX_MS = 2500;
 
 /** Auth + onboarding gate — renders children only when the user can use the app */
 export function AppGate({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isGuest } = useAuth();
   const { ready, onboardingComplete, syncAppUser } = useApp();
   const [splashElapsed, setSplashElapsed] = useState(false);
 
@@ -32,11 +32,11 @@ export function AppGate({ children }: { children: React.ReactNode }) {
     return <AppBootSplash />;
   }
 
-  if (!user) {
+  if (!user && !isGuest) {
     return <AuthScreen />;
   }
 
-  if (!onboardingComplete) {
+  if (user && !onboardingComplete) {
     return <OnboardingFlow />;
   }
 

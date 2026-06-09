@@ -22,7 +22,7 @@ interface ProfilePageProps {
 export function ProfilePage({ onClose }: ProfilePageProps) {
   const { storiesRead, likedArticlesCount, savedArticles, reloadProfileStats } =
     useApp();
-  const { user } = useAuth();
+  const { user, isGuest, requestSignIn } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
   const [streak, setStreak] = useState(0);
   const [recentlyRead, setRecentlyRead] = useState<RecentlyReadEntry[]>([]);
@@ -39,6 +39,27 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
 
   if (showSettings) {
     return <SettingsPage onBack={() => setShowSettings(false)} />;
+  }
+
+  if (isGuest && !user) {
+    return (
+      <div className="flex h-full min-h-0 flex-col bg-black">
+        <ScreenHeader title="Profile" onBack={onClose} />
+        <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+          <p className="text-lg font-semibold text-white">Sign in to your account</p>
+          <p className="mt-2 text-sm text-zinc-500">
+            Save articles, like stories, and sync your profile across devices.
+          </p>
+          <button
+            type="button"
+            onClick={requestSignIn}
+            className="mt-8 rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-8 py-3.5 text-sm font-bold text-white"
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const displayName =

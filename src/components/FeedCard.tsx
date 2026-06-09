@@ -17,6 +17,7 @@ import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
 import {
   hasSeenSwipeHint,
@@ -51,6 +52,7 @@ export function FeedCard({
     unsaveArticle,
     isArticleSaved,
   } = useApp();
+  const { user, isGuest, requestSignIn } = useAuth();
   const { liked, likeCount, toggleLike } = useArticleLikes(article);
 
   const usableInitial = hasUsableFeedImage(article.imageUrl);
@@ -59,6 +61,7 @@ export function FeedCard({
   const saved = isArticleSaved(article.id);
   const [commentCount, setCommentCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+  const [guestPrompt, setGuestPrompt] = useState<string | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [swipeHintOpacity, setSwipeHintOpacity] = useState(0);
   const displayTicker = getArticleDisplayTicker(article);
@@ -129,6 +132,22 @@ export function FeedCard({
     window.setTimeout(() => setToast(null), 1400);
   }, []);
 
+  const promptGuestSignIn = useCallback((message: string) => {
+    setGuestPrompt(message);
+    window.setTimeout(() => setGuestPrompt(null), 3200);
+  }, []);
+
+  const guardGuestAction = useCallback(
+    (message: string, action: () => void) => {
+      if (isGuest && !user) {
+        promptGuestSignIn(message);
+        return;
+      }
+      action();
+    },
+    [isGuest, user, promptGuestSignIn]
+  );
+
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
@@ -173,7 +192,9 @@ export function FeedCard({
       >
         <ActionButton
           label={liked ? "Unlike" : "Like"}
-          onClick={() => void toggleLike()}
+          onClick={() =>
+            guardGuestAction("Sign in to like this", () => void toggleLike())
+          }
         >
           <Heart
             className={`h-[26px] w-[26px] transition-colors ${
@@ -187,7 +208,12 @@ export function FeedCard({
           ) : null}
         </ActionButton>
 
-        <ActionButton label="Comment" onClick={onOpenComments}>
+        <ActionButton
+          label="Comment"
+          onClick={() =>
+            guardGuestAction("Sign in to comment", onOpenComments)
+          }
+        >
           <MessageCircle className="h-[26px] w-[26px] text-white" />
           {commentCount > 0 ? (
             <span className="text-[11px] font-semibold text-white/90">
@@ -222,15 +248,19 @@ export function FeedCard({
 
         <ActionButton
           label={saved ? "Unsave" : "Save"}
-          onClick={async () => {
-            if (saved) {
-              const ok = await unsaveArticle(article.id);
-              flash(ok ? "Removed from watchlist" : "Could not remove");
-            } else {
-              const ok = await saveArticle(article);
-              flash(ok ? "Saved to watchlist" : "Could not save");
-            }
-          }}
+          onClick={() =>
+            guardGuestAction("Sign in to save this", () => {
+              void (async () => {
+                if (saved) {
+                  const ok = await unsaveArticle(article.id);
+                  flash(ok ? "Removed from watchlist" : "Could not remove");
+                } else {
+                  const ok = await saveArticle(article);
+                  flash(ok ? "Saved to watchlist" : "Could not save");
+                }
+              })();
+            })
+          }
         >
           <Bookmark
             className={`h-[25px] w-[25px] transition-colors ${
@@ -319,6 +349,27 @@ export function FeedCard({
           data-no-drag
         >
           {toast}
+        </div>
+      )}
+
+      {guestPrompt && (
+        <div
+          className="absolute bottom-28 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/75 px-4 py-2 text-xs text-white backdrop-blur-md"
+          data-no-drag
+          data-interactive
+        >
+          <span>{guestPrompt}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setGuestPrompt(null);
+              requestSignIn();
+            }}
+            className="font-semibold text-[#00C6C6] underline-offset-2 hover:underline"
+          >
+            Sign in
+          </button>
         </div>
       )}
     </div>
