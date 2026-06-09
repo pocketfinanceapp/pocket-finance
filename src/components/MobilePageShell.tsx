@@ -1,6 +1,6 @@
 "use client";
 
-import { FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
+import { APP_VIEWPORT_HEIGHT, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 import { BottomNav, type NavTab } from "./BottomNav";
 
 interface MobilePageShellProps {
@@ -16,7 +16,7 @@ export function MobilePageShell({
   return (
     <div
       className="relative mx-auto w-full max-w-mobile overflow-hidden bg-black"
-      style={{ height: "100svh", maxHeight: "100svh" }}
+      style={{ height: APP_VIEWPORT_HEIGHT, maxHeight: APP_VIEWPORT_HEIGHT }}
     >
       <div
         className="absolute inset-x-0 top-0 overflow-hidden bg-black"

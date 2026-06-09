@@ -304,6 +304,9 @@ export function NewsFeed({
     clearFeedJump,
   ]);
 
+  const gesturesEnabledRef = useRef(gesturesEnabled);
+  gesturesEnabledRef.current = gesturesEnabled;
+
   const releaseCapture = useCallback(() => {
     const el = trackRef.current;
     const id = activePointer.current;
@@ -317,33 +320,40 @@ export function NewsFeed({
     activePointer.current = null;
   }, []);
 
-  const onPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (!gesturesEnabled || e.button !== 0 || isInteractiveTarget(e.target))
-        return;
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    const passiveFalse = { passive: false } as AddEventListenerOptions;
+    let touchGestureActive = false;
+
+    const beginGesture = (
+      clientX: number,
+      clientY: number,
+      pointerId: number,
+      target: EventTarget | null
+    ) => {
+      if (!gesturesEnabledRef.current || isInteractiveTarget(target)) return;
 
       dragging.current = true;
       setIsDragging(true);
       axis.current = null;
-      activePointer.current = e.pointerId;
+      activePointer.current = pointerId;
       startedInFeed.current =
-        (e.target as HTMLElement).closest("[data-feed-column]") !== null;
+        (target as HTMLElement | null)?.closest("[data-feed-column]") !== null;
 
-      const sample = { x: e.clientX, y: e.clientY, t: Date.now() };
+      const sample = { x: clientX, y: clientY, t: Date.now() };
       start.current = sample;
       last.current = sample;
       setDragX(0);
       setDragY(0);
-    },
-    [gesturesEnabled]
-  );
+    };
 
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!dragging.current || activePointer.current !== e.pointerId) return;
+    const moveGesture = (clientX: number, clientY: number, pointerId: number) => {
+      if (!dragging.current || activePointer.current !== pointerId) return;
 
-      const dx = e.clientX - start.current.x;
-      const dy = e.clientY - start.current.y;
+      const dx = clientX - start.current.x;
+      const dy = clientY - start.current.y;
 
       if (!axis.current) {
         if (Math.hypot(dx, dy) < AXIS_LOCK) return;
@@ -355,37 +365,44 @@ export function NewsFeed({
 
         if (inFeed && Math.abs(dy) >= Math.abs(dx)) {
           axis.current = "y";
-          trackRef.current?.setPointerCapture(e.pointerId);
+          try {
+            el.setPointerCapture(pointerId);
+          } catch {
+            /* touch ids may not support capture */
+          }
         } else if (Math.abs(dx) > Math.abs(dy)) {
           axis.current = "x";
-          trackRef.current?.setPointerCapture(e.pointerId);
+          try {
+            el.setPointerCapture(pointerId);
+          } catch {
+            /* touch ids may not support capture */
+          }
         } else if (inFeed) {
           axis.current = "y";
-          trackRef.current?.setPointerCapture(e.pointerId);
+          try {
+            el.setPointerCapture(pointerId);
+          } catch {
+            /* touch ids may not support capture */
+          }
         } else {
           dragging.current = false;
           setIsDragging(false);
-          releaseCapture();
+          activePointer.current = null;
           return;
         }
       }
 
-      last.current = { x: e.clientX, y: e.clientY, t: Date.now() };
+      last.current = { x: clientX, y: clientY, t: Date.now() };
 
       if (axis.current === "x") {
-        e.preventDefault();
         setDragX(dx);
       } else if (axis.current === "y") {
-        e.preventDefault();
         setDragY(dy);
       }
-    },
-    [releaseCapture]
-  );
+    };
 
-  const onPointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (activePointer.current !== e.pointerId) return;
+    const endGesture = (pointerId: number) => {
+      if (activePointer.current !== pointerId) return;
 
       dragging.current = false;
       setIsDragging(false);
@@ -429,9 +446,75 @@ export function NewsFeed({
         }
         setDragY(0);
       }
-    },
-    [filteredArticles.length, releaseCapture, resetFeedIndex, setFeedIndex]
-  );
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      touchGestureActive = true;
+      beginGesture(touch.clientX, touch.clientY, touch.identifier, e.target);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!dragging.current) return;
+      const touch = Array.from(e.touches).find(
+        (t) => t.identifier === activePointer.current
+      );
+      if (!touch) return;
+      if (axis.current) e.preventDefault();
+      moveGesture(touch.clientX, touch.clientY, touch.identifier);
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      const touch = Array.from(e.changedTouches).find(
+        (t) => t.identifier === activePointer.current
+      );
+      if (touch) endGesture(touch.identifier);
+      if (e.touches.length === 0) touchGestureActive = false;
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (touchGestureActive || e.button !== 0) return;
+      beginGesture(e.clientX, e.clientY, e.pointerId, e.target);
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (touchGestureActive || !dragging.current) return;
+      if (axis.current) e.preventDefault();
+      moveGesture(e.clientX, e.clientY, e.pointerId);
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (touchGestureActive) return;
+      endGesture(e.pointerId);
+    };
+
+    el.addEventListener("touchstart", onTouchStart, passiveFalse);
+    el.addEventListener("touchmove", onTouchMove, passiveFalse);
+    el.addEventListener("touchend", onTouchEnd, passiveFalse);
+    el.addEventListener("touchcancel", onTouchEnd, passiveFalse);
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove, passiveFalse);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointercancel", onPointerUp);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, [
+    filteredArticles.length,
+    gesturesEnabled,
+    releaseCapture,
+    resetFeedIndex,
+    setFeedIndex,
+  ]);
 
   const trackTransition = isDragging
     ? ""
@@ -453,10 +536,6 @@ export function NewsFeed({
             width: "300%",
             transform: hTransform,
           }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
         >
           <div
             className="h-full shrink-0 overflow-y-auto overscroll-contain"

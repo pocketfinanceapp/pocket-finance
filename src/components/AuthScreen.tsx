@@ -275,8 +275,8 @@ export function AuthScreen() {
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="mx-auto flex min-h-[100dvh] w-full max-w-mobile flex-col bg-[#0a0a0a] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white"
-      style={{ backgroundColor: "#0a0a0a", minHeight: "100dvh" }}
+      className="app-shell-height mx-auto flex w-full max-w-mobile flex-col bg-[#0a0a0a] px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-white"
+      style={{ backgroundColor: "#0a0a0a" }}
     >
       {children}
     </div>

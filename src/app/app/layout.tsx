@@ -14,7 +14,7 @@ export default async function AppLayout({
   const articles = await fetchNewsArticles();
 
   return (
-    <main className="min-h-[100dvh] bg-black">
+    <main className="app-shell-height bg-black">
       <AppBodyLock />
       <AppProviders>
         <AppGate>

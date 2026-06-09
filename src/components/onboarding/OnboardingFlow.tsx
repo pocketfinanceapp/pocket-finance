@@ -55,7 +55,7 @@ export function OnboardingFlow() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] mx-auto flex min-h-screen min-h-[100dvh] w-full max-w-mobile flex-col bg-black text-white">
+    <div className="app-shell-height fixed inset-0 z-[100] mx-auto flex w-full max-w-mobile flex-col bg-black text-white">
       <div className="flex justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
         <StepDots total={4} current={step} />
       </div>

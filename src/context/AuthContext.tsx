@@ -70,35 +70,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabase();
     let mounted = true;
 
+    const finishLoading = () => {
+      if (mounted) setLoading(false);
+    };
+
+    const authTimeout = window.setTimeout(finishLoading, 3000);
+
     const init = async () => {
       const confirmationRedirect = isEmailConfirmationUrl();
       if (confirmationRedirect) {
         handlingConfirmation.current = true;
       }
 
-      const {
-        data: { session: initial },
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session: initial },
+        } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (confirmationRedirect) {
-        if (initial) {
-          await supabase.auth.signOut();
+        if (confirmationRedirect) {
+          if (initial) {
+            await supabase.auth.signOut();
+          }
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setAuthBanner(CONFIRMED_BANNER);
+            cleanConfirmationParams();
+          }
+          handlingConfirmation.current = false;
+        } else {
+          setSession(initial);
+          setUser(initial?.user ?? null);
         }
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setAuthBanner(CONFIRMED_BANNER);
-          cleanConfirmationParams();
-        }
-        handlingConfirmation.current = false;
-      } else {
-        setSession(initial);
-        setUser(initial?.user ?? null);
+      } finally {
+        window.clearTimeout(authTimeout);
+        finishLoading();
       }
-
-      if (mounted) setLoading(false);
     };
 
     void init();
@@ -114,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      window.clearTimeout(authTimeout);
       subscription.unsubscribe();
     };
   }, []);

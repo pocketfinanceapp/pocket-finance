@@ -26,7 +26,7 @@ export class FeedErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div
-          className="flex h-[100dvh] flex-col items-center justify-center bg-[#0a0a0a] px-6 text-center text-white"
+          className="app-shell-height flex flex-col items-center justify-center bg-[#0a0a0a] px-6 text-center text-white"
           style={{ backgroundColor: "#0a0a0a" }}
         >
           <p className="text-lg font-semibold">Feed failed to load</p>

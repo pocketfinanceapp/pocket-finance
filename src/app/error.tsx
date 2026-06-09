@@ -15,8 +15,8 @@ export default function Error({
 
   return (
     <div
-      className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#0a0a0a] px-6 text-center text-white"
-      style={{ backgroundColor: "#0a0a0a", minHeight: "100dvh" }}
+      className="app-shell-height flex flex-col items-center justify-center bg-[#0a0a0a] px-6 text-center text-white"
+      style={{ backgroundColor: "#0a0a0a" }}
     >
       <p className="text-lg font-semibold">Something went wrong</p>
       <p className="mt-2 max-w-sm text-sm text-zinc-400">

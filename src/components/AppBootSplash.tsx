@@ -6,8 +6,8 @@ import { PocketBrand } from "@/components/PocketLogo";
 export function AppBootSplash() {
   return (
     <div
-      className="flex min-h-screen min-h-[100dvh] flex-col items-center justify-center bg-[#0a0a0a] px-6"
-      style={{ backgroundColor: "#0a0a0a", minHeight: "100dvh" }}
+      className="app-shell-height flex flex-col items-center justify-center bg-[#0a0a0a] px-6"
+      style={{ backgroundColor: "#0a0a0a" }}
     >
       <PocketBrand
         layout="vertical"
