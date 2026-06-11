@@ -23,7 +23,6 @@ interface ArticlePanelProps {
 
 export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
-  const paragraphs = article.body.split(/\n\n+/).filter(Boolean);
   const saved = isArticleSaved(article.id);
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
@@ -96,12 +95,6 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
             sizes="(max-width: 430px) 100vw"
             unoptimized
           />
-        </div>
-
-        <div className="mt-8 space-y-5 text-[18px] leading-[1.65] text-zinc-100">
-          {paragraphs.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
         </div>
 
         <div className="mt-8 flex flex-wrap gap-2">
