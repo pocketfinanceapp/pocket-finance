@@ -5,8 +5,16 @@ import { ArrowLeft, Bookmark } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
+import { ArticleAISummary } from "./ArticleAISummary";
 import { MarketBadge } from "./MarketBadge";
 import { SourceBadge } from "./SourceBadge";
+
+function articleSnippet(article: NewsArticle): string {
+  const subheading = article.subheading?.trim();
+  if (subheading) return subheading;
+  const first = article.body.split(/\n\n+/).map((p) => p.trim()).find(Boolean);
+  return first?.slice(0, 400) ?? "";
+}
 
 interface ArticlePanelProps {
   article: NewsArticle;
@@ -106,6 +114,12 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
             </span>
           ))}
         </div>
+
+        <ArticleAISummary
+          articleId={article.id}
+          headline={article.headline}
+          snippet={articleSnippet(article)}
+        />
 
         <a
           href={article.sourceUrl}
