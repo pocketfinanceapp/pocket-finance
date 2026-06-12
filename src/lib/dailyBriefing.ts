@@ -30,7 +30,7 @@ export function loadCachedDailyBriefing(): string[] | null {
       Array.isArray(parsed.bullets) &&
       parsed.bullets.length >= 4
     ) {
-      return parsed.bullets.slice(0, 4);
+      return sanitizeBriefingBullets(parsed.bullets);
     }
   } catch {
     /* ignore corrupt cache */
@@ -45,7 +45,7 @@ export function saveCachedDailyBriefing(bullets: string[]): void {
   try {
     const payload: CachedDailyBriefing = {
       date: getDailyBriefingDateKey(),
-      bullets: bullets.slice(0, 4),
+      bullets: sanitizeBriefingBullets(bullets),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {
@@ -53,13 +53,44 @@ export function saveCachedDailyBriefing(bullets: string[]): void {
   }
 }
 
-export function parseBriefingBullet(line: string): { emoji: string; text: string } {
+export function stripBriefingMarkdown(text: string): string {
+  let result = text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/_(.+?)_/g, "$1")
+    .trim();
+
+  result = result.replace(/^[^:]+:\s*/, "");
+  result = result.replace(/^:\s*/, "").replace(/\s*:$/, "").trim();
+
+  return result;
+}
+
+export function sanitizeBriefingBullet(line: string): string {
   const trimmed = line.trim();
   const match = trimmed.match(
     /^([\s\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]+)\s*(.+)/u
   );
   if (match) {
+    const emoji = match[1].trim();
+    const text = stripBriefingMarkdown(match[2]);
+    return text ? `${emoji} ${text}` : emoji;
+  }
+  return stripBriefingMarkdown(trimmed);
+}
+
+export function sanitizeBriefingBullets(bullets: string[]): string[] {
+  return bullets.map(sanitizeBriefingBullet).filter(Boolean).slice(0, 4);
+}
+
+export function parseBriefingBullet(line: string): { emoji: string; text: string } {
+  const sanitized = sanitizeBriefingBullet(line);
+  const match = sanitized.match(
+    /^([\s\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]+)\s*(.+)/u
+  );
+  if (match) {
     return { emoji: match[1].trim(), text: match[2].trim() };
   }
-  return { emoji: "•", text: trimmed };
+  return { emoji: "•", text: sanitized };
 }

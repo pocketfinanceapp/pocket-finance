@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { sanitizeBriefingBullets } from "@/lib/dailyBriefing";
 
 const MODEL = "claude-haiku-4-5-20251001";
 const SYSTEM_PROMPT =
-  "You are a financial markets morning briefing writer. Return exactly 4 bullet points summarising today's market conditions. Start each bullet with its emoji. Be concise, factual, and beginner-friendly. No preamble, no extra text.";
+  "You are a financial markets morning briefing writer. Return exactly 4 bullet points summarising today's market conditions. Start each bullet with its emoji. Be concise, factual, and beginner-friendly. Do not use any markdown formatting. No asterisks, no bold, no italic. Plain text only. No preamble, no extra text.";
 
 function formatBriefingDate(date: Date): string {
   return date.toLocaleDateString("en-GB", {
@@ -57,7 +58,7 @@ export async function GET() {
 
     const text =
       data.content?.find((block) => block.type === "text")?.text?.trim() ?? "";
-    const bullets = parseBullets(text);
+    const bullets = sanitizeBriefingBullets(parseBullets(text));
 
     if (bullets.length < 4) {
       return NextResponse.json({ error: "Empty briefing" }, { status: 502 });

@@ -5,6 +5,7 @@ import {
   formatDailyBriefingDate,
   loadCachedDailyBriefing,
   parseBriefingBullet,
+  sanitizeBriefingBullets,
   saveCachedDailyBriefing,
 } from "@/lib/dailyBriefing";
 
@@ -60,8 +61,9 @@ export function DailyMarketBriefingCard({ active }: DailyMarketBriefingCardProps
         if (cancelled) return;
 
         if (data.bullets?.length) {
-          setBullets(data.bullets.slice(0, 4));
-          saveCachedDailyBriefing(data.bullets);
+          const cleaned = sanitizeBriefingBullets(data.bullets);
+          setBullets(cleaned);
+          saveCachedDailyBriefing(cleaned);
           setFailed(false);
         } else {
           setFailed(true);

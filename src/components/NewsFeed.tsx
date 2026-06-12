@@ -30,7 +30,6 @@ import { StockPanel } from "./StockPanel";
 import { MobilePageShell } from "./MobilePageShell";
 import { AddToHomeScreenBanner } from "./AddToHomeScreenBanner";
 import { FeedHeader } from "./FeedHeader";
-import { TrendingFeed } from "./TrendingFeed";
 import { FeedOnboardingOverlay } from "./onboarding/FeedOnboardingOverlay";
 
 interface NewsFeedProps {
@@ -181,18 +180,6 @@ export function NewsFeed({
   feedIndexRef.current = feedIndex;
   feedModeRef.current = feedMode;
 
-  const showDailyBriefing = feedMode === "forYou";
-  const feedItemCount = showDailyBriefing
-    ? filteredArticles.length + 1
-    : filteredArticles.length;
-  const articleFeedIndex = showDailyBriefing
-    ? Math.max(0, feedIndex - 1)
-    : feedIndex;
-  const swipeArticle =
-    filteredArticles[articleFeedIndex] ?? filteredArticles[0];
-  const article = articleOverride ?? swipeArticle;
-  const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
-
   const sortedByRecent = useMemo(
     () =>
       [...allArticles].sort(
@@ -208,10 +195,19 @@ export function NewsFeed({
     [sortedByRecent]
   );
 
-  const latestArticles = useMemo(
-    () => sortedByRecent.slice(0, 5),
-    [sortedByRecent]
-  );
+  const showDailyBriefing = feedMode === "trending";
+  const swipeFeedArticles =
+    feedMode === "trending" ? trendingArticles : filteredArticles;
+  const feedItemCount = showDailyBriefing
+    ? swipeFeedArticles.length + 1
+    : swipeFeedArticles.length;
+  const articleFeedIndex = showDailyBriefing
+    ? Math.max(0, feedIndex - 1)
+    : feedIndex;
+  const swipeArticle =
+    swipeFeedArticles[articleFeedIndex] ?? swipeFeedArticles[0];
+  const article = articleOverride ?? swipeArticle;
+  const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
 
   useEffect(() => {
     const max = Math.max(0, feedItemCount - 1);
@@ -222,12 +218,12 @@ export function NewsFeed({
     if (
       prevFeedIndex.current >= 0 &&
       feedIndex !== prevFeedIndex.current &&
-      filteredArticles.length > 0
+      swipeFeedArticles.length > 0
     ) {
       incrementStoriesRead();
     }
     prevFeedIndex.current = feedIndex;
-  }, [feedIndex, filteredArticles.length, incrementStoriesRead]);
+  }, [feedIndex, swipeFeedArticles.length, incrementStoriesRead]);
 
   useEffect(() => {
     if (
@@ -278,7 +274,7 @@ export function NewsFeed({
       const idx = forYouList.findIndex((a) => a.id === selected.id);
       if (idx >= 0) {
         setFeedMode("forYou");
-        setFeedIndex(idx + 1);
+        setFeedIndex(idx);
         setArticleOverride(null);
         goToPanel(PANEL_FEED);
       }
@@ -368,9 +364,7 @@ export function NewsFeed({
         if (Math.hypot(dx, dy) < AXIS_LOCK) return;
 
         const inFeed =
-          startedInFeed.current &&
-          panelIndexRef.current === PANEL_FEED &&
-          feedModeRef.current !== "trending";
+          startedInFeed.current && panelIndexRef.current === PANEL_FEED;
 
         if (inFeed && Math.abs(dy) >= Math.abs(dx)) {
           axis.current = "y";
@@ -559,7 +553,7 @@ export function NewsFeed({
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,
-              touchAction: feedMode === "trending" ? "pan-y" : "none",
+              touchAction: "none",
             }}
           >
             <FeedHeader
@@ -569,14 +563,7 @@ export function NewsFeed({
               className="absolute left-0 right-0 top-0 z-30"
             />
 
-            {feedMode === "trending" ? (
-              <TrendingFeed
-                articles={trendingArticles}
-                latestArticles={latestArticles}
-                onOpenArticle={openArticle}
-                onJumpToForYou={jumpToForYouArticle}
-              />
-            ) : filteredArticles.length === 0 && !showDailyBriefing ? (
+            {swipeFeedArticles.length === 0 && !showDailyBriefing ? (
               <div className="flex h-full flex-col items-center justify-center px-8 text-center">
                 {feedMode === "following" && favouriteTopics.length === 0 ? (
                   <>
@@ -636,7 +623,7 @@ export function NewsFeed({
                     <DailyMarketBriefingCard active={feedIndex === 0} />
                   </div>
                 )}
-                {filteredArticles.map((a, i) => {
+                {swipeFeedArticles.map((a, i) => {
                   const cardIndex = showDailyBriefing ? i + 1 : i;
                   return (
                     <div
