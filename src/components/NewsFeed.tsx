@@ -21,6 +21,7 @@ import {
 } from "@/lib/profileStorage";
 import type { NewsArticle } from "@/lib/types";
 import { CommentSheet } from "./CommentSheet";
+import { DailyMarketBriefingCard } from "./DailyMarketBriefingCard";
 import { FeedCard } from "./FeedCard";
 import { FilterPanel } from "./FilterPanel";
 import { FeedSearchOverlay } from "./FeedSearchOverlay";
@@ -180,7 +181,15 @@ export function NewsFeed({
   feedIndexRef.current = feedIndex;
   feedModeRef.current = feedMode;
 
-  const swipeArticle = filteredArticles[feedIndex] ?? filteredArticles[0];
+  const showDailyBriefing = feedMode === "forYou";
+  const feedItemCount = showDailyBriefing
+    ? filteredArticles.length + 1
+    : filteredArticles.length;
+  const articleFeedIndex = showDailyBriefing
+    ? Math.max(0, feedIndex - 1)
+    : feedIndex;
+  const swipeArticle =
+    filteredArticles[articleFeedIndex] ?? filteredArticles[0];
   const article = articleOverride ?? swipeArticle;
   const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
 
@@ -205,9 +214,9 @@ export function NewsFeed({
   );
 
   useEffect(() => {
-    const max = Math.max(0, filteredArticles.length - 1);
+    const max = Math.max(0, feedItemCount - 1);
     if (feedIndex > max) setFeedIndex(max);
-  }, [filteredArticles.length, feedIndex, setFeedIndex]);
+  }, [feedItemCount, feedIndex, setFeedIndex]);
 
   useEffect(() => {
     if (
@@ -269,7 +278,7 @@ export function NewsFeed({
       const idx = forYouList.findIndex((a) => a.id === selected.id);
       if (idx >= 0) {
         setFeedMode("forYou");
-        setFeedIndex(idx);
+        setFeedIndex(idx + 1);
         setArticleOverride(null);
         goToPanel(PANEL_FEED);
       }
@@ -567,7 +576,7 @@ export function NewsFeed({
                 onOpenArticle={openArticle}
                 onJumpToForYou={jumpToForYouArticle}
               />
-            ) : filteredArticles.length === 0 ? (
+            ) : filteredArticles.length === 0 && !showDailyBriefing ? (
               <div className="flex h-full flex-col items-center justify-center px-8 text-center">
                 {feedMode === "following" && favouriteTopics.length === 0 ? (
                   <>
@@ -614,25 +623,37 @@ export function NewsFeed({
               <div
                 className={`w-full touch-none ${trackTransition}`}
                 style={{
-                  height: `calc(${filteredArticles.length} * ${FEED_VIEWPORT_HEIGHT})`,
+                  height: `calc(${feedItemCount} * ${FEED_VIEWPORT_HEIGHT})`,
                   transform: vTransform,
                 }}
               >
-                {filteredArticles.map((a, i) => (
+                {showDailyBriefing && (
                   <div
-                    key={a.id}
+                    key="daily-market-briefing"
                     className="w-full shrink-0"
                     style={{ height: FEED_VIEWPORT_HEIGHT }}
                   >
-                    <FeedCard
-                      article={a}
-                      active={i === feedIndex}
-                      isFirstCard={i === 0}
-                      onOpenComments={() => setCommentsOpen(true)}
-                      commentRefreshKey={commentRefreshKey}
-                    />
+                    <DailyMarketBriefingCard active={feedIndex === 0} />
                   </div>
-                ))}
+                )}
+                {filteredArticles.map((a, i) => {
+                  const cardIndex = showDailyBriefing ? i + 1 : i;
+                  return (
+                    <div
+                      key={a.id}
+                      className="w-full shrink-0"
+                      style={{ height: FEED_VIEWPORT_HEIGHT }}
+                    >
+                      <FeedCard
+                        article={a}
+                        active={feedIndex === cardIndex}
+                        isFirstCard={!showDailyBriefing && i === 0}
+                        onOpenComments={() => setCommentsOpen(true)}
+                        commentRefreshKey={commentRefreshKey}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
