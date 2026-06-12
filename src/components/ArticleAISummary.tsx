@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FinancialTermText } from "./FinancialTermText";
 
 interface ArticleAISummaryProps {
   headline: string;
@@ -84,7 +85,7 @@ export function ArticleAISummary({
                 key={bullet}
                 className="mb-3 border-l-[3px] border-[#00C6C6] pl-3 text-sm font-normal leading-relaxed text-white last:mb-0"
               >
-                {stripLeadingEmoji(bullet)}
+                <FinancialTermText text={stripLeadingEmoji(bullet)} />
               </li>
             ))}
           </ul>
