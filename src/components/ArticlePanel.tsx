@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { ArticleAISummary } from "./ArticleAISummary";
@@ -19,6 +21,41 @@ function articleSnippet(article: NewsArticle): string {
 interface ArticlePanelProps {
   article: NewsArticle;
   onBack: () => void;
+}
+
+function ArticleHeroImage({ imageUrl }: { imageUrl: string }) {
+  const usableInitial = hasUsableFeedImage(imageUrl);
+  const [showImage, setShowImage] = useState(usableInitial);
+  const [imgSrc, setImgSrc] = useState(usableInitial ? imageUrl : "");
+
+  useEffect(() => {
+    const usable = hasUsableFeedImage(imageUrl);
+    setShowImage(usable);
+    setImgSrc(usable ? imageUrl : "");
+  }, [imageUrl]);
+
+  return (
+    <div className="relative mt-6 aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#1a1a1a]">
+      {showImage && imgSrc ? (
+        <Image
+          src={imgSrc}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="(max-width: 430px) 100vw"
+          unoptimized
+          onError={() => {
+            setShowImage(false);
+            setImgSrc("");
+          }}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <span className="text-xs text-zinc-600">No image available</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
@@ -86,16 +123,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           />
         </div>
 
-        <div className="relative mt-6 aspect-[16/10] w-full overflow-hidden rounded-2xl">
-          <Image
-            src={article.imageUrl}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="(max-width: 430px) 100vw"
-            unoptimized
-          />
-        </div>
+        <ArticleHeroImage imageUrl={article.imageUrl} />
 
         <div className="mt-8 flex flex-wrap gap-2">
           {article.tags.map((tag) => (

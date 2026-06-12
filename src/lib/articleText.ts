@@ -4,6 +4,7 @@ import {
   BLOCKED_SOURCE_SLUGS,
   BLOCKED_URL_PATTERNS,
   TITLE_CRIME_NON_FINANCE_PHRASES,
+  TITLE_NON_FINANCE_KEYWORDS,
   TITLE_TRAVEL_NON_FINANCE_PHRASES,
   TITLE_TRANSIT_NON_FINANCE_PHRASES,
 } from "./articleFilter";
@@ -290,6 +291,20 @@ function isAviationFinanceTitle(title: string): boolean {
   );
 }
 
+function isLawsuitNonFinanceTitle(title: string): boolean {
+  const lower = title.toLowerCase();
+  if (!lower.includes("lawsuit")) return false;
+  if (/\bsec\b/i.test(title) || lower.includes("fraud") || lower.includes("billion")) {
+    return false;
+  }
+  return true;
+}
+
+function isNonFinanceKeywordTitle(title: string): boolean {
+  const lower = title.toLowerCase();
+  return TITLE_NON_FINANCE_KEYWORDS.some((keyword) => lower.includes(keyword));
+}
+
 function titleContainsExcludedTopic(title: string): boolean {
   const lower = title.toLowerCase();
 
@@ -302,6 +317,10 @@ function titleContainsExcludedTopic(title: string): boolean {
   if (isTravelNonFinanceTitle(title)) return true;
 
   if (isTransitNonFinanceTitle(title)) return true;
+
+  if (isLawsuitNonFinanceTitle(title)) return true;
+
+  if (isNonFinanceKeywordTitle(title)) return true;
 
   if (!isAviationFinanceTitle(title)) {
     for (const word of AVIATION_INCIDENT_WORDS) {
