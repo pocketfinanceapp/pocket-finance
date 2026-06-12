@@ -546,8 +546,13 @@ function Stat({
           <button
             type="button"
             data-no-drag
+            data-interactive
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={onInfoClick}
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onInfoClick();
+            }}
             className="flex h-4 w-4 items-center justify-center text-xs leading-none text-[#9ca3af]"
             aria-label={`What is ${label}?`}
             style={{ touchAction: "manipulation" }}
