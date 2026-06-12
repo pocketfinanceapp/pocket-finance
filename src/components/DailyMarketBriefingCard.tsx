@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import {
+  ensureFourBriefingBullets,
   formatDailyBriefingDate,
   loadCachedDailyBriefing,
-  parseBriefingBullet,
-  sanitizeBriefingBullets,
   saveCachedDailyBriefing,
 } from "@/lib/dailyBriefing";
 
@@ -13,19 +12,19 @@ interface DailyMarketBriefingCardProps {
   active: boolean;
 }
 
+const BULLET_TEXT_STYLE = {
+  fontFamily:
+    'var(--font-inter), "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
+} as const;
+
 function BulletShimmer() {
   return (
     <div
       className="rounded-[10px] border border-white/[0.08] p-4"
       style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
     >
-      <div className="flex items-start gap-3">
-        <div className="h-5 w-5 shrink-0 animate-pulse rounded bg-white/[0.08]" />
-        <div className="flex-1 space-y-2">
-          <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
-          <div className="h-3.5 w-[88%] animate-pulse rounded bg-white/[0.08]" />
-        </div>
-      </div>
+      <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
+      <div className="mt-2 h-3.5 w-[88%] animate-pulse rounded bg-white/[0.08]" />
     </div>
   );
 }
@@ -61,7 +60,7 @@ export function DailyMarketBriefingCard({ active }: DailyMarketBriefingCardProps
         if (cancelled) return;
 
         if (data.bullets?.length) {
-          const cleaned = sanitizeBriefingBullets(data.bullets);
+          const cleaned = ensureFourBriefingBullets(data.bullets);
           setBullets(cleaned);
           saveCachedDailyBriefing(cleaned);
           setFailed(false);
@@ -81,7 +80,7 @@ export function DailyMarketBriefingCard({ active }: DailyMarketBriefingCardProps
   }, [active]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#0a0a0a]">
+    <div className="relative h-full w-full touch-none overflow-hidden bg-[#0a0a0a]">
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[72px] font-bold uppercase tracking-[0.2em] text-[#1a1a1a] sm:text-[88px]"
         aria-hidden
@@ -89,7 +88,7 @@ export function DailyMarketBriefingCard({ active }: DailyMarketBriefingCardProps
         MARKETS
       </div>
 
-      <div className="relative z-10 flex h-full flex-col px-5 pb-28 pt-24">
+      <div className="relative z-10 flex h-full flex-col overflow-hidden px-5 pb-28 pt-24">
         <div className="flex items-center justify-between">
           <span className="inline-block rounded-full bg-[#00C6C6]/10 px-2.5 py-1 text-xs font-medium text-[#00C6C6]">
             Daily Briefing
@@ -109,7 +108,7 @@ export function DailyMarketBriefingCard({ active }: DailyMarketBriefingCardProps
           </span>
         </h2>
 
-        <div className="mt-6 flex flex-1 flex-col gap-3 overflow-y-auto">
+        <div className="mt-6 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
           {loading ? (
             <>
               <BulletShimmer />
@@ -122,23 +121,20 @@ export function DailyMarketBriefingCard({ active }: DailyMarketBriefingCardProps
               Briefing unavailable — check back soon
             </p>
           ) : (
-            bullets.map((bullet) => {
-              const { emoji, text } = parseBriefingBullet(bullet);
-              return (
-                <div
-                  key={bullet}
-                  className="rounded-[10px] border border-white/[0.08] px-4 py-3"
-                  style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+            bullets.map((bullet, index) => (
+              <div
+                key={`${index}-${bullet}`}
+                className="rounded-[10px] border border-white/[0.08] px-4 py-3"
+                style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+              >
+                <p
+                  className="text-sm leading-relaxed text-white"
+                  style={BULLET_TEXT_STYLE}
                 >
-                  <div className="flex items-start gap-3">
-                    <span className="shrink-0 text-base leading-relaxed">
-                      {emoji}
-                    </span>
-                    <p className="text-sm leading-relaxed text-white">{text}</p>
-                  </div>
-                </div>
-              );
-            })
+                  {bullet}
+                </p>
+              </div>
+            ))
           )}
         </div>
 
