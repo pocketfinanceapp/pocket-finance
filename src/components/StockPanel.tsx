@@ -22,8 +22,13 @@ import {
   isUsListedStockTicker,
 } from "@/lib/usStockTickers";
 import { getArticleDisplayTicker, getTickerMetaBySymbol } from "@/lib/tickerMap";
+import {
+  STOCK_METRIC_EXPLANATIONS,
+  type StockMetricExplanation,
+} from "@/lib/stockMetricExplanations";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
+import { FinancialTermPopup } from "./FinancialTermPopup";
 import { PriceChart } from "./PriceChart";
 import { SourceBadge } from "./SourceBadge";
 
@@ -48,6 +53,8 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
   const [toast, setToast] = useState<string | null>(null);
   const [liveQuote, setLiveQuote] = useState<MassiveStockQuote | null>(null);
+  const [activeMetric, setActiveMetric] =
+    useState<StockMetricExplanation | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -270,12 +277,48 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
               />
 
               <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/[0.08] pt-8">
-                <Stat label="Market Cap" value={stock.marketCap} />
-                <Stat label="Revenue (TTM)" value={stock.revenue} />
-                <Stat label="P/E Ratio" value={stock.peRatio} />
-                <Stat label="EPS (TTM)" value={stock.eps} />
-                <Stat label="EBITDA" value={stock.ebitda} />
-                <Stat label="Dividend Yield" value={stock.dividendYield} />
+                <Stat
+                  label="Market Cap"
+                  value={stock.marketCap}
+                  onInfoClick={() =>
+                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["Market Cap"])
+                  }
+                />
+                <Stat
+                  label="Revenue (TTM)"
+                  value={stock.revenue}
+                  onInfoClick={() =>
+                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["Revenue (TTM)"])
+                  }
+                />
+                <Stat
+                  label="P/E Ratio"
+                  value={stock.peRatio}
+                  onInfoClick={() =>
+                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["P/E Ratio"])
+                  }
+                />
+                <Stat
+                  label="EPS (TTM)"
+                  value={stock.eps}
+                  onInfoClick={() =>
+                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["EPS (TTM)"])
+                  }
+                />
+                <Stat
+                  label="EBITDA"
+                  value={stock.ebitda}
+                  onInfoClick={() =>
+                    setActiveMetric(STOCK_METRIC_EXPLANATIONS.EBITDA)
+                  }
+                />
+                <Stat
+                  label="Dividend Yield"
+                  value={stock.dividendYield}
+                  onInfoClick={() =>
+                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["Dividend Yield"])
+                  }
+                />
               </div>
 
               {stock.competitors.length > 0 && (
@@ -339,6 +382,11 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
           {toast}
         </div>
       )}
+
+      <FinancialTermPopup
+        term={activeMetric}
+        onClose={() => setActiveMetric(null)}
+      />
     </div>
   );
 }
@@ -479,12 +527,35 @@ function PrivateCompanyNews({ article }: { article: NewsArticle }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  onInfoClick,
+}: {
+  label: string;
+  value: string;
+  onInfoClick?: () => void;
+}) {
   return (
     <div>
-      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
-        {label}
-      </p>
+      <div className="flex items-center gap-1">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+          {label}
+        </p>
+        {onInfoClick && (
+          <button
+            type="button"
+            data-no-drag
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onInfoClick}
+            className="flex h-4 w-4 items-center justify-center text-xs leading-none text-[#9ca3af]"
+            aria-label={`What is ${label}?`}
+            style={{ touchAction: "manipulation" }}
+          >
+            ⓘ
+          </button>
+        )}
+      </div>
       <p className="mt-1.5 text-lg font-semibold text-white">{value}</p>
     </div>
   );

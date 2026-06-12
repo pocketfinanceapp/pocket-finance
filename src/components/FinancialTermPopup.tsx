@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import type { FinancialTerm } from "@/lib/financialTerms";
+interface ExplanationContent {
+  displayName: string;
+  explanation: string;
+}
 
 interface FinancialTermPopupProps {
-  term: FinancialTerm | null;
+  term: ExplanationContent | null;
   onClose: () => void;
 }
 
