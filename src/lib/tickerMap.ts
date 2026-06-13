@@ -317,35 +317,110 @@ function inferThemedTicker(text: string): TickerMeta | null {
   return null;
 }
 
-function findMatchInText(text: string): TickerMeta | null {
+const TITLE_WEIGHT = 3;
+const DESC_WEIGHT = 1;
+
+function addTickerScore(
+  scores: Map<string, number>,
+  ticker: string,
+  points: number
+): void {
+  if (points <= 0) return;
+  scores.set(ticker, (scores.get(ticker) ?? 0) + points);
+}
+
+function isSpaceXPrimaryTopic(title: string, description: string): boolean {
+  const titleLower = title.toLowerCase();
+  const full = `${title} ${description}`.toLowerCase();
+  if (!/\bspacex\b/i.test(full)) return false;
+
+  if (/\bspacex\b/i.test(titleLower)) return true;
+
+  return /\bspacex\b[^.]{0,120}\b(ipo|initial public offering|valuation|listing|offering|starship|falcon|rocket|launch|satellite|starlink)\b|\b(ipo|initial public offering|listing)\b[^.]{0,120}\bspacex\b/i.test(
+    full
+  );
+}
+
+function applyMuskTeslaHeuristics(
+  title: string,
+  description: string,
+  scores: Map<string, number>
+): void {
+  const text = `${title} ${description}`.toLowerCase();
+  const musk =
+    /\belon\s+musk\b|\bmusk'?s\b|\bmusk\b/i.test(text);
+  const teslaContext = /\btesla\b|\btsla\b/i.test(text);
+  const wealthContext =
+    /\bnet worth\b|\bwealth\b|\bfortune\b|\bbillionaire\b|\brichest\b|\bnet\s+value\b/i.test(
+      text
+    );
+
+  if (musk && (teslaContext || wealthContext)) {
+    addTickerScore(scores, "TSLA", TITLE_WEIGHT * 2);
+    if (!isSpaceXPrimaryTopic(title, description)) {
+      scores.delete("SPACEX");
+    }
+  }
+}
+
+function scoreTextForTickers(
+  text: string,
+  weight: number,
+  scores: Map<string, number>
+): void {
   const trimmed = text.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return;
 
   for (const symbol of SCANNABLE_SYMBOLS) {
     if (matchSymbol(trimmed, symbol)) {
-      return TICKER_BY_SYMBOL[symbol];
+      addTickerScore(scores, symbol, weight);
     }
   }
 
   for (const [key, entry] of NAME_KEYS) {
-    if (matchName(trimmed, key)) return entry;
+    if (matchName(trimmed, key)) {
+      addTickerScore(scores, entry.ticker, weight);
+    }
   }
 
-  return inferThemedTicker(trimmed);
+  const themed = inferThemedTicker(trimmed);
+  if (themed) {
+    addTickerScore(scores, themed.ticker, weight);
+  }
 }
 
-/** Scan title then description — first strong match wins */
+function pickBestTicker(scores: Map<string, number>): TickerMeta | null {
+  let bestTicker: string | null = null;
+  let bestScore = 0;
+
+  for (const [ticker, score] of scores) {
+    if (ticker === "MARKET") continue;
+    if (score > bestScore) {
+      bestScore = score;
+      bestTicker = ticker;
+    }
+  }
+
+  if (!bestTicker || bestScore <= 0) return null;
+  return TICKER_BY_SYMBOL[bestTicker] ?? getTickerMetaBySymbol(bestTicker);
+}
+
+/** Scan title + description — highest weighted mention wins */
 export function inferTickerFromFields(
   title: string,
   description = ""
 ): TickerMeta {
-  const titleHit = findMatchInText(title);
-  if (titleHit) return titleHit;
+  const scores = new Map<string, number>();
 
-  const descHit = findMatchInText(description);
-  if (descHit) return descHit;
+  scoreTextForTickers(title, TITLE_WEIGHT, scores);
+  scoreTextForTickers(description, DESC_WEIGHT, scores);
+  applyMuskTeslaHeuristics(title, description, scores);
 
-  return THEME_MARKET;
+  if (!isSpaceXPrimaryTopic(title, description)) {
+    scores.delete("SPACEX");
+  }
+
+  return pickBestTicker(scores) ?? THEME_MARKET;
 }
 
 /** @deprecated Use inferTickerFromFields */
