@@ -26,7 +26,7 @@ export const ACHIEVEMENT_BADGES: AchievementBadge[] = [
   },
   {
     id: "news-junkie",
-    emoji: "📰",
+    emoji: "🗞️",
     name: "News Junkie",
     progressHint: "Read 10 articles",
     isUnlocked: (s) => s.articlesRead >= 10,

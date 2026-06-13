@@ -68,7 +68,7 @@ export function ProfileAchievements({
         {unlockedCount} of {ACHIEVEMENT_BADGES.length} unlocked
       </p>
 
-      <div className="mt-3 grid grid-cols-4 gap-2">
+      <div className="mt-3 grid grid-cols-4 items-start gap-2">
         {ACHIEVEMENT_BADGES.map((badge) => {
           const unlocked = unlockedIds.has(badge.id);
           const animate = animatingIds.has(badge.id);
@@ -98,7 +98,7 @@ export function ProfileAchievements({
                 </span>
               )}
 
-              <div className="relative mx-auto mb-2 flex h-8 w-8 items-center justify-center">
+              <div className="relative mx-auto mb-2 flex items-center justify-center">
                 <span
                   className="text-[28px] leading-none"
                   style={
