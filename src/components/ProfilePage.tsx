@@ -11,6 +11,7 @@ import {
 } from "@/lib/profileStorage";
 import { timeAgo } from "@/lib/utils";
 import { MyTopicsSelector } from "./MyTopicsSelector";
+import { ProfileAchievements } from "./ProfileAchievements";
 import { PocketBrand } from "./PocketLogo";
 import { ScreenHeader } from "./ScreenHeader";
 import { SettingsPage } from "./SettingsPage";
@@ -105,6 +106,12 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
           <StatCard label="Liked" value={String(likedArticlesCount)} />
           <StatCard label="Watchlist" value={String(savedArticles.length)} />
         </div>
+
+        <ProfileAchievements
+          articlesRead={storiesRead}
+          likedCount={likedArticlesCount}
+          streak={streak}
+        />
 
         <section className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-5 py-5">
           <div className="flex items-center gap-3">

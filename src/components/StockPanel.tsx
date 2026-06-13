@@ -26,6 +26,7 @@ import {
   STOCK_METRIC_EXPLANATIONS,
   type StockMetricExplanation,
 } from "@/lib/stockMetricExplanations";
+import { markFirstStockViewed } from "@/lib/achievements";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { FinancialTermPopup } from "./FinancialTermPopup";
@@ -56,6 +57,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const [activeMetric, setActiveMetric] =
     useState<StockMetricExplanation | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    markFirstStockViewed();
+  }, []);
 
   useEffect(() => {
     setActiveTab("Overview");
