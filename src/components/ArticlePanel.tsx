@@ -7,6 +7,7 @@ import { useApp } from "@/context/AppContext";
 import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
+import { getArticleSubheading } from "@/lib/articlePreview";
 import { ArticleAISummary } from "./ArticleAISummary";
 import { MarketBadge } from "./MarketBadge";
 import { SourceBadge } from "./SourceBadge";
@@ -61,6 +62,7 @@ function ArticleHeroImage({ imageUrl }: { imageUrl: string }) {
 export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const saved = isArticleSaved(article.id);
+  const displaySubheading = getArticleSubheading(article.subheading);
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -108,11 +110,13 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           {article.headline}
         </h1>
 
-        <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
-          {article.subheading}
-        </p>
+        {displaySubheading ? (
+          <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
+            {displaySubheading}
+          </p>
+        ) : null}
 
-        <div className="mt-4 opacity-80">
+        <div className={`${displaySubheading ? "mt-4" : "mt-3"} opacity-80`}>
           <SourceBadge
             sourceName={article.sourceName}
             sourceId={article.sourceId}

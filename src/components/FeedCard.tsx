@@ -8,7 +8,7 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
-import { getArticleBodyPreview } from "@/lib/articlePreview";
+import { getArticleBodyPreview, getArticleSubheading } from "@/lib/articlePreview";
 import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatCount, timeAgo } from "@/lib/utils";
@@ -73,6 +73,7 @@ export function FeedCard({
     sourceId: article.sourceId,
   });
   const isFallbackCard = !(showImage && imgSrc);
+  const displaySubheading = getArticleSubheading(article.subheading);
   const bodyPreview = getArticleBodyPreview(article);
   const previewClassName =
     "line-clamp-3 text-[14px] leading-snug text-[#9ca3af]/90";
@@ -288,13 +289,13 @@ export function FeedCard({
             {cleanArticleTitle(article.headline)}
           </h1>
         )}
-        {article.subheading ? (
+        {displaySubheading ? (
           <p
             className={`line-clamp-2 text-[14px] leading-snug ${
               isFallbackCard ? "mt-0 text-white/70" : "mt-2 text-white/70"
             }`}
           >
-            {article.subheading}
+            {displaySubheading}
           </p>
         ) : null}
 

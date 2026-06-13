@@ -18,7 +18,16 @@ function normalize(text: string): string {
 }
 
 const PAYWALL_PHRASES = [
+  "cancel anytime",
+  "during your trial",
+  "subscribe to",
+  "subscription",
+  "free trial",
   "per month",
+  "per year",
+  "sign up",
+  "register to read",
+  "already a subscriber",
   "$75",
   "digital access",
   "complete digital access",
@@ -27,7 +36,6 @@ const PAYWALL_PHRASES = [
   "subscriber-only",
   "premium subscriber",
   "sign up for a subscription",
-  "free trial",
   "then $",
   "unlimited digital access",
   "ft.com/subscription",
@@ -52,6 +60,11 @@ function cleanPreviewText(text: string): string {
   const stripped = stripPaywallText(stripHtml(text));
   if (!stripped || isPaywallText(stripped)) return "";
   return stripped;
+}
+
+/** Subheading safe for feed cards and article view — strips paywall promo text */
+export function getArticleSubheading(subheading: string | undefined | null): string {
+  return cleanPreviewText(subheading?.trim() ?? "");
 }
 
 /** Body preview text that adds info beyond the subheading */
