@@ -21,7 +21,6 @@ import {
 } from "@/lib/profileStorage";
 import type { NewsArticle } from "@/lib/types";
 import { CommentSheet } from "./CommentSheet";
-import { DailyMarketBriefingCard } from "./DailyMarketBriefingCard";
 import { FeedCard } from "./FeedCard";
 import { FilterPanel } from "./FilterPanel";
 import { FeedSearchOverlay } from "./FeedSearchOverlay";
@@ -195,35 +194,30 @@ export function NewsFeed({
     [sortedByRecent]
   );
 
-  const showDailyBriefing = feedMode === "trending";
-  const swipeFeedArticles =
+  const verticalFeedArticles =
     feedMode === "trending" ? trendingArticles : filteredArticles;
-  const feedItemCount = showDailyBriefing
-    ? swipeFeedArticles.length + 1
-    : swipeFeedArticles.length;
-  const articleFeedIndex = showDailyBriefing
-    ? Math.max(0, feedIndex - 1)
-    : feedIndex;
   const swipeArticle =
-    swipeFeedArticles[articleFeedIndex] ?? swipeFeedArticles[0];
+    verticalFeedArticles[feedIndex] ?? verticalFeedArticles[0];
   const article = articleOverride ?? swipeArticle;
   const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
+  const verticalFeedLengthRef = useRef(verticalFeedArticles.length);
+  verticalFeedLengthRef.current = verticalFeedArticles.length;
 
   useEffect(() => {
-    const max = Math.max(0, feedItemCount - 1);
+    const max = Math.max(0, verticalFeedArticles.length - 1);
     if (feedIndex > max) setFeedIndex(max);
-  }, [feedItemCount, feedIndex, setFeedIndex]);
+  }, [verticalFeedArticles.length, feedIndex, setFeedIndex]);
 
   useEffect(() => {
     if (
       prevFeedIndex.current >= 0 &&
       feedIndex !== prevFeedIndex.current &&
-      swipeFeedArticles.length > 0
+      verticalFeedArticles.length > 0
     ) {
       incrementStoriesRead();
     }
     prevFeedIndex.current = feedIndex;
-  }, [feedIndex, swipeFeedArticles.length, incrementStoriesRead]);
+  }, [feedIndex, verticalFeedArticles.length, incrementStoriesRead]);
 
   useEffect(() => {
     if (
@@ -431,7 +425,7 @@ export function NewsFeed({
         setDragX(0);
       } else if (locked === "y") {
         const velocity = dy / dt;
-        const maxIdx = Math.max(0, filteredArticles.length - 1);
+        const maxIdx = Math.max(0, verticalFeedLengthRef.current - 1);
         let next = feedIndexRef.current;
 
         if (
@@ -512,7 +506,6 @@ export function NewsFeed({
       el.removeEventListener("pointercancel", onPointerUp);
     };
   }, [
-    filteredArticles.length,
     gesturesEnabled,
     releaseCapture,
     resetFeedIndex,
@@ -563,7 +556,7 @@ export function NewsFeed({
               className="absolute left-0 right-0 top-0 z-30"
             />
 
-            {swipeFeedArticles.length === 0 && !showDailyBriefing ? (
+            {verticalFeedArticles.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center px-8 text-center">
                 {feedMode === "following" && favouriteTopics.length === 0 ? (
                   <>
@@ -610,37 +603,25 @@ export function NewsFeed({
               <div
                 className={`w-full touch-none ${trackTransition}`}
                 style={{
-                  height: `calc(${feedItemCount} * ${FEED_VIEWPORT_HEIGHT})`,
+                  height: `calc(${verticalFeedArticles.length} * ${FEED_VIEWPORT_HEIGHT})`,
                   transform: vTransform,
                 }}
               >
-                {showDailyBriefing && (
+                {verticalFeedArticles.map((a, i) => (
                   <div
-                    key="daily-market-briefing"
+                    key={a.id}
                     className="w-full shrink-0"
                     style={{ height: FEED_VIEWPORT_HEIGHT }}
                   >
-                    <DailyMarketBriefingCard active={feedIndex === 0} />
+                    <FeedCard
+                      article={a}
+                      active={i === feedIndex}
+                      isFirstCard={i === 0}
+                      onOpenComments={() => setCommentsOpen(true)}
+                      commentRefreshKey={commentRefreshKey}
+                    />
                   </div>
-                )}
-                {swipeFeedArticles.map((a, i) => {
-                  const cardIndex = showDailyBriefing ? i + 1 : i;
-                  return (
-                    <div
-                      key={a.id}
-                      className="w-full shrink-0"
-                      style={{ height: FEED_VIEWPORT_HEIGHT }}
-                    >
-                      <FeedCard
-                        article={a}
-                        active={feedIndex === cardIndex}
-                        isFirstCard={!showDailyBriefing && i === 0}
-                        onOpenComments={() => setCommentsOpen(true)}
-                        commentRefreshKey={commentRefreshKey}
-                      />
-                    </div>
-                  );
-                })}
+                ))}
               </div>
             )}
           </div>
