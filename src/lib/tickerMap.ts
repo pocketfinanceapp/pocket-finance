@@ -329,6 +329,21 @@ function addTickerScore(
   scores.set(ticker, (scores.get(ticker) ?? 0) + points);
 }
 
+function isGeneralMarketTitle(title: string): boolean {
+  const lower = title.trim().toLowerCase();
+  if (lower.startsWith("stock market today")) return true;
+
+  return (
+    lower.includes("leads upside") ||
+    lower.includes("market rise") ||
+    lower.includes("market rally") ||
+    /\bdow\b/i.test(title) ||
+    /\bs&p\s*500\b/i.test(title) ||
+    lower.includes("nasdaq rise") ||
+    lower.includes("wholesale inflation")
+  );
+}
+
 function isSpaceXPrimaryTopic(title: string, description: string): boolean {
   const titleLower = title.toLowerCase();
   const full = `${title} ${description}`.toLowerCase();
@@ -410,6 +425,10 @@ export function inferTickerFromFields(
   title: string,
   description = ""
 ): TickerMeta {
+  if (isGeneralMarketTitle(title)) {
+    return THEME_MARKET;
+  }
+
   const scores = new Map<string, number>();
 
   scoreTextForTickers(title, TITLE_WEIGHT, scores);
