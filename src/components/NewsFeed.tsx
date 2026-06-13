@@ -19,6 +19,10 @@ import {
   PF_TOPICS_STORAGE_KEY,
   type ProfileTopic,
 } from "@/lib/profileStorage";
+import {
+  getForYouTopArticleIds,
+  rankTrendingArticles,
+} from "@/lib/trendingArticles";
 import type { NewsArticle } from "@/lib/types";
 import { CommentSheet } from "./CommentSheet";
 import { FeedCard } from "./FeedCard";
@@ -33,6 +37,7 @@ import { FeedOnboardingOverlay } from "./onboarding/FeedOnboardingOverlay";
 
 interface NewsFeedProps {
   initialArticles: NewsArticle[];
+  initialTrendingArticles?: NewsArticle[];
   /** When true, shell + bottom nav are provided by TabAppShell */
   embedded?: boolean;
   showAddToHomeBanner?: boolean;
@@ -49,11 +54,19 @@ type LockedAxis = "x" | "y" | null;
 
 export function NewsFeed({
   initialArticles,
+  initialTrendingArticles = [],
   embedded = false,
   showAddToHomeBanner = true,
 }: NewsFeedProps) {
   const [allArticles] = useState(
     initialArticles.length > 0 ? initialArticles : DEMO_ARTICLES
+  );
+  const [trendingPool] = useState(() =>
+    initialTrendingArticles.length > 0
+      ? initialTrendingArticles
+      : initialArticles.length > 0
+        ? initialArticles
+        : DEMO_ARTICLES
   );
   const {
     followedMarkets,
@@ -179,19 +192,20 @@ export function NewsFeed({
   feedIndexRef.current = feedIndex;
   feedModeRef.current = feedMode;
 
-  const sortedByRecent = useMemo(
+  const forYouTopIds = useMemo(
     () =>
-      [...allArticles].sort(
-        (a, b) =>
-          new Date(b.publishedAt).getTime() -
-          new Date(a.publishedAt).getTime()
+      getForYouTopArticleIds(
+        allArticles,
+        followedMarkets,
+        sectorInterests,
+        favouriteTopics
       ),
-    [allArticles]
+    [allArticles, followedMarkets, sectorInterests, favouriteTopics]
   );
 
   const trendingArticles = useMemo(
-    () => sortedByRecent.slice(0, 10),
-    [sortedByRecent]
+    () => rankTrendingArticles(trendingPool, forYouTopIds).slice(0, 15),
+    [trendingPool, forYouTopIds]
   );
 
   const verticalFeedArticles =
@@ -617,6 +631,7 @@ export function NewsFeed({
                       article={a}
                       active={i === feedIndex}
                       isFirstCard={i === 0}
+                      showTrendingLabel={feedMode === "trending"}
                       onOpenComments={() => setCommentsOpen(true)}
                       commentRefreshKey={commentRefreshKey}
                     />

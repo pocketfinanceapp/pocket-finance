@@ -33,6 +33,7 @@ interface FeedCardProps {
   article: NewsArticle;
   active: boolean;
   isFirstCard?: boolean;
+  showTrendingLabel?: boolean;
   onOpenComments: () => void;
   commentRefreshKey?: number;
 }
@@ -44,6 +45,7 @@ export function FeedCard({
   article,
   active,
   isFirstCard = false,
+  showTrendingLabel = false,
   onOpenComments,
   commentRefreshKey = 0,
 }: FeedCardProps) {
@@ -300,8 +302,13 @@ export function FeedCard({
           <p className={`mt-2 ${previewClassName}`}>{bodyPreview}</p>
         ) : null}
 
-        <div className={isFallbackCard ? "mt-2" : "mt-3"}>
+        <div className={`flex flex-wrap items-center gap-2 ${isFallbackCard ? "mt-2" : "mt-3"}`}>
           <MarketBadge market={displayMarket} size="sm" />
+          {showTrendingLabel && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1 text-[10px] font-semibold text-orange-300">
+              🔥 Trending
+            </span>
+          )}
         </div>
 
         {showSwipeHint && (

@@ -19,9 +19,13 @@ import { appPath } from "@/lib/appPaths";
 
 interface TabAppShellProps {
   initialArticles: NewsArticle[];
+  initialTrendingArticles: NewsArticle[];
 }
 
-function TabPanels({ initialArticles }: TabAppShellProps) {
+function TabPanels({
+  initialArticles,
+  initialTrendingArticles,
+}: TabAppShellProps) {
   const { activeTab, navTab, navigate } = useNavigation();
   const { setMarketFilters, ensureMarketsLoaded, ensureWatchlistLoaded } =
     useApp();
@@ -52,6 +56,7 @@ function TabPanels({ initialArticles }: TabAppShellProps) {
           <FeedErrorBoundary>
             <NewsFeed
               initialArticles={initialArticles}
+              initialTrendingArticles={initialTrendingArticles}
               embedded
               showAddToHomeBanner={activeTab === "home"}
             />
@@ -100,7 +105,10 @@ function TabPanel({
   );
 }
 
-export function TabAppShell({ initialArticles }: TabAppShellProps) {
+export function TabAppShell({
+  initialArticles,
+  initialTrendingArticles,
+}: TabAppShellProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -112,7 +120,10 @@ export function TabAppShell({ initialArticles }: TabAppShellProps) {
 
   return (
     <NavigationProvider>
-      <TabPanels initialArticles={initialArticles} />
+      <TabPanels
+        initialArticles={initialArticles}
+        initialTrendingArticles={initialTrendingArticles}
+      />
     </NavigationProvider>
   );
 }
