@@ -1,7 +1,6 @@
 "use client";
 
 import type { FeedMode } from "@/lib/filterArticles";
-import { PocketMarkIcon } from "./PocketLogo";
 import { useApp } from "@/context/AppContext";
 import {
   getExplicitFilterLabels,
@@ -47,13 +46,11 @@ export function FeedHeader({
       className={`shrink-0 border-b border-white/[0.06] bg-black/90 backdrop-blur-md ${className}`}
     >
       <div
-        className="grid grid-cols-[36px_1fr_44px] items-center gap-1 px-3 pb-1 sm:px-4"
+        className="grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
-        <div className="flex items-center justify-start" data-no-drag>
-          <PocketMarkIcon size={32} glow="none" />
-        </div>
-        <nav className="flex items-center justify-center gap-2.5 overflow-hidden sm:gap-4">
+        <div className="h-10 w-10 shrink-0" aria-hidden />
+        <nav className="flex items-center justify-center gap-3 overflow-hidden sm:gap-4">
           {FEED_TABS.map((tab) => (
             <button
               key={tab.id}

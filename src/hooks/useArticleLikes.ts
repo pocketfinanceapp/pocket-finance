@@ -55,5 +55,23 @@ export function useArticleLikes(article: NewsArticle) {
     setToggling(false);
   }, [user, toggling, liked, article, reloadProfileStats]);
 
-  return { liked, likeCount, toggleLike, toggling };
+  const likeOnly = useCallback(async () => {
+    if (!user || toggling || liked) return false;
+    setToggling(true);
+    setLiked(true);
+    setLikeCount((c) => c + 1);
+
+    const ok = await likeArticle(user.id, article);
+    if (!ok) {
+      setLiked(false);
+      setLikeCount((c) => Math.max(0, c - 1));
+    } else {
+      void reloadProfileStats();
+    }
+
+    setToggling(false);
+    return ok;
+  }, [user, toggling, liked, article, reloadProfileStats]);
+
+  return { liked, likeCount, toggleLike, likeOnly, toggling };
 }

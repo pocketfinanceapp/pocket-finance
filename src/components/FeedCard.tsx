@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bookmark,
   Heart,
@@ -11,6 +11,7 @@ import {
 import { getArticleContextLine } from "@/lib/articlePreview";
 import { getFeedCategoryTag } from "@/lib/feedCategory";
 import { estimateImageIsDark, hasUsableFeedImage } from "@/lib/feedImage";
+import { isInteractiveTarget } from "@/lib/gesture";
 import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
@@ -46,6 +47,9 @@ const GENERIC_SYMBOLS = new Set([
 ]);
 
 type ChipKind = "stock" | "topic";
+
+const DOUBLE_TAP_MS = 280;
+const DOUBLE_TAP_SLOP = 28;
 
 function resolveFeedChip(
   article: NewsArticle,
@@ -106,7 +110,7 @@ export function FeedCard({
 }: FeedCardProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const { user, isGuest, requestSignIn } = useAuth();
-  const { liked, toggleLike } = useArticleLikes(article);
+  const { liked, toggleLike, likeOnly } = useArticleLikes(article);
 
   const usableInitial = hasUsableFeedImage(article.imageUrl);
   const [showImage, setShowImage] = useState(usableInitial);
@@ -117,6 +121,10 @@ export function FeedCard({
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [swipeHintOpacity, setSwipeHintOpacity] = useState(0);
   const [isDarkImage, setIsDarkImage] = useState(false);
+  const [heartBursts, setHeartBursts] = useState<
+    { id: number; x: number; y: number }[]
+  >([]);
+  const lastTapRef = useRef<{ t: number; x: number; y: number } | null>(null);
 
   const displayMarket = resolveMarketForArticle({
     ticker: article.ticker,
@@ -193,8 +201,80 @@ export function FeedCard({
     [isGuest, user, promptGuestSignIn]
   );
 
+  const spawnHeartBurst = useCallback(
+    (clientX: number, clientY: number, container: HTMLElement) => {
+      const rect = container.getBoundingClientRect();
+      const id = Date.now() + Math.random();
+      setHeartBursts((prev) => [
+        ...prev,
+        { id, x: clientX - rect.left, y: clientY - rect.top },
+      ]);
+      window.setTimeout(() => {
+        setHeartBursts((prev) => prev.filter((burst) => burst.id !== id));
+      }, 720);
+    },
+    []
+  );
+
+  const handleDoubleTapLike = useCallback(
+    async (clientX: number, clientY: number, container: HTMLElement) => {
+      spawnHeartBurst(clientX, clientY, container);
+
+      if (isGuest && !user) {
+        promptGuestSignIn("Sign in to like this");
+        return;
+      }
+
+      if (!liked) {
+        await likeOnly();
+      }
+    },
+    [isGuest, user, liked, likeOnly, promptGuestSignIn, spawnHeartBurst]
+  );
+
+  const registerTap = useCallback(
+    (
+      e: React.TouchEvent<HTMLDivElement> | React.PointerEvent<HTMLDivElement>,
+      clientX: number,
+      clientY: number
+    ) => {
+      if (!active) return;
+      if (isInteractiveTarget(e.target)) return;
+
+      const now = Date.now();
+      const last = lastTapRef.current;
+
+      if (
+        last &&
+        now - last.t <= DOUBLE_TAP_MS &&
+        Math.hypot(clientX - last.x, clientY - last.y) <= DOUBLE_TAP_SLOP
+      ) {
+        e.preventDefault();
+        lastTapRef.current = null;
+        void handleDoubleTapLike(clientX, clientY, e.currentTarget);
+        return;
+      }
+
+      lastTapRef.current = { t: now, x: clientX, y: clientY };
+    },
+    [active, handleDoubleTapLike]
+  );
+
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#0a0a0a]">
+    <div
+      className="relative h-full w-full overflow-hidden bg-[#0a0a0a]"
+      data-feed-tap-area
+      style={{ touchAction: "manipulation" }}
+      onTouchEnd={(e) => {
+        const touch = e.changedTouches[0];
+        if (!touch) return;
+        registerTap(e, touch.clientX, touch.clientY);
+      }}
+      onPointerUp={(e) => {
+        if (e.pointerType === "touch") return;
+        registerTap(e, e.clientX, e.clientY);
+      }}
+    >
       {hasHeroImage ? (
         <>
           <Image
@@ -217,6 +297,20 @@ export function FeedCard({
           <FeedCardOverlays />
         </>
       )}
+
+      {heartBursts.map((burst) => (
+        <div
+          key={burst.id}
+          className="pointer-events-none absolute z-40 animate-heart-burst"
+          style={{ left: burst.x, top: burst.y }}
+          aria-hidden
+        >
+          <Heart
+            className="h-14 w-14 fill-[#00C6C6]/75 text-[#00C6C6] drop-shadow-[0_4px_16px_rgba(0,198,198,0.35)]"
+            strokeWidth={1.5}
+          />
+        </div>
+      ))}
 
       <aside
         className="absolute right-3 top-[46%] z-30 flex -translate-y-1/2 flex-col items-center gap-5 sm:right-4 sm:gap-6"

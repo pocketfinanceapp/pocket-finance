@@ -287,3 +287,22 @@ body {
 .badge-unlock-animate {
   animation: badge-unlock-pulse 0.6s ease-in-out;
 }
+
+@keyframes heart-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  25% {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+}
+
+.animate-heart-burst {
+  animation: heart-burst 680ms ease-out forwards;
+}
