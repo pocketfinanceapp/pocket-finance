@@ -4,7 +4,6 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
-import { PocketMarkIcon } from "@/components/PocketLogo";
 
 const FEED_TABS = ["For You", "Trending", "Following"] as const;
 
@@ -45,26 +44,22 @@ export function PhoneMockup() {
       </svg>
 
       <div className="absolute inset-[14px] flex flex-col overflow-hidden rounded-[34px] bg-[#0a0a0a]">
-        {/* App header + tabs */}
-        <div className="shrink-0 border-b border-white/[0.06] bg-black/90 px-3 pb-1 pt-2">
-          <div className="flex items-center justify-between">
-            <PocketMarkIcon size={22} glow="none" />
-            <div className="flex gap-2.5 text-[8px] font-semibold tracking-wide sm:text-[9px]">
-              {FEED_TABS.map((tab, i) => (
-                <span
-                  key={tab}
-                  className={`relative pb-1.5 ${
-                    i === 0 ? "text-white" : "text-white/35"
-                  }`}
-                >
-                  {tab}
-                  {i === 0 && (
-                    <span className="absolute bottom-0 left-0 right-0 h-px rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
-                  )}
-                </span>
-              ))}
-            </div>
-            <div className="h-5 w-5" />
+        {/* Tab bar — tabs only, no logo; equal columns so nothing clips at 170px */}
+        <div className="shrink-0 border-b border-white/[0.06] bg-black/90 px-1 pb-1 pt-2 sm:px-2.5">
+          <div className="grid w-full grid-cols-3 text-center text-[6.5px] font-semibold leading-none tracking-tight sm:text-[8px] md:text-[9px]">
+            {FEED_TABS.map((tab, i) => (
+              <span
+                key={tab}
+                className={`relative inline-block whitespace-nowrap pb-1.5 ${
+                  i === 0 ? "text-white" : "text-white/35"
+                }`}
+              >
+                {tab}
+                {i === 0 && (
+                  <span className="absolute bottom-0 left-1/2 h-px w-[85%] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
+                )}
+              </span>
+            ))}
           </div>
         </div>
 
