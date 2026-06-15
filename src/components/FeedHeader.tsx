@@ -48,10 +48,10 @@ export function FeedHeader({
       {/* Gradient scrim only — no backdrop-blur for mobile Safari swipe performance */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-28"
+        className="pointer-events-none absolute inset-x-0 top-0 h-32"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 52%, rgba(0,0,0,0.08) 82%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.82) 38%, rgba(0,0,0,0.42) 68%, rgba(0,0,0,0.08) 88%, transparent 100%)",
         }}
       />
 
@@ -59,7 +59,8 @@ export function FeedHeader({
         className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
-        <div className="h-10 w-10 shrink-0" aria-hidden />
+        {/* Opaque logo-slot mask — blocks feed card bleed-through in the old P mark area */}
+        <div className="relative z-[1] h-10 w-10 shrink-0 bg-black" aria-hidden />
         <nav className="flex items-center justify-center gap-3 overflow-hidden sm:gap-4">
           {FEED_TABS.map((tab) => (
             <button

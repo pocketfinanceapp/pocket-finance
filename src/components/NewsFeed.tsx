@@ -556,7 +556,7 @@ export function NewsFeed({
 
           <div
             data-feed-column
-            className="relative shrink-0 overflow-hidden"
+            className="relative isolate shrink-0 overflow-hidden"
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,

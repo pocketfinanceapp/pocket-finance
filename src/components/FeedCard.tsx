@@ -488,7 +488,7 @@ export function FeedCard({
 function FeedChip({ label, kind }: { label: string; kind: ChipKind }) {
   if (kind === "stock") {
     return (
-      <div className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/10 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6] backdrop-blur-md">
+      <div className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6]">
         <svg
           className="h-3 w-3 shrink-0"
           viewBox="0 0 24 24"
@@ -508,7 +508,7 @@ function FeedChip({ label, kind }: { label: string; kind: ChipKind }) {
   }
 
   return (
-    <div className="mt-2.5 inline-flex max-w-full items-center rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/78 backdrop-blur-md">
+    <div className="mt-2.5 inline-flex max-w-full items-center rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/78">
       <span className="truncate">{label}</span>
     </div>
   );
