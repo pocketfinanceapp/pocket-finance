@@ -13,6 +13,10 @@ const LOW_QUALITY_URL_PATTERNS = [
   "author",
   "/people/",
   "gettyimages",
+  "avatar",
+  "thumbnail",
+  "speaker",
+  "headline-shot",
 ] as const;
 
 function urlMatchesBlockedPattern(url: string, pattern: string): boolean {

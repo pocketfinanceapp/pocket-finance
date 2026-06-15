@@ -23,8 +23,8 @@ import {
   isFeedOnboardingComplete,
   markSwipeHintSeen,
 } from "@/lib/feedOnboarding";
-import { fetchCommentCount } from "@/lib/userInteractions";
 import { resolveMarketForArticle } from "@/lib/tickerMap";
+import { isUsListedStockTicker } from "@/lib/usStockTickers";
 
 interface FeedCardProps {
   article: NewsArticle;
@@ -35,10 +35,7 @@ interface FeedCardProps {
   commentRefreshKey?: number;
 }
 
-const CARD_OVERLAY =
-  "linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.02) 22%, rgba(0,0,0,0.35) 48%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,0.96) 100%)";
-
-const GENERIC_TICKERS = new Set([
+const GENERIC_SYMBOLS = new Set([
   "MARKET",
   "SPX",
   "QQQ",
@@ -59,25 +56,65 @@ const SECTOR_TAGS: Record<Sector, string> = {
   "Real Estate": "REAL ESTATE",
 };
 
+type ChipKind = "stock" | "topic";
+
 function getCategoryTag(article: NewsArticle, displayMarket: string): string {
+  const upperTags = article.tags.map((tag) => tag.toUpperCase());
+  if (upperTags.includes("AI")) return "AI";
+
   if (article.market === "CRYPTO" || article.sector === "Crypto") return "CRYPTO";
   if (article.market === "COMMODITIES") return "COMMODITIES";
-  if (displayMarket === "US MARKETS") return "MACRO";
-  if (["NASDAQ", "NYSE", "ASX", "LSE", "Nikkei", "HKEX"].includes(displayMarket)) {
+  if (displayMarket === "US MARKETS") return "US MARKETS";
+  if (
+    ["NASDAQ", "NYSE", "ASX", "LSE", "Nikkei", "HKEX"].includes(displayMarket)
+  ) {
     return displayMarket;
   }
   return SECTOR_TAGS[article.sector] ?? displayMarket.toUpperCase();
 }
 
-function getBottomChipLabel(
+function resolveFeedChip(
   article: NewsArticle,
   categoryTag: string
-): { label: string; showChartIcon: boolean } {
-  const ticker = article.ticker?.trim().toUpperCase();
-  if (ticker && !GENERIC_TICKERS.has(ticker)) {
-    return { label: ticker, showChartIcon: true };
+): { label: string; kind: ChipKind } {
+  const candidates = [
+    article.ticker?.trim().toUpperCase(),
+    ...article.tags.map((tag) => tag.toUpperCase()),
+  ].filter(Boolean) as string[];
+
+  for (const symbol of candidates) {
+    if (GENERIC_SYMBOLS.has(symbol)) continue;
+
+    if (isUsListedStockTicker(symbol)) {
+      return { label: symbol, kind: "stock" };
+    }
+
+    return { label: symbol, kind: "topic" };
   }
-  return { label: categoryTag, showChartIcon: false };
+
+  return { label: categoryTag, kind: "topic" };
+}
+
+function FeedCardOverlays() {
+  return (
+    <>
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-32 bg-gradient-to-b from-black/75 via-black/40 to-transparent" />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] mix-blend-soft-light"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(59,110,245,0.16) 0%, transparent 42%, rgba(0,198,198,0.12) 100%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1]"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.22) 42%, rgba(0,0,0,0.82) 58%, rgba(0,0,0,0.97) 100%)",
+        }}
+      />
+    </>
+  );
 }
 
 export function FeedCard({
@@ -86,7 +123,6 @@ export function FeedCard({
   isFirstCard = false,
   showTrendingLabel = false,
   onOpenComments,
-  commentRefreshKey = 0,
 }: FeedCardProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const { user, isGuest, requestSignIn } = useAuth();
@@ -107,7 +143,7 @@ export function FeedCard({
     sourceId: article.sourceId,
   });
   const categoryTag = getCategoryTag(article, displayMarket);
-  const bottomChip = getBottomChipLabel(article, categoryTag);
+  const feedChip = resolveFeedChip(article, categoryTag);
   const contextLine = getArticleContextLine(article);
   const hasHeroImage = showImage && !!imgSrc;
 
@@ -116,11 +152,6 @@ export function FeedCard({
     setShowImage(usable);
     setImgSrc(usable ? article.imageUrl : "");
   }, [article.id, article.imageUrl]);
-
-  useEffect(() => {
-    if (!active) return;
-    void fetchCommentCount(article.id);
-  }, [active, article.id, commentRefreshKey]);
 
   useEffect(() => {
     if (!isFirstCard || !active) {
@@ -190,23 +221,23 @@ export function FeedCard({
             src={imgSrc}
             alt=""
             fill
-            className="absolute inset-0 h-full w-full object-cover brightness-[0.88] contrast-[1.05]"
+            className="absolute inset-0 h-full w-full object-cover brightness-[0.72] contrast-[1.02] saturate-[0.92]"
             sizes="100vw"
             unoptimized
             priority={active}
             onError={() => setShowImage(false)}
           />
-          <div
-            className="pointer-events-none absolute inset-0 z-[1]"
-            style={{ background: CARD_OVERLAY }}
-          />
+          <FeedCardOverlays />
         </>
       ) : (
-        <FeedCardFallbackBackground />
+        <>
+          <FeedCardFallbackBackground />
+          <FeedCardOverlays />
+        </>
       )}
 
       <aside
-        className="absolute bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-3 z-30 flex flex-col items-center gap-3.5 sm:right-4 sm:gap-4"
+        className="absolute right-3 top-[38%] z-30 flex -translate-y-1/2 flex-col items-center gap-4 sm:right-4"
         data-no-drag
         data-interactive
       >
@@ -218,7 +249,7 @@ export function FeedCard({
           }
         >
           <Heart
-            className={`h-[22px] w-[22px] transition-colors ${
+            className={`h-[21px] w-[21px] transition-colors ${
               liked ? "fill-[#00C6C6] text-[#00C6C6]" : "text-white"
             }`}
             strokeWidth={2}
@@ -231,7 +262,7 @@ export function FeedCard({
             guardGuestAction("Sign in to comment", onOpenComments)
           }
         >
-          <MessageCircle className="h-[22px] w-[22px] text-white" strokeWidth={2} />
+          <MessageCircle className="h-[21px] w-[21px] text-white" strokeWidth={2} />
         </ActionButton>
 
         <ActionButton
@@ -254,7 +285,7 @@ export function FeedCard({
             void navigator.clipboard?.writeText(article.sourceUrl);
           }}
         >
-          <Share2 className="h-[22px] w-[22px] text-white" strokeWidth={2} />
+          <Share2 className="h-[21px] w-[21px] text-white" strokeWidth={2} />
         </ActionButton>
 
         <ActionButton
@@ -275,7 +306,7 @@ export function FeedCard({
           }
         >
           <Bookmark
-            className={`h-[22px] w-[22px] transition-colors ${
+            className={`h-[21px] w-[21px] transition-colors ${
               saved ? "fill-[#00C6C6] text-[#00C6C6]" : "text-white"
             }`}
             strokeWidth={2}
@@ -283,75 +314,68 @@ export function FeedCard({
         </ActionButton>
       </aside>
 
-      <div
-        className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-0 right-0 z-20 px-5 pb-1"
-        style={{ paddingRight: "4.75rem" }}
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex rounded-full border border-[#00C6C6]/30 bg-[#00C6C6]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#00C6C6]">
-            {categoryTag}
-          </span>
-          {showTrendingLabel && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-0.5 text-[10px] font-semibold text-orange-300">
-              🔥 Trending
+      <div className="absolute inset-x-0 bottom-0 z-20">
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%]"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.88) 38%, rgba(0,0,0,0.45) 62%, transparent 100%)",
+          }}
+        />
+
+        <div
+          className="relative px-5 pb-5 pt-10"
+          style={{ paddingRight: "5.25rem" }}
+        >
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#00C6C6]">
+              {categoryTag}
             </span>
+            {showTrendingLabel && (
+              <span className="text-[10px] font-semibold text-orange-300/90">
+                🔥 Trending
+              </span>
+            )}
+          </div>
+
+          <h1 className="mt-2 line-clamp-3 text-[1.42rem] font-bold leading-[1.16] tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.95)] sm:text-[1.5rem]">
+            {cleanArticleTitle(article.headline)}
+          </h1>
+
+          {contextLine ? (
+            <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/68">
+              {contextLine}
+            </p>
+          ) : null}
+
+          <div className="mt-3">
+            <SourceBadge
+              sourceName={article.sourceName}
+              sourceId={article.sourceId}
+              sourceUrl={article.sourceUrl}
+              publishedAt={article.publishedAt}
+              timeLabel={timeAgo(article.publishedAt)}
+              variant="inline"
+            />
+          </div>
+
+          <FeedChip label={feedChip.label} kind={feedChip.kind} />
+
+          {showSwipeHint && (
+            <div
+              className="mt-3 flex flex-col items-start gap-1.5 transition-opacity duration-500 ease-out sm:flex-row sm:items-center sm:gap-2"
+              style={{ opacity: swipeHintOpacity }}
+              data-no-drag
+            >
+              <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
+                Swipe left for full article
+              </span>
+              <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
+                Swipe right for stock data
+              </span>
+            </div>
           )}
         </div>
-
-        <h1 className="mt-2.5 line-clamp-3 text-[1.45rem] font-bold leading-[1.18] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)] sm:text-[1.55rem]">
-          {cleanArticleTitle(article.headline)}
-        </h1>
-
-        {contextLine ? (
-          <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/72">
-            {contextLine}
-          </p>
-        ) : null}
-
-        <div className="mt-2.5">
-          <SourceBadge
-            sourceName={article.sourceName}
-            sourceId={article.sourceId}
-            sourceUrl={article.sourceUrl}
-            publishedAt={article.publishedAt}
-            timeLabel={timeAgo(article.publishedAt)}
-            variant="inline"
-          />
-        </div>
-
-        <div className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/25 bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-md">
-          {bottomChip.showChartIcon ? (
-            <svg
-              className="h-3 w-3 shrink-0 text-[#00C6C6]"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden
-            >
-              <path
-                d="M3 17 L8 12 L12 15 L16 8 L21 14"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          ) : null}
-          <span className="truncate">{bottomChip.label}</span>
-        </div>
-
-        {showSwipeHint && (
-          <div
-            className="mt-3 flex flex-col items-start gap-1.5 transition-opacity duration-500 ease-out sm:flex-row sm:items-center sm:gap-2"
-            style={{ opacity: swipeHintOpacity }}
-            data-no-drag
-          >
-            <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
-              Swipe left for full article
-            </span>
-            <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
-              Swipe right for stock data
-            </span>
-          </div>
-        )}
       </div>
 
       {toast && (
@@ -387,6 +411,35 @@ export function FeedCard({
   );
 }
 
+function FeedChip({ label, kind }: { label: string; kind: ChipKind }) {
+  if (kind === "stock") {
+    return (
+      <div className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/10 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6] backdrop-blur-md">
+        <svg
+          className="h-3 w-3 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden
+        >
+          <path
+            d="M3 17 L8 12 L12 15 L16 8 L21 14"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span className="truncate">{label}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2.5 inline-flex max-w-full items-center rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/78 backdrop-blur-md">
+      <span className="truncate">{label}</span>
+    </div>
+  );
+}
+
 function ActionButton({
   children,
   label,
@@ -408,10 +461,10 @@ function ActionButton({
         e.stopPropagation();
         onClick();
       }}
-      className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-sm transition-transform active:scale-90 ${
+      className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-md transition-transform active:scale-90 ${
         active
-          ? "border-[#00C6C6]/35 bg-[#00C6C6]/10"
-          : "border-white/10 bg-white/[0.08]"
+          ? "border-[#00C6C6]/40 bg-[#00C6C6]/12 shadow-[0_4px_20px_rgba(0,198,198,0.18)]"
+          : "border-white/10 bg-black/40 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
       }`}
       style={{ touchAction: "manipulation" }}
     >

@@ -67,7 +67,7 @@ export function getArticleSubheading(subheading: string | undefined | null): str
   return cleanPreviewText(subheading?.trim() ?? "");
 }
 
-const CONTEXT_MAX_CHARS = 140;
+const CONTEXT_MAX_CHARS = 118;
 
 function truncateContext(text: string, max = CONTEXT_MAX_CHARS): string {
   const trimmed = text.trim();
