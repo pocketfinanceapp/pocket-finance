@@ -6,7 +6,7 @@ import { useId } from "react";
 const BLUE = "#3B6EF5";
 const TEAL = "#00C6C6";
 
-const LOGO_SRC = "/logo.png";
+const LOGO_SRC = "/logo.png?v=2";
 
 interface PocketMarkIconProps {
   size?: number;
