@@ -78,7 +78,7 @@ export function LandingPage() {
   return (
     <div className="landing-page min-h-screen bg-[#0a0a0a] text-white">
       {/* Hero */}
-      <header className="relative overflow-hidden pb-10 pt-[max(0,env(safe-area-inset-top))] sm:pb-14">
+      <header className="relative overflow-hidden pb-6 pt-[max(0,env(safe-area-inset-top))] sm:pb-14">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -89,8 +89,8 @@ export function LandingPage() {
         />
 
         <nav className="relative z-10 border-b border-[#1f2937]">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-            <PocketBrand layout="horizontal" iconSize={36} glow="normal" />
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-2.5 sm:px-8 sm:py-4">
+            <PocketBrand layout="horizontal" iconSize={32} glow="normal" />
             <Link
               href={APP_BASE}
               className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-[#00C6C6] transition-colors hover:border-[#3B6EF5] hover:text-[#00C6C6]"
@@ -100,39 +100,39 @@ export function LandingPage() {
           </div>
         </nav>
 
-        <div className="relative px-5 pt-8 sm:px-8 sm:pt-10">
-          <div className="mx-auto grid max-w-6xl items-start gap-8 md:grid-cols-2 md:gap-10 lg:gap-14">
+        <div className="relative px-5 pt-4 sm:px-8 sm:pt-10">
+          <div className="mx-auto grid max-w-6xl items-start gap-4 md:grid-cols-2 md:gap-10 lg:gap-14">
             <div className="text-center md:text-left">
-              <h1 className="text-[2rem] font-bold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.1]">
+              <h1 className="text-[1.65rem] font-bold leading-[1.12] tracking-tight sm:text-5xl sm:leading-[1.1]">
                 Finance news, built for the way{" "}
                 <span className="bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-transparent">
                   you scroll.
                 </span>
               </h1>
-              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#9ca3af] sm:text-lg md:mx-0">
+              <p className="mx-auto mt-3 max-w-xl text-[14px] leading-snug text-[#9ca3af] sm:mt-5 sm:text-lg sm:leading-relaxed md:mx-0">
                 Pocket Finance turns breaking market headlines into a fast,
                 swipeable experience — so you can read the story, check the
                 stock, and understand what matters in seconds.
               </p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 md:justify-start">
+              <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:mt-8 sm:flex-row sm:gap-4 md:justify-start">
                 <Link
                   href={APP_BASE}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-8 py-4 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.3)] transition-transform active:scale-[0.98] sm:w-auto"
+                  className="w-full rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-3 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.3)] transition-transform active:scale-[0.98] sm:w-auto sm:px-8 sm:py-4"
                 >
                   Try the app
                 </Link>
                 <a
                   href="#waitlist"
-                  className="w-full rounded-xl border border-white/20 bg-transparent px-8 py-4 text-center text-[15px] font-semibold text-white transition-colors hover:border-white/35 hover:bg-white/[0.04] sm:w-auto"
+                  className="w-full rounded-xl border border-white/20 bg-transparent px-6 py-3 text-center text-[15px] font-semibold text-white transition-colors hover:border-white/35 hover:bg-white/[0.04] sm:w-auto sm:px-8 sm:py-4"
                 >
                   Join waitlist
                 </a>
               </div>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+              <div className="mt-3 grid grid-cols-2 gap-1.5 sm:mt-6 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-2 md:justify-start">
                 {TRUST_CHIPS.map((chip) => (
                   <div
                     key={chip}
-                    className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#111] px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
+                    className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#111] px-2.5 py-1 text-[11px] sm:px-4 sm:py-2 sm:text-sm"
                   >
                     <span
                       className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#00C6C6] sm:h-2 sm:w-2"
@@ -148,26 +148,26 @@ export function LandingPage() {
 
             <div className="flex flex-col items-center md:-mt-2 md:items-end lg:-mt-4">
               <div
-                className="relative"
+                className="relative origin-top scale-[0.72] sm:scale-90 md:scale-100"
                 style={{
                   filter: "drop-shadow(0 0 48px rgba(0,198,198,0.12))",
                 }}
               >
                 <PhoneMockup />
               </div>
-              <div className="mt-5 flex w-full max-w-[270px] justify-between gap-2 px-1">
+              <div className="mt-2 flex w-full max-w-[220px] justify-between gap-1 px-1 sm:mt-5 sm:max-w-[270px] sm:gap-2">
                 {SWIPE_LABELS.map(({ icon: Icon, label }) => (
                   <div
                     key={label}
-                    className="flex flex-1 flex-col items-center gap-1.5 text-center"
+                    className="flex flex-1 flex-col items-center gap-1 text-center sm:gap-1.5"
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-[#111]">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.08] bg-[#111] sm:h-9 sm:w-9">
                       <Icon
-                        className="h-4 w-4 text-[#00C6C6]"
+                        className="h-3.5 w-3.5 text-[#00C6C6] sm:h-4 sm:w-4"
                         strokeWidth={2}
                       />
                     </div>
-                    <span className="text-[10px] leading-tight text-[#9ca3af] sm:text-[11px]">
+                    <span className="text-[9px] leading-tight text-[#9ca3af] sm:text-[11px]">
                       {label}
                     </span>
                   </div>
@@ -210,7 +210,7 @@ export function LandingPage() {
       <section className="border-t border-white/[0.06] px-5 py-14 sm:px-8 sm:py-20">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-center text-2xl font-bold sm:text-3xl">
-            Why investors choose Pocket Finance
+            Why Pocket Finance works
           </h2>
           <ul className="mt-10 space-y-4">
             {WHY_CHOOSE.map(({ icon: Icon, title, description }) => (
