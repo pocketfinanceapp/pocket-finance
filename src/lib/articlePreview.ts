@@ -67,6 +67,31 @@ export function getArticleSubheading(subheading: string | undefined | null): str
   return cleanPreviewText(subheading?.trim() ?? "");
 }
 
+const CONTEXT_MAX_CHARS = 140;
+
+function truncateContext(text: string, max = CONTEXT_MAX_CHARS): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  const cut = trimmed.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  const base = lastSpace > max * 0.55 ? cut.slice(0, lastSpace) : cut;
+  return `${base.trim()}…`;
+}
+
+/**
+ * One-line "why it matters" copy for feed cards — uses existing article
+ * description/summary only (no AI generation).
+ */
+export function getArticleContextLine(article: NewsArticle): string {
+  const subheading = getArticleSubheading(article.subheading);
+  if (subheading) return truncateContext(subheading);
+
+  const body = getArticleBodyPreview(article);
+  if (body) return truncateContext(body);
+
+  return "";
+}
+
 /** Body preview text that adds info beyond the subheading */
 export function getArticleBodyPreview(article: NewsArticle): string | null {
   const subheading = cleanPreviewText(article.subheading?.trim() ?? "");

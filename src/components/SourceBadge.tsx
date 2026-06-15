@@ -13,6 +13,8 @@ interface SourceBadgeProps {
   size?: "sm" | "md";
   /** Clean text on brand gradient — no pill/scrim backgrounds */
   onGradient?: boolean;
+  /** Single-line compact row for feed cards */
+  variant?: "default" | "inline";
 }
 
 export function SourceBadge({
@@ -23,10 +25,49 @@ export function SourceBadge({
   timeLabel,
   size = "md",
   onGradient = false,
+  variant = "default",
 }: SourceBadgeProps) {
   const brand = resolveSourceBrand(sourceName, sourceId, sourceUrl);
   const [logoFailed, setLogoFailed] = useState(false);
-  const avatarSize = size === "sm" ? 28 : 36;
+  const avatarSize = variant === "inline" ? 18 : size === "sm" ? 28 : 36;
+
+  if (variant === "inline") {
+    return (
+      <div className="flex min-w-0 items-center gap-1.5">
+        <div
+          className="relative shrink-0 overflow-hidden rounded"
+          style={{ width: avatarSize, height: avatarSize }}
+        >
+          {brand.logoUrl && !logoFailed ? (
+            <Image
+              src={brand.logoUrl}
+              alt=""
+              width={avatarSize}
+              height={avatarSize}
+              className="h-full w-full object-cover"
+              unoptimized
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <div
+              className="flex h-full w-full items-center justify-center text-[7px] font-bold"
+              style={{
+                backgroundColor: brand.color,
+                color: brand.textColor ?? "#ffffff",
+              }}
+            >
+              {brand.abbr}
+            </div>
+          )}
+        </div>
+        <p className="truncate text-[11px] text-white/65">
+          <span className="font-medium text-white/80">{brand.name}</span>
+          <span className="text-white/45"> · </span>
+          <time dateTime={publishedAt}>{timeLabel}</time>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2.5">

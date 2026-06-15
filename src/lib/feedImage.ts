@@ -7,6 +7,12 @@ const LOW_QUALITY_URL_PATTERNS = [
   "blank",
   "gov.uk",
   "gov",
+  "headshot",
+  "portrait",
+  "profile-photo",
+  "author",
+  "/people/",
+  "gettyimages",
 ] as const;
 
 function urlMatchesBlockedPattern(url: string, pattern: string): boolean {

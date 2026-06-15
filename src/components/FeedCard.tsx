@@ -8,11 +8,10 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
-import { getArticleBodyPreview, getArticleSubheading } from "@/lib/articlePreview";
+import { getArticleContextLine } from "@/lib/articlePreview";
 import { hasUsableFeedImage } from "@/lib/feedImage";
-import type { NewsArticle } from "@/lib/types";
-import { formatCount, timeAgo } from "@/lib/utils";
-import { MarketBadge } from "./MarketBadge";
+import type { NewsArticle, Sector } from "@/lib/types";
+import { timeAgo } from "@/lib/utils";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
@@ -25,10 +24,8 @@ import {
   markSwipeHintSeen,
 } from "@/lib/feedOnboarding";
 import { fetchCommentCount } from "@/lib/userInteractions";
-import {
-  getArticleDisplayTicker,
-  resolveMarketForArticle,
-} from "@/lib/tickerMap";
+import { resolveMarketForArticle } from "@/lib/tickerMap";
+
 interface FeedCardProps {
   article: NewsArticle;
   active: boolean;
@@ -39,7 +36,49 @@ interface FeedCardProps {
 }
 
 const CARD_OVERLAY =
-  "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.92) 100%)";
+  "linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.02) 22%, rgba(0,0,0,0.35) 48%, rgba(0,0,0,0.78) 62%, rgba(0,0,0,0.96) 100%)";
+
+const GENERIC_TICKERS = new Set([
+  "MARKET",
+  "SPX",
+  "QQQ",
+  "DJI",
+  "OIL",
+  "GOLD",
+  "FED",
+]);
+
+const SECTOR_TAGS: Record<Sector, string> = {
+  Technology: "TECH",
+  Finance: "FINANCE",
+  Energy: "ENERGY",
+  Mining: "MINING",
+  Healthcare: "HEALTH",
+  Consumer: "CONSUMER",
+  Crypto: "CRYPTO",
+  "Real Estate": "REAL ESTATE",
+};
+
+function getCategoryTag(article: NewsArticle, displayMarket: string): string {
+  if (article.market === "CRYPTO" || article.sector === "Crypto") return "CRYPTO";
+  if (article.market === "COMMODITIES") return "COMMODITIES";
+  if (displayMarket === "US MARKETS") return "MACRO";
+  if (["NASDAQ", "NYSE", "ASX", "LSE", "Nikkei", "HKEX"].includes(displayMarket)) {
+    return displayMarket;
+  }
+  return SECTOR_TAGS[article.sector] ?? displayMarket.toUpperCase();
+}
+
+function getBottomChipLabel(
+  article: NewsArticle,
+  categoryTag: string
+): { label: string; showChartIcon: boolean } {
+  const ticker = article.ticker?.trim().toUpperCase();
+  if (ticker && !GENERIC_TICKERS.has(ticker)) {
+    return { label: ticker, showChartIcon: true };
+  }
+  return { label: categoryTag, showChartIcon: false };
+}
 
 export function FeedCard({
   article,
@@ -49,34 +88,28 @@ export function FeedCard({
   onOpenComments,
   commentRefreshKey = 0,
 }: FeedCardProps) {
-  const {
-    saveArticle,
-    unsaveArticle,
-    isArticleSaved,
-  } = useApp();
+  const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const { user, isGuest, requestSignIn } = useAuth();
-  const { liked, likeCount, toggleLike } = useArticleLikes(article);
+  const { liked, toggleLike } = useArticleLikes(article);
 
   const usableInitial = hasUsableFeedImage(article.imageUrl);
   const [showImage, setShowImage] = useState(usableInitial);
   const [imgSrc, setImgSrc] = useState(usableInitial ? article.imageUrl : "");
   const saved = isArticleSaved(article.id);
-  const [commentCount, setCommentCount] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [guestPrompt, setGuestPrompt] = useState<string | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [swipeHintOpacity, setSwipeHintOpacity] = useState(0);
-  const displayTicker = getArticleDisplayTicker(article);
+
   const displayMarket = resolveMarketForArticle({
     ticker: article.ticker,
     sourceName: article.sourceName,
     sourceId: article.sourceId,
   });
-  const isFallbackCard = !(showImage && imgSrc);
-  const displaySubheading = getArticleSubheading(article.subheading);
-  const bodyPreview = getArticleBodyPreview(article);
-  const previewClassName =
-    "line-clamp-3 text-[14px] leading-snug text-[#9ca3af]/90";
+  const categoryTag = getCategoryTag(article, displayMarket);
+  const bottomChip = getBottomChipLabel(article, categoryTag);
+  const contextLine = getArticleContextLine(article);
+  const hasHeroImage = showImage && !!imgSrc;
 
   useEffect(() => {
     const usable = hasUsableFeedImage(article.imageUrl);
@@ -86,9 +119,7 @@ export function FeedCard({
 
   useEffect(() => {
     if (!active) return;
-    void fetchCommentCount(article.id).then((count) => {
-      setCommentCount(Number.isFinite(count) && count > 0 ? count : 0);
-    });
+    void fetchCommentCount(article.id);
   }, [active, article.id, commentRefreshKey]);
 
   useEffect(() => {
@@ -104,11 +135,11 @@ export function FeedCard({
       setShowSwipeHint(true);
       setSwipeHintOpacity(1);
 
-      const fadeTimer = window.setTimeout(() => setSwipeHintOpacity(0), 2500);
+      const fadeTimer = window.setTimeout(() => setSwipeHintOpacity(0), 3200);
       const hideTimer = window.setTimeout(() => {
         setShowSwipeHint(false);
         markSwipeHintSeen();
-      }, 3100);
+      }, 3800);
 
       return () => {
         window.clearTimeout(fadeTimer);
@@ -151,17 +182,15 @@ export function FeedCard({
     [isGuest, user, promptGuestSignIn]
   );
 
-  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
-
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0a0a0a]">
-      {showImage && imgSrc ? (
+      {hasHeroImage ? (
         <>
           <Image
             src={imgSrc}
             alt=""
             fill
-            className="absolute inset-0 h-full w-full object-cover brightness-[0.92] contrast-[1.05]"
+            className="absolute inset-0 h-full w-full object-cover brightness-[0.88] contrast-[1.05]"
             sizes="100vw"
             unoptimized
             priority={active}
@@ -173,42 +202,27 @@ export function FeedCard({
           />
         </>
       ) : (
-        <>
-          <FeedCardFallbackBackground />
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8 pb-36 pt-20">
-            <h1 className="line-clamp-4 text-center text-[1.85rem] font-bold leading-[1.2] tracking-tight text-white">
-              {cleanArticleTitle(article.headline)}
-            </h1>
-            {bodyPreview ? (
-              <p className={`mt-4 max-w-md text-center ${previewClassName}`}>
-                {bodyPreview}
-              </p>
-            ) : null}
-          </div>
-        </>
+        <FeedCardFallbackBackground />
       )}
 
       <aside
-        className="absolute bottom-4 right-4 z-30 flex flex-col items-center gap-5"
+        className="absolute bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-3 z-30 flex flex-col items-center gap-3.5 sm:right-4 sm:gap-4"
         data-no-drag
         data-interactive
       >
         <ActionButton
           label={liked ? "Unlike" : "Like"}
+          active={liked}
           onClick={() =>
             guardGuestAction("Sign in to like this", () => void toggleLike())
           }
         >
           <Heart
-            className={`h-[26px] w-[26px] transition-colors ${
-              liked ? "fill-red-500 text-red-500" : "text-white"
+            className={`h-[22px] w-[22px] transition-colors ${
+              liked ? "fill-[#00C6C6] text-[#00C6C6]" : "text-white"
             }`}
+            strokeWidth={2}
           />
-          {likeCount > 0 ? (
-            <span className="text-[11px] font-semibold text-white/90">
-              {formatCount(likeCount)}
-            </span>
-          ) : null}
         </ActionButton>
 
         <ActionButton
@@ -217,17 +231,11 @@ export function FeedCard({
             guardGuestAction("Sign in to comment", onOpenComments)
           }
         >
-          <MessageCircle className="h-[26px] w-[26px] text-white" />
-          {commentCount > 0 ? (
-            <span className="text-[11px] font-semibold text-white/90">
-              {formatCount(commentCount)}
-            </span>
-          ) : null}
+          <MessageCircle className="h-[22px] w-[22px] text-white" strokeWidth={2} />
         </ActionButton>
 
         <ActionButton
           label="Share"
-          iconOnly
           onClick={async () => {
             const payload = {
               title: article.headline,
@@ -246,11 +254,12 @@ export function FeedCard({
             void navigator.clipboard?.writeText(article.sourceUrl);
           }}
         >
-          <Share2 className="h-[25px] w-[25px] text-white" />
+          <Share2 className="h-[22px] w-[22px] text-white" strokeWidth={2} />
         </ActionButton>
 
         <ActionButton
           label={saved ? "Unsave" : "Save"}
+          active={saved}
           onClick={() =>
             guardGuestAction("Sign in to save this", () => {
               void (async () => {
@@ -266,66 +275,38 @@ export function FeedCard({
           }
         >
           <Bookmark
-            className={`h-[25px] w-[25px] transition-colors ${
-              saved ? "fill-white text-white" : "text-white"
+            className={`h-[22px] w-[22px] transition-colors ${
+              saved ? "fill-[#00C6C6] text-[#00C6C6]" : "text-white"
             }`}
+            strokeWidth={2}
           />
-          <span className="text-[11px] font-semibold text-white/90">Save</span>
         </ActionButton>
       </aside>
 
       <div
-        className="z-20"
-        style={{
-          position: "absolute",
-          bottom: "16px",
-          left: 0,
-          right: 0,
-          padding: "0 80px 0 20px",
-        }}
+        className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-0 right-0 z-20 px-5 pb-1"
+        style={{ paddingRight: "4.75rem" }}
       >
-        {!isFallbackCard && (
-          <h1 className="line-clamp-3 text-[1.55rem] font-bold leading-[1.2] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]">
-            {cleanArticleTitle(article.headline)}
-          </h1>
-        )}
-        {displaySubheading ? (
-          <p
-            className={`line-clamp-2 text-[14px] leading-snug ${
-              isFallbackCard ? "mt-0 text-white/70" : "mt-2 text-white/70"
-            }`}
-          >
-            {displaySubheading}
-          </p>
-        ) : null}
-
-        {!isFallbackCard && bodyPreview ? (
-          <p className={`mt-2 ${previewClassName}`}>{bodyPreview}</p>
-        ) : null}
-
-        <div className={`flex flex-wrap items-center gap-2 ${isFallbackCard ? "mt-2" : "mt-3"}`}>
-          <MarketBadge market={displayMarket} size="sm" />
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex rounded-full border border-[#00C6C6]/30 bg-[#00C6C6]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#00C6C6]">
+            {categoryTag}
+          </span>
           {showTrendingLabel && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1 text-[10px] font-semibold text-orange-300">
+            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-0.5 text-[10px] font-semibold text-orange-300">
               🔥 Trending
             </span>
           )}
         </div>
 
-        {showSwipeHint && (
-          <div
-            className="mt-3 flex justify-center gap-2 transition-opacity duration-500 ease-out"
-            style={{ opacity: swipeHintOpacity }}
-            data-no-drag
-          >
-            <span className="rounded-full bg-black/50 px-3 py-1 text-xs text-white backdrop-blur-sm">
-              ← Article
-            </span>
-            <span className="rounded-full bg-black/50 px-3 py-1 text-xs text-white backdrop-blur-sm">
-              Stock →
-            </span>
-          </div>
-        )}
+        <h1 className="mt-2.5 line-clamp-3 text-[1.45rem] font-bold leading-[1.18] tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)] sm:text-[1.55rem]">
+          {cleanArticleTitle(article.headline)}
+        </h1>
+
+        {contextLine ? (
+          <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/72">
+            {contextLine}
+          </p>
+        ) : null}
 
         <div className="mt-2.5">
           <SourceBadge
@@ -334,21 +315,43 @@ export function FeedCard({
             sourceUrl={article.sourceUrl}
             publishedAt={article.publishedAt}
             timeLabel={timeAgo(article.publishedAt)}
+            variant="inline"
           />
         </div>
 
-        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
-          <svg className="h-3 w-3 text-pocket-teal" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M3 17 L8 12 L12 15 L16 8 L21 14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-          {displayTicker}
+        <div className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/25 bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-md">
+          {bottomChip.showChartIcon ? (
+            <svg
+              className="h-3 w-3 shrink-0 text-[#00C6C6]"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
+              <path
+                d="M3 17 L8 12 L12 15 L16 8 L21 14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : null}
+          <span className="truncate">{bottomChip.label}</span>
         </div>
 
+        {showSwipeHint && (
+          <div
+            className="mt-3 flex flex-col items-start gap-1.5 transition-opacity duration-500 ease-out sm:flex-row sm:items-center sm:gap-2"
+            style={{ opacity: swipeHintOpacity }}
+            data-no-drag
+          >
+            <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
+              Swipe left for full article
+            </span>
+            <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
+              Swipe right for stock data
+            </span>
+          </div>
+        )}
       </div>
 
       {toast && (
@@ -388,12 +391,12 @@ function ActionButton({
   children,
   label,
   onClick,
-  iconOnly = false,
+  active = false,
 }: {
   children: React.ReactNode;
   label: string;
   onClick: () => void;
-  iconOnly?: boolean;
+  active?: boolean;
 }) {
   return (
     <button
@@ -405,10 +408,10 @@ function ActionButton({
         e.stopPropagation();
         onClick();
       }}
-      className={`rounded-lg p-2 text-white transition-transform active:scale-90 ${
-        iconOnly
-          ? "flex items-center justify-center"
-          : "flex flex-col items-center gap-1.5"
+      className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-sm transition-transform active:scale-90 ${
+        active
+          ? "border-[#00C6C6]/35 bg-[#00C6C6]/10"
+          : "border-white/10 bg-white/[0.08]"
       }`}
       style={{ touchAction: "manipulation" }}
     >
