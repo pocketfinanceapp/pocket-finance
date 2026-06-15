@@ -89,8 +89,8 @@ function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
         className="pointer-events-none absolute inset-0 z-[1]"
         style={{
           background: soft
-            ? "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.04) 18%, rgba(0,0,0,0.16) 42%, rgba(0,0,0,0.68) 58%, rgba(0,0,0,0.9) 100%)"
-            : "linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.22) 42%, rgba(0,0,0,0.82) 58%, rgba(0,0,0,0.97) 100%)",
+            ? "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.03) 18%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.52) 68%, rgba(0,0,0,0.82) 100%)"
+            : "linear-gradient(180deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.06) 18%, rgba(0,0,0,0.14) 45%, rgba(0,0,0,0.58) 68%, rgba(0,0,0,0.86) 100%)",
         }}
       />
     </>
@@ -219,7 +219,7 @@ export function FeedCard({
       )}
 
       <aside
-        className="absolute right-3 top-[38%] z-30 flex -translate-y-1/2 flex-col items-center gap-4 sm:right-4"
+        className="absolute right-3 top-[46%] z-30 flex -translate-y-1/2 flex-col items-center gap-5 sm:right-4 sm:gap-6"
         data-no-drag
         data-interactive
       >
@@ -310,11 +310,11 @@ export function FeedCard({
 
       <div className="absolute inset-x-0 bottom-0 z-20">
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[50%]"
           style={{
             background: useSoftOverlay
-              ? "linear-gradient(to top, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.78) 38%, rgba(0,0,0,0.34) 62%, transparent 100%)"
-              : "linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.88) 38%, rgba(0,0,0,0.45) 62%, transparent 100%)",
+              ? "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.62) 30%, rgba(0,0,0,0.24) 58%, transparent 100%)"
+              : "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.68) 30%, rgba(0,0,0,0.28) 58%, transparent 100%)",
           }}
         />
 
