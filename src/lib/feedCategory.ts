@@ -36,6 +36,13 @@ const CRYPTO_KEYWORDS = [
   "stablecoin",
 ] as const;
 
+function getCryptoTopicLabel(article: NewsArticle): string {
+  const text = articleText(article);
+  if (text.includes("bitcoin")) return "BITCOIN";
+  if (/\betf\b/.test(text) || text.includes("exchange-traded fund")) return "ETF";
+  return "CRYPTO";
+}
+
 function articleText(article: NewsArticle): string {
   return `${article.headline} ${article.subheading} ${article.tags.join(" ")}`.toLowerCase();
 }
@@ -86,13 +93,17 @@ export function getFeedCategoryTag(
     return "US MARKETS";
   }
 
+  // Topic labels are more useful than exchange labels for crypto/ETF stories,
+  // even when the related instrument trades on Nasdaq (e.g. Bitcoin ETF inflows).
+  if (isGenuinelyCryptoRelated(article)) {
+    return getCryptoTopicLabel(article);
+  }
+
   const exchange = resolveExchangeTag(displayMarket, article.market);
   if (exchange) return exchange;
 
   if (displayMarket === "US MARKETS") return "US MARKETS";
   if (article.market === "COMMODITIES") return "COMMODITIES";
-
-  if (isGenuinelyCryptoRelated(article)) return "CRYPTO";
 
   // Ignore mis-assigned Crypto sector unless content is genuinely crypto-related.
   if (article.sector !== "Crypto") {

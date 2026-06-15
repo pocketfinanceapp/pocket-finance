@@ -35,30 +35,18 @@ export function SourceBadge({
     return (
       <div className="flex min-w-0 items-center gap-1.5">
         <div
-          className="relative shrink-0 overflow-hidden rounded"
+          className="relative shrink-0 overflow-hidden rounded border border-white/10"
           style={{ width: avatarSize, height: avatarSize }}
         >
-          {brand.logoUrl && !logoFailed ? (
-            <Image
-              src={brand.logoUrl}
-              alt=""
-              width={avatarSize}
-              height={avatarSize}
-              className="h-full w-full object-cover"
-              unoptimized
-              onError={() => setLogoFailed(true)}
-            />
-          ) : (
-            <div
-              className="flex h-full w-full items-center justify-center text-[7px] font-bold"
-              style={{
-                backgroundColor: brand.color,
-                color: brand.textColor ?? "#ffffff",
-              }}
-            >
-              {brand.abbr}
-            </div>
-          )}
+          <div
+            className="flex h-full w-full items-center justify-center text-[7px] font-bold"
+            style={{
+              backgroundColor: brand.color,
+              color: brand.textColor ?? "#ffffff",
+            }}
+          >
+            {brand.abbr}
+          </div>
         </div>
         <p className="truncate text-[11px] text-white/65">
           <span className="font-medium text-white/80">{brand.name}</span>

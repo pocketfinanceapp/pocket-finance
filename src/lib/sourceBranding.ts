@@ -31,6 +31,12 @@ const KNOWN_SOURCES: Record<string, Omit<SourceBrand, "name">> = {
   "marketwatch": { abbr: "MW", color: "#00ac4e" },
   "yahoo-finance": { abbr: "YF", color: "#6001d2" },
   "investing-com": { abbr: "INV", color: "#0d926e" },
+  afr: { abbr: "AFR", color: "#003366", textColor: "#ffffff" },
+  "australian-financial-review": {
+    abbr: "AFR",
+    color: "#003366",
+    textColor: "#ffffff",
+  },
 };
 
 const NAME_ALIASES: Record<string, string> = {
@@ -43,6 +49,8 @@ const NAME_ALIASES: Record<string, string> = {
   "bbc news": "bbc-news",
   "yahoo finance": "yahoo-finance",
   "the street": "thestreet",
+  "australian financial review": "australian-financial-review",
+  afr: "australian-financial-review",
 };
 
 function slugify(name: string): string {
