@@ -36,8 +36,8 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/pocket-logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/pocket-logo.png" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
         <Script
           id="microsoft-clarity"
           strategy="afterInteractive"
