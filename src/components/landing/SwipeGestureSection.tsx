@@ -1,79 +1,78 @@
 import {
+  ArrowDownUp,
   ArrowLeft,
   ArrowRight,
   ChartLine,
-  Lock,
-  MoveVertical,
-  Newspaper,
-  Smartphone,
-  Target,
-  Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-const STEPS: {
-  step: string;
+const GESTURES: {
   icon: LucideIcon;
-  title: string;
-  description: string;
+  gesture: string;
+  label: string;
+  hint: string;
 }[] = [
   {
-    step: "1",
-    icon: MoveVertical,
-    title: "Swipe through headlines",
-    description: "Catch up on breaking market stories in seconds.",
+    icon: ArrowDownUp,
+    gesture: "Swipe up/down",
+    label: "Headlines",
+    hint: "Browse the feed",
   },
   {
-    step: "2",
     icon: ArrowLeft,
-    title: "Read the full story",
-    description: "Open the full article from trusted financial sources.",
+    gesture: "Swipe left",
+    label: "Full article",
+    hint: "Read the story",
   },
   {
-    step: "3",
     icon: ArrowRight,
-    title: "Check the stock",
-    description: "View live prices, charts, and key metrics instantly.",
+    gesture: "Swipe right",
+    label: "Stock intel",
+    hint: "Live prices & charts",
   },
 ];
 
 export function SwipeGestureSection() {
   return (
-    <section className="border-t border-white/[0.06] px-5 py-14 sm:px-8 sm:py-20">
-      <div className="mx-auto max-w-6xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Three swipes. All you need.
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-[#9ca3af] sm:text-base">
-            Everything you need to go from breaking news to market insight in
-            seconds.
-          </p>
-        </div>
+    <section className="relative px-5 py-10 sm:px-8 sm:py-14">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(0,198,198,0.06) 0%, transparent 65%)",
+        }}
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-6xl">
+        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#00C6C6]/80">
+          How it works
+        </p>
+        <h2 className="mt-2 text-center text-xl font-bold tracking-tight text-white sm:text-2xl">
+          Three swipes. All you need.
+        </h2>
 
-        <ol className="mt-10 grid gap-4 sm:mt-12 md:grid-cols-3 md:gap-5">
-          {STEPS.map(({ step, icon: Icon, title, description }) => (
-            <li
-              key={step}
-              className="rounded-2xl border border-white/[0.08] bg-[#111] p-5 sm:p-6"
+        <div className="mt-6 flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide sm:mt-8 sm:grid sm:grid-cols-3 sm:gap-3 sm:overflow-visible">
+          {GESTURES.map(({ icon: Icon, gesture, label, hint }) => (
+            <div
+              key={label}
+              className="flex min-w-[148px] shrink-0 items-center gap-3 rounded-2xl border border-[#00C6C6]/20 bg-white/[0.04] px-3.5 py-3 backdrop-blur-sm sm:min-w-0"
+              style={{
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px rgba(0,198,198,0.08)",
+              }}
             >
-              <div className="flex items-start gap-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-xs font-bold text-white">
-                  {step}
-                </span>
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-[#0B0B0D]">
-                  <Icon className="h-5 w-5 text-[#00C6C6]" strokeWidth={2} />
-                </div>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#00C6C6]/25 bg-[#00C6C6]/10">
+                <Icon className="h-4 w-4 text-[#00C6C6]" strokeWidth={2.25} />
               </div>
-              <h3 className="mt-5 text-base font-bold text-white sm:text-lg">
-                {title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#9ca3af]">
-                {description}
-              </p>
-            </li>
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-[#00C6C6]/90">
+                  {gesture}
+                </p>
+                <p className="text-sm font-semibold text-white">{label}</p>
+                <p className="text-[10px] text-[#9ca3af]">{hint}</p>
+              </div>
+            </div>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );
