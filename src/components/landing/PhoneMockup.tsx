@@ -11,7 +11,7 @@ const FEED_TABS = ["For You", "Trending", "Following"] as const;
 export function PhoneMockup() {
   return (
     <div
-      className="relative h-[420px] w-[210px] shrink-0 drop-shadow-[0_24px_64px_rgba(0,0,0,0.55)] sm:h-[480px] sm:w-[240px] md:h-[520px] md:w-[260px]"
+      className="relative h-[340px] w-[170px] shrink-0 drop-shadow-[0_24px_64px_rgba(0,0,0,0.55)] sm:h-[480px] sm:w-[240px] md:h-[520px] md:w-[260px]"
       aria-hidden
     >
       <svg

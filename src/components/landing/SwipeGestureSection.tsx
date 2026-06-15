@@ -2,7 +2,6 @@ import {
   ArrowDownUp,
   ArrowLeft,
   ArrowRight,
-  ChartLine,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -34,7 +33,7 @@ const GESTURES: {
 
 export function SwipeGestureSection() {
   return (
-    <section className="relative px-5 py-10 sm:px-8 sm:py-14">
+    <section className="relative px-5 py-8 sm:px-8 sm:py-14">
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -51,13 +50,14 @@ export function SwipeGestureSection() {
           Three swipes. All you need.
         </h2>
 
-        <div className="mt-6 flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide sm:mt-8 sm:grid sm:grid-cols-3 sm:gap-3 sm:overflow-visible">
+        <div className="mt-5 flex flex-col gap-2.5 md:mt-8 md:grid md:grid-cols-3 md:gap-3">
           {GESTURES.map(({ icon: Icon, gesture, label, hint }) => (
             <div
               key={label}
-              className="flex min-w-[148px] shrink-0 items-center gap-3 rounded-2xl border border-[#00C6C6]/20 bg-white/[0.04] px-3.5 py-3 backdrop-blur-sm sm:min-w-0"
+              className="flex w-full items-center gap-3 rounded-2xl border border-[#00C6C6]/20 bg-white/[0.04] px-3.5 py-3 backdrop-blur-sm"
               style={{
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px rgba(0,198,198,0.08)",
+                boxShadow:
+                  "inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px rgba(0,198,198,0.08)",
               }}
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#00C6C6]/25 bg-[#00C6C6]/10">
