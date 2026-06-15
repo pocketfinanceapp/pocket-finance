@@ -59,7 +59,7 @@ export function WaitlistForm() {
           disabled={status === "loading" || status === "success"}
           className="shrink-0 rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-3.5 text-[15px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {status === "loading" ? "Joining…" : "Join Waitlist"}
+          {status === "loading" ? "Joining…" : "Join waitlist"}
         </button>
       </div>
       {message ? (
