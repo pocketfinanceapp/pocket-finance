@@ -20,6 +20,8 @@ const FEED_TABS: { id: FeedMode; label: string }[] = [
   { id: "trending", label: "Trending" },
 ];
 
+const TAB_SHADOW = "drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]";
+
 export function FeedHeader({
   feedMode,
   onFeedModeChange,
@@ -42,11 +44,19 @@ export function FeedHeader({
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
-    <header
-      className={`shrink-0 border-b border-white/[0.06] bg-black/90 backdrop-blur-md ${className}`}
-    >
+    <header className={`relative ${className}`}>
+      {/* Gradient scrim only — no backdrop-blur for mobile Safari swipe performance */}
       <div
-        className="grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-28"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.38) 52%, rgba(0,0,0,0.08) 82%, transparent 100%)",
+        }}
+      />
+
+      <div
+        className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
         <div className="h-10 w-10 shrink-0" aria-hidden />
@@ -58,8 +68,8 @@ export function FeedHeader({
               data-no-drag
               onPointerDown={stop}
               onClick={() => onFeedModeChange(tab.id)}
-              className={`relative shrink-0 whitespace-nowrap pb-2 text-[11px] font-semibold tracking-wide sm:text-[12px] ${
-                feedMode === tab.id ? "text-white" : "text-white/40"
+              className={`relative shrink-0 whitespace-nowrap pb-2 text-[11px] font-semibold tracking-wide sm:text-[12px] ${TAB_SHADOW} ${
+                feedMode === tab.id ? "text-white" : "text-white/45"
               }`}
             >
               {tab.label}
@@ -74,7 +84,7 @@ export function FeedHeader({
           data-no-drag
           onPointerDown={stop}
           onClick={onOpenSearch}
-          className="flex h-10 w-10 items-center justify-center justify-self-end rounded-full text-white/90 active:bg-white/10"
+          className={`flex h-10 w-10 items-center justify-center justify-self-end rounded-full text-white/90 active:bg-white/10 ${TAB_SHADOW}`}
           aria-label="Search"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,15 +94,15 @@ export function FeedHeader({
         </button>
       </div>
       {showFilterPill && (
-        <div className="flex justify-center px-4 pb-2" data-no-drag>
+        <div className="relative flex justify-center px-4 pb-2" data-no-drag>
           <button
             type="button"
             onPointerDown={stop}
             onClick={clearFilters}
-            className="max-w-full truncate rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[11px] font-medium text-zinc-400 backdrop-blur-sm active:bg-white/10"
+            className={`max-w-full truncate rounded-full border border-white/12 bg-black/35 px-3 py-1 text-[11px] font-medium text-white/70 active:bg-white/10 ${TAB_SHADOW}`}
           >
             {filterLabels.join(" · ")}
-            <span className="ml-1.5 text-zinc-500">×</span>
+            <span className="ml-1.5 text-white/40">×</span>
           </button>
         </div>
       )}
