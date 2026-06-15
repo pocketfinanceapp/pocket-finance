@@ -1,6 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Bitcoin,
+  Building2,
+  Check,
+  Cpu,
+  Flame,
+  Globe2,
+  HeartPulse,
+  Landmark,
+  type LucideIcon,
+  Mountain,
+  Pickaxe,
+  ShoppingBag,
+  TrendingUp,
+} from "lucide-react";
 import { PocketMarkIcon } from "@/components/PocketLogo";
 import { useApp } from "@/context/AppContext";
 import {
@@ -10,6 +25,28 @@ import {
   type SectorFilter,
 } from "@/lib/filters";
 import { getMarketById } from "@/lib/markets";
+
+const SECTOR_ICONS: Record<SectorFilter, LucideIcon> = {
+  Technology: Cpu,
+  Finance: Landmark,
+  Energy: Flame,
+  Mining: Pickaxe,
+  Healthcare: HeartPulse,
+  Consumer: ShoppingBag,
+  Crypto: Bitcoin,
+  "Real Estate": Building2,
+};
+
+const MARKET_ICONS: Record<(typeof ONBOARDING_MARKETS)[number], LucideIcon> = {
+  ASX: Globe2,
+  NASDAQ: TrendingUp,
+  NYSE: Landmark,
+  LSE: Building2,
+  Nikkei: Mountain,
+  HKEX: Building2,
+  TSX: Globe2,
+  SGX: Globe2,
+};
 
 type Step = 0 | 1 | 2 | 3;
 
@@ -231,6 +268,7 @@ function MarketsStep({
               label={m.name}
               sub={m.country}
               emoji={m.flag}
+              icon={MARKET_ICONS[id]}
             />
           );
         })}
@@ -269,12 +307,15 @@ function SectorsStep({
               active={active}
               onClick={() => onToggle(sector)}
               label={sector}
+              icon={SECTOR_ICONS[sector]}
             />
           );
         })}
       </div>
       <div className="flex-1" />
-      <GradientButton onClick={onNext}>Continue</GradientButton>
+      <GradientButton onClick={onNext} disabled={selected.length === 0}>
+        Continue
+      </GradientButton>
     </div>
   );
 }
@@ -357,32 +398,78 @@ function SelectTile({
   label,
   sub,
   emoji,
+  icon: Icon,
 }: {
   active: boolean;
   onClick: () => void;
   label: string;
   sub?: string;
   emoji?: string;
+  icon?: LucideIcon;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-start rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 active:scale-[0.98] ${
-        active
-          ? "border-[#3B6EF5]/50 bg-gradient-to-br from-[#3B6EF5]/15 to-[#00C6C6]/10 shadow-[0_0_20px_rgba(59,110,245,0.12)]"
-          : "border-white/[0.1] bg-white/[0.03]"
-      }`}
+      className="relative flex min-h-[108px] flex-col items-start rounded-[20px] px-4 py-4 text-left transition-all duration-200 active:scale-[0.98]"
+      style={{
+        background: active
+          ? "linear-gradient(135deg, rgba(59,110,245,0.16), rgba(0,198,198,0.12))"
+          : "#0B0B0D",
+        border: active
+          ? "1.5px solid #00C6C6"
+          : "1px solid rgba(255,255,255,0.10)",
+        boxShadow: active
+          ? "0 0 20px rgba(0,198,198,0.25), inset 0 1px 0 rgba(255,255,255,0.08)"
+          : "inset 0 1px 0 rgba(255,255,255,0.06)",
+      }}
     >
-      {emoji && <span className="text-2xl leading-none">{emoji}</span>}
+      {active && (
+        <span
+          className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#00C6C6]/15"
+          aria-hidden
+        >
+          <Check className="h-3 w-3 text-[#00C6C6]" strokeWidth={3} />
+        </span>
+      )}
+
+      {emoji ? (
+        <div className="relative mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <span className="text-[22px] leading-none">{emoji}</span>
+          {Icon && (
+            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-md border border-white/10 bg-[#0B0B0D]">
+              <Icon
+                className={`h-3 w-3 ${active ? "text-[#00C6C6]" : "text-zinc-400"}`}
+                strokeWidth={2}
+              />
+            </span>
+          )}
+        </div>
+      ) : Icon ? (
+        <span
+          className={`mb-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ${
+            active
+              ? "border-[#00C6C6]/30 bg-[#00C6C6]/10"
+              : "border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02]"
+          }`}
+        >
+          <Icon
+            className={`h-5 w-5 ${active ? "text-[#00C6C6]" : "text-zinc-400"}`}
+            strokeWidth={1.75}
+          />
+        </span>
+      ) : null}
+
       <span
-        className={`font-semibold ${emoji ? "mt-2" : ""} ${
+        className={`pr-6 text-[15px] font-semibold leading-tight ${
           active ? "text-white" : "text-zinc-200"
         }`}
       >
         {label}
       </span>
-      {sub && <span className="mt-0.5 text-[11px] text-zinc-500">{sub}</span>}
+      {sub && (
+        <span className="mt-1 text-xs leading-snug text-zinc-500">{sub}</span>
+      )}
     </button>
   );
 }
@@ -401,7 +488,11 @@ function GradientButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-opacity active:scale-[0.99] disabled:opacity-40"
+      className={`w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] via-[#4A7EF6] to-[#00C6C6] py-4 text-base font-bold text-white transition-all duration-200 active:scale-[0.98] ${
+        disabled
+          ? "cursor-not-allowed opacity-40 shadow-none"
+          : "onboarding-cta-glow shadow-[0_8px_32px_rgba(59,110,245,0.35)]"
+      }`}
     >
       {children}
     </button>
