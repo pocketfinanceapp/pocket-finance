@@ -181,9 +181,11 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-8 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4">
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="onboarding-enter onboarding-enter-d1 mb-10">
-            <PocketMarkIcon size={120} glow="none" className="mx-auto" />
-          </div>
+          <PocketMarkIcon
+            size={120}
+            glow="none"
+            className="onboarding-enter onboarding-enter-d1 mx-auto mb-10"
+          />
 
           <h1 className="onboarding-enter onboarding-enter-d2 text-[34px] font-extrabold leading-tight tracking-tight text-white antialiased">
             Pocket Finance
@@ -396,10 +398,10 @@ function SelectTile({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex min-h-[118px] flex-col rounded-[20px] p-4 text-left transition-all duration-200 active:scale-[0.98]"
+      className="relative flex min-h-[104px] flex-col rounded-[20px] p-5 text-left transition-all duration-200 active:scale-[0.98]"
       style={{
         background: active
-          ? "linear-gradient(165deg, rgba(59,110,245,0.08) 0%, rgba(0,198,198,0.16) 100%)"
+          ? "linear-gradient(165deg, rgba(59,110,245,0.05) 0%, rgba(0,198,198,0.10) 100%)"
           : "#0B0B0D",
         border: active
           ? "1.5px solid #00C6C6"
@@ -421,13 +423,13 @@ function SelectTile({
           <span className="text-[26px] leading-none">{emoji}</span>
         ) : Icon ? (
           <Icon
-            className={`h-6 w-6 ${active ? "text-[#00C6C6]" : "text-zinc-500"}`}
+            className={`h-6 w-6 ${active ? "text-[#00C6C6]" : "text-white/[0.38]"}`}
             strokeWidth={1.5}
           />
         ) : null}
       </div>
 
-      <div className="mt-auto pt-5">
+      <div className="mt-auto pt-3">
         <span className="block text-[15px] font-semibold leading-tight text-white">
           {label}
         </span>

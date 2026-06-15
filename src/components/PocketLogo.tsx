@@ -60,8 +60,8 @@ export function PocketMarkIcon({
       width={size}
       height={size}
       unoptimized
-      className={`shrink-0 object-contain mix-blend-screen ${glowClass[glow]} ${className}`}
-      style={{ width: size, height: size, mixBlendMode: "screen" }}
+      className={`shrink-0 object-contain ${glowClass[glow]} ${className}`}
+      style={{ width: size, height: size }}
       aria-hidden
     />
   );
