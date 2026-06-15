@@ -1,7 +1,25 @@
 const FEED_ROWS = [
-  { ticker: "NVDA", title: "NVIDIA Hits Record High as AI Demand Surges", up: true },
-  { ticker: "TSLA", title: "Tesla Cuts Prices Amid EV Competition", up: false },
-  { ticker: "AAPL", title: "Apple Services Revenue Beats Estimates", up: true },
+  {
+    ticker: "SOXX",
+    title: "AI chip demand drives semiconductor stocks higher",
+    up: true,
+  },
+  {
+    ticker: "XLK",
+    title: "Chipmaker shares rise on data-centre demand",
+    up: true,
+  },
+  {
+    ticker: "SMH",
+    title: "Semiconductor rally continues as AI spending accelerates",
+    up: false,
+  },
+] as const;
+
+const STOCK_METRICS = [
+  { label: "Mkt Cap", value: "2.8T" },
+  { label: "P/E", value: "71.4" },
+  { label: "Vol", value: "48.2M" },
 ] as const;
 
 export function FeedCardPreview() {
@@ -31,7 +49,7 @@ export function FeedCardPreview() {
                 row.up ? "text-[#00C6C6]" : "text-red-400/80"
               }`}
             >
-              {row.up ? "+4.2%" : "-1.1%"}
+              {row.up ? "+2.8%" : "-0.9%"}
             </span>
           </div>
         ))}
@@ -51,23 +69,23 @@ export function ArticleCardPreview() {
         }}
       >
         <div className="flex items-center gap-1.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded bg-[#005594] text-[7px] font-bold text-white">
-            R
+          <span className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/[0.08] text-[7px] font-bold text-[#00C6C6]">
+            MW
           </span>
-          <span className="text-[8px] text-white/70">Reuters · 1m ago</span>
+          <span className="text-[8px] text-white/70">Market Wire · 1m ago</span>
         </div>
       </div>
       <div className="space-y-2 p-2.5">
         <p className="text-[10px] font-bold leading-snug text-white">
-          NVIDIA Hits Record High as AI Demand Surges
+          AI chip demand drives semiconductor stocks higher
         </p>
         <div className="rounded-lg border border-[#00C6C6]/20 bg-[#00C6C6]/5 p-2">
           <p className="text-[8px] font-semibold uppercase tracking-wide text-[#00C6C6]">
             AI Briefing
           </p>
           <p className="mt-1 text-[8px] leading-relaxed text-[#9ca3af]">
-            AI chip demand drives record revenue outlook as data centre spend
-            accelerates.
+            Chipmakers rally as data-centre AI spending accelerates across the
+            semiconductor supply chain.
           </p>
         </div>
       </div>
@@ -80,12 +98,12 @@ export function StockCardPreview() {
     <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-black/50 p-2.5">
       <div className="flex items-baseline justify-between">
         <div>
-          <span className="text-[11px] font-bold text-white">NVDA</span>
-          <p className="text-[8px] text-[#9ca3af]">NVIDIA Corp</p>
+          <span className="text-[11px] font-bold text-white">SOXX</span>
+          <p className="text-[8px] text-[#9ca3af]">Semiconductor ETF</p>
         </div>
         <div className="text-right">
-          <span className="text-[11px] font-bold text-white">$892.40</span>
-          <p className="text-[9px] font-semibold text-[#00C6C6]">+4.2%</p>
+          <span className="text-[11px] font-bold text-white">$268.40</span>
+          <p className="text-[9px] font-semibold text-[#00C6C6]">+2.8%</p>
         </div>
       </div>
       <svg
@@ -118,13 +136,13 @@ export function StockCardPreview() {
         />
       </svg>
       <div className="mt-2 grid grid-cols-3 gap-1.5">
-        {["Mkt Cap", "P/E", "Vol"].map((label) => (
+        {STOCK_METRICS.map(({ label, value }) => (
           <div
             key={label}
             className="rounded-md border border-white/[0.05] bg-white/[0.03] px-1.5 py-1 text-center"
           >
             <p className="text-[7px] text-[#9ca3af]">{label}</p>
-            <p className="text-[8px] font-semibold text-white/80">—</p>
+            <p className="text-[8px] font-semibold text-white/80">{value}</p>
           </div>
         ))}
       </div>
