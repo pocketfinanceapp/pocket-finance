@@ -9,8 +9,9 @@ import {
   Share2,
 } from "lucide-react";
 import { getArticleContextLine } from "@/lib/articlePreview";
-import { hasUsableFeedImage } from "@/lib/feedImage";
-import type { NewsArticle, Sector } from "@/lib/types";
+import { getFeedCategoryTag } from "@/lib/feedCategory";
+import { estimateImageIsDark, hasUsableFeedImage } from "@/lib/feedImage";
+import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
@@ -19,8 +20,7 @@ import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
 import {
-  hasSeenSwipeHint,
-  isFeedOnboardingComplete,
+  hasSeenSwipeHintThisSession,
   markSwipeHintSeen,
 } from "@/lib/feedOnboarding";
 import { resolveMarketForArticle } from "@/lib/tickerMap";
@@ -45,33 +45,7 @@ const GENERIC_SYMBOLS = new Set([
   "FED",
 ]);
 
-const SECTOR_TAGS: Record<Sector, string> = {
-  Technology: "TECH",
-  Finance: "FINANCE",
-  Energy: "ENERGY",
-  Mining: "MINING",
-  Healthcare: "HEALTH",
-  Consumer: "CONSUMER",
-  Crypto: "CRYPTO",
-  "Real Estate": "REAL ESTATE",
-};
-
 type ChipKind = "stock" | "topic";
-
-function getCategoryTag(article: NewsArticle, displayMarket: string): string {
-  const upperTags = article.tags.map((tag) => tag.toUpperCase());
-  if (upperTags.includes("AI")) return "AI";
-
-  if (article.market === "CRYPTO" || article.sector === "Crypto") return "CRYPTO";
-  if (article.market === "COMMODITIES") return "COMMODITIES";
-  if (displayMarket === "US MARKETS") return "US MARKETS";
-  if (
-    ["NASDAQ", "NYSE", "ASX", "LSE", "Nikkei", "HKEX"].includes(displayMarket)
-  ) {
-    return displayMarket;
-  }
-  return SECTOR_TAGS[article.sector] ?? displayMarket.toUpperCase();
-}
 
 function resolveFeedChip(
   article: NewsArticle,
@@ -95,22 +69,28 @@ function resolveFeedChip(
   return { label: categoryTag, kind: "topic" };
 }
 
-function FeedCardOverlays() {
+function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
   return (
     <>
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-32 bg-gradient-to-b from-black/75 via-black/40 to-transparent" />
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-32 bg-gradient-to-b ${
+          soft ? "from-black/55 via-black/25" : "from-black/75 via-black/40"
+        } to-transparent`}
+      />
       <div
         className="pointer-events-none absolute inset-0 z-[1] mix-blend-soft-light"
         style={{
-          background:
-            "linear-gradient(135deg, rgba(59,110,245,0.16) 0%, transparent 42%, rgba(0,198,198,0.12) 100%)",
+          background: soft
+            ? "linear-gradient(135deg, rgba(59,110,245,0.12) 0%, transparent 42%, rgba(0,198,198,0.08) 100%)"
+            : "linear-gradient(135deg, rgba(59,110,245,0.16) 0%, transparent 42%, rgba(0,198,198,0.12) 100%)",
         }}
       />
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
         style={{
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.22) 42%, rgba(0,0,0,0.82) 58%, rgba(0,0,0,0.97) 100%)",
+          background: soft
+            ? "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.04) 18%, rgba(0,0,0,0.16) 42%, rgba(0,0,0,0.68) 58%, rgba(0,0,0,0.9) 100%)"
+            : "linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.22) 42%, rgba(0,0,0,0.82) 58%, rgba(0,0,0,0.97) 100%)",
         }}
       />
     </>
@@ -136,21 +116,36 @@ export function FeedCard({
   const [guestPrompt, setGuestPrompt] = useState<string | null>(null);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [swipeHintOpacity, setSwipeHintOpacity] = useState(0);
+  const [isDarkImage, setIsDarkImage] = useState(false);
 
   const displayMarket = resolveMarketForArticle({
     ticker: article.ticker,
     sourceName: article.sourceName,
     sourceId: article.sourceId,
   });
-  const categoryTag = getCategoryTag(article, displayMarket);
+  const categoryTag = getFeedCategoryTag(article, displayMarket);
   const feedChip = resolveFeedChip(article, categoryTag);
   const contextLine = getArticleContextLine(article);
   const hasHeroImage = showImage && !!imgSrc;
+  const useSoftOverlay = hasHeroImage && isDarkImage;
+  const iconClass = "h-[21px] w-[21px] text-white opacity-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]";
 
   useEffect(() => {
     const usable = hasUsableFeedImage(article.imageUrl);
     setShowImage(usable);
     setImgSrc(usable ? article.imageUrl : "");
+    setIsDarkImage(false);
+
+    if (!usable || !article.imageUrl) return;
+
+    let cancelled = false;
+    void estimateImageIsDark(article.imageUrl).then((dark) => {
+      if (!cancelled) setIsDarkImage(dark);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [article.id, article.imageUrl]);
 
   useEffect(() => {
@@ -160,35 +155,20 @@ export function FeedCard({
       return;
     }
 
-    const startHint = () => {
-      if (!isFeedOnboardingComplete() || hasSeenSwipeHint()) return;
+    if (hasSeenSwipeHintThisSession()) return;
 
-      setShowSwipeHint(true);
-      setSwipeHintOpacity(1);
+    setShowSwipeHint(true);
+    setSwipeHintOpacity(0.82);
 
-      const fadeTimer = window.setTimeout(() => setSwipeHintOpacity(0), 3200);
-      const hideTimer = window.setTimeout(() => {
-        setShowSwipeHint(false);
-        markSwipeHintSeen();
-      }, 3800);
-
-      return () => {
-        window.clearTimeout(fadeTimer);
-        window.clearTimeout(hideTimer);
-      };
-    };
-
-    let cleanup = startHint();
-    const onOnboardingDismissed = () => {
-      cleanup?.();
-      cleanup = startHint();
-    };
-
-    window.addEventListener("pf-onboarding-dismissed", onOnboardingDismissed);
+    const fadeTimer = window.setTimeout(() => setSwipeHintOpacity(0), 4200);
+    const hideTimer = window.setTimeout(() => {
+      setShowSwipeHint(false);
+      markSwipeHintSeen();
+    }, 4800);
 
     return () => {
-      cleanup?.();
-      window.removeEventListener("pf-onboarding-dismissed", onOnboardingDismissed);
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(hideTimer);
     };
   }, [isFirstCard, active]);
 
@@ -221,13 +201,15 @@ export function FeedCard({
             src={imgSrc}
             alt=""
             fill
-            className="absolute inset-0 h-full w-full object-cover brightness-[0.72] contrast-[1.02] saturate-[0.92]"
+            className={`absolute inset-0 h-full w-full object-cover contrast-[1.02] saturate-[0.92] ${
+              useSoftOverlay ? "brightness-[0.84]" : "brightness-[0.72]"
+            }`}
             sizes="100vw"
             unoptimized
             priority={active}
             onError={() => setShowImage(false)}
           />
-          <FeedCardOverlays />
+          <FeedCardOverlays soft={useSoftOverlay} />
         </>
       ) : (
         <>
@@ -249,10 +231,10 @@ export function FeedCard({
           }
         >
           <Heart
-            className={`h-[21px] w-[21px] transition-colors ${
-              liked ? "fill-[#00C6C6] text-[#00C6C6]" : "text-white"
+            className={`${iconClass} transition-colors ${
+              liked ? "fill-[#00C6C6] text-[#00C6C6] opacity-100" : ""
             }`}
-            strokeWidth={2}
+            strokeWidth={2.25}
           />
         </ActionButton>
 
@@ -262,7 +244,7 @@ export function FeedCard({
             guardGuestAction("Sign in to comment", onOpenComments)
           }
         >
-          <MessageCircle className="h-[21px] w-[21px] text-white" strokeWidth={2} />
+          <MessageCircle className={iconClass} strokeWidth={2.25} />
         </ActionButton>
 
         <ActionButton
@@ -285,7 +267,7 @@ export function FeedCard({
             void navigator.clipboard?.writeText(article.sourceUrl);
           }}
         >
-          <Share2 className="h-[21px] w-[21px] text-white" strokeWidth={2} />
+          <Share2 className={iconClass} strokeWidth={2.25} />
         </ActionButton>
 
         <ActionButton
@@ -306,20 +288,33 @@ export function FeedCard({
           }
         >
           <Bookmark
-            className={`h-[21px] w-[21px] transition-colors ${
-              saved ? "fill-[#00C6C6] text-[#00C6C6]" : "text-white"
+            className={`${iconClass} transition-colors ${
+              saved ? "fill-[#00C6C6] text-[#00C6C6] opacity-100" : ""
             }`}
-            strokeWidth={2}
+            strokeWidth={2.25}
           />
         </ActionButton>
       </aside>
+
+      {showSwipeHint && isFirstCard && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-[4.75rem] z-30 -translate-x-1/2 transition-opacity duration-700 ease-out"
+          style={{ opacity: swipeHintOpacity }}
+          data-no-drag
+        >
+          <span className="whitespace-nowrap rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] text-white/75 backdrop-blur-sm">
+            Swipe left for article · Swipe right for stock
+          </span>
+        </div>
+      )}
 
       <div className="absolute inset-x-0 bottom-0 z-20">
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%]"
           style={{
-            background:
-              "linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.88) 38%, rgba(0,0,0,0.45) 62%, transparent 100%)",
+            background: useSoftOverlay
+              ? "linear-gradient(to top, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.78) 38%, rgba(0,0,0,0.34) 62%, transparent 100%)"
+              : "linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.88) 38%, rgba(0,0,0,0.45) 62%, transparent 100%)",
           }}
         />
 
@@ -360,21 +355,6 @@ export function FeedCard({
           </div>
 
           <FeedChip label={feedChip.label} kind={feedChip.kind} />
-
-          {showSwipeHint && (
-            <div
-              className="mt-3 flex flex-col items-start gap-1.5 transition-opacity duration-500 ease-out sm:flex-row sm:items-center sm:gap-2"
-              style={{ opacity: swipeHintOpacity }}
-              data-no-drag
-            >
-              <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
-                Swipe left for full article
-              </span>
-              <span className="rounded-full border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] text-white/85 backdrop-blur-sm">
-                Swipe right for stock data
-              </span>
-            </div>
-          )}
         </div>
       </div>
 

@@ -34,7 +34,19 @@ export function markSwipeHintSeen(): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(SWIPE_HINT_KEY, "true");
+    sessionStorage.setItem(SWIPE_HINT_SESSION_KEY, "true");
   } catch {
     /* private mode / quota */
+  }
+}
+
+const SWIPE_HINT_SESSION_KEY = "pf-swipe-hint-session";
+
+export function hasSeenSwipeHintThisSession(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return sessionStorage.getItem(SWIPE_HINT_SESSION_KEY) === "true";
+  } catch {
+    return true;
   }
 }

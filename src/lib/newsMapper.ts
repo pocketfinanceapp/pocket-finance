@@ -1,4 +1,3 @@
-import { SECTOR_FILTERS } from "./filters";
 import type { MarketExchange, NewsArticle, Sector } from "./types";
 import { hasUsableFeedImage } from "./feedImage";
 import { cleanArticleDescription } from "./articleText";
@@ -20,9 +19,7 @@ interface NewsApiArticle {
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80";
 
-function assignSector(metaSector: Sector, index: number): Sector {
-  const pool = SECTOR_FILTERS as readonly Sector[];
-  if (index % 3 === 0) return pool[index % pool.length];
+function assignSector(metaSector: Sector, _index: number): Sector {
   return metaSector;
 }
 
