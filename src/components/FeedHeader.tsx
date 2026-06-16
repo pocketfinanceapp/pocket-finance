@@ -45,28 +45,8 @@ export function FeedHeader({
 
   return (
     <header className={`relative isolate ${className}`}>
-      {/* Opaque compositing shield — blocks Safari ghost layers from card stack */}
       <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-[1]"
-        style={{
-          height: "var(--feed-header-zone)",
-          background:
-            "linear-gradient(to bottom, #000 0%, #000 58%, rgba(0,0,0,0.92) 78%, transparent 100%)",
-        }}
-      />
-      {/* Soft readability scrim for tabs — gradient only, no backdrop-blur */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-36"
-        style={{
-          background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.18) 42%, transparent 100%)",
-        }}
-      />
-
-      <div
-        className="relative z-[3] grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
+        className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
         <div className="h-10 w-10 shrink-0" aria-hidden />
@@ -104,7 +84,7 @@ export function FeedHeader({
         </button>
       </div>
       {showFilterPill && (
-        <div className="relative z-[3] flex justify-center px-4 pb-2" data-no-drag>
+        <div className="relative flex justify-center px-4 pb-2" data-no-drag>
           <button
             type="button"
             onPointerDown={stop}

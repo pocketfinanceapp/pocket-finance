@@ -1,3 +1,4 @@
+import { computeFinanceRelevanceScore } from "./feedRelevance";
 import { buildFeedArticles } from "./filterArticles";
 import type { MarketFilter, SectorFilter } from "./filters";
 import type { ProfileTopic } from "./profileStorage";
@@ -62,6 +63,8 @@ export function computeTrendingScore(
   if (forYouTopIds.has(article.id)) {
     score -= 40;
   }
+
+  score += Math.round(computeFinanceRelevanceScore(article) * 0.35);
 
   return score;
 }

@@ -293,7 +293,7 @@ export function FeedCard({
         </>
       ) : (
         <>
-          <FeedCardFallbackBackground />
+          <FeedCardFallbackBackground article={article} />
           <FeedCardOverlays />
         </>
       )}

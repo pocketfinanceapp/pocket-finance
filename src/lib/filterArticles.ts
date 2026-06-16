@@ -1,5 +1,6 @@
 import type { MarketFilter, SectorFilter } from "./filters";
 import { articleMatchesMarket } from "./filters";
+import { rankByFinanceRelevance } from "./feedRelevance";
 import type { ProfileTopic } from "./profileStorage";
 import { TOPIC_KEYWORDS } from "./profileStorage";
 import type { NewsArticle } from "./types";
@@ -119,16 +120,20 @@ export function buildFeedArticles(
     const topicMatches = articles.filter((a) =>
       articleMatchesTopics(a, favouriteTopics)
     );
-    return filterArticles(topicMatches, [], sectorFilters, searchQuery);
+    return rankByFinanceRelevance(
+      filterArticles(topicMatches, [], sectorFilters, searchQuery)
+    );
   }
 
   // Explicit market drill-down from Markets tab
   if (marketFilters.length > 0) {
-    return filterArticles(
-      articles,
-      marketFilters,
-      sectorFilters,
-      searchQuery
+    return rankByFinanceRelevance(
+      filterArticles(
+        articles,
+        marketFilters,
+        sectorFilters,
+        searchQuery
+      )
     );
   }
 
@@ -138,7 +143,7 @@ export function buildFeedArticles(
     if (followedMarkets.length > 0) {
       result = prioritizeByFollowed(result, followedMarkets);
     }
-    return result;
+    return rankByFinanceRelevance(result);
   }
 
   // For You: full pool; onboarding interests only affect ranking
@@ -149,5 +154,5 @@ export function buildFeedArticles(
   if (sectorInterests.length > 0) {
     result = prioritizeBySectors(result, sectorInterests);
   }
-  return result;
+  return rankByFinanceRelevance(result);
 }
