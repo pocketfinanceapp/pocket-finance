@@ -207,86 +207,88 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 
   return (
     <div className="relative flex h-full flex-col bg-black text-white">
-      <header className="shrink-0 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            data-no-drag
-            onPointerDown={stop}
-            onClick={onBack}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/10"
-            aria-label="Back"
-            style={{ touchAction: "manipulation" }}
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <div className="flex shrink-0 items-center gap-1">
+      <div className="relative z-20 shrink-0 bg-black">
+        <header className="px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
+          <div className="flex items-center justify-between">
             <button
               type="button"
               data-no-drag
               onPointerDown={stop}
-              onClick={toggleSave}
-              className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
-              aria-label={saved ? "Remove from watchlist" : "Save to watchlist"}
+              onClick={onBack}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/10"
+              aria-label="Back"
               style={{ touchAction: "manipulation" }}
             >
-              <Bookmark
-                className={`h-5 w-5 ${saved ? "fill-white text-white" : "text-white"}`}
-              />
+              <ArrowLeft className="h-6 w-6" />
             </button>
-            <button
-              type="button"
-              data-no-drag
-              onPointerDown={stop}
-              onClick={() => {
-                void navigator.share?.({
-                  title: ticker,
-                  url: article.sourceUrl,
-                });
-              }}
-              className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
-              aria-label="Share"
-              style={{ touchAction: "manipulation" }}
-            >
-              <Share2 className="h-5 w-5" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                data-no-drag
+                onPointerDown={stop}
+                onClick={toggleSave}
+                className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+                aria-label={saved ? "Remove from watchlist" : "Save to watchlist"}
+                style={{ touchAction: "manipulation" }}
+              >
+                <Bookmark
+                  className={`h-5 w-5 ${saved ? "fill-white text-white" : "text-white"}`}
+                />
+              </button>
+              <button
+                type="button"
+                data-no-drag
+                onPointerDown={stop}
+                onClick={() => {
+                  void navigator.share?.({
+                    title: ticker,
+                    url: article.sourceUrl,
+                  });
+                }}
+                className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+                aria-label="Share"
+                style={{ touchAction: "manipulation" }}
+              >
+                <Share2 className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        {marketTheme && themeConfig ? (
-          <StockIdentityHeader
-            className="mt-2"
-            title={themeConfig.title}
-            subtitle={themeConfig.subtitle}
-          />
-        ) : null}
-      </header>
+          {marketTheme && themeConfig ? (
+            <StockIdentityHeader
+              className="mt-2"
+              title={themeConfig.title}
+              subtitle={themeConfig.subtitle}
+            />
+          ) : null}
+        </header>
 
-      {showTabs && (
-        <nav className="z-10 flex w-full shrink-0 border-b border-white/[0.08] bg-black px-4">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              data-no-drag
-              onPointerDown={stop}
-              onClick={() => setActiveTab(tab)}
-              className={`relative flex-1 pb-2.5 pt-1 text-center text-sm font-medium ${
-                activeTab === tab ? "text-white" : "text-zinc-500"
-              }`}
-            >
-              {tab}
-              {activeTab === tab && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
-              )}
-            </button>
-          ))}
-        </nav>
-      )}
+        {showTabs && (
+          <nav className="relative flex w-full border-b border-white/[0.08] bg-black px-4 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-2 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                data-no-drag
+                onPointerDown={stop}
+                onClick={() => setActiveTab(tab)}
+                className={`relative flex-1 pb-2.5 pt-1 text-center text-sm font-medium ${
+                  activeTab === tab ? "text-white" : "text-zinc-500"
+                }`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
+                )}
+              </button>
+            ))}
+          </nav>
+        )}
+      </div>
 
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
       >
         {privateCompany && privateProfile ? (
           <PrivateCompanyProfileView
