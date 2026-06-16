@@ -109,7 +109,11 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
 
       <article
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(5.25rem+max(1rem,env(safe-area-inset-bottom)))]"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5"
+        style={{
+          paddingBottom:
+            "calc(7.75rem + max(1.25rem, env(safe-area-inset-bottom)))",
+        }}
       >
         <MarketBadge market={article.market} />
 
@@ -154,21 +158,22 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           headline={article.headline}
           snippet={articleSnippet(article)}
         />
+        <div className="h-4 shrink-0" aria-hidden />
       </article>
 
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/95 to-transparent pt-6"
+        className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/90 to-transparent pt-5"
         aria-hidden
       />
       <div
-        className="absolute inset-x-0 bottom-0 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2"
+        className="absolute inset-x-0 bottom-0 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-1.5"
         data-no-drag
       >
         <a
           href={article.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] p-3.5 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
+          className="block w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-4 py-3 text-center text-[15px] font-bold text-white shadow-[0_6px_24px_rgba(59,110,245,0.22)] transition-transform active:scale-[0.98]"
           style={{ touchAction: "manipulation" }}
         >
           Read full article →
