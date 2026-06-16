@@ -190,20 +190,20 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 
   return (
     <div className="relative flex h-full flex-col bg-black text-white">
-      <header className="shrink-0 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1">
-        <div className="flex items-start justify-between">
+      <header className="shrink-0 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
+        <div className="flex items-center justify-between">
           <button
             type="button"
             data-no-drag
             onPointerDown={stop}
             onClick={onBack}
-            className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/10"
             aria-label="Back"
             style={{ touchAction: "manipulation" }}
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
               data-no-drag
@@ -235,6 +235,14 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             </button>
           </div>
         </div>
+
+        {marketTheme && themeConfig ? (
+          <StockIdentityHeader
+            className="mt-2"
+            title={themeConfig.title}
+            subtitle={themeConfig.subtitle}
+          />
+        ) : null}
       </header>
 
       {showTabs && (
@@ -261,7 +269,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
         style={{ paddingBottom: STOCK_PANEL_SCROLL_PADDING }}
       >
         {privateCompany && privateProfile ? (
@@ -271,13 +279,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             article={article}
           />
         ) : marketTheme && themeConfig ? (
-          <>
-            <StockIdentityHeader
-              title={themeConfig.title}
-              subtitle={themeConfig.subtitle}
-            />
-            <MarketThemePanelView config={themeConfig} />
-          </>
+          <MarketThemePanelView config={themeConfig} />
         ) : showTabs && stock ? (
           <>
             <StockIdentityHeader title={ticker} subtitle={meta.companyName} />
@@ -391,12 +393,14 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 function StockIdentityHeader({
   title,
   subtitle,
+  className = "",
 }: {
   title: string;
   subtitle: string;
+  className?: string;
 }) {
   return (
-    <div>
+    <div className={className}>
       <h1 className="text-[1.625rem] font-bold tracking-tight">{title}</h1>
       <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p>
     </div>
@@ -411,7 +415,7 @@ function MarketThemePanelView({
   const relatedAssets = getRelatedAssetsFromTickers(config.relatedTickers);
 
   return (
-    <div className="mt-4">
+    <div>
       <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-6 text-center">
         <p className="text-sm leading-relaxed text-zinc-400">{config.message}</p>
       </div>
@@ -478,7 +482,7 @@ function PrivateCompanyProfileView({
   article: NewsArticle;
 }) {
   return (
-    <div className="mt-2">
+    <div className="mt-1">
       <div className="flex flex-col items-center text-center">
         <CompanyLogo
           ticker={ticker}
