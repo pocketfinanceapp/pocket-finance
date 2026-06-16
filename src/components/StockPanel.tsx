@@ -49,9 +49,9 @@ const ETORO_URL = "https://www.etoro.com/";
 
 /** Bottom scroll clearance by Stock Panel variant (Safari toolbar + tap room). */
 const STOCK_PANEL_BOTTOM_CLEARANCE = {
-  equity: "calc(9rem + max(1.25rem, env(safe-area-inset-bottom)))",
-  private: "calc(11rem + max(1.25rem, env(safe-area-inset-bottom)))",
-  theme: "calc(7rem + max(1.25rem, env(safe-area-inset-bottom)))",
+  equity: "calc(7rem + max(1.25rem, env(safe-area-inset-bottom)))",
+  private: "calc(10rem + max(1.25rem, env(safe-area-inset-bottom)))",
+  theme: "calc(6rem + max(1.25rem, env(safe-area-inset-bottom)))",
 } as const;
 
 function getStockPanelBottomClearance(
@@ -414,7 +414,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 function StockIdentityHeader({
   title,
   subtitle,
-  className = "mt-3",
+  className = "mt-5",
 }: {
   title: string;
   subtitle: string;
