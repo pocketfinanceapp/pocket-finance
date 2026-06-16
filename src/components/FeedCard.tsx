@@ -24,54 +24,21 @@ import {
   hasSeenSwipeHintThisSession,
   markSwipeHintSeen,
 } from "@/lib/feedOnboarding";
+import { resolveFeedChip } from "@/lib/feedChip";
 import { resolveMarketForArticle } from "@/lib/tickerMap";
-import { isUsListedStockTicker } from "@/lib/usStockTickers";
 
 interface FeedCardProps {
   article: NewsArticle;
   active: boolean;
+  showBottomChrome?: boolean;
   isFirstCard?: boolean;
   showTrendingLabel?: boolean;
   onOpenComments: () => void;
   commentRefreshKey?: number;
 }
 
-const GENERIC_SYMBOLS = new Set([
-  "MARKET",
-  "SPX",
-  "QQQ",
-  "DJI",
-  "OIL",
-  "GOLD",
-  "FED",
-]);
-
-type ChipKind = "stock" | "topic";
-
 const DOUBLE_TAP_MS = 280;
 const DOUBLE_TAP_SLOP = 28;
-
-function resolveFeedChip(
-  article: NewsArticle,
-  categoryTag: string
-): { label: string; kind: ChipKind } {
-  const candidates = [
-    article.ticker?.trim().toUpperCase(),
-    ...article.tags.map((tag) => tag.toUpperCase()),
-  ].filter(Boolean) as string[];
-
-  for (const symbol of candidates) {
-    if (GENERIC_SYMBOLS.has(symbol)) continue;
-
-    if (isUsListedStockTicker(symbol)) {
-      return { label: symbol, kind: "stock" };
-    }
-
-    return { label: symbol, kind: "topic" };
-  }
-
-  return { label: categoryTag, kind: "topic" };
-}
 
 function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
   return (
@@ -104,6 +71,7 @@ function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
 export function FeedCard({
   article,
   active,
+  showBottomChrome = true,
   isFirstCard = false,
   showTrendingLabel = false,
   onOpenComments,
@@ -402,6 +370,7 @@ export function FeedCard({
         </div>
       )}
 
+      {showBottomChrome && (
       <div
         className="absolute inset-x-0 bottom-0 z-20"
         style={{
@@ -459,6 +428,7 @@ export function FeedCard({
           <FeedChip label={feedChip.label} kind={feedChip.kind} />
         </div>
       </div>
+      )}
 
       {toast && (
         <div
@@ -493,7 +463,13 @@ export function FeedCard({
   );
 }
 
-function FeedChip({ label, kind }: { label: string; kind: ChipKind }) {
+function FeedChip({
+  label,
+  kind,
+}: {
+  label: string;
+  kind: "stock" | "topic";
+}) {
   if (kind === "stock") {
     return (
       <div className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6]">

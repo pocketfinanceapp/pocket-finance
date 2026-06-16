@@ -102,6 +102,7 @@ const DEPRIORITISE_KEYWORDS = [
   "pardon",
   "graduation",
   "graduates",
+  "walkout",
   "campus",
   "university protest",
   "celebrity",
@@ -130,6 +131,8 @@ const DEPRIORITISE_KEYWORDS = [
   "wildfire evacuation",
   "earthquake",
   "flood",
+  "red carpet",
+  "reality show",
 ] as const;
 
 function articleBlob(article: NewsArticle): string {
@@ -184,19 +187,30 @@ export function computeFinanceRelevanceScore(article: NewsArticle): number {
   }
 
   for (const keyword of DEPRIORITISE_KEYWORDS) {
-    if (text.includes(keyword)) score -= 28;
+    if (text.includes(keyword)) score -= 32;
   }
 
   // Politics without market angle
   if (
-    /\b(trump|biden|congress|senate|election|white house|parliament)\b/.test(
+    /\b(trump|biden|congress|senate|election|white house|parliament|pardon)\b/.test(
       text
     ) &&
-    !/\b(market|stock|rate|tariff|trade|economy|gdp|inflation|fed|earnings)\b/.test(
+    !/\b(market|stock|rate|tariff|trade|economy|gdp|inflation|fed|earnings|investor|shares|ipo)\b/.test(
       text
     )
   ) {
-    score -= 20;
+    score -= 30;
+  }
+
+  // Soft penalty when story lacks any finance signal at all
+  const hasFinanceSignal =
+    (ticker && !GENERIC_TICKERS.has(ticker)) ||
+    FINANCE_KEYWORDS.some((keyword) => text.includes(keyword)) ||
+    isGenuinelyCryptoRelated(article) ||
+    article.market === "COMMODITIES";
+
+  if (!hasFinanceSignal) {
+    score -= 18;
   }
 
   return score;

@@ -615,31 +615,34 @@ export function NewsFeed({
                 )}
               </div>
             ) : (
-              <div
-                className={`feed-card-stack w-full touch-none ${trackTransition}`}
-                style={{
-                  height: `calc(${verticalFeedArticles.length} * ${FEED_VIEWPORT_HEIGHT})`,
-                  transform: vTransform,
-                  WebkitBackfaceVisibility: "hidden",
-                  backfaceVisibility: "hidden",
-                }}
-              >
-                {verticalFeedArticles.map((a, i) => (
-                  <div
-                    key={a.id}
-                    className="w-full shrink-0"
-                    style={{ height: FEED_VIEWPORT_HEIGHT }}
-                  >
-                    <FeedCard
-                      article={a}
-                      active={i === feedIndex}
-                      isFirstCard={i === 0}
-                      showTrendingLabel={feedMode === "trending"}
-                      onOpenComments={() => setCommentsOpen(true)}
-                      commentRefreshKey={commentRefreshKey}
-                    />
-                  </div>
-                ))}
+              <div className="feed-column-viewport">
+                <div
+                  className={`w-full touch-none ${trackTransition}`}
+                  style={{
+                    height: `calc(${verticalFeedArticles.length} * ${FEED_VIEWPORT_HEIGHT})`,
+                    transform: vTransform,
+                    WebkitBackfaceVisibility: "hidden",
+                    backfaceVisibility: "hidden",
+                  }}
+                >
+                  {verticalFeedArticles.map((a, i) => (
+                    <div
+                      key={a.id}
+                      className="w-full shrink-0"
+                      style={{ height: FEED_VIEWPORT_HEIGHT }}
+                    >
+                      <FeedCard
+                        article={a}
+                        active={i === feedIndex}
+                        showBottomChrome={i === feedIndex && !isDragging}
+                        isFirstCard={i === 0}
+                        showTrendingLabel={feedMode === "trending"}
+                        onOpenComments={() => setCommentsOpen(true)}
+                        commentRefreshKey={commentRefreshKey}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

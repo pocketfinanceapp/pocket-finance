@@ -19,9 +19,11 @@
   }
 }
 
-.feed-card-stack {
-  -webkit-clip-path: inset(var(--feed-header-zone) 0 0 0);
-  clip-path: inset(var(--feed-header-zone) 0 0 0);
+.feed-column-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform: translateZ(0);
 }
 
 * {

@@ -47,6 +47,41 @@ function articleText(article: NewsArticle): string {
   return `${article.headline} ${article.subheading} ${article.tags.join(" ")}`.toLowerCase();
 }
 
+/** Content-first category when mapped sector/market metadata is wrong. */
+function inferContentCategoryTag(article: NewsArticle): string | null {
+  const text = articleText(article);
+
+  if (
+    /\b(xbox|playstation|microsoft|apple|google|alphabet|nvidia|semiconductor|openai|software|cloud computing)\b/.test(
+      text
+    )
+  ) {
+    return "TECH";
+  }
+  if (
+    /\b(oil|crude|opec|exxon|chevron|natural gas|petroleum|barrel)\b/.test(text)
+  ) {
+    return "ENERGY";
+  }
+  if (
+    /\b(bhp|rio tinto|iron ore|copper|lithium|mining|metals)\b/.test(text)
+  ) {
+    return "MINING";
+  }
+  if (
+    /\b(jpmorgan|goldman|bank of america|interest rate|bond yield|treasury|mortgage rate|central bank)\b/.test(
+      text
+    )
+  ) {
+    return "FINANCE";
+  }
+  if (isGenuinelyCryptoRelated(article)) {
+    return getCryptoTopicLabel(article);
+  }
+
+  return null;
+}
+
 /** True only when headline, description, tags, or ticker indicate crypto content. */
 export function isGenuinelyCryptoRelated(article: NewsArticle): boolean {
   const ticker = article.ticker?.trim().toUpperCase();
@@ -101,6 +136,9 @@ export function getFeedCategoryTag(
 
   const exchange = resolveExchangeTag(displayMarket, article.market);
   if (exchange) return exchange;
+
+  const contentTag = inferContentCategoryTag(article);
+  if (contentTag) return contentTag;
 
   if (displayMarket === "US MARKETS") return "US MARKETS";
   if (article.market === "COMMODITIES") return "COMMODITIES";
