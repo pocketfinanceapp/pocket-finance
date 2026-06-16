@@ -109,7 +109,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
 
       <article
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(6rem+env(safe-area-inset-bottom))]"
       >
         <MarketBadge market={article.market} />
 
