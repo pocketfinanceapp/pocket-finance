@@ -47,9 +47,21 @@ const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 
 const ETORO_URL = "https://www.etoro.com/";
 
-/** Shared bottom clearance for all Stock Panel scroll variants (Safari toolbar + tap room). */
-const STOCK_PANEL_BOTTOM_CLEARANCE =
-  "calc(14rem + max(1.25rem, env(safe-area-inset-bottom)))";
+/** Bottom scroll clearance by Stock Panel variant (Safari toolbar + tap room). */
+const STOCK_PANEL_BOTTOM_CLEARANCE = {
+  equity: "calc(9rem + max(1.25rem, env(safe-area-inset-bottom)))",
+  private: "calc(11rem + max(1.25rem, env(safe-area-inset-bottom)))",
+  theme: "calc(7rem + max(1.25rem, env(safe-area-inset-bottom)))",
+} as const;
+
+function getStockPanelBottomClearance(
+  isPrivate: boolean,
+  isTheme: boolean
+): string {
+  if (isPrivate) return STOCK_PANEL_BOTTOM_CLEARANCE.private;
+  if (isTheme) return STOCK_PANEL_BOTTOM_CLEARANCE.theme;
+  return STOCK_PANEL_BOTTOM_CLEARANCE.equity;
+}
 
 interface MetricItem {
   label: string;
@@ -188,6 +200,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   };
 
   const showTabs = !privateCompany && !marketTheme;
+  const bottomClearance = getStockPanelBottomClearance(
+    privateCompany,
+    marketTheme
+  );
 
   return (
     <div className="relative flex h-full flex-col bg-black text-white">
@@ -377,7 +393,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         <div
           aria-hidden
           className="shrink-0"
-          style={{ minHeight: STOCK_PANEL_BOTTOM_CLEARANCE }}
+          style={{ minHeight: bottomClearance }}
         />
       </div>
 
@@ -398,7 +414,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 function StockIdentityHeader({
   title,
   subtitle,
-  className = "",
+  className = "mt-3",
 }: {
   title: string;
   subtitle: string;
@@ -487,7 +503,7 @@ function PrivateCompanyProfileView({
   article: NewsArticle;
 }) {
   return (
-    <div className="mt-1">
+    <div className="mt-3">
       <div className="flex flex-col items-center text-center">
         <CompanyLogo
           ticker={ticker}
