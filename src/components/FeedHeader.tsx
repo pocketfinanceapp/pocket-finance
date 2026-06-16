@@ -44,23 +44,32 @@ export function FeedHeader({
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
-    <header className={`relative ${className}`}>
-      {/* Gradient scrim only — no backdrop-blur for mobile Safari swipe performance */}
+    <header className={`relative isolate ${className}`}>
+      {/* Opaque compositing shield — blocks Safari ghost layers from card stack */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-32"
+        className="pointer-events-none absolute inset-x-0 top-0 z-[1]"
+        style={{
+          height: "var(--feed-header-zone)",
+          background:
+            "linear-gradient(to bottom, #000 0%, #000 58%, rgba(0,0,0,0.92) 78%, transparent 100%)",
+        }}
+      />
+      {/* Soft readability scrim for tabs — gradient only, no backdrop-blur */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-36"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.82) 38%, rgba(0,0,0,0.42) 68%, rgba(0,0,0,0.08) 88%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.18) 42%, transparent 100%)",
         }}
       />
 
       <div
-        className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
+        className="relative z-[3] grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
-        {/* Opaque logo-slot mask — blocks feed card bleed-through in the old P mark area */}
-        <div className="relative z-[1] h-10 w-10 shrink-0 bg-black" aria-hidden />
+        <div className="h-10 w-10 shrink-0" aria-hidden />
         <nav className="flex items-center justify-center gap-3 overflow-hidden sm:gap-4">
           {FEED_TABS.map((tab) => (
             <button
@@ -95,7 +104,7 @@ export function FeedHeader({
         </button>
       </div>
       {showFilterPill && (
-        <div className="relative flex justify-center px-4 pb-2" data-no-drag>
+        <div className="relative z-[3] flex justify-center px-4 pb-2" data-no-drag>
           <button
             type="button"
             onPointerDown={stop}

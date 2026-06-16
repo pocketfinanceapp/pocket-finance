@@ -531,7 +531,7 @@ export function NewsFeed({
     : "transition-transform duration-300 ease-out";
 
   const hTransform = `translateX(calc(-${panelIndex} * 33.333% + ${dragX}px))`;
-  const vTransform = `translateY(calc(-${feedIndex} * ${FEED_VIEWPORT_HEIGHT} + ${dragY}px))`;
+  const vTransform = `translate3d(0, calc(-${feedIndex} * ${FEED_VIEWPORT_HEIGHT} + ${dragY}px), 0)`;
 
   const feedContent = (
     <div
@@ -556,11 +556,12 @@ export function NewsFeed({
 
           <div
             data-feed-column
-            className="relative isolate shrink-0 overflow-hidden"
+            className="relative isolate shrink-0 overflow-hidden bg-[#0a0a0a]"
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,
               touchAction: "none",
+              transform: "translateZ(0)",
             }}
           >
             <FeedHeader
@@ -615,10 +616,12 @@ export function NewsFeed({
               </div>
             ) : (
               <div
-                className={`w-full touch-none ${trackTransition}`}
+                className={`feed-card-stack w-full touch-none ${trackTransition}`}
                 style={{
                   height: `calc(${verticalFeedArticles.length} * ${FEED_VIEWPORT_HEIGHT})`,
                   transform: vTransform,
+                  WebkitBackfaceVisibility: "hidden",
+                  backfaceVisibility: "hidden",
                 }}
               >
                 {verticalFeedArticles.map((a, i) => (

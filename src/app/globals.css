@@ -8,6 +8,8 @@
   --pocket-blue: #3B6EF5;
   --app-vh: 100vh;
   --app-feed-vh: calc(100vh - 65px);
+  /* Header + safe-area band — cards must not paint above this line */
+  --feed-header-zone: calc(max(0.625rem, env(safe-area-inset-top)) + 3.625rem);
 }
 
 @supports (height: 100svh) {
@@ -15,6 +17,11 @@
     --app-vh: 100svh;
     --app-feed-vh: calc(100svh - 65px);
   }
+}
+
+.feed-card-stack {
+  -webkit-clip-path: inset(var(--feed-header-zone) 0 0 0);
+  clip-path: inset(var(--feed-header-zone) 0 0 0);
 }
 
 * {
