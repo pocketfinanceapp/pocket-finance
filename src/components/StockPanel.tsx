@@ -4,12 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import type { ChartRange, NewsArticle } from "@/lib/types";
+import type { ChartRange, Competitor, NewsArticle } from "@/lib/types";
 import {
   getChartPointsForPrice,
   getStockProfile,
   resolveChartBasePrice,
 } from "@/lib/stockData";
+import {
+  getMarketThemeConfig,
+  getRelatedAssetsFromTickers,
+  isMarketThemeTicker,
+} from "@/lib/marketThemes";
 import {
   getPrivateCompanyProfile,
   isPrivateTicker,
@@ -42,12 +47,47 @@ const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 
 const ETORO_URL = "https://www.etoro.com/";
 
+interface MetricItem {
+  label: string;
+  value: string;
+  explanationKey?: keyof typeof STOCK_METRIC_EXPLANATIONS;
+}
+
+function buildMetrics(ticker: string, stock: NonNullable<ReturnType<typeof getStockProfile>>): MetricItem[] {
+  if (isCryptoTicker(ticker)) {
+    return [
+      { label: "Market Cap", value: stock.marketCap, explanationKey: "Market Cap" },
+      { label: "24h Volume", value: stock.volume24h ?? "—", explanationKey: "24h Volume" },
+      {
+        label: "Circulating Supply",
+        value: stock.circulatingSupply ?? "—",
+        explanationKey: "Circulating Supply",
+      },
+    ];
+  }
+
+  return [
+    { label: "Market Cap", value: stock.marketCap, explanationKey: "Market Cap" },
+    { label: "Revenue (TTM)", value: stock.revenue, explanationKey: "Revenue (TTM)" },
+    { label: "P/E Ratio", value: stock.peRatio, explanationKey: "P/E Ratio" },
+    { label: "EPS (TTM)", value: stock.eps, explanationKey: "EPS (TTM)" },
+    { label: "EBITDA", value: stock.ebitda, explanationKey: "EBITDA" },
+    {
+      label: "Dividend Yield",
+      value: stock.dividendYield,
+      explanationKey: "Dividend Yield",
+    },
+  ];
+}
+
 export function StockPanel({ article, onBack }: StockPanelProps) {
   const ticker = getArticleDisplayTicker(article);
   const privateCompany = isPrivateTicker(ticker);
+  const marketTheme = isMarketThemeTicker(ticker);
   const privateProfile = privateCompany ? getPrivateCompanyProfile(ticker) : null;
-  const stock = privateCompany ? null : getStockProfile(ticker);
+  const stock = privateCompany || marketTheme ? null : getStockProfile(ticker);
   const meta = getTickerMetaBySymbol(ticker);
+  const themeConfig = marketTheme ? getMarketThemeConfig(ticker) : null;
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const saved = isArticleSaved(article.id);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
@@ -104,7 +144,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
     liveQuote?.changePercent ?? stock?.changePercent ?? 0;
   const hasMassiveQuote = liveQuote !== null;
   const isUp = displayChangePercent >= 0;
-  const showMarketData = !isNonStockMarketTicker(ticker);
+  const showMarketData = stock !== null && !isNonStockMarketTicker(ticker);
   const tradeLabel = isCryptoTicker(ticker)
     ? "Trade this crypto"
     : "Trade this stock";
@@ -125,6 +165,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         : [],
     [stock, showMarketData, chartBasePrice, ticker, chartRange]
   );
+  const metrics = stock ? buildMetrics(ticker, stock) : [];
+  const relatedTitle =
+    isCryptoTicker(ticker) || marketTheme ? "Related assets" : "Competitors";
+  const competitors = stock?.competitors ?? [];
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -139,8 +183,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
     setTimeout(() => setToast(null), 1500);
   };
 
+  const showTabs = !privateCompany && !marketTheme;
+
   return (
-    <div className="flex h-full flex-col bg-[#0a0a0a] text-white">
+    <div className="relative flex h-full flex-col bg-black text-white">
       <header className="shrink-0 px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-start justify-between">
           <button
@@ -188,14 +234,31 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         </div>
 
         {!privateCompany && (
-          <div className="mt-1">
-            <h1 className="text-xl font-bold">{ticker}</h1>
-            <p className="text-sm text-zinc-400">{meta.companyName}</p>
+          <div className="mt-2">
+            {marketTheme && themeConfig ? (
+              <>
+                <h1 className="text-[1.625rem] font-bold tracking-tight">
+                  {themeConfig.title}
+                </h1>
+                <p className="mt-0.5 text-sm text-zinc-500">
+                  {themeConfig.subtitle}
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-[1.625rem] font-bold tracking-tight">
+                  {ticker}
+                </h1>
+                <p className="mt-0.5 text-sm text-zinc-500">
+                  {meta.companyName}
+                </p>
+              </>
+            )}
           </div>
         )}
 
-        {!privateCompany && (
-          <nav className="mt-4 flex w-full border-b border-white/[0.08]">
+        {showTabs && (
+          <nav className="mt-5 flex w-full border-b border-white/[0.08]">
             {TABS.map((tab) => (
               <button
                 key={tab}
@@ -217,164 +280,98 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         )}
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-32">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]"
+      >
         {privateCompany && privateProfile ? (
           <PrivateCompanyProfileView
             ticker={ticker}
             profile={privateProfile}
             article={article}
           />
-        ) : activeTab === "Overview" && stock ? (
-          showMarketData ? (
-            <>
-              <section className="mt-4 shrink-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-3xl font-bold tracking-tight">
-                    {displayPrice.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    <span className="text-lg font-normal text-zinc-400">
-                      USD
-                    </span>
-                  </p>
-                  {hasMassiveQuote && (
-                    <div className="flex flex-col gap-0.5">
-                      <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                        Delayed
-                      </span>
-                      <span className="text-[10px] text-zinc-500">
-                        Prices delayed 15min
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <p
-                  className={`mt-1 text-sm font-medium ${
-                    isUp ? "text-pocket-green" : "text-pocket-red"
-                  }`}
-                >
-                  {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
-                  {Math.abs(displayChangePercent).toFixed(2)}%) Today
+        ) : marketTheme && themeConfig ? (
+          <MarketThemePanelView config={themeConfig} />
+        ) : activeTab === "Overview" && stock && showMarketData ? (
+          <>
+            <section className="mt-5 shrink-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-[2rem] font-bold leading-none tracking-tight">
+                  {displayPrice.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  <span className="text-base font-normal text-zinc-500">
+                    USD
+                  </span>
                 </p>
-              </section>
-
-              <a
-                href={`${ETORO_URL}?utm_source=pocket_finance`}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-no-drag
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
-                style={{ touchAction: "manipulation" }}
+                {hasMassiveQuote && (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      Delayed
+                    </span>
+                    <span className="text-[10px] text-zinc-500">
+                      Prices delayed 15min
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p
+                className={`mt-2 text-sm font-semibold ${
+                  isUp ? "text-pocket-green" : "text-pocket-red"
+                }`}
               >
-                {tradeLabel}
-                <ExternalLink className="h-4 w-4" />
-              </a>
-              <p className="mt-1.5 text-center text-[10px] text-zinc-600">
-                Affiliate partner · eToro
+                {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
+                {Math.abs(displayChangePercent).toFixed(2)}%) Today
               </p>
+            </section>
 
+            <a
+              href={`${ETORO_URL}?utm_source=pocket_finance`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-no-drag
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
+              style={{ touchAction: "manipulation" }}
+            >
+              {tradeLabel}
+              <ExternalLink className="h-4 w-4" />
+            </a>
+            <p className="mt-1.5 text-center text-[10px] text-zinc-600">
+              Affiliate partner · eToro
+            </p>
+
+            <div className="mt-6">
               <PriceChart
                 key={`${ticker}-${chartRange}-${Math.round(chartBasePrice)}`}
                 data={chartPoints}
                 range={chartRange}
                 onRangeChange={setChartRange}
               />
+            </div>
 
-              <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-7 border-t border-white/[0.08] pt-8">
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {metrics.map((metric) => (
                 <Stat
-                  label="Market Cap"
-                  value={stock.marketCap}
-                  onInfoClick={() =>
-                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["Market Cap"])
+                  key={metric.label}
+                  label={metric.label}
+                  value={metric.value}
+                  onInfoClick={
+                    metric.explanationKey
+                      ? () =>
+                          setActiveMetric(
+                            STOCK_METRIC_EXPLANATIONS[metric.explanationKey!]
+                          )
+                      : undefined
                   }
                 />
-                <Stat
-                  label="Revenue (TTM)"
-                  value={stock.revenue}
-                  onInfoClick={() =>
-                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["Revenue (TTM)"])
-                  }
-                />
-                <Stat
-                  label="P/E Ratio"
-                  value={stock.peRatio}
-                  onInfoClick={() =>
-                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["P/E Ratio"])
-                  }
-                />
-                <Stat
-                  label="EPS (TTM)"
-                  value={stock.eps}
-                  onInfoClick={() =>
-                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["EPS (TTM)"])
-                  }
-                />
-                <Stat
-                  label="EBITDA"
-                  value={stock.ebitda}
-                  onInfoClick={() =>
-                    setActiveMetric(STOCK_METRIC_EXPLANATIONS.EBITDA)
-                  }
-                />
-                <Stat
-                  label="Dividend Yield"
-                  value={stock.dividendYield}
-                  onInfoClick={() =>
-                    setActiveMetric(STOCK_METRIC_EXPLANATIONS["Dividend Yield"])
-                  }
-                />
-              </div>
+              ))}
+            </div>
 
-              {stock.competitors.length > 0 && (
-                <div className="mt-8">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-semibold">Competitors</h2>
-                    <span className="bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-sm font-medium text-transparent">
-                      View all
-                    </span>
-                  </div>
-                  <ul className="mt-3 divide-y divide-white/[0.08]">
-                    {stock.competitors.map((c) => (
-                      <li
-                        key={c.ticker}
-                        className="flex items-center justify-between py-3.5"
-                      >
-                        <div className="flex items-center gap-3">
-                          <CompanyLogo
-                            ticker={c.ticker}
-                            color={c.color}
-                            size={36}
-                          />
-                          <div>
-                            <p className="font-semibold">{c.ticker}</p>
-                            <p className="text-xs text-zinc-500">{c.name}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">{c.price.toFixed(2)}</p>
-                          <p
-                            className={`text-xs font-medium ${
-                              c.changePercent >= 0
-                                ? "text-pocket-green"
-                                : "text-pocket-red"
-                            }`}
-                          >
-                            {c.changePercent >= 0 ? "▲" : "▼"}{" "}
-                            {Math.abs(c.changePercent).toFixed(2)}%
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="mt-4 text-sm text-zinc-500">
-              Market data not available for this ticker
-            </p>
-          )
+            {competitors.length > 0 && (
+              <AssetList title={relatedTitle} assets={competitors} />
+            )}
+          </>
         ) : (
           <div className="flex h-48 items-center justify-center text-zinc-500">
             <p className="text-sm">{activeTab} — coming soon</p>
@@ -383,7 +380,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
       </div>
 
       {toast && (
-        <div className="pointer-events-none absolute bottom-28 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm text-white">
+        <div className="pointer-events-none absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm text-white">
           {toast}
         </div>
       )}
@@ -392,6 +389,65 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         term={activeMetric}
         onClose={() => setActiveMetric(null)}
       />
+    </div>
+  );
+}
+
+function MarketThemePanelView({
+  config,
+}: {
+  config: ReturnType<typeof getMarketThemeConfig>;
+}) {
+  const relatedAssets = getRelatedAssetsFromTickers(config.relatedTickers);
+
+  return (
+    <div className="mt-5">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-6 text-center">
+        <p className="text-sm leading-relaxed text-zinc-400">{config.message}</p>
+      </div>
+
+      {relatedAssets.length > 0 && (
+        <AssetList title="Related assets" assets={relatedAssets} />
+      )}
+    </div>
+  );
+}
+
+function AssetList({ title, assets }: { title: string; assets: Competitor[] }) {
+  return (
+    <div className="mt-8">
+      <h2 className="font-semibold">{title}</h2>
+      <ul className="mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]">
+        {assets.map((asset, index) => (
+          <li
+            key={asset.ticker}
+            className={`flex items-center justify-between px-4 py-3.5 ${
+              index < assets.length - 1 ? "border-b border-white/[0.06]" : ""
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <CompanyLogo ticker={asset.ticker} color={asset.color} size={36} />
+              <div>
+                <p className="font-semibold">{asset.ticker}</p>
+                <p className="text-xs text-zinc-500">{asset.name}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-semibold">{asset.price.toFixed(2)}</p>
+              <p
+                className={`text-xs font-medium ${
+                  asset.changePercent >= 0
+                    ? "text-pocket-green"
+                    : "text-pocket-red"
+                }`}
+              >
+                {asset.changePercent >= 0 ? "▲" : "▼"}{" "}
+                {Math.abs(asset.changePercent).toFixed(2)}%
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -542,7 +598,7 @@ function Stat({
   onInfoClick?: () => void;
 }) {
   return (
-    <div>
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3">
       <div className="flex items-center gap-1">
         <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
           {label}

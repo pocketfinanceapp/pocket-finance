@@ -1,4 +1,5 @@
 import { isPrivateTicker } from "./privateTickers";
+import { isMarketThemeTicker } from "./marketThemes";
 import { getTickerMetaBySymbol } from "./tickerMap";
 
 const NON_LIVE_TICKERS = new Set([
@@ -7,17 +8,9 @@ const NON_LIVE_TICKERS = new Set([
   "OIL",
   "GOLD",
   "FED",
+  "RATES",
+  "ENERGY",
   "MARKET",
-  "SPX",
-  "QQQ",
-  "DJI",
-]);
-
-const WATCHLIST_NO_PRICE_TICKERS = new Set([
-  "MARKET",
-  "FED",
-  "OIL",
-  "GOLD",
   "SPX",
   "QQQ",
   "DJI",
@@ -25,7 +18,7 @@ const WATCHLIST_NO_PRICE_TICKERS = new Set([
 
 /** Thematic / index tickers with no real tradeable market price */
 export function isNonStockMarketTicker(ticker: string): boolean {
-  return WATCHLIST_NO_PRICE_TICKERS.has(ticker.toUpperCase());
+  return isMarketThemeTicker(ticker);
 }
 
 export function isCryptoTicker(ticker: string): boolean {
@@ -37,7 +30,7 @@ export function isCryptoTicker(ticker: string): boolean {
 export function shouldShowWatchlistPrice(ticker: string): boolean {
   const upper = ticker.toUpperCase();
   if (isPrivateTicker(upper)) return false;
-  if (WATCHLIST_NO_PRICE_TICKERS.has(upper)) return false;
+  if (isMarketThemeTicker(upper)) return false;
 
   if (upper === "BTC" || upper === "ETH") return true;
 

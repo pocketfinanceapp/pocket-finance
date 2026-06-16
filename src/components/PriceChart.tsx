@@ -26,14 +26,12 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
   const fillGradId = `chartFill-${uid}`;
 
   const prices = data.map((d) => d.price);
-  const min =
-    prices.length > 0 ? Math.min(...prices) * 0.998 : 0;
-  const max =
-    prices.length > 0 ? Math.max(...prices) * 1.002 : 1;
+  const min = prices.length > 0 ? Math.min(...prices) * 0.998 : 0;
+  const max = prices.length > 0 ? Math.max(...prices) * 1.002 : 1;
 
   return (
-    <div className="mt-4">
-      <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+      <div className="flex gap-1.5 overflow-x-auto pb-3 scrollbar-hide">
         {RANGES.map((r) => (
           <button
             key={r}
@@ -50,16 +48,21 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
         ))}
       </div>
 
-      <div className="mt-2 h-44 w-full">
+      <div className="h-48 w-full">
         {prices.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-sm text-zinc-500">
-            Chart unavailable
+          <div className="flex h-full flex-col items-center justify-center rounded-xl border border-white/[0.06] bg-black/20 px-4 text-center">
+            <p className="text-sm font-medium text-zinc-400">
+              Chart data unavailable
+            </p>
+            <p className="mt-1.5 max-w-[240px] text-xs leading-relaxed text-zinc-600">
+              We couldn&apos;t load live price history for this asset.
+            </p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
+              margin={{ top: 8, right: 4, left: 0, bottom: 4 }}
             >
               <defs>
                 <linearGradient id={lineGradId} x1="0%" y1="0%" x2="100%" y2="0%">

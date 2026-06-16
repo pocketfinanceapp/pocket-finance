@@ -41,10 +41,11 @@ interface NewsFeedProps {
   /** When true, shell + bottom nav are provided by TabAppShell */
   embedded?: boolean;
   showAddToHomeBanner?: boolean;
-  /** Called when the article panel opens or closes (embedded shell hides bottom nav) */
-  onArticlePanelChange?: (open: boolean) => void;
+  /** Called when stock or article side panel opens or closes (embedded shell hides bottom nav) */
+  onSidePanelChange?: (open: boolean) => void;
 }
 
+const PANEL_STOCK = 0;
 const PANEL_FEED = 1;
 const PANEL_ARTICLE = 2;
 const AXIS_LOCK = 6;
@@ -59,7 +60,7 @@ export function NewsFeed({
   initialTrendingArticles = [],
   embedded = false,
   showAddToHomeBanner = true,
-  onArticlePanelChange,
+  onSidePanelChange,
 }: NewsFeedProps) {
   const [allArticles] = useState(
     initialArticles.length > 0 ? initialArticles : DEMO_ARTICLES
@@ -248,8 +249,10 @@ export function NewsFeed({
   }, [panelIndex, article]);
 
   useEffect(() => {
-    onArticlePanelChange?.(panelIndex === PANEL_ARTICLE);
-  }, [panelIndex, onArticlePanelChange]);
+    onSidePanelChange?.(
+      panelIndex === PANEL_STOCK || panelIndex === PANEL_ARTICLE
+    );
+  }, [panelIndex, onSidePanelChange]);
 
   const goToPanel = useCallback((index: number) => {
     setPanelIndex(index);
@@ -540,7 +543,9 @@ export function NewsFeed({
   const hTransform = `translateX(calc(-${panelIndex} * 33.333% + ${dragX}px))`;
   const vTransform = `translate3d(0, calc(-${feedIndex} * ${FEED_VIEWPORT_HEIGHT} + ${dragY}px), 0)`;
   const trackHeight =
-    panelIndex === PANEL_ARTICLE ? APP_VIEWPORT_HEIGHT : FEED_VIEWPORT_HEIGHT;
+    panelIndex === PANEL_STOCK || panelIndex === PANEL_ARTICLE
+      ? APP_VIEWPORT_HEIGHT
+      : FEED_VIEWPORT_HEIGHT;
 
   const feedContent = (
     <div
@@ -687,7 +692,7 @@ export function NewsFeed({
   }
 
   return (
-    <MobilePageShell activeTab="home" hideBottomNav={panelIndex === PANEL_ARTICLE}>
+    <MobilePageShell activeTab="home" hideBottomNav={panelIndex === PANEL_STOCK || panelIndex === PANEL_ARTICLE}>
       {feedContent}
     </MobilePageShell>
   );

@@ -35,4 +35,14 @@ export const STOCK_METRIC_EXPLANATIONS: Record<string, StockMetricExplanation> =
       explanation:
         "Dividend Yield shows how much a company pays out to shareholders each year as a percentage of its share price. A 2% yield means for every $100 of shares you own, you receive $2 per year in dividends.",
     },
+    "24h Volume": {
+      displayName: "24h Volume",
+      explanation:
+        "24h Volume is the total value of this asset traded across exchanges in the last 24 hours. Higher volume usually means more liquidity and stronger market interest.",
+    },
+    "Circulating Supply": {
+      displayName: "Circulating Supply",
+      explanation:
+        "Circulating Supply is the number of coins or tokens currently available and actively trading in the market. It helps investors gauge scarcity and potential inflation from new issuance.",
+    },
   };

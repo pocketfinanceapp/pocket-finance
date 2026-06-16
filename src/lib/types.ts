@@ -114,6 +114,8 @@ export interface StockProfile {
   eps: string;
   ebitda: string;
   dividendYield: string;
+  volume24h?: string;
+  circulatingSupply?: string;
   competitors: Competitor[];
   chartData: Record<ChartRange, ChartPoint[]>;
 }

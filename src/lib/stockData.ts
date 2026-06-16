@@ -177,6 +177,8 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     eps: "N/A",
     ebitda: "—",
     dividendYield: "—",
+    volume24h: "$42.6B",
+    circulatingSupply: "19.8M BTC",
     competitors: [
       { ticker: "ETH", name: "Ethereum", price: 3421.8, changePercent: 2.1, color: "#627eea" },
       { ticker: "COIN", name: "Coinbase Global", price: 245.6, changePercent: 1.4, color: "#0052ff" },
@@ -260,6 +262,8 @@ function demoFinancials(seed: string, isCrypto: boolean) {
       eps: "N/A",
       ebitda: "—",
       dividendYield: "—",
+      volume24h: `$${pseudoRandom(`${seed}-vol`, 8, 68).toFixed(1)}B`,
+      circulatingSupply: `${pseudoRandom(`${seed}-sup`, 80, 120).toFixed(1)}M ${seed}`,
     };
   }
 
@@ -298,6 +302,12 @@ function withDemoFinancials(
     dividendYield: isMissingFinancial(profile.dividendYield)
       ? demo.dividendYield
       : profile.dividendYield,
+    volume24h:
+      profile.volume24h ??
+      ("volume24h" in demo ? demo.volume24h : undefined),
+    circulatingSupply:
+      profile.circulatingSupply ??
+      ("circulatingSupply" in demo ? demo.circulatingSupply : undefined),
   };
 }
 
