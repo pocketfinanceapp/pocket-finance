@@ -47,6 +47,9 @@ const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 
 const ETORO_URL = "https://www.etoro.com/";
 
+const STOCK_PANEL_SCROLL_PADDING =
+  "calc(10rem + max(1.25rem, env(safe-area-inset-bottom)))";
+
 interface MetricItem {
   label: string;
   value: string;
@@ -187,7 +190,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 
   return (
     <div className="relative flex h-full flex-col bg-black text-white">
-      <header className="shrink-0 px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <header className="shrink-0 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1">
         <div className="flex items-start justify-between">
           <button
             type="button"
@@ -232,57 +235,34 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             </button>
           </div>
         </div>
-
-        {!privateCompany && (
-          <div className="mt-2">
-            {marketTheme && themeConfig ? (
-              <>
-                <h1 className="text-[1.625rem] font-bold tracking-tight">
-                  {themeConfig.title}
-                </h1>
-                <p className="mt-0.5 text-sm text-zinc-500">
-                  {themeConfig.subtitle}
-                </p>
-              </>
-            ) : (
-              <>
-                <h1 className="text-[1.625rem] font-bold tracking-tight">
-                  {ticker}
-                </h1>
-                <p className="mt-0.5 text-sm text-zinc-500">
-                  {meta.companyName}
-                </p>
-              </>
-            )}
-          </div>
-        )}
-
-        {showTabs && (
-          <nav className="mt-5 flex w-full border-b border-white/[0.08]">
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                data-no-drag
-                onPointerDown={stop}
-                onClick={() => setActiveTab(tab)}
-                className={`relative flex-1 pb-2.5 text-center text-sm font-medium ${
-                  activeTab === tab ? "text-white" : "text-zinc-500"
-                }`}
-              >
-                {tab}
-                {activeTab === tab && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
-                )}
-              </button>
-            ))}
-          </nav>
-        )}
       </header>
+
+      {showTabs && (
+        <nav className="z-10 flex w-full shrink-0 border-b border-white/[0.08] bg-black px-4">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              data-no-drag
+              onPointerDown={stop}
+              onClick={() => setActiveTab(tab)}
+              className={`relative flex-1 pb-2.5 pt-1 text-center text-sm font-medium ${
+                activeTab === tab ? "text-white" : "text-zinc-500"
+              }`}
+            >
+              {tab}
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
+              )}
+            </button>
+          ))}
+        </nav>
+      )}
 
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3"
+        style={{ paddingBottom: STOCK_PANEL_SCROLL_PADDING }}
       >
         {privateCompany && privateProfile ? (
           <PrivateCompanyProfileView
@@ -291,10 +271,19 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             article={article}
           />
         ) : marketTheme && themeConfig ? (
-          <MarketThemePanelView config={themeConfig} />
-        ) : activeTab === "Overview" && stock && showMarketData ? (
           <>
-            <section className="mt-5 shrink-0">
+            <StockIdentityHeader
+              title={themeConfig.title}
+              subtitle={themeConfig.subtitle}
+            />
+            <MarketThemePanelView config={themeConfig} />
+          </>
+        ) : showTabs && stock ? (
+          <>
+            <StockIdentityHeader title={ticker} subtitle={meta.companyName} />
+            {activeTab === "Overview" && showMarketData ? (
+              <>
+                <section className="mt-4 shrink-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-[2rem] font-bold leading-none tracking-tight">
                   {displayPrice.toLocaleString("en-US", {
@@ -341,7 +330,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
               Affiliate partner · eToro
             </p>
 
-            <div className="mt-6">
+            <div className="mt-7">
               <PriceChart
                 key={`${ticker}-${chartRange}-${Math.round(chartBasePrice)}`}
                 data={chartPoints}
@@ -371,10 +360,16 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             {competitors.length > 0 && (
               <AssetList title={relatedTitle} assets={competitors} />
             )}
+              </>
+            ) : (
+              <div className="flex h-48 items-center justify-center text-zinc-500">
+                <p className="text-sm">{activeTab} — coming soon</p>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex h-48 items-center justify-center text-zinc-500">
-            <p className="text-sm">{activeTab} — coming soon</p>
+            <p className="text-sm">Overview — coming soon</p>
           </div>
         )}
       </div>
@@ -393,6 +388,21 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   );
 }
 
+function StockIdentityHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div>
+      <h1 className="text-[1.625rem] font-bold tracking-tight">{title}</h1>
+      <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p>
+    </div>
+  );
+}
+
 function MarketThemePanelView({
   config,
 }: {
@@ -401,7 +411,7 @@ function MarketThemePanelView({
   const relatedAssets = getRelatedAssetsFromTickers(config.relatedTickers);
 
   return (
-    <div className="mt-5">
+    <div className="mt-4">
       <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-6 text-center">
         <p className="text-sm leading-relaxed text-zinc-400">{config.message}</p>
       </div>
