@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useApp } from "@/context/AppContext";
@@ -9,6 +9,7 @@ import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { getArticleSubheading } from "@/lib/articlePreview";
 import { ArticleAISummary } from "./ArticleAISummary";
+import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { MarketBadge } from "./MarketBadge";
 import { SourceBadge } from "./SourceBadge";
 
@@ -24,19 +25,19 @@ interface ArticlePanelProps {
   onBack: () => void;
 }
 
-function ArticleHeroImage({ imageUrl }: { imageUrl: string }) {
-  const usableInitial = hasUsableFeedImage(imageUrl);
+function ArticleHeroImage({ article }: { article: NewsArticle }) {
+  const usableInitial = hasUsableFeedImage(article.imageUrl);
   const [showImage, setShowImage] = useState(usableInitial);
-  const [imgSrc, setImgSrc] = useState(usableInitial ? imageUrl : "");
+  const [imgSrc, setImgSrc] = useState(usableInitial ? article.imageUrl : "");
 
   useEffect(() => {
-    const usable = hasUsableFeedImage(imageUrl);
+    const usable = hasUsableFeedImage(article.imageUrl);
     setShowImage(usable);
-    setImgSrc(usable ? imageUrl : "");
-  }, [imageUrl]);
+    setImgSrc(usable ? article.imageUrl : "");
+  }, [article.id, article.imageUrl]);
 
   return (
-    <div className="relative mt-6 aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#1a1a1a]">
+    <div className="relative mt-3 aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#0a0a0a]">
       {showImage && imgSrc ? (
         <Image
           src={imgSrc}
@@ -51,9 +52,7 @@ function ArticleHeroImage({ imageUrl }: { imageUrl: string }) {
           }}
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center">
-          <span className="text-xs text-zinc-600">No image available</span>
-        </div>
+        <FeedCardFallbackBackground article={article} />
       )}
     </div>
   );
@@ -63,6 +62,11 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const saved = isArticleSaved(article.id);
   const displaySubheading = getArticleSubheading(article.subheading);
+  const scrollRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [article.id]);
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -75,8 +79,8 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
   };
 
   return (
-    <div className="flex h-full flex-col bg-black text-white">
-      <header className="flex shrink-0 items-center justify-between px-5 py-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <div className="relative flex h-full flex-col bg-black text-white">
+      <header className="flex shrink-0 items-center justify-between px-5 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <button
           type="button"
           data-no-drag
@@ -103,20 +107,23 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
         </button>
       </header>
 
-      <article className="flex-1 overflow-y-auto px-5 pb-32">
+      <article
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(5.25rem+max(1rem,env(safe-area-inset-bottom)))]"
+      >
         <MarketBadge market={article.market} />
 
-        <h1 className="mt-4 text-[1.75rem] font-bold leading-[1.2] tracking-tight">
+        <h1 className="mt-2 text-[1.75rem] font-bold leading-[1.2] tracking-tight">
           {article.headline}
         </h1>
 
         {displaySubheading ? (
-          <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
+          <p className="mt-2 text-[15px] leading-snug text-zinc-400">
             {displaySubheading}
           </p>
         ) : null}
 
-        <div className={`${displaySubheading ? "mt-4" : "mt-3"} opacity-80`}>
+        <div className="mt-2 opacity-80">
           <SourceBadge
             sourceName={article.sourceName}
             sourceId={article.sourceId}
@@ -127,36 +134,46 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           />
         </div>
 
-        <ArticleHeroImage imageUrl={article.imageUrl} />
+        <ArticleHeroImage article={article} />
 
-        <div className="mt-8 flex flex-wrap gap-2">
-          {article.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-zinc-300"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+        {article.tags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {article.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-1.5 text-sm font-medium text-zinc-300"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         <ArticleAISummary
           articleId={article.id}
           headline={article.headline}
           snippet={articleSnippet(article)}
         />
+      </article>
 
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/95 to-transparent pt-6"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2"
+        data-no-drag
+      >
         <a
           href={article.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          data-no-drag
-          className="mt-10 block w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] p-4 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
+          className="block w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] p-3.5 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
           style={{ touchAction: "manipulation" }}
         >
           Read full article →
         </a>
-      </article>
+      </div>
     </div>
   );
 }

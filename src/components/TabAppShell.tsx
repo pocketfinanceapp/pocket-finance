@@ -30,6 +30,7 @@ function TabPanels({
   const { setMarketFilters, ensureMarketsLoaded, ensureWatchlistLoaded } =
     useApp();
   const [fadeKey, setFadeKey] = useState(0);
+  const [articlePanelOpen, setArticlePanelOpen] = useState(false);
 
   useEffect(() => {
     ensureMarketsLoaded();
@@ -50,7 +51,7 @@ function TabPanels({
   );
 
   return (
-    <MobilePageShell activeTab={navTab}>
+    <MobilePageShell activeTab={navTab} hideBottomNav={articlePanelOpen}>
       <div className="relative h-full w-full">
         <TabPanel active={activeTab === "home"} fadeKey={fadeKey}>
           <FeedErrorBoundary>
@@ -59,6 +60,7 @@ function TabPanels({
               initialTrendingArticles={initialTrendingArticles}
               embedded
               showAddToHomeBanner={activeTab === "home"}
+              onArticlePanelChange={setArticlePanelOpen}
             />
           </FeedErrorBoundary>
         </TabPanel>

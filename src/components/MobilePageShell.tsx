@@ -6,13 +6,18 @@ import { BottomNav, type NavTab } from "./BottomNav";
 interface MobilePageShellProps {
   activeTab: NavTab;
   children: React.ReactNode;
+  /** Hide bottom nav and expand content to full viewport (e.g. article panel open) */
+  hideBottomNav?: boolean;
 }
 
 /** Full-screen shell — feed area above a fixed 65px bottom nav */
 export function MobilePageShell({
   activeTab,
   children,
+  hideBottomNav = false,
 }: MobilePageShellProps) {
+  const contentHeight = hideBottomNav ? APP_VIEWPORT_HEIGHT : FEED_VIEWPORT_HEIGHT;
+
   return (
     <div
       className="relative mx-auto w-full max-w-mobile overflow-hidden bg-black"
@@ -20,11 +25,11 @@ export function MobilePageShell({
     >
       <div
         className="absolute inset-x-0 top-0 overflow-hidden bg-black"
-        style={{ height: FEED_VIEWPORT_HEIGHT }}
+        style={{ height: contentHeight }}
       >
         {children}
       </div>
-      <BottomNav active={activeTab} />
+      {!hideBottomNav && <BottomNav active={activeTab} />}
     </div>
   );
 }

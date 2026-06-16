@@ -11,7 +11,7 @@ import {
 } from "@/lib/filterArticles";
 import { appPath } from "@/lib/appPaths";
 import { isInteractiveTarget } from "@/lib/gesture";
-import { FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
+import { APP_VIEWPORT_HEIGHT, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 import {
   addRecentlyRead,
   loadFavouriteTopics,
@@ -41,6 +41,8 @@ interface NewsFeedProps {
   /** When true, shell + bottom nav are provided by TabAppShell */
   embedded?: boolean;
   showAddToHomeBanner?: boolean;
+  /** Called when the article panel opens or closes (embedded shell hides bottom nav) */
+  onArticlePanelChange?: (open: boolean) => void;
 }
 
 const PANEL_FEED = 1;
@@ -57,6 +59,7 @@ export function NewsFeed({
   initialTrendingArticles = [],
   embedded = false,
   showAddToHomeBanner = true,
+  onArticlePanelChange,
 }: NewsFeedProps) {
   const [allArticles] = useState(
     initialArticles.length > 0 ? initialArticles : DEMO_ARTICLES
@@ -243,6 +246,10 @@ export function NewsFeed({
     }
     prevPanelIndex.current = panelIndex;
   }, [panelIndex, article]);
+
+  useEffect(() => {
+    onArticlePanelChange?.(panelIndex === PANEL_ARTICLE);
+  }, [panelIndex, onArticlePanelChange]);
 
   const goToPanel = useCallback((index: number) => {
     setPanelIndex(index);
@@ -532,17 +539,19 @@ export function NewsFeed({
 
   const hTransform = `translateX(calc(-${panelIndex} * 33.333% + ${dragX}px))`;
   const vTransform = `translate3d(0, calc(-${feedIndex} * ${FEED_VIEWPORT_HEIGHT} + ${dragY}px), 0)`;
+  const trackHeight =
+    panelIndex === PANEL_ARTICLE ? APP_VIEWPORT_HEIGHT : FEED_VIEWPORT_HEIGHT;
 
   const feedContent = (
     <div
       className="relative overflow-hidden bg-[#0a0a0a]"
-      style={{ height: FEED_VIEWPORT_HEIGHT }}
+      style={{ height: trackHeight }}
     >
         <div
           ref={trackRef}
           className={`flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""}`}
           style={{
-            height: FEED_VIEWPORT_HEIGHT,
+            height: trackHeight,
             width: "300%",
             transform: hTransform,
           }}
@@ -678,6 +687,8 @@ export function NewsFeed({
   }
 
   return (
-    <MobilePageShell activeTab="home">{feedContent}</MobilePageShell>
+    <MobilePageShell activeTab="home" hideBottomNav={panelIndex === PANEL_ARTICLE}>
+      {feedContent}
+    </MobilePageShell>
   );
 }

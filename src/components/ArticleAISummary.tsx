@@ -60,29 +60,29 @@ export function ArticleAISummary({
 
   return (
     <div
-      className="mt-8 mb-4 rounded-xl border p-4"
+      className="mt-5 mb-1 rounded-xl border p-3"
       style={{
         backgroundColor: "rgba(255,255,255,0.03)",
         borderColor: "rgba(0,198,198,0.15)",
       }}
     >
       {loading ? (
-        <div className="space-y-3" aria-hidden>
-          <div className="h-5 w-24 animate-pulse rounded-full bg-[#00C6C6]/10" />
-          <div className="h-4 w-full animate-pulse rounded bg-white/[0.08]" />
-          <div className="h-4 w-[92%] animate-pulse rounded bg-white/[0.08]" />
-          <div className="h-4 w-[88%] animate-pulse rounded bg-white/[0.08]" />
+        <div className="space-y-2.5" aria-hidden>
+          <div className="h-4 w-24 animate-pulse rounded-full bg-[#00C6C6]/10" />
+          <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
+          <div className="h-3.5 w-[92%] animate-pulse rounded bg-white/[0.08]" />
+          <div className="h-3.5 w-[88%] animate-pulse rounded bg-white/[0.08]" />
         </div>
       ) : (
         <>
-          <span className="inline-block rounded-full bg-[#00C6C6]/10 px-2.5 py-1 text-xs font-medium text-[#00C6C6]">
+          <span className="inline-block rounded-full bg-[#00C6C6]/10 px-2 py-0.5 text-[11px] font-medium text-[#00C6C6]">
             AI Briefing
           </span>
-          <ul className="mt-3">
+          <ul className="mt-2">
             {bullets?.map((bullet) => (
               <li
                 key={bullet}
-                className="mb-3 border-l-[3px] border-[#00C6C6] pl-3 text-sm font-normal leading-relaxed text-white last:mb-0"
+                className="mb-2 border-l-[3px] border-[#00C6C6] pl-2.5 text-sm font-normal leading-snug text-white last:mb-0"
               >
                 {stripLeadingEmoji(bullet)}
               </li>
