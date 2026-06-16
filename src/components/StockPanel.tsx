@@ -47,8 +47,9 @@ const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 
 const ETORO_URL = "https://www.etoro.com/";
 
-const STOCK_PANEL_SCROLL_PADDING =
-  "calc(10rem + max(1.25rem, env(safe-area-inset-bottom)))";
+/** Shared bottom clearance for all Stock Panel scroll variants (Safari toolbar + tap room). */
+const STOCK_PANEL_BOTTOM_CLEARANCE =
+  "calc(14rem + max(1.25rem, env(safe-area-inset-bottom)))";
 
 interface MetricItem {
   label: string;
@@ -270,7 +271,6 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
       <div
         ref={scrollRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
-        style={{ paddingBottom: STOCK_PANEL_SCROLL_PADDING }}
       >
         {privateCompany && privateProfile ? (
           <PrivateCompanyProfileView
@@ -374,6 +374,11 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             <p className="text-sm">Overview — coming soon</p>
           </div>
         )}
+        <div
+          aria-hidden
+          className="shrink-0"
+          style={{ minHeight: STOCK_PANEL_BOTTOM_CLEARANCE }}
+        />
       </div>
 
       {toast && (
