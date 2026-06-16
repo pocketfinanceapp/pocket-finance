@@ -66,7 +66,10 @@ function TabPanels({
         </TabPanel>
 
         <TabPanel active={activeTab === "markets"} fadeKey={fadeKey}>
-          <MarketsPage onOpenMarketFeed={openMarketFeed} />
+          <MarketsPage
+            onOpenMarketFeed={openMarketFeed}
+            articles={initialArticles}
+          />
         </TabPanel>
 
         <TabPanel active={activeTab === "browse"} fadeKey={fadeKey}>

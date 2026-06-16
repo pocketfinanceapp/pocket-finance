@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import {
   GLOBAL_INDEX_REGIONS,
   GLOBAL_INDEXES,
@@ -14,7 +15,7 @@ export function GlobalIndexesSection() {
   const indexes = GLOBAL_INDEXES[region];
 
   return (
-    <section className="mt-4">
+    <section className="mt-6">
       <h2 className="px-4 pb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
         Global Indexes
       </h2>
@@ -23,39 +24,57 @@ export function GlobalIndexesSection() {
         active={region}
         onChange={setRegion}
       />
-      <ul className="mt-1 max-h-[280px] overflow-y-auto overscroll-contain">
-        {indexes.map((index) => {
-          const up = index.changePercent >= 0;
-          const borderColor = up ? "#34c759" : "#ff453a";
-          const textColor = up ? "text-[#34c759]" : "text-[#ff453a]";
+      <div className="mx-4 mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+        <ul>
+          {indexes.map((index, i) => {
+            const up = index.changePercent >= 0;
+            const textColor = up ? "text-[#34c759]" : "text-[#ff453a]";
 
-          return (
-            <li
-              key={index.id}
-              className="flex items-center gap-3 border-b border-l-[3px] border-white/[0.06] py-3 pl-3 pr-4"
-              style={{ borderLeftColor: borderColor }}
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-semibold text-white">
-                  {index.name}
-                </p>
-                <p className="truncate text-[11px] text-zinc-500">
-                  {index.fullName}
-                </p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-[14px] tabular-nums text-white">
-                  {formatIndexValue(index.value)}
-                </p>
-                <p className={`text-[12px] font-medium tabular-nums ${textColor}`}>
-                  {up ? "+" : ""}
-                  {index.changePercent.toFixed(2)}%
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+            return (
+              <li
+                key={index.id}
+                className={`flex items-center gap-3 px-4 py-3.5 ${
+                  i < indexes.length - 1 ? "border-b border-white/[0.06]" : ""
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-semibold text-white">
+                    {index.name}
+                  </p>
+                  <p className="mt-0.5 truncate text-[11px] text-zinc-500">
+                    {index.fullName}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[14px] tabular-nums text-white">
+                    {formatIndexValue(index.value)}
+                  </p>
+                  <p
+                    className={`mt-0.5 text-[12px] font-medium tabular-nums ${textColor}`}
+                  >
+                    {up ? "+" : ""}
+                    {index.changePercent.toFixed(2)}%
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <SectionFooter label="View all indexes" />
+      </div>
     </section>
+  );
+}
+
+function SectionFooter({ label }: { label: string }) {
+  return (
+    <button
+      type="button"
+      data-no-drag
+      className="flex w-full items-center justify-center gap-1 border-t border-white/[0.06] py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white"
+    >
+      {label}
+      <ChevronRight className="h-4 w-4" />
+    </button>
   );
 }
