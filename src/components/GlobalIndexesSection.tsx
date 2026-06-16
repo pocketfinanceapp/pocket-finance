@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
 import {
   GLOBAL_INDEX_REGIONS,
   GLOBAL_INDEXES,
@@ -60,21 +59,7 @@ export function GlobalIndexesSection() {
             );
           })}
         </ul>
-        <SectionFooter label="View all indexes" />
       </div>
     </section>
-  );
-}
-
-function SectionFooter({ label }: { label: string }) {
-  return (
-    <button
-      type="button"
-      data-no-drag
-      className="flex w-full items-center justify-center gap-1 border-t border-white/[0.06] py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white"
-    >
-      {label}
-      <ChevronRight className="h-4 w-4" />
-    </button>
   );
 }

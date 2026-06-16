@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronRight } from "lucide-react";
 import {
   TOP_MOVER_TABS,
   formatStockPrice,
@@ -35,14 +34,6 @@ export function TopMoversSection() {
             />
           ))}
         </ul>
-        <button
-          type="button"
-          data-no-drag
-          className="flex w-full items-center justify-center gap-1 border-t border-white/[0.06] py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white"
-        >
-          View all
-          <ChevronRight className="h-4 w-4" />
-        </button>
       </div>
     </section>
   );
