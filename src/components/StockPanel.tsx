@@ -264,7 +264,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         </header>
 
         {showTabs && (
-          <nav className="relative flex w-full border-b border-white/[0.08] bg-black px-4 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-2 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
+          <nav className="relative flex w-full border-b border-white/[0.08] bg-black px-4 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
             {TABS.map((tab) => (
               <button
                 key={tab}
