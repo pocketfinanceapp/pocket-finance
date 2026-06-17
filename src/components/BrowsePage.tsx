@@ -56,113 +56,135 @@ const CATEGORY_TOKENS: Record<BrowseCategory, CategoryToken> = {
     description: "Stocks, indices, and market-moving news",
     Icon: TrendingUp,
     accent: "#60a5fa",
-    tileBg: "rgba(59,130,246,.13)",
+    tileBg: "rgba(59,130,246,.10)",
   },
   Technology: {
     description: "Tech earnings, innovation, and digital trends",
     Icon: Cpu,
     accent: "#a78bfa",
-    tileBg: "rgba(139,92,246,.13)",
+    tileBg: "rgba(139,92,246,.10)",
   },
   Economy: {
     description: "Macro trends, policy, and economic insights",
     Icon: Globe,
     accent: "#34d399",
-    tileBg: "rgba(52,211,153,.13)",
+    tileBg: "rgba(52,211,153,.10)",
   },
   Crypto: {
     description: "Digital assets, blockchain, and crypto markets",
     Icon: Bitcoin,
-    accent: "#71717a",
-    tileBg: "rgba(113,113,122,.10)",
+    accent: "#52525b",
+    tileBg: "rgba(82,82,91,.08)",
   },
   Energy: {
     description: "Oil, gas, and clean energy market updates",
     Icon: Zap,
-    accent: "#fbbf24",
-    tileBg: "rgba(251,191,36,.13)",
+    accent: "#f59e0b",
+    tileBg: "rgba(245,158,11,.10)",
   },
   Healthcare: {
     description: "Healthcare industry, biotech, and pharma",
     Icon: Activity,
     accent: "#f87171",
-    tileBg: "rgba(248,113,113,.13)",
+    tileBg: "rgba(248,113,113,.10)",
   },
   "Real Estate": {
     description: "Property markets, REITs, and real estate trends",
     Icon: Building2,
     accent: "#4ade80",
-    tileBg: "rgba(74,222,128,.13)",
+    tileBg: "rgba(74,222,128,.10)",
   },
   Banking: {
     description: "Banks, credit markets, and financial services",
     Icon: Landmark,
-    accent: "#93c5fd",
-    tileBg: "rgba(147,197,253,.13)",
+    accent: "#7dd3fc",
+    tileBg: "rgba(125,211,252,.10)",
   },
   Commodities: {
     description: "Gold, metals, agriculture, and commodity markets",
     Icon: BarChart2,
-    accent: "#fcd34d",
-    tileBg: "rgba(252,211,77,.13)",
+    accent: "#fbbf24",
+    tileBg: "rgba(251,191,36,.10)",
   },
   "World Markets": {
     description: "Global indices, currencies, and international news",
     Icon: Globe2,
     accent: "#22d3ee",
-    tileBg: "rgba(34,211,238,.13)",
+    tileBg: "rgba(34,211,238,.10)",
   },
 };
 
-/** Inline SVG sparkline for the top-story placeholder */
+/* ── Shared decorative textures ─────────────────────────────────────────── */
+
+const GRID_TEXTURE: React.CSSProperties = {
+  backgroundImage:
+    "linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px)," +
+    "linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px)",
+  backgroundSize: "24px 24px",
+};
+
+/** Sparkline used in Top Story placeholder and hero card */
+function SparklineSVG({
+  accent,
+  className,
+}: {
+  accent: string;
+  className?: string;
+}) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 200 56"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={`sl-${accent.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={accent} stopOpacity="0.15" />
+          <stop offset="100%" stopColor={accent} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon
+        points="0,48 28,40 56,43 84,30 112,24 140,28 168,15 200,10 200,56 0,56"
+        fill={`url(#sl-${accent.replace("#", "")})`}
+      />
+      <polyline
+        points="0,48 28,40 56,43 84,30 112,24 140,28 168,15 200,10"
+        fill="none"
+        stroke={accent}
+        strokeWidth="1.5"
+        strokeOpacity="0.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Editorial Top Story visual — grid texture + sparkline */
 function EditorialPlaceholder({ accent }: { accent: string }) {
   return (
     <div
       className="relative h-[80px] w-full overflow-hidden"
-      style={{ background: "#09090E" }}
+      style={{
+        background: "linear-gradient(135deg,#07090F 0%,#090C15 100%)",
+        boxShadow: `inset 0 0 40px ${accent}08`,
+      }}
     >
-      {/* Subtle grid texture */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px)," +
-            "linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
-      />
-      {/* Mini sparkline */}
-      <svg
+      <div className="absolute inset-0" style={GRID_TEXTURE} />
+      <SparklineSVG
+        accent={accent}
         className="absolute inset-0 h-full w-full"
-        viewBox="0 0 300 80"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
-        <polygon
-          points="0,68 45,58 85,62 130,45 172,38 214,42 255,26 300,18 300,80 0,80"
-          fill={accent}
-          fillOpacity="0.06"
-        />
-        <polyline
-          points="0,68 45,58 85,62 130,45 172,38 214,42 255,26 300,18"
-          fill="none"
-          stroke={accent}
-          strokeWidth="1.5"
-          strokeOpacity="0.38"
-          strokeLinejoin="round"
-        />
-      </svg>
-      {/* Bottom fade so the text block blends in cleanly */}
+      />
       <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#09090E] to-transparent" />
     </div>
   );
 }
 
-const CARD_SURFACE = { background: "#09090E" } as const;
+const CARD_SURFACE = "#09090E";
+const PAGE_BG = "#030305";
+const BOTTOM_PADDING = "calc(9rem + env(safe-area-inset-bottom))";
 
-const CATEGORY_BOTTOM_PADDING = "calc(9rem + env(safe-area-inset-bottom))";
-const BROWSE_BOTTOM_PADDING =
-  "calc(3rem + max(1.25rem, env(safe-area-inset-bottom)))";
+const HERO_CATEGORIES: BrowseCategory[] = ["Markets", "Technology", "Economy"];
 
 /* ── Main component ──────────────────────────────────────────────────────── */
 
@@ -203,9 +225,15 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     const count = categoryArticles.length;
 
     return (
-      <div className="flex h-full min-h-0 flex-col bg-[#030305] text-white">
+      <div
+        className="flex h-full min-h-0 flex-col text-white"
+        style={{ background: PAGE_BG }}
+      >
         {/* Pinned header */}
-        <div className="relative z-20 shrink-0 border-b border-white/[0.06] bg-[#030305] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']">
+        <div
+          className="relative z-20 shrink-0 border-b border-white/[0.06] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
+          style={{ background: PAGE_BG }}
+        >
           <header className="flex items-center gap-2 px-2 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
             <button
               type="button"
@@ -213,7 +241,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               onClick={() =>
                 router.replace(appPath("browse"), { scroll: false })
               }
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/10"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/[0.08]"
               aria-label="Back to categories"
             >
               <ArrowLeft className="h-5 w-5 text-white" />
@@ -224,14 +252,18 @@ export function BrowsePage({ articles }: BrowsePageProps) {
 
         <div
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
-          style={{ paddingBottom: CATEGORY_BOTTOM_PADDING }}
+          style={{ paddingBottom: BOTTOM_PADDING }}
         >
-          {/* Category summary card */}
+          {/* Category summary card — with grid texture */}
           <div
-            className="mx-4 mt-4 overflow-hidden rounded-xl border border-white/[0.07]"
-            style={CARD_SURFACE}
+            className="relative mx-4 mt-4 overflow-hidden rounded-xl border border-white/[0.07]"
+            style={{
+              background: CARD_SURFACE,
+              boxShadow: `inset 0 0 40px ${accent}08`,
+            }}
           >
-            <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="absolute inset-0" style={GRID_TEXTURE} />
+            <div className="relative flex items-center gap-3 px-4 py-3.5">
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                 style={{ background: token.tileBg }}
@@ -266,14 +298,18 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               {/* Top story */}
               {topStory && (
                 <section className="mt-5 px-4">
-                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
                     Top story
                   </p>
                   <button
                     type="button"
                     data-no-drag
                     onClick={() => openInFeed(topStory)}
-                    className="w-full overflow-hidden rounded-xl border border-white/[0.07] text-left active:opacity-80"
+                    className="w-full overflow-hidden rounded-xl text-left active:opacity-80"
+                    style={{
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      boxShadow: `0 0 24px ${accent}0A`,
+                    }}
                   >
                     {topStory.imageUrl ? (
                       <div className="relative aspect-[16/8] w-full overflow-hidden">
@@ -290,10 +326,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                     ) : (
                       <EditorialPlaceholder accent={accent} />
                     )}
-                    <div
-                      className="px-4 pb-4 pt-3"
-                      style={CARD_SURFACE}
-                    >
+                    <div className="px-4 pb-4 pt-3" style={{ background: CARD_SURFACE }}>
                       <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white">
                         {cleanArticleTitle(topStory.headline)}
                       </p>
@@ -315,12 +348,12 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               {/* Latest stories */}
               {latestStories.length > 0 && (
                 <section className="mt-5 px-4">
-                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
                     Latest stories
                   </p>
                   <div
                     className="overflow-hidden rounded-xl border border-white/[0.07]"
-                    style={CARD_SURFACE}
+                    style={{ background: CARD_SURFACE }}
                   >
                     {latestStories.map((article, index) => (
                       <div key={article.id}>
@@ -328,7 +361,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                           type="button"
                           data-no-drag
                           onClick={() => openInFeed(article)}
-                          className="flex w-full flex-col px-4 py-3 text-left active:bg-white/[0.04]"
+                          className="flex w-full flex-col px-4 py-3 text-left active:bg-white/[0.03]"
                         >
                           <p className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-white">
                             {cleanArticleTitle(article.headline)}
@@ -345,10 +378,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                           </p>
                         </button>
                         {index < latestStories.length - 1 && (
-                          <div
-                            className="mx-4 h-px bg-white/[0.05]"
-                            aria-hidden
-                          />
+                          <div className="mx-4 h-px bg-white/[0.05]" aria-hidden />
                         )}
                       </div>
                     ))}
@@ -364,13 +394,17 @@ export function BrowsePage({ articles }: BrowsePageProps) {
 
   /* ── Browse landing page ─────────────────────────────────────────────── */
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#030305] text-white">
+    <div
+      className="flex h-full min-h-0 flex-col text-white"
+      style={{ background: PAGE_BG }}
+    >
       {/* Pinned header */}
-      <div className="relative z-20 shrink-0 bg-[#030305] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']">
-        <header className="px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
-          <h1 className="text-[28px] font-bold tracking-tight text-white">
-            Browse
-          </h1>
+      <div
+        className="relative z-20 shrink-0 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
+        style={{ background: PAGE_BG }}
+      >
+        <header className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
+          <h1 className="text-[28px] font-bold tracking-tight text-white">Browse</h1>
           <p className="mt-0.5 text-[13px] text-zinc-500">
             Explore markets, sectors, and business trends
           </p>
@@ -378,13 +412,104 @@ export function BrowsePage({ articles }: BrowsePageProps) {
       </div>
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-2"
-        style={{ paddingBottom: BROWSE_BOTTOM_PADDING }}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3"
+        style={{ paddingBottom: BOTTOM_PADDING }}
       >
-        {/* Single grouped list — more Bloomberg/finance-native */}
+        {/* ── Premium hero discovery card ───────────────────────────────── */}
+        <div
+          className="relative mb-4 overflow-hidden rounded-xl border border-white/[0.07]"
+          style={{
+            background: "linear-gradient(135deg,#07090F 0%,#0A0D1A 60%,#08091A 100%)",
+            boxShadow:
+              "0 0 60px rgba(34,211,238,.06), 0 0 40px rgba(139,92,246,.05)",
+          }}
+        >
+          {/* Grid texture */}
+          <div className="absolute inset-0" style={GRID_TEXTURE} />
+          {/* Ambient glow blobs */}
+          <div
+            className="absolute -right-10 -top-10 h-32 w-32 rounded-full blur-2xl"
+            style={{ background: "rgba(34,211,238,.07)" }}
+          />
+          <div
+            className="absolute -bottom-8 left-1/3 h-24 w-24 rounded-full blur-2xl"
+            style={{ background: "rgba(139,92,246,.06)" }}
+          />
+
+          <div className="relative flex items-stretch gap-3 px-4 py-4">
+            {/* Left: text + pills */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-white">Explore the market</p>
+              <p className="mt-0.5 text-[11.5px] leading-snug text-zinc-500">
+                Follow the sectors and themes moving today&apos;s stories
+              </p>
+              {/* Live stat pills */}
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {HERO_CATEGORIES.map((cat) => {
+                  const t = CATEGORY_TOKENS[cat];
+                  const n = categoryCounts.get(cat) ?? 0;
+                  return (
+                    <div
+                      key={cat}
+                      className="flex items-center gap-1.5 rounded-full border border-white/[0.08] px-2.5 py-1"
+                      style={{ background: "rgba(255,255,255,.04)" }}
+                    >
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ background: t.accent }}
+                      />
+                      <span className="text-[10px] font-medium text-zinc-400">
+                        {cat}
+                      </span>
+                      <span className="text-[10px] tabular-nums text-zinc-600">
+                        {n}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {/* Right: mini sparkline */}
+            <div className="flex shrink-0 items-center">
+              <svg
+                className="h-14 w-20 opacity-50"
+                viewBox="0 0 80 56"
+                preserveAspectRatio="none"
+                aria-hidden
+              >
+                <defs>
+                  <linearGradient id="heroLine" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.8" />
+                  </linearGradient>
+                  <linearGradient id="heroFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.12" />
+                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon
+                  points="0,46 12,38 24,40 36,28 48,22 60,26 72,14 80,8 80,56 0,56"
+                  fill="url(#heroFill)"
+                />
+                <polyline
+                  points="0,46 12,38 24,40 36,28 48,22 60,26 72,14 80,8"
+                  fill="none"
+                  stroke="url(#heroLine)"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Grouped category list ──────────────────────────────────────── */}
         <div
           className="overflow-hidden rounded-xl border border-white/[0.07]"
-          style={CARD_SURFACE}
+          style={{
+            background: CARD_SURFACE,
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,.04)",
+          }}
         >
           {BROWSE_CATEGORIES.map((item, index) => {
             const token = CATEGORY_TOKENS[item];
@@ -395,33 +520,24 @@ export function BrowsePage({ articles }: BrowsePageProps) {
             return (
               <div key={item}>
                 {isCrypto ? (
-                  <div className="flex items-center gap-3 px-4 py-3 opacity-45">
-                    {/* Left accent bar */}
+                  <div className="flex items-center gap-3 px-4 py-3 opacity-40">
                     <div
                       className="h-5 w-[3px] shrink-0 rounded-r-full"
                       style={{ background: accent }}
                     />
-                    {/* Icon */}
                     <span
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
                       style={{ background: token.tileBg }}
                     >
-                      <Icon
-                        className="h-[15px] w-[15px]"
-                        style={{ color: accent }}
-                      />
+                      <Icon className="h-[15px] w-[15px]" style={{ color: accent }} />
                     </span>
-                    {/* Text */}
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13.5px] font-semibold text-zinc-400">
-                        {item}
-                      </p>
+                      <p className="text-[13.5px] font-semibold text-zinc-400">{item}</p>
                       <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-600">
                         {token.description}
                       </p>
                     </div>
-                    {/* Coming soon pill */}
-                    <span className="shrink-0 rounded-md bg-zinc-800/70 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+                    <span className="shrink-0 rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] font-medium text-zinc-500">
                       Soon
                     </span>
                   </div>
@@ -435,34 +551,25 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                         { scroll: false }
                       )
                     }
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/[0.04]"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/[0.03]"
                   >
-                    {/* Left accent bar */}
                     <div
-                      className="h-5 w-[3px] shrink-0 rounded-r-full"
-                      style={{ background: accent, opacity: 0.75 }}
+                      className="h-5 w-[3px] shrink-0 rounded-r-full opacity-60"
+                      style={{ background: accent }}
                     />
-                    {/* Icon tile */}
                     <span
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
                       style={{ background: token.tileBg }}
                     >
-                      <Icon
-                        className="h-[15px] w-[15px]"
-                        style={{ color: accent }}
-                      />
+                      <Icon className="h-[15px] w-[15px]" style={{ color: accent }} />
                     </span>
-                    {/* Text */}
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13.5px] font-semibold text-white">
-                        {item}
-                      </p>
+                      <p className="text-[13.5px] font-semibold text-white">{item}</p>
                       <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
                         {token.description}
                       </p>
                     </div>
-                    {/* Story count + chevron */}
-                    <span className="shrink-0 text-[11px] tabular-nums text-zinc-600">
+                    <span className="shrink-0 text-[11px] tabular-nums text-zinc-700">
                       {count === 1 ? "1 story" : `${count} stories`}
                     </span>
                     <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-700" />
