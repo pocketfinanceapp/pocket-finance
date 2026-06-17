@@ -129,21 +129,12 @@ const PAGE_BG = "#030305";
 const CARD_SURFACE = "#09090E";
 const BOTTOM_PADDING = "calc(9rem + env(safe-area-inset-bottom))";
 
-const FEATURED_PRIMARY: BrowseCategory = "Markets";
-const FEATURED_SECONDARY: BrowseCategory[] = ["Technology", "Economy"];
+const FEATURED_CATEGORIES: BrowseCategory[] = ["Markets", "Technology", "Economy"];
 const ALL_TOPICS: BrowseCategory[] = BROWSE_CATEGORIES.filter(
-  (c) => c !== FEATURED_PRIMARY && !FEATURED_SECONDARY.includes(c)
+  (c) => !FEATURED_CATEGORIES.includes(c)
 );
 
-/** Standard grid texture — category detail header/placeholder */
-const GRID_TEXTURE: React.CSSProperties = {
-  backgroundImage:
-    "linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px)," +
-    "linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px)",
-  backgroundSize: "24px 24px",
-};
-
-/** Lighter grid — Featured cards so text stays legible */
+/** Very subtle grid for cards — texture only, not a visual element */
 const GRID_TEXTURE_SUBTLE: React.CSSProperties = {
   backgroundImage:
     "linear-gradient(rgba(255,255,255,.010) 1px,transparent 1px)," +
@@ -151,18 +142,25 @@ const GRID_TEXTURE_SUBTLE: React.CSSProperties = {
   backgroundSize: "24px 24px",
 };
 
-/* ── Featured card ───────────────────────────────────────────────────────── */
+/** Standard grid for detail-page header/placeholder */
+const GRID_TEXTURE: React.CSSProperties = {
+  backgroundImage:
+    "linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px)," +
+    "linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px)",
+  backgroundSize: "24px 24px",
+};
 
-function FeaturedCard({
+/* ── Editorial featured card ─────────────────────────────────────────────── */
+
+function TopStoryCard({
   item,
+  article,
   count,
-  primary,
   onClick,
 }: {
   item: BrowseCategory;
+  article: NewsArticle | null;
   count: number;
-  /** true = full-width primary, false = half-width secondary */
-  primary: boolean;
   onClick: () => void;
 }) {
   const token = CATEGORY_TOKENS[item];
@@ -174,89 +172,70 @@ function FeaturedCard({
       type="button"
       data-no-drag
       onClick={onClick}
-      className={[
-        "relative overflow-hidden rounded-xl text-left active:opacity-80",
-        primary ? "h-[118px] w-full" : "h-[114px] min-w-0 flex-1",
-      ].join(" ")}
+      className="relative w-full overflow-hidden rounded-xl text-left active:opacity-80"
       style={{
         border: "1px solid rgba(255,255,255,0.07)",
         background: token.cardGradient,
-        // Primary only: restrained outer glow; both: subtle inner top highlight
-        boxShadow: primary
-          ? `inset 0 1px 0 rgba(255,255,255,.07),0 0 28px ${accent}0C`
-          : "inset 0 1px 0 rgba(255,255,255,.05)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,.06)",
       }}
     >
-      {/* Grid texture — subtle, not a design element */}
+      {/* Very subtle grid texture */}
       <div className="absolute inset-0" style={GRID_TEXTURE_SUBTLE} />
-      {/* Accent glow blob — primary only */}
-      {primary && (
-        <div
-          className="absolute -right-5 -top-5 h-20 w-20 rounded-full blur-2xl"
-          style={{ background: `${accent}12` }}
-        />
-      )}
-      {/* Sparkline at bottom */}
+      {/* Faint sparkline in top-right corner — texture only */}
       <svg
-        className="absolute inset-x-0 bottom-0 h-[52px] w-full"
-        viewBox="0 0 200 52"
+        className="absolute right-0 top-0 h-16 w-28 opacity-[0.12]"
+        viewBox="0 0 112 64"
         preserveAspectRatio="none"
         aria-hidden
       >
-        <defs>
-          <linearGradient id={`fc-${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={accent} stopOpacity="0.09" />
-            <stop offset="100%" stopColor={accent} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <polygon
-          points="0,40 40,32 80,36 120,22 160,16 200,8 200,52 0,52"
-          fill={`url(#fc-${uid})`}
-        />
         <polyline
-          points="0,40 40,32 80,36 120,22 160,16 200,8"
+          points="0,56 20,44 40,48 60,32 80,24 100,28 112,16"
           fill="none"
           stroke={accent}
           strokeWidth="1.5"
-          strokeOpacity="0.28"
           strokeLinejoin="round"
         />
       </svg>
-      {/* Bottom fade */}
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/15 to-transparent" />
 
       {/* Content */}
-      <div className="relative flex h-full flex-col p-4">
-        <div className="flex items-center gap-2.5">
+      <div className="relative px-4 py-3.5">
+        {/* Category row */}
+        <div className="mb-2.5 flex items-center gap-1.5">
           <span
-            className={[
-              "flex shrink-0 items-center justify-center rounded-lg",
-              primary ? "h-8 w-8" : "h-7 w-7",
-            ].join(" ")}
+            className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md"
             style={{ background: token.tileBg }}
           >
-            <Icon
-              className={primary ? "h-[15px] w-[15px]" : "h-[13px] w-[13px]"}
-              style={{ color: accent }}
-            />
+            <Icon className="h-[11px] w-[11px]" style={{ color: accent }} />
           </span>
-          <div className="min-w-0 flex-1">
-            <p
-              className={[
-                "truncate font-bold leading-tight text-white",
-                primary ? "text-[14px]" : "text-[13px]",
-              ].join(" ")}
-            >
-              {item}
-            </p>
-            <p className="text-[10px] tabular-nums text-zinc-500">
-              {count === 1 ? "1 story" : `${count} stories`}
-            </p>
-          </div>
+          <span
+            className="text-[11px] font-semibold"
+            style={{ color: accent }}
+          >
+            {item}
+          </span>
+          <span className="ml-auto text-[10px] tabular-nums text-zinc-600">
+            {count === 1 ? "1 story" : `${count} stories`}
+          </span>
         </div>
-        {/* Description only on primary — secondary cards stay clean */}
-        {primary && (
-          <p className="mt-2.5 line-clamp-2 text-[12px] text-zinc-400">
+
+        {article ? (
+          <>
+            <p className="line-clamp-2 text-[14px] font-bold leading-snug text-white">
+              {cleanArticleTitle(article.headline)}
+            </p>
+            {article.subheading && (
+              <p className="mt-1 line-clamp-1 text-[11.5px] leading-snug text-zinc-500">
+                {article.subheading}
+              </p>
+            )}
+            <p className="mt-2 text-[10.5px] text-zinc-600">
+              {article.sourceName}
+              <span className="mx-1">·</span>
+              {timeAgo(article.publishedAt)}
+            </p>
+          </>
+        ) : (
+          <p className="text-[13px] leading-snug text-zinc-500">
             {token.description}
           </p>
         )}
@@ -265,7 +244,7 @@ function FeaturedCard({
   );
 }
 
-/* ── Editorial placeholder for Top Story ────────────────────────────────── */
+/* ── Editorial placeholder for Top Story (detail page) ──────────────────── */
 
 function EditorialPlaceholder({ accent }: { accent: string }) {
   const uid = accent.replace("#", "");
@@ -274,7 +253,7 @@ function EditorialPlaceholder({ accent }: { accent: string }) {
       className="relative h-[80px] w-full overflow-hidden"
       style={{
         background: "linear-gradient(135deg,#07090F 0%,#090C15 100%)",
-        boxShadow: `inset 0 0 40px ${accent}08`,
+        boxShadow: `inset 0 0 40px ${accent}06`,
       }}
     >
       <div className="absolute inset-0" style={GRID_TEXTURE} />
@@ -325,6 +304,16 @@ export function BrowsePage({ articles }: BrowsePageProps) {
       counts.set(item, filterArticlesByBrowseCategory(articles, item).length);
     }
     return counts;
+  }, [articles]);
+
+  /** Top article per category for featured cards and All Topics rows */
+  const categoryTopArticle = useMemo(() => {
+    const map = new Map<BrowseCategory, NewsArticle | null>();
+    for (const item of BROWSE_CATEGORIES) {
+      const filtered = filterArticlesByBrowseCategory(articles, item);
+      map.set(item, filtered[0] ?? null);
+    }
+    return map;
   }, [articles]);
 
   const categoryArticles = useMemo(() => {
@@ -524,34 +513,26 @@ export function BrowsePage({ articles }: BrowsePageProps) {
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         style={{ paddingBottom: BOTTOM_PADDING }}
       >
-        {/* ── Featured grid ────────────────────────────────────────────── */}
+        {/* ── Top stories by topic ──────────────────────────────────────── */}
         <section className="px-4 pt-3">
-          <p className="mb-3 text-[13px] font-semibold text-white">Featured</p>
-
-          {/* Primary card — Markets, full width */}
-          <FeaturedCard
-            item={FEATURED_PRIMARY}
-            count={categoryCounts.get(FEATURED_PRIMARY) ?? 0}
-            primary
-            onClick={() => navigateTo(FEATURED_PRIMARY)}
-          />
-
-          {/* Secondary row — Technology + Economy */}
-          <div className="mt-2.5 flex gap-2.5">
-            {FEATURED_SECONDARY.map((item) => (
-              <FeaturedCard
+          <p className="mb-3 text-[13px] font-semibold text-white">
+            Top stories by topic
+          </p>
+          <div className="flex flex-col gap-2.5">
+            {FEATURED_CATEGORIES.map((item) => (
+              <TopStoryCard
                 key={item}
                 item={item}
+                article={categoryTopArticle.get(item) ?? null}
                 count={categoryCounts.get(item) ?? 0}
-                primary={false}
                 onClick={() => navigateTo(item)}
               />
             ))}
           </div>
         </section>
 
-        {/* ── All topics grouped list ──────────────────────────────────── */}
-        <section className="mt-6 px-4">
+        {/* ── All topics ───────────────────────────────────────────────── */}
+        <section className="mt-5 px-4">
           <p className="mb-3 text-[13px] font-semibold text-white">All topics</p>
           <div
             className="overflow-hidden rounded-xl border border-white/[0.06]"
@@ -564,6 +545,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               const token = CATEGORY_TOKENS[item];
               const { Icon, accent } = token;
               const count = categoryCounts.get(item) ?? 0;
+              const topArticle = categoryTopArticle.get(item) ?? null;
               const isCrypto = item === "Crypto";
 
               return (
@@ -610,7 +592,9 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-semibold text-white">{item}</p>
                         <p className="mt-0.5 line-clamp-1 text-[10.5px] text-zinc-500">
-                          {token.description}
+                          {topArticle
+                            ? cleanArticleTitle(topArticle.headline)
+                            : token.description}
                         </p>
                       </div>
                       <span className="shrink-0 text-[10.5px] tabular-nums text-zinc-700">
