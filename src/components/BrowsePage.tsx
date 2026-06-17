@@ -306,12 +306,35 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     return counts;
   }, [articles]);
 
-  /** Top article per category for featured cards and All Topics rows */
+  /** Top article per category for All Topics rows (no deduplication needed) */
   const categoryTopArticle = useMemo(() => {
     const map = new Map<BrowseCategory, NewsArticle | null>();
     for (const item of BROWSE_CATEGORIES) {
       const filtered = filterArticlesByBrowseCategory(articles, item);
       map.set(item, filtered[0] ?? null);
+    }
+    return map;
+  }, [articles]);
+
+  /**
+   * Deduplicated top articles for the 3 featured cards.
+   * Each featured category gets the first article in its list that
+   * hasn't already been claimed by an earlier featured category,
+   * ensuring all three cards show distinct headlines.
+   */
+  const featuredTopArticle = useMemo(() => {
+    const usedIds = new Set<string>();
+    const map = new Map<BrowseCategory, NewsArticle | null>();
+    for (const item of FEATURED_CATEGORIES) {
+      const filtered = filterArticlesByBrowseCategory(articles, item);
+      const unique = filtered.find((a) => !usedIds.has(a.id));
+      if (unique) {
+        usedIds.add(unique.id);
+        map.set(item, unique);
+      } else {
+        // fallback: show own first article even if it duplicates another card
+        map.set(item, filtered[0] ?? null);
+      }
     }
     return map;
   }, [articles]);
@@ -523,7 +546,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               <TopStoryCard
                 key={item}
                 item={item}
-                article={categoryTopArticle.get(item) ?? null}
+                article={featuredTopArticle.get(item) ?? null}
                 count={categoryCounts.get(item) ?? 0}
                 onClick={() => navigateTo(item)}
               />
