@@ -135,10 +135,19 @@ const ALL_TOPICS: BrowseCategory[] = BROWSE_CATEGORIES.filter(
   (c) => c !== FEATURED_PRIMARY && !FEATURED_SECONDARY.includes(c)
 );
 
+/** Standard grid texture — category detail header/placeholder */
 const GRID_TEXTURE: React.CSSProperties = {
   backgroundImage:
-    "linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px)," +
-    "linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px)",
+    "linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px)," +
+    "linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px)",
+  backgroundSize: "24px 24px",
+};
+
+/** Lighter grid — Featured cards so text stays legible */
+const GRID_TEXTURE_SUBTLE: React.CSSProperties = {
+  backgroundImage:
+    "linear-gradient(rgba(255,255,255,.010) 1px,transparent 1px)," +
+    "linear-gradient(90deg,rgba(255,255,255,.010) 1px,transparent 1px)",
   backgroundSize: "24px 24px",
 };
 
@@ -167,21 +176,26 @@ function FeaturedCard({
       onClick={onClick}
       className={[
         "relative overflow-hidden rounded-xl text-left active:opacity-80",
-        primary ? "h-[118px] w-full" : "h-[102px] min-w-0 flex-1",
+        primary ? "h-[118px] w-full" : "h-[114px] min-w-0 flex-1",
       ].join(" ")}
       style={{
         border: "1px solid rgba(255,255,255,0.07)",
         background: token.cardGradient,
-        boxShadow: `0 0 28px ${accent}0D`,
+        // Primary only: restrained outer glow; both: subtle inner top highlight
+        boxShadow: primary
+          ? `inset 0 1px 0 rgba(255,255,255,.07),0 0 28px ${accent}0C`
+          : "inset 0 1px 0 rgba(255,255,255,.05)",
       }}
     >
-      {/* Grid texture */}
-      <div className="absolute inset-0" style={GRID_TEXTURE} />
-      {/* Accent glow */}
-      <div
-        className="absolute -right-5 -top-5 h-20 w-20 rounded-full blur-2xl"
-        style={{ background: `${accent}1A` }}
-      />
+      {/* Grid texture — subtle, not a design element */}
+      <div className="absolute inset-0" style={GRID_TEXTURE_SUBTLE} />
+      {/* Accent glow blob — primary only */}
+      {primary && (
+        <div
+          className="absolute -right-5 -top-5 h-20 w-20 rounded-full blur-2xl"
+          style={{ background: `${accent}12` }}
+        />
+      )}
       {/* Sparkline at bottom */}
       <svg
         className="absolute inset-x-0 bottom-0 h-[52px] w-full"
@@ -191,7 +205,7 @@ function FeaturedCard({
       >
         <defs>
           <linearGradient id={`fc-${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={accent} stopOpacity="0.14" />
+            <stop offset="0%" stopColor={accent} stopOpacity="0.09" />
             <stop offset="100%" stopColor={accent} stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -204,16 +218,16 @@ function FeaturedCard({
           fill="none"
           stroke={accent}
           strokeWidth="1.5"
-          strokeOpacity="0.4"
+          strokeOpacity="0.28"
           strokeLinejoin="round"
         />
       </svg>
-      {/* Bottom fade so text is readable over sparkline */}
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent" />
+      {/* Bottom fade */}
+      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/15 to-transparent" />
 
       {/* Content */}
-      <div className="relative flex h-full flex-col p-3.5">
-        <div className="flex items-center gap-2">
+      <div className="relative flex h-full flex-col p-4">
+        <div className="flex items-center gap-2.5">
           <span
             className={[
               "flex shrink-0 items-center justify-center rounded-lg",
@@ -240,14 +254,12 @@ function FeaturedCard({
             </p>
           </div>
         </div>
-        <p
-          className={[
-            "mt-2 text-zinc-400",
-            primary ? "line-clamp-2 text-[12px]" : "line-clamp-1 text-[11px]",
-          ].join(" ")}
-        >
-          {token.description}
-        </p>
+        {/* Description only on primary — secondary cards stay clean */}
+        {primary && (
+          <p className="mt-2.5 line-clamp-2 text-[12px] text-zinc-400">
+            {token.description}
+          </p>
+        )}
       </div>
     </button>
   );
@@ -274,7 +286,7 @@ function EditorialPlaceholder({ accent }: { accent: string }) {
       >
         <defs>
           <linearGradient id={`ep-${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={accent} stopOpacity="0.15" />
+            <stop offset="0%" stopColor={accent} stopOpacity="0.11" />
             <stop offset="100%" stopColor={accent} stopOpacity="0" />
           </linearGradient>
         </defs>
@@ -287,7 +299,7 @@ function EditorialPlaceholder({ accent }: { accent: string }) {
           fill="none"
           stroke={accent}
           strokeWidth="1.5"
-          strokeOpacity="0.45"
+          strokeOpacity="0.32"
           strokeLinejoin="round"
         />
       </svg>
@@ -364,7 +376,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
           {/* Category summary card */}
           <div
             className="relative mx-4 mt-4 overflow-hidden rounded-xl border border-white/[0.07]"
-            style={{ background: CARD_SURFACE, boxShadow: `inset 0 0 40px ${accent}09` }}
+            style={{ background: CARD_SURFACE, boxShadow: `inset 0 0 40px ${accent}06` }}
           >
             <div className="absolute inset-0" style={GRID_TEXTURE} />
             <div className="relative flex items-center gap-3 px-4 py-3.5">
@@ -542,10 +554,10 @@ export function BrowsePage({ articles }: BrowsePageProps) {
         <section className="mt-6 px-4">
           <p className="mb-3 text-[13px] font-semibold text-white">All topics</p>
           <div
-            className="overflow-hidden rounded-xl border border-white/[0.07]"
+            className="overflow-hidden rounded-xl border border-white/[0.06]"
             style={{
-              background: CARD_SURFACE,
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,.04)",
+              background: "rgba(9,9,14,0.60)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,.03)",
             }}
           >
             {ALL_TOPICS.map((item, index) => {
