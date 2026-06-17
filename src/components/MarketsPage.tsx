@@ -174,8 +174,8 @@ function FollowingSection({
   const handleScroll = () => {
     const el = carouselRef.current;
     if (!el) return;
-    // card = 72vw, gap-3 = 12px; no container padding (margins on first/last card)
-    const cardWidth = el.clientWidth * 0.72;
+    // card = 68vw, gap-3 = 12px; no container padding (margins on first/last card)
+    const cardWidth = el.clientWidth * 0.68;
     const gap = 12;
     const index = Math.round(el.scrollLeft / (cardWidth + gap));
     setActiveIndex(Math.min(markets.length - 1, Math.max(0, index)));
@@ -185,8 +185,8 @@ function FollowingSection({
     <section className={MARKETS_SECTION_SPACING}>
       <h2 className={MARKETS_SECTION_HEADING}>Following</h2>
       {/*
-        No container padding — first card gets ml-[14vw] and last gets mr-[14vw].
-        (100vw - 72vw) / 2 = 14vw so snap-center aligns perfectly without scroll-padding.
+        No container padding — first card gets ml-[16vw] and last gets mr-[16vw].
+        (100vw - 68vw) / 2 = 16vw so snap-center aligns perfectly without scroll-padding.
       */}
       <div
         ref={carouselRef}
@@ -235,7 +235,7 @@ function FollowingMarketCard({
       type="button"
       data-no-drag
       onClick={onOpen}
-      className="w-[72vw] shrink-0 snap-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5 text-left transition-colors active:bg-white/[0.06] first:ml-[14vw] last:mr-[14vw]"
+      className="w-[68vw] shrink-0 snap-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5 text-left transition-colors active:bg-white/[0.06] first:ml-[16vw] last:mr-[16vw]"
     >
       <div className="flex items-center gap-2">
         <span className="text-base leading-none">{market.flag}</span>
