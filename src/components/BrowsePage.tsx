@@ -47,7 +47,6 @@ interface CategoryToken {
   Icon: LucideIcon;
   accent: string;
   tileBg: string;
-  /** Dark gradient for featured cards */
   cardGradient: string;
 }
 
@@ -130,10 +129,10 @@ const PAGE_BG = "#030305";
 const CARD_SURFACE = "#09090E";
 const BOTTOM_PADDING = "calc(9rem + env(safe-area-inset-bottom))";
 
-const FEATURED_CATEGORIES: BrowseCategory[] = ["Markets", "Technology", "Economy"];
-
+const FEATURED_PRIMARY: BrowseCategory = "Markets";
+const FEATURED_SECONDARY: BrowseCategory[] = ["Technology", "Economy"];
 const ALL_TOPICS: BrowseCategory[] = BROWSE_CATEGORIES.filter(
-  (c) => !FEATURED_CATEGORIES.includes(c)
+  (c) => c !== FEATURED_PRIMARY && !FEATURED_SECONDARY.includes(c)
 );
 
 const GRID_TEXTURE: React.CSSProperties = {
@@ -143,49 +142,121 @@ const GRID_TEXTURE: React.CSSProperties = {
   backgroundSize: "24px 24px",
 };
 
-/* ── Shared decorative SVGs ──────────────────────────────────────────────── */
+/* ── Featured card ───────────────────────────────────────────────────────── */
 
-function SparklineSVG({
-  accent,
-  className,
+function FeaturedCard({
+  item,
+  count,
+  primary,
+  onClick,
 }: {
-  accent: string;
-  className?: string;
+  item: BrowseCategory;
+  count: number;
+  /** true = full-width primary, false = half-width secondary */
+  primary: boolean;
+  onClick: () => void;
 }) {
+  const token = CATEGORY_TOKENS[item];
+  const { Icon, accent } = token;
+  const uid = accent.replace("#", "");
+
   return (
-    <svg
-      className={className}
-      viewBox="0 0 200 56"
-      preserveAspectRatio="none"
-      aria-hidden
+    <button
+      type="button"
+      data-no-drag
+      onClick={onClick}
+      className={[
+        "relative overflow-hidden rounded-xl text-left active:opacity-80",
+        primary ? "h-[118px] w-full" : "h-[102px] min-w-0 flex-1",
+      ].join(" ")}
+      style={{
+        border: "1px solid rgba(255,255,255,0.07)",
+        background: token.cardGradient,
+        boxShadow: `0 0 28px ${accent}0D`,
+      }}
     >
-      <defs>
-        <linearGradient
-          id={`fill-${accent.replace("#", "")}`}
-          x1="0" y1="0" x2="0" y2="1"
+      {/* Grid texture */}
+      <div className="absolute inset-0" style={GRID_TEXTURE} />
+      {/* Accent glow */}
+      <div
+        className="absolute -right-5 -top-5 h-20 w-20 rounded-full blur-2xl"
+        style={{ background: `${accent}1A` }}
+      />
+      {/* Sparkline at bottom */}
+      <svg
+        className="absolute inset-x-0 bottom-0 h-[52px] w-full"
+        viewBox="0 0 200 52"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <defs>
+          <linearGradient id={`fc-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={accent} stopOpacity="0.14" />
+            <stop offset="100%" stopColor={accent} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon
+          points="0,40 40,32 80,36 120,22 160,16 200,8 200,52 0,52"
+          fill={`url(#fc-${uid})`}
+        />
+        <polyline
+          points="0,40 40,32 80,36 120,22 160,16 200,8"
+          fill="none"
+          stroke={accent}
+          strokeWidth="1.5"
+          strokeOpacity="0.4"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {/* Bottom fade so text is readable over sparkline */}
+      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent" />
+
+      {/* Content */}
+      <div className="relative flex h-full flex-col p-3.5">
+        <div className="flex items-center gap-2">
+          <span
+            className={[
+              "flex shrink-0 items-center justify-center rounded-lg",
+              primary ? "h-8 w-8" : "h-7 w-7",
+            ].join(" ")}
+            style={{ background: token.tileBg }}
+          >
+            <Icon
+              className={primary ? "h-[15px] w-[15px]" : "h-[13px] w-[13px]"}
+              style={{ color: accent }}
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p
+              className={[
+                "truncate font-bold leading-tight text-white",
+                primary ? "text-[14px]" : "text-[13px]",
+              ].join(" ")}
+            >
+              {item}
+            </p>
+            <p className="text-[10px] tabular-nums text-zinc-500">
+              {count === 1 ? "1 story" : `${count} stories`}
+            </p>
+          </div>
+        </div>
+        <p
+          className={[
+            "mt-2 text-zinc-400",
+            primary ? "line-clamp-2 text-[12px]" : "line-clamp-1 text-[11px]",
+          ].join(" ")}
         >
-          <stop offset="0%" stopColor={accent} stopOpacity="0.14" />
-          <stop offset="100%" stopColor={accent} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon
-        points="0,48 28,40 56,43 84,30 112,24 140,28 168,15 200,10 200,56 0,56"
-        fill={`url(#fill-${accent.replace("#", "")})`}
-      />
-      <polyline
-        points="0,48 28,40 56,43 84,30 112,24 140,28 168,15 200,10"
-        fill="none"
-        stroke={accent}
-        strokeWidth="1.5"
-        strokeOpacity="0.45"
-        strokeLinejoin="round"
-      />
-    </svg>
+          {token.description}
+        </p>
+      </div>
+    </button>
   );
 }
 
-/** Top Story placeholder — editorial grid + sparkline */
+/* ── Editorial placeholder for Top Story ────────────────────────────────── */
+
 function EditorialPlaceholder({ accent }: { accent: string }) {
+  const uid = accent.replace("#", "");
   return (
     <div
       className="relative h-[80px] w-full overflow-hidden"
@@ -195,7 +266,31 @@ function EditorialPlaceholder({ accent }: { accent: string }) {
       }}
     >
       <div className="absolute inset-0" style={GRID_TEXTURE} />
-      <SparklineSVG accent={accent} className="absolute inset-0 h-full w-full" />
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 200 56"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <defs>
+          <linearGradient id={`ep-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={accent} stopOpacity="0.15" />
+            <stop offset="100%" stopColor={accent} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon
+          points="0,48 28,40 56,43 84,30 112,24 140,28 168,15 200,10 200,56 0,56"
+          fill={`url(#ep-${uid})`}
+        />
+        <polyline
+          points="0,48 28,40 56,43 84,30 112,24 140,28 168,15 200,10"
+          fill="none"
+          stroke={accent}
+          strokeWidth="1.5"
+          strokeOpacity="0.45"
+          strokeLinejoin="round"
+        />
+      </svg>
       <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#09090E] to-transparent" />
     </div>
   );
@@ -229,6 +324,9 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     requestFeedJump(article.id);
     navigation.navigate("home");
   };
+
+  const navigateTo = (item: BrowseCategory) =>
+    router.replace(appPath(`browse/${categoryToSlug(item)}`), { scroll: false });
 
   /* ── Category detail ─────────────────────────────────────────────────── */
   if (category) {
@@ -299,7 +397,6 @@ export function BrowsePage({ articles }: BrowsePageProps) {
             </p>
           ) : (
             <>
-              {/* Top story */}
               {topStory && (
                 <section className="mt-5 px-4">
                   <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
@@ -349,7 +446,6 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                 </section>
               )}
 
-              {/* Latest stories */}
               {latestStories.length > 0 && (
                 <section className="mt-5 px-4">
                   <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
@@ -416,189 +512,34 @@ export function BrowsePage({ articles }: BrowsePageProps) {
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         style={{ paddingBottom: BOTTOM_PADDING }}
       >
-        {/* ── Market Pulse hero card ──────────────────────────────────── */}
-        <div
-          className="relative mx-4 mt-3 overflow-hidden rounded-xl border border-white/[0.07]"
-          style={{
-            background: "linear-gradient(135deg,#07090F 0%,#0A0D1A 55%,#080918 100%)",
-            boxShadow: "0 0 60px rgba(34,211,238,.06),0 0 40px rgba(139,92,246,.05)",
-          }}
-        >
-          <div className="absolute inset-0" style={GRID_TEXTURE} />
-          {/* Glow blobs */}
-          <div
-            className="absolute -right-8 -top-8 h-28 w-28 rounded-full blur-2xl"
-            style={{ background: "rgba(34,211,238,.08)" }}
-          />
-          <div
-            className="absolute -bottom-6 left-1/3 h-20 w-20 rounded-full blur-2xl"
-            style={{ background: "rgba(139,92,246,.07)" }}
+        {/* ── Featured grid ────────────────────────────────────────────── */}
+        <section className="px-4 pt-3">
+          <p className="mb-3 text-[13px] font-semibold text-white">Featured</p>
+
+          {/* Primary card — Markets, full width */}
+          <FeaturedCard
+            item={FEATURED_PRIMARY}
+            count={categoryCounts.get(FEATURED_PRIMARY) ?? 0}
+            primary
+            onClick={() => navigateTo(FEATURED_PRIMARY)}
           />
 
-          <div className="relative flex items-stretch gap-3 px-4 py-4">
-            {/* Left: text + chips */}
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-white">Market Pulse</p>
-              <p className="mt-0.5 text-[11.5px] leading-snug text-zinc-500">
-                Track the themes driving today&apos;s stories
-              </p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {FEATURED_CATEGORIES.map((cat) => {
-                  const t = CATEGORY_TOKENS[cat];
-                  const n = categoryCounts.get(cat) ?? 0;
-                  return (
-                    <div
-                      key={cat}
-                      className="flex items-center gap-1.5 rounded-full border border-white/[0.08] px-2.5 py-1"
-                      style={{ background: "rgba(255,255,255,.04)" }}
-                    >
-                      <span
-                        className="h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ background: t.accent }}
-                      />
-                      <span className="text-[10px] font-medium text-zinc-400">{cat}</span>
-                      <span className="text-[10px] tabular-nums text-zinc-600">{n}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            {/* Right: mini sparkline */}
-            <div className="flex shrink-0 items-center">
-              <svg
-                className="h-14 w-20 opacity-45"
-                viewBox="0 0 80 56"
-                preserveAspectRatio="none"
-                aria-hidden
-              >
-                <defs>
-                  <linearGradient id="heroLine" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.7" />
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.9" />
-                  </linearGradient>
-                  <linearGradient id="heroFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.14" />
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  points="0,46 12,38 24,40 36,28 48,22 60,26 72,14 80,8 80,56 0,56"
-                  fill="url(#heroFill)"
-                />
-                <polyline
-                  points="0,46 12,38 24,40 36,28 48,22 60,26 72,14 80,8"
-                  fill="none"
-                  stroke="url(#heroLine)"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Featured carousel ───────────────────────────────────────── */}
-        <section className="mt-5">
-          <p className="mb-3 px-5 text-[13px] font-semibold text-white">Featured</p>
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 scrollbar-hide">
-            {FEATURED_CATEGORIES.map((item, index) => {
-              const token = CATEGORY_TOKENS[item];
-              const { Icon, accent } = token;
-              const count = categoryCounts.get(item) ?? 0;
-
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  data-no-drag
-                  onClick={() =>
-                    router.replace(
-                      appPath(`browse/${categoryToSlug(item)}`),
-                      { scroll: false }
-                    )
-                  }
-                  className={[
-                    "relative h-[148px] w-[74vw] shrink-0 snap-center overflow-hidden rounded-xl text-left active:opacity-80",
-                    index === 0 ? "ml-[13vw]" : "",
-                    index === FEATURED_CATEGORIES.length - 1 ? "mr-[13vw]" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    background: token.cardGradient,
-                    boxShadow: `0 0 32px ${accent}0E`,
-                  }}
-                >
-                  {/* Grid texture */}
-                  <div className="absolute inset-0" style={GRID_TEXTURE} />
-                  {/* Accent glow blob */}
-                  <div
-                    className="absolute -right-6 -top-6 h-24 w-24 rounded-full blur-2xl"
-                    style={{ background: `${accent}18` }}
-                  />
-                  {/* Sparkline at bottom */}
-                  <svg
-                    className="absolute inset-x-0 bottom-0 h-[56px] w-full"
-                    viewBox="0 0 200 56"
-                    preserveAspectRatio="none"
-                    aria-hidden
-                  >
-                    <defs>
-                      <linearGradient
-                        id={`cf-${accent.replace("#", "")}`}
-                        x1="0" y1="0" x2="0" y2="1"
-                      >
-                        <stop offset="0%" stopColor={accent} stopOpacity="0.14" />
-                        <stop offset="100%" stopColor={accent} stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <polygon
-                      points="0,46 28,38 56,42 84,28 112,22 140,26 168,13 200,8 200,56 0,56"
-                      fill={`url(#cf-${accent.replace("#", "")})`}
-                    />
-                    <polyline
-                      points="0,46 28,38 56,42 84,28 112,22 140,26 168,13 200,8"
-                      fill="none"
-                      stroke={accent}
-                      strokeWidth="1.5"
-                      strokeOpacity="0.4"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  {/* Bottom fade */}
-                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/20 to-transparent" />
-
-                  {/* Content */}
-                  <div className="relative flex h-full flex-col p-4">
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                        style={{ background: token.tileBg }}
-                      >
-                        <Icon className="h-[15px] w-[15px]" style={{ color: accent }} />
-                      </span>
-                      <div>
-                        <p className="text-[14px] font-bold leading-tight text-white">
-                          {item}
-                        </p>
-                        <p className="text-[10px] tabular-nums text-zinc-500">
-                          {count === 1 ? "1 story" : `${count} stories`}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="mt-2.5 line-clamp-2 text-[12px] leading-snug text-zinc-400">
-                      {token.description}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
+          {/* Secondary row — Technology + Economy */}
+          <div className="mt-2.5 flex gap-2.5">
+            {FEATURED_SECONDARY.map((item) => (
+              <FeaturedCard
+                key={item}
+                item={item}
+                count={categoryCounts.get(item) ?? 0}
+                primary={false}
+                onClick={() => navigateTo(item)}
+              />
+            ))}
           </div>
         </section>
 
-        {/* ── All topics list ─────────────────────────────────────────── */}
-        <section className="mt-6 px-4 pb-1">
+        {/* ── All topics grouped list ──────────────────────────────────── */}
+        <section className="mt-6 px-4">
           <p className="mb-3 text-[13px] font-semibold text-white">All topics</p>
           <div
             className="overflow-hidden rounded-xl border border-white/[0.07]"
@@ -616,20 +557,20 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               return (
                 <div key={item}>
                   {isCrypto ? (
-                    <div className="flex items-center gap-3 px-4 py-3 opacity-40">
+                    <div className="flex items-center gap-3 px-4 py-2.5 opacity-40">
                       <div
-                        className="h-5 w-[3px] shrink-0 rounded-r-full"
+                        className="h-4 w-[3px] shrink-0 rounded-r-full"
                         style={{ background: accent }}
                       />
                       <span
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
                         style={{ background: token.tileBg }}
                       >
-                        <Icon className="h-[15px] w-[15px]" style={{ color: accent }} />
+                        <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13.5px] font-semibold text-zinc-400">{item}</p>
-                        <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-600">
+                        <p className="text-[13px] font-semibold text-zinc-400">{item}</p>
+                        <p className="mt-0.5 line-clamp-1 text-[10.5px] text-zinc-600">
                           {token.description}
                         </p>
                       </div>
@@ -641,31 +582,26 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                     <button
                       type="button"
                       data-no-drag
-                      onClick={() =>
-                        router.replace(
-                          appPath(`browse/${categoryToSlug(item)}`),
-                          { scroll: false }
-                        )
-                      }
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/[0.03]"
+                      onClick={() => navigateTo(item)}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left active:bg-white/[0.03]"
                     >
                       <div
-                        className="h-5 w-[3px] shrink-0 rounded-r-full opacity-60"
+                        className="h-4 w-[3px] shrink-0 rounded-r-full opacity-60"
                         style={{ background: accent }}
                       />
                       <span
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
                         style={{ background: token.tileBg }}
                       >
-                        <Icon className="h-[15px] w-[15px]" style={{ color: accent }} />
+                        <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13.5px] font-semibold text-white">{item}</p>
-                        <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
+                        <p className="text-[13px] font-semibold text-white">{item}</p>
+                        <p className="mt-0.5 line-clamp-1 text-[10.5px] text-zinc-500">
                           {token.description}
                         </p>
                       </div>
-                      <span className="shrink-0 text-[11px] tabular-nums text-zinc-700">
+                      <span className="shrink-0 text-[10.5px] tabular-nums text-zinc-700">
                         {count === 1 ? "1 story" : `${count} stories`}
                       </span>
                       <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-700" />
