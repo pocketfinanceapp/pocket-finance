@@ -169,24 +169,26 @@ function FollowingSection({
   onOpen: (market: MarketFilter) => void;
 }) {
   const carouselRef = useRef<HTMLDivElement>(null);
-  const [activePage, setActivePage] = useState(0);
-  const pageCount = Math.max(1, Math.ceil(markets.length / 2));
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const handleScroll = () => {
     const el = carouselRef.current;
     if (!el) return;
-    const pageWidth = el.clientWidth * 0.85;
-    if (pageWidth <= 0) return;
-    setActivePage(Math.min(pageCount - 1, Math.round(el.scrollLeft / pageWidth)));
+    // card width = 74vw of container; gap-3 = 12px
+    const cardWidth = el.clientWidth * 0.74;
+    const gap = 12;
+    const index = Math.round(el.scrollLeft / (cardWidth + gap));
+    setActiveIndex(Math.min(markets.length - 1, Math.max(0, index)));
   };
 
   return (
     <section className={MARKETS_SECTION_SPACING}>
       <h2 className={MARKETS_SECTION_HEADING}>Following</h2>
+      {/* px-[13vw] = (100vw - 74vw) / 2 so first/last cards snap-center perfectly */}
       <div
         ref={carouselRef}
         onScroll={handleScroll}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-1 scrollbar-hide"
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-[13vw] pb-2 scrollbar-hide [scroll-padding-inline:13vw]"
       >
         {markets.map((market) => (
           <FollowingMarketCard
@@ -196,13 +198,13 @@ function FollowingSection({
           />
         ))}
       </div>
-      {pageCount > 1 && (
+      {markets.length > 1 && (
         <div className="mt-2.5 flex justify-center gap-1.5">
-          {Array.from({ length: pageCount }, (_, i) => (
+          {markets.map((_, i) => (
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all ${
-                i === activePage
+                i === activeIndex
                   ? "w-4 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
                   : "w-1.5 bg-zinc-700"
               }`}
@@ -230,7 +232,7 @@ function FollowingMarketCard({
       type="button"
       data-no-drag
       onClick={onOpen}
-      className="w-[78%] max-w-[220px] shrink-0 snap-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3 text-left transition-colors active:bg-white/[0.06]"
+      className="w-[74vw] shrink-0 snap-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5 text-left transition-colors active:bg-white/[0.06]"
     >
       <div className="flex items-center gap-2">
         <span className="text-base leading-none">{market.flag}</span>
@@ -250,7 +252,7 @@ function FollowingMarketCard({
         {market.changePercent.toFixed(2)}%
       </p>
       <div className="mt-2.5">
-        <MarketSparkline points={sparkline} up={up} width={152} height={26} />
+        <MarketSparkline points={sparkline} up={up} width={200} height={26} />
       </div>
     </button>
   );
