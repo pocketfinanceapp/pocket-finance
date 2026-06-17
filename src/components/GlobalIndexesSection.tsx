@@ -14,8 +14,8 @@ export function GlobalIndexesSection() {
   const indexes = GLOBAL_INDEXES[region];
 
   return (
-    <section className="mt-6">
-      <h2 className="px-4 pb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+    <section className="mt-5">
+      <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500">
         Global Indexes
       </h2>
       <SectionTabs
@@ -23,7 +23,7 @@ export function GlobalIndexesSection() {
         active={region}
         onChange={setRegion}
       />
-      <div className="mx-4 mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+      <div className="mx-4 mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
         <ul>
           {indexes.map((index, i) => {
             const up = index.changePercent >= 0;
@@ -32,7 +32,7 @@ export function GlobalIndexesSection() {
             return (
               <li
                 key={index.id}
-                className={`flex items-center gap-3 px-4 py-3.5 ${
+                className={`flex items-center gap-3 px-4 py-3 ${
                   i < indexes.length - 1 ? "border-b border-white/[0.06]" : ""
                 }`}
               >

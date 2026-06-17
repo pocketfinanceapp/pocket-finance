@@ -24,10 +24,22 @@ import { MarketSparkline } from "./MarketSparkline";
 import { GlobalIndexesSection } from "./GlobalIndexesSection";
 import { TopMoversSection } from "./TopMoversSection";
 
-export const MARKETS_LIST_VERSION = "global-indexes-movers-v7";
+export const MARKETS_LIST_VERSION = "global-indexes-movers-v8";
 
 const MARKETS_SCROLL_PADDING =
-  "calc(3rem + max(1.25rem, env(safe-area-inset-bottom)))";
+  "calc(2.5rem + max(1.25rem, env(safe-area-inset-bottom)))";
+
+/** Shared premium card shell for Markets sections */
+export const MARKETS_SECTION_CARD =
+  "mx-4 mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]";
+
+export const MARKETS_SECTION_ROW =
+  "flex items-center gap-3 px-4 py-3";
+
+export const MARKETS_SECTION_HEADING =
+  "px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500";
+
+export const MARKETS_SECTION_SPACING = "mt-5";
 
 interface MarketsPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
@@ -89,8 +101,8 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
       data-markets-list={MARKETS_LIST_VERSION}
       className="flex h-full min-h-0 flex-col bg-black text-white"
     >
-      <div className="relative z-20 shrink-0 bg-black after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
-        <header className="px-4 pb-3 pt-[max(12px,env(safe-area-inset-top))]">
+      <div className="relative z-20 shrink-0 border-b border-white/[0.08] bg-black after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:z-10 after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
+        <header className="px-4 pb-2.5 pt-[max(12px,env(safe-area-inset-top))]">
           <h1 className="text-[28px] font-bold tracking-tight">Markets</h1>
         </header>
       </div>
@@ -99,7 +111,7 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         style={{ paddingBottom: MARKETS_SCROLL_PADDING }}
       >
-        <div className="px-4 pt-4">
+        <div className="px-4 pt-3">
           <MarketSummaryBar movers={movers} session={session} />
         </div>
 
@@ -121,11 +133,9 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
         )}
 
         {regions.map((region) => (
-          <section key={region.id} className="mt-6">
-            <h2 className="px-4 pb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
-              {region.label}
-            </h2>
-            <div className="mx-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+          <section key={region.id} className={MARKETS_SECTION_SPACING}>
+            <h2 className={MARKETS_SECTION_HEADING}>{region.label}</h2>
+            <div className={MARKETS_SECTION_CARD}>
               <ul>
                 {region.markets.map((market, i) => (
                   <MarketRow
@@ -142,16 +152,10 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
           </section>
         ))}
 
-        <p className="mx-4 mt-8 px-1 pb-2 text-center text-[11px] leading-relaxed text-zinc-600">
+        <p className="mx-4 mt-6 px-1 pb-1 text-center text-[11px] leading-relaxed text-zinc-600">
           Market data is provided for informational purposes only and should
           not be considered investment advice.
         </p>
-
-        <div
-          aria-hidden
-          className="shrink-0"
-          style={{ minHeight: "0.5rem" }}
-        />
       </div>
     </div>
   );
@@ -177,14 +181,12 @@ function FollowingSection({
   };
 
   return (
-    <section className="mt-6">
-      <h2 className="px-4 pb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
-        Following
-      </h2>
+    <section className={MARKETS_SECTION_SPACING}>
+      <h2 className={MARKETS_SECTION_HEADING}>Following</h2>
       <div
         ref={carouselRef}
         onScroll={handleScroll}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide"
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-1 scrollbar-hide"
       >
         {markets.map((market) => (
           <FollowingMarketCard
@@ -195,7 +197,7 @@ function FollowingSection({
         ))}
       </div>
       {pageCount > 1 && (
-        <div className="mt-3 flex justify-center gap-1.5">
+        <div className="mt-2.5 flex justify-center gap-1.5">
           {Array.from({ length: pageCount }, (_, i) => (
             <span
               key={i}
@@ -228,7 +230,7 @@ function FollowingMarketCard({
       type="button"
       data-no-drag
       onClick={onOpen}
-      className="w-[168px] shrink-0 snap-start rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5 text-left transition-colors active:bg-white/[0.06]"
+      className="w-[78%] max-w-[220px] shrink-0 snap-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3 text-left transition-colors active:bg-white/[0.06]"
     >
       <div className="flex items-center gap-2">
         <span className="text-base leading-none">{market.flag}</span>
@@ -236,7 +238,7 @@ function FollowingMarketCard({
           {market.name}
         </span>
       </div>
-      <p className="mt-3 truncate text-[20px] font-bold leading-tight tabular-nums text-white">
+      <p className="mt-2.5 truncate text-[20px] font-bold leading-tight tabular-nums text-white">
         {formatIndexValue(market.value)}
       </p>
       <p
@@ -247,8 +249,8 @@ function FollowingMarketCard({
         {up ? "+" : ""}
         {market.changePercent.toFixed(2)}%
       </p>
-      <div className="mt-3">
-        <MarketSparkline points={sparkline} up={up} width={136} height={28} />
+      <div className="mt-2.5">
+        <MarketSparkline points={sparkline} up={up} width={152} height={26} />
       </div>
     </button>
   );
@@ -262,7 +264,7 @@ function MarketSummaryBar({
   session: { open: boolean; label: "Markets open" | "Markets closed" };
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
@@ -309,16 +311,14 @@ function MarketNewsSection({
   onViewAll: () => void;
 }) {
   return (
-    <section className="mt-6">
-      <h2 className="px-4 pb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
-        Market News
-      </h2>
-      <div className="mx-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+    <section className={MARKETS_SECTION_SPACING}>
+      <h2 className={MARKETS_SECTION_HEADING}>Market News</h2>
+      <div className={MARKETS_SECTION_CARD}>
         <ul>
           {articles.map((article, i) => (
             <li
               key={article.id}
-              className={`flex gap-3 px-4 py-3.5 ${
+              className={`flex gap-3 px-4 py-3 ${
                 i < articles.length - 1 ? "border-b border-white/[0.06]" : ""
               }`}
             >
@@ -379,7 +379,7 @@ function MarketRow({
 
   return (
     <li
-      className={`flex items-center gap-2 px-4 py-3.5 ${
+      className={`flex items-center gap-2 px-4 py-3 ${
         showDivider ? "border-b border-white/[0.06]" : ""
       }`}
     >

@@ -19,12 +19,12 @@ export function TopMoversSection() {
   const movers = useMemo(() => getTopMovers(tab), [tab]);
 
   return (
-    <section className="mt-6">
-      <h2 className="px-4 pb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+    <section className="mt-5">
+      <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500">
         Top Movers
       </h2>
       <SectionTabs tabs={TOP_MOVER_TABS} active={tab} onChange={setTab} />
-      <div className="mx-4 mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+      <div className="mx-4 mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
         <ul>
           {movers.map((mover, i) => (
             <TopMoverRow
@@ -52,7 +52,7 @@ function TopMoverRow({
 
   return (
     <li
-      className={`flex items-center gap-3 px-4 py-3.5 ${
+      className={`flex items-center gap-3 px-4 py-3 ${
         showDivider ? "border-b border-white/[0.06]" : ""
       }`}
     >
