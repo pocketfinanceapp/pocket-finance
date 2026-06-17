@@ -3,7 +3,20 @@
 import { useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  TrendingUp,
+  Cpu,
+  Globe,
+  Zap,
+  Activity,
+  Building2,
+  Landmark,
+  BarChart2,
+  Globe2,
+  Bitcoin,
+} from "lucide-react";
 import {
   BROWSE_CATEGORIES,
   categoryFromSlug,
@@ -22,99 +35,136 @@ interface BrowsePageProps {
   articles: NewsArticle[];
 }
 
-/* ── Per-category visual tokens ─────────────────────────────────────────── */
+/* ── Category visual tokens ─────────────────────────────────────────────── */
 
-interface CategoryMeta {
-  emoji: string;
+type LucideIcon = React.ComponentType<{
+  className?: string;
+  style?: React.CSSProperties;
+}>;
+
+interface CategoryToken {
   description: string;
-  /** CSS gradient for the small emoji icon tile */
+  Icon: LucideIcon;
+  /** accent color for icon, bar, sparkline */
+  accent: string;
+  /** very subtle tinted tile bg */
   tileBg: string;
-  /** CSS gradient for header cards / top-story placeholder */
-  heroBg: string;
-  /** CSS rgba border colour */
-  borderColor: string;
 }
 
-const CATEGORY_META: Record<BrowseCategory, CategoryMeta> = {
+const CATEGORY_TOKENS: Record<BrowseCategory, CategoryToken> = {
   Markets: {
-    emoji: "📈",
     description: "Stocks, indices, and market-moving news",
-    tileBg: "linear-gradient(135deg,rgba(29,78,216,.55),rgba(8,145,178,.38))",
-    heroBg: "linear-gradient(135deg,#0b1a38 0%,#061622 100%)",
-    borderColor: "rgba(29,78,216,.22)",
+    Icon: TrendingUp,
+    accent: "#60a5fa",
+    tileBg: "rgba(59,130,246,.13)",
   },
   Technology: {
-    emoji: "💻",
     description: "Tech earnings, innovation, and digital trends",
-    tileBg: "linear-gradient(135deg,rgba(79,70,229,.55),rgba(124,58,237,.38))",
-    heroBg: "linear-gradient(135deg,#14103a 0%,#190a2e 100%)",
-    borderColor: "rgba(79,70,229,.22)",
+    Icon: Cpu,
+    accent: "#a78bfa",
+    tileBg: "rgba(139,92,246,.13)",
   },
   Economy: {
-    emoji: "🌍",
     description: "Macro trends, policy, and economic insights",
-    tileBg: "linear-gradient(135deg,rgba(5,150,105,.55),rgba(8,145,178,.38))",
-    heroBg: "linear-gradient(135deg,#071d17 0%,#051720 100%)",
-    borderColor: "rgba(5,150,105,.22)",
+    Icon: Globe,
+    accent: "#34d399",
+    tileBg: "rgba(52,211,153,.13)",
   },
   Crypto: {
-    emoji: "🪙",
     description: "Digital assets, blockchain, and crypto markets",
-    tileBg: "linear-gradient(135deg,rgba(107,114,128,.38),rgba(76,29,149,.28))",
-    heroBg: "linear-gradient(135deg,#111118 0%,#0d0a1a 100%)",
-    borderColor: "rgba(107,114,128,.16)",
+    Icon: Bitcoin,
+    accent: "#71717a",
+    tileBg: "rgba(113,113,122,.10)",
   },
   Energy: {
-    emoji: "⚡",
     description: "Oil, gas, and clean energy market updates",
-    tileBg: "linear-gradient(135deg,rgba(217,119,6,.55),rgba(234,88,12,.38))",
-    heroBg: "linear-gradient(135deg,#1e1103 0%,#190e03 100%)",
-    borderColor: "rgba(217,119,6,.22)",
+    Icon: Zap,
+    accent: "#fbbf24",
+    tileBg: "rgba(251,191,36,.13)",
   },
   Healthcare: {
-    emoji: "🏥",
     description: "Healthcare industry, biotech, and pharma",
-    tileBg: "linear-gradient(135deg,rgba(225,29,72,.55),rgba(219,39,119,.38))",
-    heroBg: "linear-gradient(135deg,#1e0811 0%,#18050e 100%)",
-    borderColor: "rgba(225,29,72,.22)",
+    Icon: Activity,
+    accent: "#f87171",
+    tileBg: "rgba(248,113,113,.13)",
   },
   "Real Estate": {
-    emoji: "🏠",
     description: "Property markets, REITs, and real estate trends",
-    tileBg: "linear-gradient(135deg,rgba(22,163,74,.55),rgba(5,150,105,.38))",
-    heroBg: "linear-gradient(135deg,#06180b 0%,#041510 100%)",
-    borderColor: "rgba(22,163,74,.22)",
+    Icon: Building2,
+    accent: "#4ade80",
+    tileBg: "rgba(74,222,128,.13)",
   },
   Banking: {
-    emoji: "🏦",
     description: "Banks, credit markets, and financial services",
-    tileBg: "linear-gradient(135deg,rgba(29,78,216,.55),rgba(59,130,246,.38))",
-    heroBg: "linear-gradient(135deg,#0b1525 0%,#070f1c 100%)",
-    borderColor: "rgba(29,78,216,.22)",
+    Icon: Landmark,
+    accent: "#93c5fd",
+    tileBg: "rgba(147,197,253,.13)",
   },
   Commodities: {
-    emoji: "🛢️",
     description: "Gold, metals, agriculture, and commodity markets",
-    tileBg: "linear-gradient(135deg,rgba(217,119,6,.55),rgba(245,158,11,.38))",
-    heroBg: "linear-gradient(135deg,#1e1502 0%,#191002 100%)",
-    borderColor: "rgba(217,119,6,.22)",
+    Icon: BarChart2,
+    accent: "#fcd34d",
+    tileBg: "rgba(252,211,77,.13)",
   },
   "World Markets": {
-    emoji: "🌐",
     description: "Global indices, currencies, and international news",
-    tileBg: "linear-gradient(135deg,rgba(8,145,178,.55),rgba(59,130,246,.38))",
-    heroBg: "linear-gradient(135deg,#05131e 0%,#040e1c 100%)",
-    borderColor: "rgba(8,145,178,.22)",
+    Icon: Globe2,
+    accent: "#22d3ee",
+    tileBg: "rgba(34,211,238,.13)",
   },
 };
 
-const CATEGORY_BOTTOM_PADDING =
-  "calc(9rem + env(safe-area-inset-bottom))";
+/** Inline SVG sparkline for the top-story placeholder */
+function EditorialPlaceholder({ accent }: { accent: string }) {
+  return (
+    <div
+      className="relative h-[80px] w-full overflow-hidden"
+      style={{ background: "#09090E" }}
+    >
+      {/* Subtle grid texture */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px)," +
+            "linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      {/* Mini sparkline */}
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 300 80"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <polygon
+          points="0,68 45,58 85,62 130,45 172,38 214,42 255,26 300,18 300,80 0,80"
+          fill={accent}
+          fillOpacity="0.06"
+        />
+        <polyline
+          points="0,68 45,58 85,62 130,45 172,38 214,42 255,26 300,18"
+          fill="none"
+          stroke={accent}
+          strokeWidth="1.5"
+          strokeOpacity="0.38"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {/* Bottom fade so the text block blends in cleanly */}
+      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#09090E] to-transparent" />
+    </div>
+  );
+}
 
+const CARD_SURFACE = { background: "#09090E" } as const;
+
+const CATEGORY_BOTTOM_PADDING = "calc(9rem + env(safe-area-inset-bottom))";
 const BROWSE_BOTTOM_PADDING =
   "calc(3rem + max(1.25rem, env(safe-area-inset-bottom)))";
 
-/* ── Component ───────────────────────────────────────────────────────────── */
+/* ── Main component ──────────────────────────────────────────────────────── */
 
 export function BrowsePage({ articles }: BrowsePageProps) {
   const pathname = usePathname();
@@ -144,18 +194,19 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     navigation.navigate("home");
   };
 
-  /* ── Category detail ──────────────────────────────────────────────────── */
+  /* ── Category detail page ────────────────────────────────────────────── */
   if (category) {
-    const meta = CATEGORY_META[category];
+    const token = CATEGORY_TOKENS[category];
+    const { Icon, accent } = token;
     const topStory = categoryArticles[0] ?? null;
     const latestStories = categoryArticles.slice(1);
     const count = categoryArticles.length;
 
     return (
-      <div className="flex h-full min-h-0 flex-col bg-black text-white">
+      <div className="flex h-full min-h-0 flex-col bg-[#030305] text-white">
         {/* Pinned header */}
-        <div className="relative z-20 shrink-0 border-b border-white/[0.06] bg-black after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
-          <header className="flex items-center gap-3 px-4 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="relative z-20 shrink-0 border-b border-white/[0.06] bg-[#030305] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']">
+          <header className="flex items-center gap-2 px-2 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
             <button
               type="button"
               data-no-drag
@@ -165,9 +216,9 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/10"
               aria-label="Back to categories"
             >
-              <ArrowLeft className="h-6 w-6 text-white" />
+              <ArrowLeft className="h-5 w-5 text-white" />
             </button>
-            <h1 className="text-lg font-bold text-white">{category}</h1>
+            <h1 className="text-[17px] font-semibold text-white">{category}</h1>
           </header>
         </div>
 
@@ -175,42 +226,39 @@ export function BrowsePage({ articles }: BrowsePageProps) {
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
           style={{ paddingBottom: CATEGORY_BOTTOM_PADDING }}
         >
-          {/* Category info card */}
+          {/* Category summary card */}
           <div
-            className="mx-4 mt-4 overflow-hidden rounded-2xl"
-            style={{ border: `1px solid ${meta.borderColor}` }}
+            className="mx-4 mt-4 overflow-hidden rounded-xl border border-white/[0.07]"
+            style={CARD_SURFACE}
           >
-            <div
-              className="flex items-center gap-3.5 px-4 py-3.5"
-              style={{ background: meta.heroBg }}
-            >
+            <div className="flex items-center gap-3 px-4 py-3.5">
               <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl leading-none"
-                style={{ background: meta.tileBg }}
-                aria-hidden
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                style={{ background: token.tileBg }}
               >
-                {meta.emoji}
+                <Icon className="h-[18px] w-[18px]" style={{ color: accent }} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[16px] font-bold text-white">{category}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-white/55">
-                  {meta.description}
+                <p className="text-[15px] font-bold text-white">{category}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-zinc-500">
+                  {token.description}
                 </p>
-                <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-white/40">
-                  <span>{count === 1 ? "1 story" : `${count} stories`}</span>
-                  {count > 0 && (
-                    <>
-                      <span>·</span>
-                      <span>Updated today</span>
-                    </>
-                  )}
-                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-[12px] font-medium text-zinc-400">
+                  {count === 1 ? "1 story" : `${count} stories`}
+                </p>
+                {count > 0 && (
+                  <p className="mt-0.5 text-[11px] text-zinc-600">
+                    Updated today
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
           {count === 0 ? (
-            <p className="px-4 py-12 text-center text-sm text-zinc-500">
+            <p className="px-4 py-12 text-center text-sm text-zinc-600">
               No articles in this category yet
             </p>
           ) : (
@@ -218,15 +266,14 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               {/* Top story */}
               {topStory && (
                 <section className="mt-5 px-4">
-                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
                     Top story
-                  </h2>
+                  </p>
                   <button
                     type="button"
                     data-no-drag
                     onClick={() => openInFeed(topStory)}
-                    className="w-full overflow-hidden rounded-2xl text-left active:opacity-80"
-                    style={{ border: `1px solid ${meta.borderColor}` }}
+                    className="w-full overflow-hidden rounded-xl border border-white/[0.07] text-left active:opacity-80"
                   >
                     {topStory.imageUrl ? (
                       <div className="relative aspect-[16/8] w-full overflow-hidden">
@@ -238,38 +285,26 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                           sizes="(max-width: 430px) calc(100vw - 2rem)"
                           unoptimized
                         />
-                        {/* Dark gradient overlay for readability */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       </div>
                     ) : (
-                      /* Designed gradient placeholder — no grey void */
-                      <div
-                        className="relative flex h-[120px] w-full items-center justify-center overflow-hidden"
-                        style={{ background: meta.heroBg }}
-                      >
-                        <span
-                          className="select-none text-[96px] leading-none opacity-[0.09]"
-                          aria-hidden
-                        >
-                          {meta.emoji}
-                        </span>
-                      </div>
+                      <EditorialPlaceholder accent={accent} />
                     )}
                     <div
-                      className="px-4 py-3.5"
-                      style={{ background: meta.heroBg }}
+                      className="px-4 pb-4 pt-3"
+                      style={CARD_SURFACE}
                     >
                       <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white">
                         {cleanArticleTitle(topStory.headline)}
                       </p>
                       {topStory.subheading && (
-                        <p className="mt-1.5 line-clamp-2 text-[12px] leading-snug text-white/55">
+                        <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-zinc-500">
                           {topStory.subheading}
                         </p>
                       )}
-                      <p className="mt-2 text-[11px] text-white/40">
+                      <p className="mt-2 text-[11px] text-zinc-600">
                         {topStory.sourceName}
-                        <span className="mx-1.5 opacity-50">·</span>
+                        <span className="mx-1.5">·</span>
                         {timeAgo(topStory.publishedAt)}
                       </p>
                     </div>
@@ -280,34 +315,40 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               {/* Latest stories */}
               {latestStories.length > 0 && (
                 <section className="mt-5 px-4">
-                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
                     Latest stories
-                  </h2>
-                  <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.025]">
+                  </p>
+                  <div
+                    className="overflow-hidden rounded-xl border border-white/[0.07]"
+                    style={CARD_SURFACE}
+                  >
                     {latestStories.map((article, index) => (
                       <div key={article.id}>
                         <button
                           type="button"
                           data-no-drag
                           onClick={() => openInFeed(article)}
-                          className="flex w-full flex-col gap-1 px-4 py-3 text-left active:bg-white/[0.04]"
+                          className="flex w-full flex-col px-4 py-3 text-left active:bg-white/[0.04]"
                         >
-                          <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-white">
+                          <p className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-white">
                             {cleanArticleTitle(article.headline)}
                           </p>
                           {article.subheading ? (
-                            <p className="line-clamp-1 text-[11px] leading-snug text-zinc-500">
+                            <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
                               {article.subheading}
                             </p>
                           ) : null}
-                          <p className="mt-0.5 text-[11px] text-zinc-600">
+                          <p className="mt-1 text-[11px] text-zinc-600">
                             {article.sourceName}
-                            <span className="mx-1.5 text-zinc-700">·</span>
+                            <span className="mx-1.5">·</span>
                             {timeAgo(article.publishedAt)}
                           </p>
                         </button>
                         {index < latestStories.length - 1 && (
-                          <div className="mx-4 h-px bg-white/[0.06]" aria-hidden />
+                          <div
+                            className="mx-4 h-px bg-white/[0.05]"
+                            aria-hidden
+                          />
                         )}
                       </div>
                     ))}
@@ -321,93 +362,116 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     );
   }
 
-  /* ── Browse landing ───────────────────────────────────────────────────── */
+  /* ── Browse landing page ─────────────────────────────────────────────── */
   return (
-    <div className="flex h-full min-h-0 flex-col bg-black text-white">
+    <div className="flex h-full min-h-0 flex-col bg-[#030305] text-white">
       {/* Pinned header */}
-      <div className="relative z-20 shrink-0 bg-black after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
-        <header className="px-5 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="relative z-20 shrink-0 bg-[#030305] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-4 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']">
+        <header className="px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
           <h1 className="text-[28px] font-bold tracking-tight text-white">
             Browse
           </h1>
-          <p className="mt-0.5 text-sm text-zinc-500">
+          <p className="mt-0.5 text-[13px] text-zinc-500">
             Explore markets, sectors, and business trends
           </p>
         </header>
       </div>
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-2"
         style={{ paddingBottom: BROWSE_BOTTOM_PADDING }}
       >
-        <div className="flex flex-col gap-1.5">
-          {BROWSE_CATEGORIES.map((item) => {
-            const meta = CATEGORY_META[item];
+        {/* Single grouped list — more Bloomberg/finance-native */}
+        <div
+          className="overflow-hidden rounded-xl border border-white/[0.07]"
+          style={CARD_SURFACE}
+        >
+          {BROWSE_CATEGORIES.map((item, index) => {
+            const token = CATEGORY_TOKENS[item];
+            const { Icon, accent } = token;
             const count = categoryCounts.get(item) ?? 0;
             const isCrypto = item === "Crypto";
 
-            if (isCrypto) {
-              return (
-                <div
-                  key={item}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 opacity-50"
-                  style={{ background: "#0e0e12", border: "1px solid rgba(255,255,255,0.06)" }}
-                >
-                  <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg leading-none"
-                    style={{ background: meta.tileBg }}
-                    aria-hidden
-                  >
-                    {meta.emoji}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-semibold text-zinc-400">{item}</p>
-                    <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-600">
-                      {meta.description}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-zinc-800/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                    Coming soon
-                  </span>
-                </div>
-              );
-            }
-
             return (
-              <button
-                key={item}
-                type="button"
-                data-no-drag
-                onClick={() =>
-                  router.replace(
-                    appPath(`browse/${categoryToSlug(item)}`),
-                    { scroll: false }
-                  )
-                }
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left active:opacity-75"
-                style={{
-                  background: "#0e0e12",
-                  border: `1px solid ${meta.borderColor}`,
-                }}
-              >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg leading-none"
-                  style={{ background: meta.tileBg }}
-                  aria-hidden
-                >
-                  {meta.emoji}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold text-white">{item}</p>
-                  <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
-                    {meta.description}
-                  </p>
-                </div>
-                <span className="shrink-0 text-[11px] tabular-nums text-zinc-600">
-                  {count === 1 ? "1 story" : `${count} stories`}
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-zinc-700" />
-              </button>
+              <div key={item}>
+                {isCrypto ? (
+                  <div className="flex items-center gap-3 px-4 py-3 opacity-45">
+                    {/* Left accent bar */}
+                    <div
+                      className="h-5 w-[3px] shrink-0 rounded-r-full"
+                      style={{ background: accent }}
+                    />
+                    {/* Icon */}
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                      style={{ background: token.tileBg }}
+                    >
+                      <Icon
+                        className="h-[15px] w-[15px]"
+                        style={{ color: accent }}
+                      />
+                    </span>
+                    {/* Text */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13.5px] font-semibold text-zinc-400">
+                        {item}
+                      </p>
+                      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-600">
+                        {token.description}
+                      </p>
+                    </div>
+                    {/* Coming soon pill */}
+                    <span className="shrink-0 rounded-md bg-zinc-800/70 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+                      Soon
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    data-no-drag
+                    onClick={() =>
+                      router.replace(
+                        appPath(`browse/${categoryToSlug(item)}`),
+                        { scroll: false }
+                      )
+                    }
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/[0.04]"
+                  >
+                    {/* Left accent bar */}
+                    <div
+                      className="h-5 w-[3px] shrink-0 rounded-r-full"
+                      style={{ background: accent, opacity: 0.75 }}
+                    />
+                    {/* Icon tile */}
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                      style={{ background: token.tileBg }}
+                    >
+                      <Icon
+                        className="h-[15px] w-[15px]"
+                        style={{ color: accent }}
+                      />
+                    </span>
+                    {/* Text */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13.5px] font-semibold text-white">
+                        {item}
+                      </p>
+                      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
+                        {token.description}
+                      </p>
+                    </div>
+                    {/* Story count + chevron */}
+                    <span className="shrink-0 text-[11px] tabular-nums text-zinc-600">
+                      {count === 1 ? "1 story" : `${count} stories`}
+                    </span>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-700" />
+                  </button>
+                )}
+                {index < BROWSE_CATEGORIES.length - 1 && (
+                  <div className="mx-4 h-px bg-white/[0.05]" aria-hidden />
+                )}
+              </div>
             );
           })}
         </div>
