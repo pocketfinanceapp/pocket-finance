@@ -150,6 +150,35 @@ const GRID_TEXTURE: React.CSSProperties = {
   backgroundSize: "24px 24px",
 };
 
+/* ── Keyword relevance scoring for featured card selection ───────────────── */
+
+const FEATURED_KEYWORDS: Partial<Record<BrowseCategory, string[]>> = {
+  Markets: [
+    "stock", "stocks", "market", "markets", "futures", "dow", "s&p", "nasdaq",
+    "wall street", "shares", "rally", "selloff", "investors", "earnings",
+    "fed", "rates", "yield", "ipo", "valuation", "market cap",
+  ],
+  Technology: [
+    "ai", "chip", "chips", "nvidia", "microsoft", "apple", "google", "meta",
+    "amazon", "tesla", "salesforce", "software", "cloud", "semiconductor",
+    "tech", "startup", "openai",
+  ],
+  Economy: [
+    "economy", "inflation", "fed", "rates", "jobs", "wages", "gdp",
+    "recession", "consumer spending", "tariffs", "oil prices", "gas prices",
+    "policy", "central bank",
+  ],
+};
+
+function scoreArticle(article: NewsArticle, keywords: string[]): number {
+  const text =
+    `${article.headline} ${article.subheading ?? ""}`.toLowerCase();
+  return keywords.reduce(
+    (n, kw) => n + (text.includes(kw) ? 1 : 0),
+    0
+  );
+}
+
 /* ── Editorial featured card ─────────────────────────────────────────────── */
 
 function TopStoryCard({
@@ -198,9 +227,9 @@ function TopStoryCard({
       </svg>
 
       {/* Content */}
-      <div className="relative px-4 py-3.5">
+      <div className="relative px-4 py-3">
         {/* Category row */}
-        <div className="mb-2.5 flex items-center gap-1.5">
+        <div className="mb-2 flex items-center gap-1.5">
           <span
             className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md"
             style={{ background: token.tileBg }}
@@ -224,11 +253,11 @@ function TopStoryCard({
               {cleanArticleTitle(article.headline)}
             </p>
             {article.subheading && (
-              <p className="mt-1 line-clamp-1 text-[11.5px] leading-snug text-zinc-500">
+              <p className="mt-1 line-clamp-1 text-[11px] leading-snug text-zinc-500">
                 {article.subheading}
               </p>
             )}
-            <p className="mt-2 text-[10.5px] text-zinc-600">
+            <p className="mt-1.5 text-[10px] text-zinc-700">
               {article.sourceName}
               <span className="mx-1">·</span>
               {timeAgo(article.publishedAt)}
@@ -317,23 +346,34 @@ export function BrowsePage({ articles }: BrowsePageProps) {
   }, [articles]);
 
   /**
-   * Deduplicated top articles for the 3 featured cards.
-   * Each featured category gets the first article in its list that
-   * hasn't already been claimed by an earlier featured category,
-   * ensuring all three cards show distinct headlines.
+   * Keyword-scored, deduplicated top articles for the 3 featured cards.
+   * Candidates for each category are sorted by keyword-relevance score so
+   * the most on-topic article wins. Deduplication across cards is applied
+   * after scoring so no two cards share the same headline.
    */
   const featuredTopArticle = useMemo(() => {
     const usedIds = new Set<string>();
     const map = new Map<BrowseCategory, NewsArticle | null>();
     for (const item of FEATURED_CATEGORIES) {
       const filtered = filterArticlesByBrowseCategory(articles, item);
-      const unique = filtered.find((a) => !usedIds.has(a.id));
-      if (unique) {
-        usedIds.add(unique.id);
-        map.set(item, unique);
+      const keywords = FEATURED_KEYWORDS[item] ?? [];
+
+      // Sort by relevance score descending, preserving recency among ties
+      const scored = filtered
+        .map((a) => ({ a, score: scoreArticle(a, keywords) }))
+        .sort((x, y) => y.score - x.score);
+
+      // Pick highest-scoring article not already used
+      const best = scored.find(({ a }) => !usedIds.has(a.id));
+      if (best) {
+        usedIds.add(best.a.id);
+        map.set(item, best.a);
       } else {
-        // fallback: show own first article even if it duplicates another card
-        map.set(item, filtered[0] ?? null);
+        // Fallback: first unique article regardless of score
+        const fallback = filtered.find((a) => !usedIds.has(a.id));
+        const pick = fallback ?? filtered[0] ?? null;
+        if (pick) usedIds.add(pick.id);
+        map.set(item, pick);
       }
     }
     return map;
