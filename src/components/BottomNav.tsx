@@ -92,7 +92,7 @@ export function BottomNav({ active }: BottomNavProps) {
         </NavItem>
 
         <NavItem
-          label="Browse"
+          label="Discover"
           active={browseActive}
           onClick={() => navigate("browse")}
         >
