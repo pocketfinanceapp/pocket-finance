@@ -1,69 +1,82 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Lock } from "lucide-react";
 import {
-  ACHIEVEMENT_BADGES,
-  getUnlockedBadgeIds,
-  hasViewedStockPanel,
-  loadSeenBadgeIds,
-  markBadgeSeen,
-  type AchievementStats,
-} from "@/lib/achievements";
+  getAchievements,
+  type Achievement,
+  type AchievementCategory,
+} from "@/lib/progression";
+
+// ---------------------------------------------------------------------------
+// Types & constants
+// ---------------------------------------------------------------------------
+
+const CATEGORY_FILTERS: { id: AchievementCategory | "all"; label: string }[] =
+  [
+    { id: "all", label: "All" },
+    { id: "reading", label: "Reading" },
+    { id: "markets", label: "Markets" },
+    { id: "consistency", label: "Consistency" },
+    { id: "discovery", label: "Discovery" },
+    { id: "engagement", label: "Engagement" },
+  ];
 
 interface ProfileAchievementsProps {
-  articlesRead: number;
-  likedCount: number;
-  streak: number;
-  /** Limit visible achievements (for preview mode). Default: show all */
+  likedArticlesCount?: number;
+  /**
+   * When set, renders exactly 4 prioritised achievements (2 unlocked +
+   * 2 closest to completion). Omit for the full list.
+   */
   maxItems?: number;
-  /** When provided, renders "View all" as a tappable button */
+  /** Renders a "View all" button when provided. */
   onViewAll?: () => void;
+  /** Full-screen mode: shows category filter tabs. */
+  showCategoryFilter?: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Prioritisation for preview (4 cards)
+// ---------------------------------------------------------------------------
+
+function buildPreview4(achievements: Achievement[]): Achievement[] {
+  const unlocked = achievements.filter((a) => a.unlocked);
+  const locked = [...achievements.filter((a) => !a.unlocked)].sort(
+    (a, b) => b.progress / b.required - a.progress / a.required
+  );
+  const result: Achievement[] = [
+    ...unlocked.slice(0, 2),
+    ...locked.slice(0, Math.max(0, 4 - Math.min(unlocked.length, 2))),
+  ];
+  return result.slice(0, 4);
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export function ProfileAchievements({
-  articlesRead,
-  likedCount,
-  streak,
+  likedArticlesCount = 0,
   maxItems,
   onViewAll,
+  showCategoryFilter = false,
 }: ProfileAchievementsProps) {
-  const [firstStockViewed, setFirstStockViewed] = useState(false);
-  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
+  const [activeCategory, setActiveCategory] = useState<
+    AchievementCategory | "all"
+  >("all");
 
-  useEffect(() => {
-    setFirstStockViewed(hasViewedStockPanel());
-  }, []);
-
-  const stats: AchievementStats = useMemo(
-    () => ({ articlesRead, likedCount, streak, firstStockViewed }),
-    [articlesRead, likedCount, streak, firstStockViewed]
+  const allAchievements = useMemo(
+    () => getAchievements({ likedArticlesCount }),
+    [likedArticlesCount]
   );
 
-  const unlockedIds = useMemo(
-    () => new Set(getUnlockedBadgeIds(stats)),
-    [stats]
-  );
-  const unlockedCount = unlockedIds.size;
+  const displayAchievements = useMemo(() => {
+    if (maxItems) return buildPreview4(allAchievements);
+    if (activeCategory === "all") return allAchievements;
+    return allAchievements.filter((a) => a.category === activeCategory);
+  }, [allAchievements, maxItems, activeCategory]);
 
-  useEffect(() => {
-    const seen = loadSeenBadgeIds();
-    const toAnimate = [...unlockedIds].filter((id) => !seen.has(id));
-    if (toAnimate.length === 0) return;
-
-    setAnimatingIds(new Set(toAnimate));
-    const timer = window.setTimeout(() => {
-      for (const id of toAnimate) markBadgeSeen(id);
-      setAnimatingIds(new Set());
-    }, 650);
-    return () => window.clearTimeout(timer);
-  }, [unlockedIds]);
-
-  const displayBadges = maxItems
-    ? ACHIEVEMENT_BADGES.slice(0, maxItems)
-    : ACHIEVEMENT_BADGES;
-
-  const hasMore = maxItems !== undefined && ACHIEVEMENT_BADGES.length > maxItems;
+  const unlockedCount = allAchievements.filter((a) => a.unlocked).length;
 
   return (
     <section>
@@ -72,7 +85,7 @@ export function ProfileAchievements({
         <div>
           <h3 className="text-[15px] font-bold text-white">Achievements</h3>
           <p className="mt-0.5 text-[11px] text-zinc-500">
-            {unlockedCount} of {ACHIEVEMENT_BADGES.length} unlocked
+            {unlockedCount} of {allAchievements.length} unlocked
           </p>
         </div>
         {onViewAll && (
@@ -87,101 +100,157 @@ export function ProfileAchievements({
         )}
       </div>
 
-      {/* 2-column grid */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {displayBadges.map((badge) => {
-          const unlocked = unlockedIds.has(badge.id);
-          const animate = animatingIds.has(badge.id);
-
-          return (
-            <div
-              key={badge.id}
-              className={`relative overflow-hidden rounded-2xl p-3 ${
-                animate ? "badge-unlock-animate" : ""
-              }`}
-              style={{
-                minHeight: 96,
-                backgroundColor: unlocked
-                  ? "rgba(0,198,198,0.025)"
-                  : "rgba(10,11,16,0.72)",
-                border: unlocked
-                  ? "1px solid rgba(255,255,255,0.08)"
-                  : "1px solid rgba(255,255,255,0.05)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,.03)",
-              }}
-            >
-              {/* Left accent line — unlocked only */}
-              {unlocked && (
-                <div
-                  className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full"
+      {/* Category filter tabs (full-screen mode only) */}
+      {showCategoryFilter && (
+        <div className="-mx-5 mt-3 overflow-x-auto px-5">
+          <div className="flex gap-2 pb-1">
+            {CATEGORY_FILTERS.map((f) => {
+              const active = activeCategory === f.id;
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  data-no-drag
+                  onClick={() => setActiveCategory(f.id)}
+                  className="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors active:opacity-70"
                   style={{
-                    background:
-                      "linear-gradient(to bottom, rgba(0,198,198,0.60), rgba(0,198,198,0.12))",
-                  }}
-                />
-              )}
-
-              {/* Top row: icon tile + status badge */}
-              <div className="flex items-start justify-between">
-                {/* Neutral dark tile — no cyan tint for unlocked */}
-                <div
-                  className="flex h-8 w-8 items-center justify-center rounded-xl text-lg leading-none"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.07)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    opacity: unlocked ? 1 : 0.28,
-                    filter: unlocked ? undefined : "grayscale(100%)",
+                    backgroundColor: active
+                      ? "rgba(0,198,198,0.15)"
+                      : "rgba(255,255,255,0.05)",
+                    color: active ? "#00C6C6" : "rgba(255,255,255,0.42)",
+                    border: active
+                      ? "1px solid rgba(0,198,198,0.25)"
+                      : "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
-                  {badge.emoji}
-                </div>
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-                {unlocked ? (
-                  <div
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #009faa 0%, #007080 100%)",
-                    }}
-                  >
-                    <Check
-                      className="h-[10px] w-[10px] text-white"
-                      strokeWidth={3}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.09)",
-                    }}
-                  >
-                    <Lock className="h-[9px] w-[9px] text-zinc-600" />
-                  </div>
-                )}
-              </div>
+      {/* 2-column grid */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {displayAchievements.map((a) => (
+          <AchievementCard key={a.id} achievement={a} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
-              {/* Title + requirement */}
-              <p
-                className="mt-2 text-[12px] font-semibold leading-snug"
-                style={{
-                  color: unlocked
-                    ? "rgba(255,255,255,0.92)"
-                    : "rgba(255,255,255,0.33)",
-                }}
-              >
-                {badge.name}
-              </p>
-              <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
-                {badge.progressHint}
-              </p>
-            </div>
-          );
-        })}
+// ---------------------------------------------------------------------------
+// Achievement card
+// ---------------------------------------------------------------------------
+
+function AchievementCard({ achievement: a }: { achievement: Achievement }) {
+  const pct = Math.min(100, Math.round((a.progress / a.required) * 100));
+  const inProgress = !a.unlocked && a.progress > 0;
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl p-3"
+      style={{
+        minHeight: 96,
+        backgroundColor: a.unlocked
+          ? "rgba(0,198,198,0.025)"
+          : "rgba(10,11,16,0.72)",
+        border: a.unlocked
+          ? "1px solid rgba(255,255,255,0.08)"
+          : "1px solid rgba(255,255,255,0.05)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,.03)",
+      }}
+    >
+      {/* Left accent line — unlocked only */}
+      {a.unlocked && (
+        <div
+          className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0,198,198,0.60), rgba(0,198,198,0.12))",
+          }}
+        />
+      )}
+
+      {/* Top row: icon tile + status badge */}
+      <div className="flex items-start justify-between">
+        <div
+          className="flex h-8 w-8 items-center justify-center rounded-xl text-lg leading-none"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.07)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            opacity: a.unlocked ? 1 : 0.28,
+            filter: a.unlocked ? undefined : "grayscale(100%)",
+          }}
+        >
+          {a.icon}
+        </div>
+
+        {a.unlocked ? (
+          <div
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+            style={{
+              background: "linear-gradient(135deg, #009faa 0%, #007080 100%)",
+            }}
+          >
+            <Check
+              className="h-[10px] w-[10px] text-white"
+              strokeWidth={3}
+            />
+          </div>
+        ) : (
+          <div
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.09)",
+            }}
+          >
+            <Lock className="h-[9px] w-[9px] text-zinc-600" />
+          </div>
+        )}
       </div>
 
-      {/* No pagination dots — "View all" opens a separate page */}
-    </section>
+      {/* Title */}
+      <p
+        className="mt-2 text-[12px] font-semibold leading-snug"
+        style={{
+          color: a.unlocked
+            ? "rgba(255,255,255,0.92)"
+            : "rgba(255,255,255,0.33)",
+        }}
+      >
+        {a.title}
+      </p>
+
+      {/* Progress text or description */}
+      {a.unlocked ? (
+        <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
+          {a.description}
+        </p>
+      ) : (
+        <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
+          {a.progress}&thinsp;/&thinsp;{a.required}
+        </p>
+      )}
+
+      {/* Progress bar — shown for in-progress locked achievements */}
+      {inProgress && (
+        <div
+          className="mt-2 overflow-hidden rounded-full"
+          style={{ height: 2, backgroundColor: "rgba(255,255,255,0.07)" }}
+        >
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${pct}%`,
+              backgroundColor: "rgba(0,198,198,0.60)",
+            }}
+          />
+        </div>
+      )}
+    </div>
   );
 }

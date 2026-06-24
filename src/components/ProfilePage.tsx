@@ -1,15 +1,42 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Calendar, ChevronRight, Settings, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Calendar,
+  Check,
+  ChevronRight,
+  Hash,
+  Layers,
+  Newspaper,
+  Settings,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import {
-  getReadingStreak,
   loadFavouriteTopics,
   loadRecentlyRead,
   type RecentlyReadEntry,
 } from "@/lib/profileStorage";
+import {
+  getAchievements,
+  getDailyGoalState,
+  getProgressionState,
+  getSessionSnapshot,
+  getStreakState,
+  getTotalXP,
+  getWeeklyActivity,
+  type Achievement,
+  type DailyGoalState,
+  type LevelState,
+  type StreakState,
+  type WeeklyActivity,
+} from "@/lib/progression";
 import type { LikedArticleEntry, SavedArticleEntry } from "@/lib/types";
 import { fetchLikedArticles, fetchSavedArticles } from "@/lib/userInteractions";
 import { timeAgo } from "@/lib/utils";
@@ -19,23 +46,39 @@ import { ProfileArticlePreview } from "./ProfileArticlePreview";
 import { ScreenHeader } from "./ScreenHeader";
 import { SettingsPage } from "./SettingsPage";
 
-/* ── Streak milestone helpers ────────────────────────────────────────────── */
+// ---------------------------------------------------------------------------
+// Session-level flags (module-level → survive ProfilePage mount/unmount)
+// ---------------------------------------------------------------------------
 
-const STREAK_MILESTONES = [3, 7, 14, 30];
+let _levelUpModalShownThisSession = false;
+const _achievementToastsShownThisSession = new Set<string>();
 
-function getNextMilestone(streak: number): number {
-  return STREAK_MILESTONES.find((m) => m > streak) ?? 30;
-}
-
-/* ── Design tokens ───────────────────────────────────────────────────────── */
+// ---------------------------------------------------------------------------
+// Design tokens
+// ---------------------------------------------------------------------------
 
 const CARD_STYLE = {
-  backgroundColor: "rgba(10,11,16,0.72)" as const,
+  backgroundColor: "rgba(10,11,16,0.97)" as const,
   border: "1px solid rgba(255,255,255,0.07)" as const,
   boxShadow: "inset 0 1px 0 rgba(255,255,255,.04)" as const,
 };
 
-/* ─────────────────────────────────────────────────────────────────────────── */
+// ---------------------------------------------------------------------------
+// Level-up description copy
+// ---------------------------------------------------------------------------
+
+const LEVEL_DESCRIPTIONS: Record<number, string> = {
+  2: "You're building a solid reading habit — keep at it.",
+  3: "You're exploring the markets with real depth.",
+  4: "You're making serious progress as a market explorer.",
+  5: "Elite-level insight. The markets are starting to talk.",
+  6: "You think in portfolios. Truly impressive discipline.",
+  7: "You've reached the pinnacle of market mastery.",
+};
+
+// ---------------------------------------------------------------------------
+// ProfilePage
+// ---------------------------------------------------------------------------
 
 interface ProfilePageProps {
   onClose: () => void;
@@ -50,14 +93,13 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     useApp();
   const { user, isGuest, requestSignIn } = useAuth();
 
-  /* ── UI sub-screen state ────────────────────────────────────────────── */
+  /* ── Sub-screen state ───────────────────────────────────────────────── */
   const [showSettings, setShowSettings] = useState(false);
   const [settingsScreen, setSettingsScreen] = useState<SettingsScreen>("main");
   const [showTopics, setShowTopics] = useState(false);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
   const [showAllRecentlyRead, setShowAllRecentlyRead] = useState(false);
 
-  /* Notify parent so bottom nav can hide on any sub-screen */
   const isSubPage =
     showSettings || showTopics || showAllAchievements || showAllRecentlyRead;
   useEffect(() => {
@@ -65,14 +107,12 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   }, [isSubPage, onSubPageChange]);
 
   /* ── Data state ─────────────────────────────────────────────────────── */
-  const [streak, setStreak] = useState(0);
   const [recentlyRead, setRecentlyRead] = useState<RecentlyReadEntry[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [likedPreview, setLikedPreview] = useState<LikedArticleEntry[]>([]);
   const [savedPreview, setSavedPreview] = useState<SavedArticleEntry[]>([]);
 
   const refreshLocalProfile = useCallback(() => {
-    setStreak(getReadingStreak());
     setRecentlyRead(loadRecentlyRead());
     setSelectedTopics(loadFavouriteTopics());
   }, []);
@@ -82,24 +122,103 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     refreshLocalProfile();
   }, [reloadProfileStats, refreshLocalProfile]);
 
-  /* Load liked/saved previews from server */
   useEffect(() => {
     if (!user?.id) return;
     fetchLikedArticles(user.id)
       .then((items) => setLikedPreview(items.slice(0, 2)))
-        .catch(() => {});
+      .catch(() => {});
     fetchSavedArticles(user.id)
       .then((items) => setSavedPreview(items.slice(0, 2)))
       .catch(() => {});
   }, [user?.id]);
 
-  /* ── Open settings helper ───────────────────────────────────────────── */
+  /* ── Progression data (re-derived when Supabase data changes) ───────── */
+  const progressionState: LevelState = useMemo(
+    () => getProgressionState(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [likedArticlesCount, storiesRead]
+  );
+  const totalXP = useMemo(
+    () => getTotalXP(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [likedArticlesCount, storiesRead]
+  );
+  const dailyGoal: DailyGoalState = useMemo(
+    () => getDailyGoalState(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [likedArticlesCount]
+  );
+  const streakState: StreakState = useMemo(
+    () => getStreakState(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [likedArticlesCount]
+  );
+  const weeklyActivity: WeeklyActivity = useMemo(
+    () => getWeeklyActivity(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [likedArticlesCount]
+  );
+  const allAchievements = useMemo(
+    () => getAchievements({ likedArticlesCount }),
+    [likedArticlesCount]
+  );
+
+  /* ── Level-up modal ─────────────────────────────────────────────────── */
+  const [levelUpData, setLevelUpData] = useState<{
+    level: number;
+    title: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (_levelUpModalShownThisSession) return;
+    const snapshot = getSessionSnapshot();
+    if (!snapshot) return;
+    if (progressionState.level > snapshot.initialLevel) {
+      setLevelUpData({ level: progressionState.level, title: progressionState.title });
+      _levelUpModalShownThisSession = true;
+    }
+  }, [progressionState.level, progressionState.title]);
+
+  /* ── Achievement unlock toasts ──────────────────────────────────────── */
+  const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
+  const [currentToast, setCurrentToast] = useState<Achievement | null>(null);
+
+  useEffect(() => {
+    const snapshot = getSessionSnapshot();
+    if (!snapshot) return;
+    const initialIds = new Set(snapshot.initialUnlockedAchievementIds);
+    const newlyUnlocked = allAchievements.filter(
+      (a) =>
+        a.unlocked &&
+        !initialIds.has(a.id) &&
+        !_achievementToastsShownThisSession.has(a.id)
+    );
+    if (newlyUnlocked.length === 0) return;
+    setToastQueue((prev) => [...prev, ...newlyUnlocked]);
+    for (const a of newlyUnlocked) _achievementToastsShownThisSession.add(a.id);
+  }, [allAchievements]);
+
+  // Process toast queue: 500ms gap between toasts
+  useEffect(() => {
+    if (currentToast !== null || toastQueue.length === 0) return;
+    const timer = setTimeout(() => {
+      setCurrentToast(toastQueue[0]);
+      setToastQueue((prev) => prev.slice(1));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [currentToast, toastQueue]);
+
+  const handleToastDone = useCallback(() => {
+    setCurrentToast(null);
+  }, []);
+
+  /* ── Settings helper ────────────────────────────────────────────────── */
   const openSettings = useCallback((screen: SettingsScreen = "main") => {
     setSettingsScreen(screen);
     setShowSettings(true);
   }, []);
 
-  /* ── Sub-screens ─────────────────────────────────────────────────────── */
+  /* ── Sub-screens ──────────────────────────────────────────────────────── */
 
   if (showSettings) {
     return (
@@ -151,16 +270,12 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         </header>
         <div
           className="min-h-0 flex-1 overflow-y-auto px-5 pt-5"
-          style={{
-            paddingBottom: "calc(9rem + env(safe-area-inset-bottom))",
-          }}
+          style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
         >
           <p className="text-sm text-zinc-400">
             Choose topics to personalise your Following feed.
           </p>
           <MyTopicsSelector showCount />
-
-          {/* Explanatory note */}
           <div
             className="mt-5 rounded-2xl p-4"
             style={{
@@ -196,14 +311,11 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         />
         <div
           className="min-h-0 flex-1 overflow-y-auto px-5 pt-4"
-          style={{
-            paddingBottom: "calc(9rem + env(safe-area-inset-bottom))",
-          }}
+          style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
         >
           <ProfileAchievements
-            articlesRead={storiesRead}
-            likedCount={likedArticlesCount}
-            streak={streak}
+            likedArticlesCount={likedArticlesCount}
+            showCategoryFilter
           />
         </div>
       </div>
@@ -219,9 +331,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         />
         <div
           className="min-h-0 flex-1 overflow-y-auto px-5 pt-4"
-          style={{
-            paddingBottom: "calc(9rem + env(safe-area-inset-bottom))",
-          }}
+          style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
         >
           <ArticleGroupCard>
             {recentlyRead.map((item) => (
@@ -240,7 +350,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     );
   }
 
-  /* ── Guest state ─────────────────────────────────────────────────────── */
+  /* ── Guest state ──────────────────────────────────────────────────────── */
 
   if (isGuest && !user) {
     return (
@@ -265,7 +375,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     );
   }
 
-  /* ── Derived values ──────────────────────────────────────────────────── */
+  /* ── Derived display values ───────────────────────────────────────────── */
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ||
@@ -281,34 +391,28 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
       })
     : null;
 
-  const streakSubtitle =
-    streak > 1
-      ? "Keep it up!"
-      : streak === 0
-        ? "Start your streak today!"
-        : "Come back tomorrow!";
-
-  const nextMilestone = getNextMilestone(streak);
-  const segmentCount = Math.min(nextMilestone, 7);
-  const filledSegments = Math.min(streak, segmentCount);
-
   const recentlyReadPreview = recentlyRead.slice(0, 3);
 
-  /* ── Main profile dashboard ──────────────────────────────────────────── */
+  const isMaxLevel = progressionState.level === 7;
+
+  /* ── Main profile dashboard ───────────────────────────────────────────── */
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-black">
+    <div className="relative flex h-full min-h-0 flex-col bg-black">
       {/* Sticky root header */}
       <ProfileRootHeader onSettings={() => openSettings()} />
+
+      {/* Achievement toast (fixed at top) */}
+      {currentToast && (
+        <AchievementToast achievement={currentToast} onDone={handleToastDone} />
+      )}
 
       {/* Scrollable content */}
       <div
         className="min-h-0 flex-1 overflow-y-auto px-5"
-        style={{
-          paddingBottom: "calc(9rem + env(safe-area-inset-bottom))",
-        }}
+        style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
       >
-        {/* ── 1. Identity + stats card ───────────────────────────────── */}
+        {/* ── 1. Identity card ──────────────────────────────────────────── */}
         <div
           className="relative mt-3 overflow-hidden rounded-2xl"
           style={{
@@ -318,28 +422,29 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             boxShadow: "inset 0 1px 0 rgba(255,255,255,.04)",
           }}
         >
-          {/* Ambient cyan corner glow */}
+          {/* Ambient corner glow */}
           <div
             className="pointer-events-none absolute right-0 top-0 h-28 w-28"
             style={{
               background:
-                "radial-gradient(circle at 85% 15%, rgba(0,198,198,0.10) 0%, transparent 70%)",
+                "radial-gradient(circle at 85% 15%, rgba(124,108,248,0.10) 0%, transparent 70%)",
             }}
           />
 
-          {/* Identity top */}
+          {/* Avatar + identity */}
           <div className="flex items-center gap-4 px-5 pb-4 pt-5">
             <div
               className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[14px] text-2xl font-bold text-white"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(59,110,245,0.55), rgba(0,198,198,0.40))",
+                  "linear-gradient(135deg, rgba(59,110,245,0.70), rgba(0,198,198,0.50))",
                 boxShadow:
                   "inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 12px rgba(0,0,0,0.4)",
               }}
             >
               {initials}
             </div>
+
             <div className="min-w-0 flex-1">
               <p className="text-[18px] font-bold leading-tight text-white">
                 {displayName}
@@ -347,13 +452,67 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
               <p className="mt-0.5 truncate text-[13px] text-zinc-400">
                 {user?.email}
               </p>
-              {joined && (
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3 shrink-0 text-zinc-600" />
-                  <p className="text-[11px] text-zinc-600">Joined {joined}</p>
-                </div>
+              {/* Level title + badge */}
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="text-[12px] font-semibold text-zinc-400">
+                  {progressionState.title}
+                </span>
+                <span
+                  className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white"
+                  style={{
+                    background: "linear-gradient(90deg, #7C6CF8, #5B8EF0)",
+                  }}
+                >
+                  Lvl {progressionState.level}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* XP progress section */}
+          <div className="px-5 pb-4">
+            {/* Bar */}
+            <div
+              className="overflow-hidden rounded-full"
+              style={{ height: 4, backgroundColor: "rgba(255,255,255,0.07)" }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: isMaxLevel
+                    ? "100%"
+                    : `${progressionState.progressPercent}%`,
+                  background: "linear-gradient(90deg, #7C6CF8, #5B8EF0)",
+                }}
+              />
+            </div>
+            {/* XP label */}
+            <div className="mt-1.5 flex items-baseline justify-between">
+              <p className="text-[11px] tabular-nums text-zinc-600">
+                {isMaxLevel ? (
+                  <span>{totalXP.toLocaleString()} XP · Max level</span>
+                ) : (
+                  <span>
+                    {totalXP.toLocaleString()}&thinsp;/&thinsp;
+                    {progressionState.nextLevelXP.toLocaleString()} XP
+                  </span>
+                )}
+              </p>
+              {!isMaxLevel && (
+                <p className="text-[11px] text-zinc-600">
+                  {progressionState.nextLevelXP - totalXP} to{" "}
+                  {LEVELS[progressionState.level]?.title ?? "max"}
+                </p>
               )}
             </div>
+
+            {/* Joined date */}
+            {joined && (
+              <div className="mt-2 flex items-center gap-1.5">
+                <Calendar className="h-3 w-3 shrink-0 text-zinc-700" />
+                <p className="text-[11px] text-zinc-600">Joined {joined}</p>
+              </div>
+            )}
           </div>
 
           {/* Divider */}
@@ -361,102 +520,31 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
           {/* Stats row */}
           <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
-            <StatCell label="Articles Read" value={String(storiesRead)} />
+            <StatCell label="Articles Opened" value={String(storiesRead)} />
             <StatCell label="Liked" value={String(likedArticlesCount)} />
             <StatCell label="Watchlist" value={String(savedArticles.length)} />
           </div>
         </div>
 
-        {/* ── 2. Streak card ────────────────────────────────────────── */}
-        <div
-          className="mt-3 overflow-hidden rounded-2xl"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(22,13,5,0.97) 0%, rgba(8,7,6,0.99) 100%)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            boxShadow: "inset 0 1px 0 rgba(255,180,0,0.06)",
-          }}
-        >
-          <div className="flex items-center gap-4 px-4 py-4">
-            {/* Amber flame tile */}
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl leading-none"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(251,146,60,0.30), rgba(234,88,12,0.16))",
-                border: "1px solid rgba(251,146,60,0.22)",
-              }}
-            >
-              🔥
-            </div>
+        {/* ── 2. Today's Market Goal ────────────────────────────────────── */}
+        <TodayGoalCard goal={dailyGoal} />
 
-            <div className="min-w-0 flex-1">
-              <p className="text-[16px] font-bold leading-tight text-white">
-                {streak} day streak
-              </p>
-              <p className="mt-0.5 text-[12px] text-zinc-500">
-                {streakSubtitle}
-              </p>
-            </div>
+        {/* ── 3. Streak card ────────────────────────────────────────────── */}
+        <StreakCard streakState={streakState} />
 
-            {/* Progress */}
-            <div className="flex shrink-0 flex-col items-end gap-1.5">
-              <p className="text-[11px] font-semibold tabular-nums text-zinc-500">
-                {streak}&thinsp;/&thinsp;{nextMilestone}
-              </p>
-              <div className="flex gap-[3px]">
-                {Array.from({ length: segmentCount }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-1.5 w-4 rounded-full"
-                    style={{
-                      backgroundColor:
-                        i < filledSegments
-                          ? "rgba(251,146,60,0.85)"
-                          : "rgba(255,255,255,0.10)",
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── 3. Achievements preview (4 of 8) ──────────────────────── */}
+        {/* ── 4. Achievements preview (4 prioritised cards) ─────────────── */}
         <section className="mt-5">
           <ProfileAchievements
-            articlesRead={storiesRead}
-            likedCount={likedArticlesCount}
-            streak={streak}
+            likedArticlesCount={likedArticlesCount}
             maxItems={4}
             onViewAll={() => setShowAllAchievements(true)}
           />
         </section>
 
-        {/* ── 4. Recently Read (only when data exists) ───────────────── */}
-        {recentlyReadPreview.length > 0 && (
-          <section className="mt-5">
-            <SectionHeader
-              title="Recently read"
-              action="View history"
-              onAction={() => setShowAllRecentlyRead(true)}
-            />
-            <ArticleGroupCard className="mt-3">
-              {recentlyReadPreview.map((item) => (
-                <ProfileArticlePreview
-                  key={item.id}
-                  title={item.headline}
-                  source={item.sourceName}
-                  timestamp={timeAgo(item.readAt)}
-                  href={item.sourceUrl}
-                  endIcon="link"
-                />
-              ))}
-            </ArticleGroupCard>
-          </section>
-        )}
+        {/* ── 5. Your Week ──────────────────────────────────────────────── */}
+        <YourWeekCard weekly={weeklyActivity} />
 
-        {/* ── 5. Saved articles preview ──────────────────────────────── */}
+        {/* ── 6. Saved articles preview ────────────────────────────────── */}
         {savedPreview.length > 0 && (
           <section className="mt-5">
             <SectionHeader
@@ -480,7 +568,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           </section>
         )}
 
-        {/* ── 6. Liked articles preview ──────────────────────────────── */}
+        {/* ── 7. Liked articles preview ────────────────────────────────── */}
         {likedPreview.length > 0 && (
           <section className="mt-5">
             <SectionHeader
@@ -504,7 +592,30 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           </section>
         )}
 
-        {/* ── 7. My Topics compact row ───────────────────────────────── */}
+        {/* ── 8. Recently Read ─────────────────────────────────────────── */}
+        {recentlyReadPreview.length > 0 && (
+          <section className="mt-5">
+            <SectionHeader
+              title="Recently read"
+              action="View history"
+              onAction={() => setShowAllRecentlyRead(true)}
+            />
+            <ArticleGroupCard className="mt-3">
+              {recentlyReadPreview.map((item) => (
+                <ProfileArticlePreview
+                  key={item.id}
+                  title={item.headline}
+                  source={item.sourceName}
+                  timestamp={timeAgo(item.readAt)}
+                  href={item.sourceUrl}
+                  endIcon="link"
+                />
+              ))}
+            </ArticleGroupCard>
+          </section>
+        )}
+
+        {/* ── 9. My Topics compact row ─────────────────────────────────── */}
         <section className="mt-5">
           <button
             type="button"
@@ -513,7 +624,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:bg-white/[0.05]"
             style={CARD_STYLE}
           >
-            {/* Tag icon tile */}
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
               style={{
@@ -535,7 +645,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
                 <line x1="7" y1="7" x2="7.01" y2="7" />
               </svg>
             </div>
-
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-semibold text-white">My Topics</p>
               {selectedTopics.length === 0 ? (
@@ -551,21 +660,475 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
                 </p>
               )}
             </div>
-
             <ChevronRight className="h-4 w-4 shrink-0 text-zinc-600" />
           </button>
         </section>
 
-        {/* ── 8. Footer ─────────────────────────────────────────────── */}
+        {/* ── 10. Footer ───────────────────────────────────────────────── */}
         <p className="mt-10 text-center text-[11px] text-zinc-700">
           Pocket Finance · Bold news. Smarter moves.
         </p>
+      </div>
+
+      {/* ── Level-up modal ─────────────────────────────────────────────── */}
+      {levelUpData && (
+        <LevelUpModal
+          level={levelUpData.level}
+          title={levelUpData.title}
+          onDismiss={() => setLevelUpData(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Level titles lookup (same as LEVELS in progression.ts, kept here for display)
+// ---------------------------------------------------------------------------
+
+const LEVELS: Record<number, { title: string }> = {
+  1: { title: "Market Starter" },
+  2: { title: "News Reader" },
+  3: { title: "Market Explorer" },
+  4: { title: "Informed Investor" },
+  5: { title: "Market Analyst" },
+  6: { title: "Portfolio Thinker" },
+  7: { title: "Market Strategist" },
+};
+
+// ---------------------------------------------------------------------------
+// Today's Market Goal card
+// ---------------------------------------------------------------------------
+
+function TodayGoalCard({ goal }: { goal: DailyGoalState }) {
+  return (
+    <div
+      className="mt-3 overflow-hidden rounded-2xl"
+      style={{
+        ...CARD_STYLE,
+        border: goal.isComplete
+          ? "1px solid rgba(0,198,198,0.25)"
+          : "1px solid rgba(255,255,255,0.07)",
+        boxShadow: goal.isComplete
+          ? "inset 0 1px 0 rgba(0,198,198,0.08), 0 0 18px rgba(0,198,198,0.06)"
+          : "inset 0 1px 0 rgba(255,255,255,.04)",
+      }}
+    >
+      {goal.isComplete ? (
+        /* Completed state */
+        <div className="flex items-center gap-3 px-4 py-4">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
+            style={{
+              background: "rgba(0,198,198,0.12)",
+              border: "1px solid rgba(0,198,198,0.22)",
+            }}
+          >
+            <Check
+              className="h-4 w-4"
+              style={{ color: "#00C6C6" }}
+              strokeWidth={2.5}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-bold text-white">
+              Today&apos;s Market Goal
+            </p>
+            <p className="mt-0.5 text-[12px] text-zinc-500">
+              You&apos;re caught up on today&apos;s markets.
+            </p>
+          </div>
+          <span
+            className="shrink-0 text-[12px] font-bold tabular-nums"
+            style={{ color: "#00C6C6" }}
+          >
+            +15 XP
+          </span>
+        </div>
+      ) : (
+        /* Incomplete state */
+        <div className="px-4 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[13px] font-bold text-white">
+              Today&apos;s Market Goal
+            </p>
+            <span className="text-[11px] font-semibold text-zinc-500">
+              +15 XP
+            </span>
+          </div>
+
+          {goal.tasks.map((task, idx) => (
+            <div
+              key={task.id}
+              className={`flex items-center gap-3 ${idx > 0 ? "mt-2.5" : ""}`}
+            >
+              {task.completed >= task.required ? (
+                <div
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: "rgba(0,198,198,0.85)" }}
+                >
+                  <Check
+                    className="h-3 w-3"
+                    style={{ color: "rgba(0,0,0,0.85)" }}
+                    strokeWidth={3}
+                  />
+                </div>
+              ) : (
+                <div
+                  className="h-5 w-5 shrink-0 rounded-full"
+                  style={{ border: "1.5px solid rgba(255,255,255,0.16)" }}
+                />
+              )}
+              <p className="min-w-0 flex-1 text-[13px] text-zinc-300">
+                {task.label}
+              </p>
+              <p className="shrink-0 text-[12px] tabular-nums text-zinc-500">
+                {task.completed}&thinsp;/&thinsp;{task.required}
+              </p>
+            </div>
+          ))}
+
+          {/* 4 compact progress segments (3 for articles + 1 for briefing) */}
+          <div className="mt-3 flex gap-1">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-1 flex-1 rounded-full"
+                style={{
+                  backgroundColor:
+                    i < goal.tasks[0].completed
+                      ? "#00C6C6"
+                      : "rgba(255,255,255,0.08)",
+                }}
+              />
+            ))}
+            <div className="w-2" />
+            <div
+              className="h-1 flex-1 rounded-full"
+              style={{
+                backgroundColor:
+                  goal.tasks[1].completed >= 1
+                    ? "#00C6C6"
+                    : "rgba(255,255,255,0.08)",
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Streak card with weekly strip
+// ---------------------------------------------------------------------------
+
+function StreakCard({ streakState }: { streakState: StreakState }) {
+  const {
+    currentStreak,
+    bestStreak,
+    goalCompletedToday,
+    weeklyStrip,
+    nextMilestone,
+  } = streakState;
+
+  const subtitle =
+    currentStreak === 0
+      ? "Start your streak by completing today's goal"
+      : goalCompletedToday
+        ? "Goal complete — come back tomorrow!"
+        : `Complete today's goal to keep your ${currentStreak}-day streak alive`;
+
+  return (
+    <div
+      className="mt-3 overflow-hidden rounded-2xl"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(22,13,5,0.97) 0%, rgba(8,7,6,0.99) 100%)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        boxShadow: "inset 0 1px 0 rgba(255,180,0,0.06)",
+      }}
+    >
+      <div className="px-4 pb-4 pt-4">
+        {/* Header row */}
+        <div className="flex items-center gap-3">
+          {/* Amber flame tile */}
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl leading-none"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(251,146,60,0.30), rgba(234,88,12,0.16))",
+              border: "1px solid rgba(251,146,60,0.22)",
+            }}
+          >
+            🔥
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-[16px] font-bold leading-tight text-white">
+              {currentStreak} day streak
+            </p>
+            <p className="mt-0.5 text-[12px] leading-snug text-zinc-500">
+              {subtitle}
+            </p>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-end gap-0.5">
+            <p className="text-[10px] text-zinc-600">
+              Best: {bestStreak} days
+            </p>
+            <p className="text-[10px] text-zinc-600">
+              Next: {nextMilestone} days
+            </p>
+          </div>
+        </div>
+
+        {/* Mon–Sun weekly strip */}
+        <div className="mt-3 flex justify-between">
+          {weeklyStrip.map(({ day, completed, isToday }) => (
+            <div key={day} className="flex flex-col items-center gap-1">
+              <div
+                className="flex h-7 w-7 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: completed
+                    ? "rgba(245,158,11,0.85)"
+                    : "transparent",
+                  border: isToday
+                    ? `2px solid ${completed ? "rgba(245,158,11,1.0)" : "rgba(245,158,11,0.40)"}`
+                    : completed
+                      ? "none"
+                      : "1.5px solid rgba(255,255,255,0.12)",
+                }}
+              >
+                {completed && (
+                  <Check
+                    className="h-3 w-3"
+                    style={{ color: "rgba(0,0,0,0.80)" }}
+                    strokeWidth={3}
+                  />
+                )}
+              </div>
+              <span className="text-[9px] text-zinc-600">{day}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── Shared sub-components ──────────────────────────────────────────────── */
+// ---------------------------------------------------------------------------
+// Your Week card
+// ---------------------------------------------------------------------------
+
+function YourWeekCard({ weekly }: { weekly: WeeklyActivity }) {
+  const hasActivity =
+    weekly.articlesRead > 0 ||
+    weekly.briefingsCompleted > 0 ||
+    weekly.xpEarned > 0;
+
+  if (!hasActivity) return null;
+
+  return (
+    <div
+      className="mt-5 overflow-hidden rounded-2xl"
+      style={CARD_STYLE}
+    >
+      <div className="px-4 py-4">
+        <p className="mb-3 text-[14px] font-bold text-white">Your Week</p>
+
+        <WeekRow
+          Icon={BookOpen}
+          label="Articles opened"
+          value={weekly.articlesRead}
+        />
+        <WeekRow
+          Icon={Zap}
+          label="Briefings completed"
+          value={weekly.briefingsCompleted}
+        />
+        <WeekRow
+          Icon={Layers}
+          label="Topics explored"
+          value={weekly.topicsExplored}
+        />
+        <WeekRow
+          Icon={TrendingUp}
+          label="XP earned"
+          value={weekly.xpEarned}
+        />
+        <div className="flex items-center justify-between py-1.5">
+          <div className="flex items-center gap-2.5">
+            <Hash className="h-4 w-4 text-zinc-600" />
+            <span className="text-[13px] text-zinc-500">Most-read topic</span>
+          </div>
+          <span className="text-[13px] font-semibold text-zinc-400">
+            {weekly.mostReadTopic ?? "—"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WeekRow({
+  Icon,
+  label,
+  value,
+}: {
+  Icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <div className="flex items-center gap-2.5">
+        <Icon className="h-4 w-4 text-zinc-600" />
+        <span className="text-[13px] text-zinc-500">{label}</span>
+      </div>
+      <span className="text-[13px] font-semibold tabular-nums text-white">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Level-up modal
+// ---------------------------------------------------------------------------
+
+function LevelUpModal({
+  level,
+  title,
+  onDismiss,
+}: {
+  level: number;
+  title: string;
+  onDismiss: () => void;
+}) {
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setEntered(true))
+    );
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const desc =
+    LEVEL_DESCRIPTIONS[level] ??
+    "You're making serious progress as a market explorer.";
+
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center px-5"
+      style={{
+        backgroundColor: "rgba(3,3,5,0.80)",
+        backdropFilter: "blur(6px)",
+      }}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl p-7 text-center"
+        style={{
+          background:
+            "linear-gradient(155deg, rgba(12,14,30,0.99), rgba(4,5,10,0.99))",
+          border: "1px solid rgba(124,108,248,0.28)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.06), 0 28px 56px rgba(0,0,0,0.65)",
+          opacity: entered ? 1 : 0,
+          transform: entered ? "scale(1)" : "scale(0.92)",
+          transition: "opacity 300ms ease-out, transform 300ms ease-out",
+        }}
+      >
+        {/* Level number tile */}
+        <div
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl text-3xl font-bold text-white"
+          style={{
+            background: "linear-gradient(135deg, #7C6CF8, #5B8EF0)",
+            boxShadow: "0 4px 20px rgba(124,108,248,0.45)",
+          }}
+        >
+          {level}
+        </div>
+
+        <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+          Level Up
+        </p>
+        <p className="mt-1.5 text-[22px] font-bold text-white">{title}</p>
+        <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">{desc}</p>
+
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="mt-6 w-full rounded-2xl py-3.5 text-[15px] font-bold text-white"
+          style={{ background: "linear-gradient(90deg, #7C6CF8, #5B8EF0)" }}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Achievement unlock toast
+// ---------------------------------------------------------------------------
+
+function AchievementToast({
+  achievement,
+  onDone,
+}: {
+  achievement: Achievement;
+  onDone: () => void;
+}) {
+  const [entered, setEntered] = useState(false);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true));
+    const timer = setTimeout(() => onDoneRef.current(), 3000);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <div
+      className="absolute left-4 right-4 top-0 z-[60] flex justify-center"
+      style={{
+        paddingTop: "max(1rem, calc(env(safe-area-inset-top) + 0.5rem))",
+        opacity: entered ? 1 : 0,
+        transform: entered ? "translateY(0)" : "translateY(-8px)",
+        transition: "opacity 250ms ease-out, transform 250ms ease-out",
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        className="flex w-full max-w-sm items-center gap-3 rounded-2xl px-4 py-3"
+        style={{
+          background: "rgba(10,11,16,0.97)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <span className="text-xl leading-none">{achievement.icon}</span>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+            Achievement Unlocked
+          </p>
+          <p className="text-[14px] font-bold text-white">{achievement.title}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared sub-components
+// ---------------------------------------------------------------------------
 
 function ProfileRootHeader({ onSettings }: { onSettings: () => void }) {
   return (

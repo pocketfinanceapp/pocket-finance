@@ -15,7 +15,6 @@ import { ProfilePage } from "./ProfilePage";
 import { BrowsePage } from "./BrowsePage";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
-import { initSessionSnapshot } from "@/lib/progression";
 import { appPath } from "@/lib/appPaths";
 
 interface TabAppShellProps {
@@ -38,7 +37,6 @@ function TabPanels({
     ensureMarketsLoaded();
     ensureWatchlistLoaded();
     recordAppVisit();
-    initSessionSnapshot();
   }, [ensureMarketsLoaded, ensureWatchlistLoaded]);
 
   useEffect(() => {
