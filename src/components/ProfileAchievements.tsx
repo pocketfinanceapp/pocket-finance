@@ -68,7 +68,7 @@ export function ProfileAchievements({
         {unlockedCount} of {ACHIEVEMENT_BADGES.length} unlocked
       </p>
 
-      <div className="mt-3 grid grid-cols-4 items-start gap-2">
+      <div className="mt-3 grid grid-cols-2 items-start gap-2.5">
         {ACHIEVEMENT_BADGES.map((badge) => {
           const unlocked = unlockedIds.has(badge.id);
           const animate = animatingIds.has(badge.id);
@@ -76,46 +76,45 @@ export function ProfileAchievements({
           return (
             <div
               key={badge.id}
-              className={`relative rounded-2xl px-2 py-4 text-center ${
+              className={`relative rounded-2xl px-4 py-5 ${
                 animate ? "badge-unlock-animate" : ""
               }`}
               style={{
-                backgroundColor: "rgba(255,255,255,0.05)",
+                backgroundColor: unlocked
+                  ? "rgba(0,198,198,0.06)"
+                  : "rgba(255,255,255,0.04)",
                 border: unlocked
-                  ? "1px solid rgba(0,198,198,0.4)"
-                  : "1px solid rgba(255,255,255,0.08)",
+                  ? "1px solid rgba(0,198,198,0.35)"
+                  : "1px solid rgba(255,255,255,0.07)",
                 boxShadow: unlocked
-                  ? "0 0 12px rgba(0,198,198,0.15)"
+                  ? "0 0 16px rgba(0,198,198,0.10)"
                   : undefined,
               }}
             >
               {unlocked && (
                 <span
-                  className="absolute right-2 top-2 text-[10px] font-bold text-[#00C6C6]"
+                  className="absolute right-3 top-3 text-[11px] font-bold text-[#00C6C6]"
                   aria-hidden
                 >
                   ✓
                 </span>
               )}
 
-              <div className="relative mx-auto mb-2 flex items-center justify-center">
+              <div className="relative mb-3 flex items-center">
                 <span
-                  className="text-[28px] leading-none"
+                  className="text-[34px] leading-none"
                   style={
                     unlocked
                       ? undefined
-                      : {
-                          opacity: 0.25,
-                          filter: "grayscale(100%)",
-                        }
+                      : { opacity: 0.22, filter: "grayscale(100%)" }
                   }
                 >
                   {badge.emoji}
                 </span>
                 {!unlocked && (
                   <span
-                    className="absolute -bottom-0.5 -right-0.5 text-[10px] leading-none"
-                    style={{ opacity: 0.4 }}
+                    className="absolute -bottom-0.5 left-5 text-[11px] leading-none"
+                    style={{ opacity: 0.35 }}
                     aria-hidden
                   >
                     🔒
@@ -124,12 +123,12 @@ export function ProfileAchievements({
               </div>
 
               <p
-                className="text-[11px] font-medium leading-tight text-white"
-                style={{ opacity: unlocked ? 1 : 0.5 }}
+                className="text-[13px] font-semibold leading-snug text-white"
+                style={{ opacity: unlocked ? 1 : 0.45 }}
               >
                 {badge.name}
               </p>
-              <p className="mt-1 text-[10px] leading-tight text-[#9ca3af]">
+              <p className="mt-1 text-[11px] leading-snug text-zinc-500">
                 {badge.progressHint}
               </p>
             </div>

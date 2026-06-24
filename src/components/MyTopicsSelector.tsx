@@ -26,9 +26,6 @@ export function MyTopicsSelector() {
 
   return (
     <div>
-      <p className="mb-3 text-xs text-zinc-500">
-        Tap to personalise your Following feed
-      </p>
       <div className="flex flex-wrap gap-2">
         {PROFILE_TOPICS.map((topic) => {
           const selected = topics.includes(topic);

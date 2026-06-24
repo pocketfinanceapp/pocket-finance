@@ -6,13 +6,13 @@ import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import {
   getReadingStreak,
+  loadFavouriteTopics,
   loadRecentlyRead,
   type RecentlyReadEntry,
 } from "@/lib/profileStorage";
 import { timeAgo } from "@/lib/utils";
 import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ProfileAchievements } from "./ProfileAchievements";
-import { PocketBrand } from "./PocketLogo";
 import { ScreenHeader } from "./ScreenHeader";
 import { SettingsPage } from "./SettingsPage";
 
@@ -25,12 +25,15 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
     useApp();
   const { user, isGuest, requestSignIn } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
+  const [showTopics, setShowTopics] = useState(false);
   const [streak, setStreak] = useState(0);
   const [recentlyRead, setRecentlyRead] = useState<RecentlyReadEntry[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const refreshLocalProfile = useCallback(() => {
     setStreak(getReadingStreak());
     setRecentlyRead(loadRecentlyRead());
+    setSelectedTopics(loadFavouriteTopics());
   }, []);
 
   useEffect(() => {
@@ -38,14 +41,41 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
     refreshLocalProfile();
   }, [reloadProfileStats, refreshLocalProfile]);
 
+  /* ── Sub-screens ─────────────────────────────────────────────────────── */
+
   if (showSettings) {
     return <SettingsPage onBack={() => setShowSettings(false)} />;
   }
 
+  if (showTopics) {
+    return (
+      <div className="flex h-full min-h-0 flex-col bg-black">
+        <ScreenHeader
+          title="My Topics"
+          onBack={() => {
+            refreshLocalProfile();
+            setShowTopics(false);
+          }}
+        />
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-10 pt-4">
+          <p className="mb-4 text-sm text-zinc-500">
+            Choose topics to personalise your Following feed.
+          </p>
+          <MyTopicsSelector />
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Guest state ─────────────────────────────────────────────────────── */
+
   if (isGuest && !user) {
     return (
       <div className="flex h-full min-h-0 flex-col bg-black">
-        <ScreenHeader title="Profile" onBack={onClose} />
+        {/* Guest profile header — no back arrow */}
+        <header className="flex shrink-0 items-center border-b border-white/[0.06] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <h1 className="flex-1 text-lg font-bold text-white">Profile</h1>
+        </header>
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <p className="text-lg font-semibold text-white">Sign in to your account</p>
           <p className="mt-2 text-sm text-zinc-500">
@@ -63,10 +93,14 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
     );
   }
 
+  /* ── Derived display values ──────────────────────────────────────────── */
+
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ||
     user?.email?.split("@")[0] ||
     "Investor";
+
+  const initials = displayName.charAt(0).toUpperCase();
 
   const joined = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("en-US", {
@@ -82,44 +116,74 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
         ? "Start your streak today!"
         : "Come back tomorrow!";
 
+  /* ── Main profile ────────────────────────────────────────────────────── */
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-black">
-      <ScreenHeader title="Profile" onBack={onClose} />
-      <div className="min-h-0 flex-1 overflow-y-auto px-5">
-        <div className="flex flex-col items-center py-10">
-          <PocketBrand
-            layout="vertical"
-            iconSize={72}
-            glow="none"
-            showTagline
-            wordmarkClassName="text-xl font-extrabold"
-          />
-          <h2 className="mt-8 text-[1.35rem] font-bold text-white">{displayName}</h2>
-          <p className="mt-1.5 text-sm text-zinc-500">{user?.email}</p>
-          {joined && (
-            <p className="mt-1 text-xs text-zinc-600">Joined {joined}</p>
-          )}
+      {/* Root Profile header — no back arrow, settings gear top-right */}
+      <header className="flex shrink-0 items-center border-b border-white/[0.06] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <h1 className="flex-1 text-lg font-bold text-white">Profile</h1>
+        <button
+          type="button"
+          data-no-drag
+          onClick={() => setShowSettings(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/[0.08]"
+          aria-label="Settings"
+        >
+          <Settings className="h-5 w-5 text-zinc-400" />
+        </button>
+      </header>
+
+      <div
+        className="min-h-0 flex-1 overflow-y-auto px-5"
+        style={{
+          paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))",
+        }}
+      >
+        {/* Compact user identity — user is the visual focus */}
+        <div className="flex items-center gap-4 py-6">
+          <div
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold text-white"
+            style={{
+              background:
+                "linear-gradient(135deg,rgba(59,110,245,.30),rgba(0,198,198,.22))",
+            }}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[18px] font-bold leading-tight text-white">
+              {displayName}
+            </p>
+            <p className="mt-0.5 truncate text-sm text-zinc-500">{user?.email}</p>
+            {joined && (
+              <p className="mt-0.5 text-xs text-zinc-600">Joined {joined}</p>
+            )}
+          </div>
         </div>
 
+        {/* Stats row */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard label="Stories read" value={String(storiesRead)} />
           <StatCard label="Liked" value={String(likedArticlesCount)} />
           <StatCard label="Watchlist" value={String(savedArticles.length)} />
         </div>
 
+        {/* Achievements — 2-column grid */}
         <ProfileAchievements
           articlesRead={storiesRead}
           likedCount={likedArticlesCount}
           streak={streak}
         />
 
-        <section className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-5 py-5">
+        {/* Streak — exactly one card, after achievements */}
+        <section className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-5 py-4">
           <div className="flex items-center gap-3">
-            <span className="text-3xl" aria-hidden>
+            <span className="text-2xl leading-none" aria-hidden>
               🔥
             </span>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-xl font-bold text-white">
                 {streak} day streak
               </p>
               <p className="mt-0.5 text-sm text-zinc-500">{streakSubtitle}</p>
@@ -127,22 +191,36 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
           </div>
         </section>
 
-        <section id="profile-my-topics" className="mt-8 scroll-mt-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-            My Topics
-          </h3>
-          <div className="mt-3">
-            <MyTopicsSelector />
-          </div>
+        {/* My Topics — compact row, no chip cloud */}
+        <section className="mt-5">
+          <button
+            type="button"
+            data-no-drag
+            onClick={() => setShowTopics(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-left active:bg-white/[0.06]"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-white">My Topics</p>
+              {selectedTopics.length === 0 ? (
+                <p className="mt-0.5 text-xs text-zinc-500">
+                  Choose topics to personalise your Following feed.
+                </p>
+              ) : (
+                <p className="mt-0.5 text-xs text-zinc-500">
+                  {`Following ${selectedTopics.length} topic${selectedTopics.length === 1 ? "" : "s"} · ${selectedTopics.slice(0, 3).join(", ")}${selectedTopics.length > 3 ? "…" : ""}`}
+                </p>
+              )}
+            </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-zinc-600" />
+          </button>
         </section>
 
-        <section className="mt-8">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-            Recently Read
-          </h3>
-          {recentlyRead.length === 0 ? (
-            <p className="mt-3 text-sm text-zinc-600">No articles read yet</p>
-          ) : (
+        {/* Recently Read — hidden entirely when empty */}
+        {recentlyRead.length > 0 && (
+          <section className="mt-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+              Recently Read
+            </h3>
             <ul className="mt-3 divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-white/[0.03]">
               {recentlyRead.map((item) => (
                 <li key={item.id}>
@@ -166,24 +244,11 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
                 </li>
               ))}
             </ul>
-          )}
-        </section>
+          </section>
+        )}
 
-        <button
-          type="button"
-          data-no-drag
-          onClick={() => setShowSettings(true)}
-          className="mt-8 flex w-full items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.04] px-5 py-4 active:bg-white/[0.08]"
-        >
-          <div className="flex items-center gap-3">
-            <Settings className="h-5 w-5 text-zinc-400" />
-            <span className="font-medium text-white">Settings</span>
-          </div>
-          <ChevronRight className="h-5 w-5 text-zinc-500" />
-        </button>
-
-        <p className="mt-10 pb-6 text-center text-xs text-zinc-600">
-          Pocket Finance v1.0 · Bold news. Smarter moves.
+        <p className="mt-10 text-center text-xs text-zinc-600">
+          Pocket Finance · Bold news. Smarter moves.
         </p>
       </div>
     </div>
