@@ -86,10 +86,10 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   useEffect(() => {
     if (!user?.id) return;
     fetchLikedArticles(user.id)
-      .then((items) => setLikedPreview(items.slice(0, 3)))
-      .catch(() => {});
+      .then((items) => setLikedPreview(items.slice(0, 2)))
+        .catch(() => {});
     fetchSavedArticles(user.id)
-      .then((items) => setSavedPreview(items.slice(0, 3)))
+      .then((items) => setSavedPreview(items.slice(0, 2)))
       .catch(() => {});
   }, [user?.id]);
 

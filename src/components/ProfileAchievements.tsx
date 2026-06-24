@@ -102,7 +102,7 @@ export function ProfileAchievements({
               style={{
                 minHeight: 96,
                 backgroundColor: unlocked
-                  ? "rgba(0,198,198,0.04)"
+                  ? "rgba(0,198,198,0.025)"
                   : "rgba(10,11,16,0.72)",
                 border: unlocked
                   ? "1px solid rgba(255,255,255,0.08)"
@@ -141,7 +141,7 @@ export function ProfileAchievements({
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
                     style={{
                       background:
-                        "linear-gradient(135deg, #00c6c6 0%, #008fa5 100%)",
+                        "linear-gradient(135deg, #009faa 0%, #007080 100%)",
                     }}
                   >
                     <Check
@@ -181,23 +181,7 @@ export function ProfileAchievements({
         })}
       </div>
 
-      {/* Pagination dots — preview mode */}
-      {hasMore && (
-        <div className="mt-4 flex items-center justify-center gap-[5px]">
-          <div
-            className="h-1.5 rounded-full"
-            style={{ width: 18, backgroundColor: "rgba(0,198,198,0.65)" }}
-          />
-          <div
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
-          />
-          <div
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
-          />
-        </div>
-      )}
+      {/* No pagination dots — "View all" opens a separate page */}
     </section>
   );
 }
