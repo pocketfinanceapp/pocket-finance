@@ -442,6 +442,17 @@ export function getProgressionState(): LevelState {
   return calculateLevel(getTotalXP());
 }
 
+/**
+ * Count of unique articles genuinely opened since the progression system was
+ * installed. Uses the deduplicated usedRewardKeys rather than the legacy
+ * Supabase storiesRead counter (which inflates via feed-impression tracking).
+ */
+export function getUniqueArticlesOpened(): number {
+  const store = loadStore();
+  return store.usedRewardKeys.filter((k) => k.startsWith("article_opened:"))
+    .length;
+}
+
 /** Full append-only event log. */
 export function getActivityEvents(): ActivityEvent[] {
   return loadStore().events;
@@ -759,7 +770,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "news_regular",
       "reading",
       "News Regular",
-      "Read 10 articles",
+      "Opened 10 articles",
       "📰",
       totalArticlesRead,
       10
@@ -768,7 +779,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "deep_reader",
       "reading",
       "Deep Reader",
-      "Read 50 articles",
+      "Opened 50 articles",
       "📚",
       totalArticlesRead,
       50
@@ -777,7 +788,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "century_club",
       "reading",
       "Century Club",
-      "Read 100 articles",
+      "Opened 100 articles",
       "💯",
       totalArticlesRead,
       100
@@ -786,7 +797,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "news_obsessed",
       "reading",
       "News Obsessed",
-      "Read 500 articles",
+      "Opened 500 articles",
       "🗞️",
       totalArticlesRead,
       500
@@ -826,7 +837,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "first_steps",
       "consistency",
       "First Steps",
-      "Read your first article",
+      "Opened your first article",
       "🌱",
       totalArticlesRead,
       1
@@ -911,7 +922,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "on_fire",
       "engagement",
       "On Fire",
-      "Read 50 articles total",
+      "Opened 50 articles total",
       "🔥",
       totalArticlesRead,
       50

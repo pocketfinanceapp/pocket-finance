@@ -14,6 +14,8 @@ import { useAuth } from "@/context/AuthContext";
 import {
   loadFavouriteTopics,
   loadRecentlyRead,
+  toggleFavouriteTopic,
+  type ProfileTopic,
   type RecentlyReadEntry,
 } from "@/lib/profileStorage";
 import {
@@ -23,6 +25,7 @@ import {
   getSessionSnapshot,
   getStreakState,
   getTotalXP,
+  getUniqueArticlesOpened,
   getWeeklyActivity,
   type Achievement,
   type DailyGoalState,
@@ -165,6 +168,11 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [likedArticlesCount, progressionTick]
   );
+  const uniqueArticlesOpened = useMemo(
+    () => getUniqueArticlesOpened(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [progressionTick]
+  );
 
   /* ── Level-up modal ─────────────────────────────────────────────────── */
   const [levelUpData, setLevelUpData] = useState<{
@@ -241,67 +249,10 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
       setShowTopics(false);
     };
     return (
-      <div className="flex h-full min-h-0 flex-col bg-black">
-        <header
-          className="flex shrink-0 flex-col border-b border-white/[0.06] px-4"
-          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
-        >
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-600">
-            Pocket Finance
-          </p>
-          <div className="flex items-center justify-between pb-3 pt-1.5">
-            <button
-              type="button"
-              data-no-drag
-              onClick={handleTopicsBack}
-              className="flex items-center gap-1.5 active:opacity-60"
-            >
-              <ArrowLeft className="h-5 w-5 text-zinc-400" />
-              <span className="text-[15px] font-semibold text-white">
-                My Topics
-              </span>
-            </button>
-            <button
-              type="button"
-              data-no-drag
-              onClick={handleTopicsBack}
-              className="text-[15px] font-semibold text-[#00C6C6] active:opacity-60"
-            >
-              Done
-            </button>
-          </div>
-        </header>
-        <div
-          className="min-h-0 flex-1 overflow-y-auto px-5 pt-5"
-          style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
-        >
-          <p className="text-sm text-zinc-400">
-            Choose topics to personalise your Following feed.
-          </p>
-          <MyTopicsSelector showCount />
-          <div
-            className="mt-5 rounded-2xl p-4"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(10,18,50,0.85), rgba(6,10,28,0.90))",
-              border: "1px solid rgba(255,255,255,0.07)",
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#3B6EF5]/70" />
-              <div>
-                <p className="text-[13px] font-semibold text-white">
-                  Your feed
-                </p>
-                <p className="mt-0.5 text-[12px] leading-relaxed text-zinc-500">
-                  Selected topics shape the Following tab and help personalise
-                  your Discover recommendations.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TopicsSubPage
+        initialTopics={selectedTopics as ProfileTopic[]}
+        onBack={handleTopicsBack}
+      />
     );
   }
 
@@ -522,7 +473,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
           {/* Stats row */}
           <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
-            <StatCell label="Articles Opened" value={String(storiesRead)} />
+            <StatCell label="Articles Opened" value={String(uniqueArticlesOpened)} />
             <StatCell label="Liked" value={String(likedArticlesCount)} />
             <StatCell label="Watchlist" value={String(savedArticles.length)} />
           </div>
@@ -970,6 +921,128 @@ function WeekMetric({ value, label }: { value: number; label: string }) {
         {value}
       </span>
       <span className="text-[12px] text-zinc-500">{label}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// My Topics subpage (extracted to manage its own live-topics state)
+// ---------------------------------------------------------------------------
+
+const SUGGESTED_TOPICS: ProfileTopic[] = ["Markets", "Tech", "Economy"];
+
+function TopicsSubPage({
+  initialTopics,
+  onBack,
+}: {
+  initialTopics: ProfileTopic[];
+  onBack: () => void;
+}) {
+  const [liveTopics, setLiveTopics] = useState<ProfileTopic[]>(initialTopics);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const handleSuggestion = (topic: ProfileTopic) => {
+    toggleFavouriteTopic(topic);
+    const updated = loadFavouriteTopics();
+    setLiveTopics(updated);
+    // Force MyTopicsSelector to re-read from localStorage so the new pill shows selected
+    setReloadKey((k) => k + 1);
+  };
+
+  const showSuggestions = liveTopics.length === 0;
+
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-black">
+      <header
+        className="flex shrink-0 flex-col border-b border-white/[0.06] px-4"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+      >
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-600">
+          Pocket Finance
+        </p>
+        <div className="flex items-center justify-between pb-3 pt-1.5">
+          <button
+            type="button"
+            data-no-drag
+            onClick={onBack}
+            className="flex items-center gap-1.5 active:opacity-60"
+          >
+            <ArrowLeft className="h-5 w-5 text-zinc-400" />
+            <span className="text-[15px] font-semibold text-white">
+              My Topics
+            </span>
+          </button>
+          <button
+            type="button"
+            data-no-drag
+            onClick={onBack}
+            className="text-[15px] font-semibold text-[#00C6C6] active:opacity-60"
+          >
+            Done
+          </button>
+        </div>
+      </header>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto px-5 pt-5"
+        style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
+      >
+        <p className="text-sm text-zinc-400">
+          Choose topics to personalise your Following feed.
+        </p>
+        <MyTopicsSelector
+          showCount
+          reloadKey={reloadKey}
+          onTopicsChange={setLiveTopics}
+        />
+
+        {/* "Your feed" info card */}
+        <div
+          className="mt-5 rounded-2xl p-4"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(10,18,50,0.85), rgba(6,10,28,0.90))",
+            border: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#3B6EF5]/70" />
+            <div>
+              <p className="text-[13px] font-semibold text-white">Your feed</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-zinc-500">
+                Selected topics shape the Following tab and help personalise
+                your Discover recommendations.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Suggested topics prompt — only when nothing selected */}
+        {showSuggestions && (
+          <div className="mt-5">
+            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
+              Suggested for you
+            </p>
+            <div className="flex gap-2">
+              {SUGGESTED_TOPICS.map((topic) => (
+                <button
+                  key={topic}
+                  type="button"
+                  data-no-drag
+                  onClick={() => handleSuggestion(topic)}
+                  className="rounded-full px-3.5 py-2 text-[13px] font-medium active:opacity-60"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.045)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    color: "rgba(161,161,170,1)",
+                  }}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

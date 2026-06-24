@@ -41,20 +41,25 @@ const TOPIC_ICON: Record<ProfileTopic, React.ReactNode> = {
 interface MyTopicsSelectorProps {
   /** Show "X selected" count below the selector */
   showCount?: boolean;
+  /** Called with the updated topic list after each toggle */
+  onTopicsChange?: (topics: ProfileTopic[]) => void;
+  /** Force a re-read from localStorage (increment to reset after external toggle) */
+  reloadKey?: number;
 }
 
-export function MyTopicsSelector({ showCount }: MyTopicsSelectorProps) {
+export function MyTopicsSelector({ showCount, onTopicsChange, reloadKey }: MyTopicsSelectorProps) {
   const [topics, setTopics] = useState<ProfileTopic[]>([]);
   const [pulseTopic, setPulseTopic] = useState<ProfileTopic | null>(null);
 
   useEffect(() => {
     setTopics(loadFavouriteTopics());
-  }, []);
+  }, [reloadKey]);
 
   const handleToggle = (topic: ProfileTopic) => {
     const next = toggleFavouriteTopic(topic);
     console.log("[pf-topics] MyTopicsSelector toggled:", topic, "→", next);
     setTopics(next);
+    onTopicsChange?.(next);
     setPulseTopic(topic);
     window.setTimeout(() => setPulseTopic(null), 220);
   };
