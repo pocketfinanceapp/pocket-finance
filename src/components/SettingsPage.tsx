@@ -29,11 +29,13 @@ type SettingsScreen = "main" | "liked" | "saved" | "topics";
 
 interface SettingsPageProps {
   onBack: () => void;
+  /** Open directly to a sub-screen (e.g. "liked", "saved") */
+  initialScreen?: SettingsScreen;
 }
 
-export function SettingsPage({ onBack }: SettingsPageProps) {
+export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
   const { user, signOut } = useAuth();
-  const [screen, setScreen] = useState<SettingsScreen>("main");
+  const [screen, setScreen] = useState<SettingsScreen>(initialScreen ?? "main");
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [likedArticles, setLikedArticles] = useState<LikedArticleEntry[]>([]);
@@ -82,7 +84,11 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
   };
 
   const handleSubBack = () => {
-    if (screen === "main") {
+    // If on root screen, or we landed directly on this sub-screen, return to caller
+    if (
+      screen === "main" ||
+      (initialScreen && initialScreen !== "main" && screen === initialScreen)
+    ) {
       onBack();
       return;
     }

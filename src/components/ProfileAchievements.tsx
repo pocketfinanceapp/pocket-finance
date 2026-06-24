@@ -15,12 +15,18 @@ interface ProfileAchievementsProps {
   articlesRead: number;
   likedCount: number;
   streak: number;
+  /** Limit visible achievements (for preview mode). Default: show all */
+  maxItems?: number;
+  /** When provided, renders "View all" as a tappable button */
+  onViewAll?: () => void;
 }
 
 export function ProfileAchievements({
   articlesRead,
   likedCount,
   streak,
+  maxItems,
+  onViewAll,
 }: ProfileAchievementsProps) {
   const [firstStockViewed, setFirstStockViewed] = useState(false);
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
@@ -46,18 +52,22 @@ export function ProfileAchievements({
     if (toAnimate.length === 0) return;
 
     setAnimatingIds(new Set(toAnimate));
-
     const timer = window.setTimeout(() => {
       for (const id of toAnimate) markBadgeSeen(id);
       setAnimatingIds(new Set());
     }, 650);
-
     return () => window.clearTimeout(timer);
   }, [unlockedIds]);
 
+  const displayBadges = maxItems
+    ? ACHIEVEMENT_BADGES.slice(0, maxItems)
+    : ACHIEVEMENT_BADGES;
+
+  const hasMore = maxItems !== undefined && ACHIEVEMENT_BADGES.length > maxItems;
+
   return (
-    <section className="mt-5">
-      {/* Section header with View all */}
+    <section>
+      {/* Section header */}
       <div className="flex items-baseline justify-between">
         <div>
           <h3 className="text-[15px] font-bold text-white">Achievements</h3>
@@ -65,14 +75,21 @@ export function ProfileAchievements({
             {unlockedCount} of {ACHIEVEMENT_BADGES.length} unlocked
           </p>
         </div>
-        <span className="text-[12px] font-semibold text-[#00C6C6]">
-          View all
-        </span>
+        {onViewAll && (
+          <button
+            type="button"
+            data-no-drag
+            onClick={onViewAll}
+            className="text-[12px] font-semibold text-[#00C6C6] active:opacity-60"
+          >
+            View all
+          </button>
+        )}
       </div>
 
       {/* 2-column grid */}
       <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {ACHIEVEMENT_BADGES.map((badge) => {
+        {displayBadges.map((badge) => {
           const unlocked = unlockedIds.has(badge.id);
           const animate = animatingIds.has(badge.id);
 
@@ -83,7 +100,7 @@ export function ProfileAchievements({
                 animate ? "badge-unlock-animate" : ""
               }`}
               style={{
-                minHeight: 120,
+                minHeight: 108,
                 backgroundColor: unlocked
                   ? "rgba(0,198,198,0.04)"
                   : "rgba(10,11,16,0.72)",
@@ -93,20 +110,19 @@ export function ProfileAchievements({
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,.03)",
               }}
             >
-              {/* Left accent line for unlocked */}
+              {/* Left accent line — unlocked only */}
               {unlocked && (
                 <div
                   className="absolute bottom-3 left-0 top-3 w-[2px] rounded-full"
                   style={{
                     background:
-                      "linear-gradient(to bottom, rgba(0,198,198,0.7), rgba(0,198,198,0.2))",
+                      "linear-gradient(to bottom, rgba(0,198,198,0.65), rgba(0,198,198,0.15))",
                   }}
                 />
               )}
 
               {/* Top row: icon tile + status badge */}
               <div className="flex items-start justify-between">
-                {/* Icon tile */}
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-xl text-xl leading-none"
                   style={{
@@ -116,23 +132,25 @@ export function ProfileAchievements({
                     border: unlocked
                       ? "1px solid rgba(0,198,198,0.15)"
                       : "1px solid rgba(255,255,255,0.06)",
-                    opacity: unlocked ? 1 : 0.32,
+                    opacity: unlocked ? 1 : 0.30,
                     filter: unlocked ? undefined : "grayscale(100%)",
                   }}
                 >
                   {badge.emoji}
                 </div>
 
-                {/* Status badge */}
                 {unlocked ? (
                   <div
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
                     style={{
                       background:
-                        "linear-gradient(135deg, #00c6c6 0%, #00919f 100%)",
+                        "linear-gradient(135deg, #00c6c6 0%, #008fa5 100%)",
                     }}
                   >
-                    <Check className="h-[10px] w-[10px] text-white" strokeWidth={3} />
+                    <Check
+                      className="h-[10px] w-[10px] text-white"
+                      strokeWidth={3}
+                    />
                   </div>
                 ) : (
                   <div
@@ -152,8 +170,8 @@ export function ProfileAchievements({
                 className="mt-3 text-[13px] font-semibold leading-snug"
                 style={{
                   color: unlocked
-                    ? "rgba(255,255,255,0.95)"
-                    : "rgba(255,255,255,0.38)",
+                    ? "rgba(255,255,255,0.93)"
+                    : "rgba(255,255,255,0.35)",
                 }}
               >
                 {badge.name}
@@ -165,6 +183,24 @@ export function ProfileAchievements({
           );
         })}
       </div>
+
+      {/* Pagination dots — preview mode */}
+      {hasMore && (
+        <div className="mt-4 flex items-center justify-center gap-[5px]">
+          <div
+            className="h-1.5 rounded-full"
+            style={{ width: 18, backgroundColor: "rgba(0,198,198,0.65)" }}
+          />
+          <div
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
+          />
+          <div
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
+          />
+        </div>
+      )}
     </section>
   );
 }
