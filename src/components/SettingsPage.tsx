@@ -21,6 +21,7 @@ import {
 } from "@/lib/userInteractions";
 import type { LikedArticleEntry, SavedArticleEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
+import { CompanyLogo } from "./CompanyLogo";
 import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ScreenHeader } from "./ScreenHeader";
 
@@ -124,12 +125,14 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                       title: a.articleTitle,
                       url: a.articleUrl,
                       meta: `${a.ticker} · ${timeAgo(a.likedAt)}`,
+                      ticker: a.ticker,
                     }))
                   : savedArticles.map((a) => ({
                       id: a.id,
                       title: a.articleTitle,
                       url: a.articleUrl,
                       meta: `${a.ticker} · ${timeAgo(a.savedAt)}`,
+                      ticker: a.ticker,
                     }))
               }
             />
@@ -253,12 +256,30 @@ function SettingsRow({
   );
 }
 
+/* Ticker → logo color mapping for thumbnails */
+const TICKER_COLORS: Record<string, string> = {
+  AAPL: "#555555",
+  MSFT: "#00A4EF",
+  GOOGL: "#4285F4",
+  AMZN: "#FF9900",
+  NVDA: "#76B900",
+  TSLA: "#E31937",
+  META: "#0866FF",
+  BTC: "#F7931A",
+  ETH: "#627EEA",
+  SPX: "#3B6EF5",
+};
+
+function tickerColor(ticker: string): string {
+  return TICKER_COLORS[ticker.toUpperCase()] ?? "#3B6EF5";
+}
+
 function ArticleList({
   items,
   emptyMessage,
   loading,
 }: {
-  items: Array<{ id: string; title: string; url: string; meta: string }>;
+  items: Array<{ id: string; title: string; url: string; meta: string; ticker: string }>;
   emptyMessage: string;
   loading: boolean;
 }) {
@@ -273,7 +294,7 @@ function ArticleList({
   }
 
   return (
-    <ul className="mt-4 divide-y divide-white/[0.06] rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+    <ul className="mt-4 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
       {items.map((item) => (
         <li key={item.id}>
           <a
@@ -281,15 +302,24 @@ function ArticleList({
             target="_blank"
             rel="noopener noreferrer"
             data-no-drag
-            className="flex items-start justify-between gap-3 px-4 py-3.5 active:bg-white/[0.04]"
+            className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.04]"
           >
+            {/* Ticker thumbnail */}
+            <div className="shrink-0 overflow-hidden rounded-lg">
+              <CompanyLogo
+                ticker={item.ticker}
+                color={tickerColor(item.ticker)}
+                size={48}
+                shape="square"
+              />
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="line-clamp-2 text-sm font-medium leading-snug text-white">
+              <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white">
                 {item.title}
               </p>
-              <p className="mt-1 text-xs text-zinc-500">{item.meta}</p>
+              <p className="mt-1 text-[11px] text-zinc-500">{item.meta}</p>
             </div>
-            <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
+            <ExternalLink className="h-4 w-4 shrink-0 text-zinc-600" />
           </a>
         </li>
       ))}
