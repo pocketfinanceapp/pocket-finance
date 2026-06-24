@@ -340,10 +340,10 @@ export function FeedCard({
               void (async () => {
                 if (saved) {
                   const ok = await unsaveArticle(article.id);
-                  flash(ok ? "Removed from watchlist" : "Could not remove");
+                  flash(ok ? "Removed" : "Could not remove");
                 } else {
                   const ok = await saveArticle(article);
-                  flash(ok ? "Saved to watchlist" : "Could not save");
+                  flash(ok ? "Article saved" : "Could not save");
                 }
               })();
             })
