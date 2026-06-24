@@ -88,7 +88,7 @@ export function ProfileAchievements({
       </div>
 
       {/* 2-column grid */}
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         {displayBadges.map((badge) => {
           const unlocked = unlockedIds.has(badge.id);
           const animate = animatingIds.has(badge.id);
@@ -96,11 +96,11 @@ export function ProfileAchievements({
           return (
             <div
               key={badge.id}
-              className={`relative overflow-hidden rounded-2xl p-4 ${
+              className={`relative overflow-hidden rounded-2xl p-3 ${
                 animate ? "badge-unlock-animate" : ""
               }`}
               style={{
-                minHeight: 108,
+                minHeight: 96,
                 backgroundColor: unlocked
                   ? "rgba(0,198,198,0.04)"
                   : "rgba(10,11,16,0.72)",
@@ -113,26 +113,23 @@ export function ProfileAchievements({
               {/* Left accent line — unlocked only */}
               {unlocked && (
                 <div
-                  className="absolute bottom-3 left-0 top-3 w-[2px] rounded-full"
+                  className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full"
                   style={{
                     background:
-                      "linear-gradient(to bottom, rgba(0,198,198,0.65), rgba(0,198,198,0.15))",
+                      "linear-gradient(to bottom, rgba(0,198,198,0.60), rgba(0,198,198,0.12))",
                   }}
                 />
               )}
 
               {/* Top row: icon tile + status badge */}
               <div className="flex items-start justify-between">
+                {/* Neutral dark tile — no cyan tint for unlocked */}
                 <div
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-xl leading-none"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-lg leading-none"
                   style={{
-                    backgroundColor: unlocked
-                      ? "rgba(0,198,198,0.10)"
-                      : "rgba(255,255,255,0.05)",
-                    border: unlocked
-                      ? "1px solid rgba(0,198,198,0.15)"
-                      : "1px solid rgba(255,255,255,0.06)",
-                    opacity: unlocked ? 1 : 0.30,
+                    backgroundColor: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    opacity: unlocked ? 1 : 0.28,
                     filter: unlocked ? undefined : "grayscale(100%)",
                   }}
                 >
@@ -156,8 +153,8 @@ export function ProfileAchievements({
                   <div
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
                     style={{
-                      backgroundColor: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.10)",
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.09)",
                     }}
                   >
                     <Lock className="h-[9px] w-[9px] text-zinc-600" />
@@ -167,16 +164,16 @@ export function ProfileAchievements({
 
               {/* Title + requirement */}
               <p
-                className="mt-3 text-[13px] font-semibold leading-snug"
+                className="mt-2 text-[12px] font-semibold leading-snug"
                 style={{
                   color: unlocked
-                    ? "rgba(255,255,255,0.93)"
-                    : "rgba(255,255,255,0.35)",
+                    ? "rgba(255,255,255,0.92)"
+                    : "rgba(255,255,255,0.33)",
                 }}
               >
                 {badge.name}
               </p>
-              <p className="mt-1 text-[11px] leading-snug text-zinc-600">
+              <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
                 {badge.progressHint}
               </p>
             </div>

@@ -31,6 +31,7 @@ function TabPanels({
     useApp();
   const [fadeKey, setFadeKey] = useState(0);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
+  const [profileSubPageOpen, setProfileSubPageOpen] = useState(false);
 
   useEffect(() => {
     ensureMarketsLoaded();
@@ -50,8 +51,11 @@ function TabPanels({
     [setMarketFilters, navigate]
   );
 
+  const hideBottomNav =
+    sidePanelOpen || (activeTab === "profile" && profileSubPageOpen);
+
   return (
-    <MobilePageShell activeTab={navTab} hideBottomNav={sidePanelOpen}>
+    <MobilePageShell activeTab={navTab} hideBottomNav={hideBottomNav}>
       <div className="relative h-full w-full">
         <TabPanel active={activeTab === "home"} fadeKey={fadeKey}>
           <FeedErrorBoundary>
@@ -81,7 +85,10 @@ function TabPanels({
         </TabPanel>
 
         <TabPanel active={activeTab === "profile"} fadeKey={fadeKey}>
-          <ProfilePage onClose={() => navigate("home")} />
+          <ProfilePage
+            onClose={() => navigate("home")}
+            onSubPageChange={setProfileSubPageOpen}
+          />
         </TabPanel>
       </div>
     </MobilePageShell>

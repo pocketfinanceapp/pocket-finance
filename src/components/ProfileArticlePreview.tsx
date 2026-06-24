@@ -3,24 +3,51 @@
 import { ChevronRight, ExternalLink, Newspaper } from "lucide-react";
 import { CompanyLogo } from "./CompanyLogo";
 
-/* ── Ticker → brand colour ───────────────────────────────────────────────── */
+/* ── Known company tickers (show CompanyLogo; everything else → editorial tile) */
 
 const TICKER_COLORS: Record<string, string> = {
   AAPL: "#4a4a4a",
   MSFT: "#00A4EF",
   GOOGL: "#4285F4",
+  GOOG: "#4285F4",
   AMZN: "#FF9900",
   NVDA: "#76B900",
   TSLA: "#CC0000",
   META: "#0866FF",
   BTC: "#F7931A",
   ETH: "#627EEA",
-  SPX: "#3B6EF5",
-  MARKET: "#3B6EF5",
+  COIN: "#0052FF",
+  NFLX: "#E50914",
+  JPM: "#1D4D8E",
+  GS: "#7399C6",
+  BAC: "#E31837",
+  WFC: "#D71E28",
+  V: "#1A1F71",
+  MA: "#EB001B",
+  PYPL: "#003087",
+  DIS: "#006EBF",
+  INTC: "#0068B5",
+  AMD: "#ED1C24",
+  QCOM: "#3253DC",
+  NVDA_ALT: "#76B900",
+  HOOD: "#00C805",
+  SHOP: "#96BF48",
+  SNAP: "#FFFC00",
+  SPOT: "#1DB954",
+  PLTR: "#1D2333",
+  XOM: "#FF0000",
+  CVX: "#007AC2",
 };
 
+/** Only these tickers render a CompanyLogo tile; all others get editorial tile */
+const KNOWN_TICKERS = new Set(Object.keys(TICKER_COLORS));
+
 export function tickerLogoColor(ticker: string): string {
-  return TICKER_COLORS[ticker.toUpperCase()] ?? "#2a3060";
+  return TICKER_COLORS[ticker.toUpperCase()] ?? "#3B6EF5";
+}
+
+function isKnownTicker(ticker: string): boolean {
+  return KNOWN_TICKERS.has(ticker.toUpperCase());
 }
 
 /* ── Component ───────────────────────────────────────────────────────────── */
@@ -55,8 +82,8 @@ export function ProfileArticlePreview({
 }: ProfileArticlePreviewProps) {
   const row = (
     <div className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.04]">
-      {/* Logo tile */}
-      {ticker ? (
+      {/* Logo tile: only for known company tickers; else neutral editorial */}
+      {ticker && isKnownTicker(ticker) ? (
         <div className="shrink-0 overflow-hidden rounded-xl">
           <CompanyLogo
             ticker={ticker}

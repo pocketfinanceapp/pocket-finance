@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Calendar, ChevronRight, Settings } from "lucide-react";
+import { ArrowLeft, Calendar, ChevronRight, Settings, Sparkles } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -39,11 +39,13 @@ const CARD_STYLE = {
 
 interface ProfilePageProps {
   onClose: () => void;
+  /** Called when a sub-screen opens/closes so parent can hide/show bottom nav */
+  onSubPageChange?: (isSubPage: boolean) => void;
 }
 
 type SettingsScreen = "main" | "liked" | "saved" | "topics";
 
-export function ProfilePage({ onClose }: ProfilePageProps) {
+export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   const { storiesRead, likedArticlesCount, savedArticles, reloadProfileStats } =
     useApp();
   const { user, isGuest, requestSignIn } = useAuth();
@@ -54,6 +56,13 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
   const [showTopics, setShowTopics] = useState(false);
   const [showAllAchievements, setShowAllAchievements] = useState(false);
   const [showAllRecentlyRead, setShowAllRecentlyRead] = useState(false);
+
+  /* Notify parent so bottom nav can hide on any sub-screen */
+  const isSubPage =
+    showSettings || showTopics || showAllAchievements || showAllRecentlyRead;
+  useEffect(() => {
+    onSubPageChange?.(isSubPage);
+  }, [isSubPage, onSubPageChange]);
 
   /* ── Data state ─────────────────────────────────────────────────────── */
   const [streak, setStreak] = useState(0);
@@ -150,6 +159,29 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
             Choose topics to personalise your Following feed.
           </p>
           <MyTopicsSelector showCount />
+
+          {/* Explanatory note */}
+          <div
+            className="mt-5 rounded-2xl p-4"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(10,18,50,0.85), rgba(6,10,28,0.90))",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#3B6EF5]/70" />
+              <div>
+                <p className="text-[13px] font-semibold text-white">
+                  Your feed
+                </p>
+                <p className="mt-0.5 text-[12px] leading-relaxed text-zinc-500">
+                  Selected topics shape the Following tab and help personalise
+                  your Discover recommendations.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -278,7 +310,7 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
       >
         {/* ── 1. Identity + stats card ───────────────────────────────── */}
         <div
-          className="relative mt-5 overflow-hidden rounded-2xl"
+          className="relative mt-3 overflow-hidden rounded-2xl"
           style={{
             background:
               "linear-gradient(155deg, rgba(9,12,30,0.97) 0%, rgba(4,5,10,0.99) 100%)",
@@ -538,8 +570,8 @@ export function ProfilePage({ onClose }: ProfilePageProps) {
 function ProfileRootHeader({ onSettings }: { onSettings: () => void }) {
   return (
     <header
-      className="flex shrink-0 items-center border-b border-white/[0.06] bg-black px-4 pb-3"
-      style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+      className="flex shrink-0 items-center border-b border-white/[0.06] bg-black px-4 pb-2"
+      style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
     >
       <h1 className="flex-1 text-lg font-bold text-white">Profile</h1>
       <button

@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Heart,
   LogOut,
+  Newspaper,
   Tag,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -123,6 +124,17 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
                 screen === "liked"
                   ? "No liked articles yet"
                   : "No saved articles yet"
+              }
+              countLabel={
+                !loadingList
+                  ? screen === "liked"
+                    ? likedArticles.length > 0
+                      ? `${likedArticles.length} liked article${likedArticles.length !== 1 ? "s" : ""}`
+                      : undefined
+                    : savedArticles.length > 0
+                      ? `${savedArticles.length} saved article${savedArticles.length !== 1 ? "s" : ""}`
+                      : undefined
+                  : undefined
               }
               items={
                 screen === "liked"
@@ -262,32 +274,56 @@ function SettingsRow({
   );
 }
 
-/* Ticker → logo color mapping for thumbnails */
+/* ── Ticker helpers (only known company tickers get a coloured logo tile) ── */
+
 const TICKER_COLORS: Record<string, string> = {
-  AAPL: "#555555",
+  AAPL: "#4a4a4a",
   MSFT: "#00A4EF",
   GOOGL: "#4285F4",
+  GOOG: "#4285F4",
   AMZN: "#FF9900",
   NVDA: "#76B900",
-  TSLA: "#E31937",
+  TSLA: "#CC0000",
   META: "#0866FF",
   BTC: "#F7931A",
   ETH: "#627EEA",
-  SPX: "#3B6EF5",
+  COIN: "#0052FF",
+  NFLX: "#E50914",
+  JPM: "#1D4D8E",
+  GS: "#7399C6",
+  BAC: "#E31837",
+  V: "#1A1F71",
+  MA: "#EB001B",
+  PYPL: "#003087",
+  DIS: "#006EBF",
+  INTC: "#0068B5",
+  AMD: "#ED1C24",
+  HOOD: "#00C805",
+  SHOP: "#96BF48",
+  XOM: "#FF0000",
+  CVX: "#007AC2",
 };
+
+const KNOWN_TICKERS = new Set(Object.keys(TICKER_COLORS));
 
 function tickerColor(ticker: string): string {
   return TICKER_COLORS[ticker.toUpperCase()] ?? "#3B6EF5";
+}
+
+function isKnownTicker(ticker: string): boolean {
+  return KNOWN_TICKERS.has(ticker.toUpperCase());
 }
 
 function ArticleList({
   items,
   emptyMessage,
   loading,
+  countLabel,
 }: {
   items: Array<{ id: string; title: string; url: string; meta: string; ticker: string }>;
   emptyMessage: string;
   loading: boolean;
+  countLabel?: string;
 }) {
   if (loading) {
     return <p className="pt-6 text-center text-sm text-zinc-500">Loading…</p>;
@@ -300,35 +336,52 @@ function ArticleList({
   }
 
   return (
-    <ul className="mt-4 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
-      {items.map((item) => (
-        <li key={item.id}>
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-no-drag
-            className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.04]"
-          >
-            {/* Ticker thumbnail */}
-            <div className="shrink-0 overflow-hidden rounded-lg">
-              <CompanyLogo
-                ticker={item.ticker}
-                color={tickerColor(item.ticker)}
-                size={48}
-                shape="square"
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white">
-                {item.title}
-              </p>
-              <p className="mt-1 text-[11px] text-zinc-500">{item.meta}</p>
-            </div>
-            <ExternalLink className="h-4 w-4 shrink-0 text-zinc-600" />
-          </a>
-        </li>
-      ))}
-    </ul>
+    <>
+      {countLabel && (
+        <p className="px-1 pt-4 text-[13px] text-zinc-500">{countLabel}</p>
+      )}
+      <ul className="mt-3 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+        {items.map((item) => (
+          <li key={item.id}>
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-no-drag
+              className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.04]"
+            >
+              {/* Only known company tickers get the coloured logo tile */}
+              {isKnownTicker(item.ticker) ? (
+                <div className="shrink-0 overflow-hidden rounded-lg">
+                  <CompanyLogo
+                    ticker={item.ticker}
+                    color={tickerColor(item.ticker)}
+                    size={48}
+                    shape="square"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
+                  style={{
+                    backgroundColor: "rgba(18,22,50,0.90)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <Newspaper className="h-5 w-5 text-zinc-600" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white">
+                  {item.title}
+                </p>
+                <p className="mt-1 text-[11px] text-zinc-500">{item.meta}</p>
+              </div>
+              <ExternalLink className="h-4 w-4 shrink-0 text-zinc-600" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
