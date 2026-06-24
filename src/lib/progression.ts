@@ -750,7 +750,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "first_briefing",
       "discovery",
       "First Briefing",
-      "Complete your first AI Briefing",
+      "Completed your first AI briefing",
       "⚡",
       uniqueBriefings,
       1
@@ -797,7 +797,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "market_watcher",
       "markets",
       "Market Watcher",
-      "Open your first stock panel",
+      "Viewed your first stock panel",
       "📈",
       hasAnyStockViewed ? 1 : 0,
       1
@@ -806,7 +806,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "stock_follower",
       "markets",
       "Stock Follower",
-      "Add 1 stock to your watchlist",
+      "Added a stock to your watchlist",
       "⭐",
       totalWatchlisted,
       1
@@ -815,7 +815,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "market_explorer",
       "markets",
       "Market Explorer",
-      "Open 5 different stock panels",
+      "Opened 5 different stock panels",
       "🔭",
       totalStockPanels,
       5
@@ -835,7 +835,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "rising_star",
       "consistency",
       "Rising Star",
-      "Maintain a 3-day streak",
+      "Maintained a 3-day streak",
       "🌟",
       currentStreak,
       3
@@ -844,7 +844,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "diamond_hands",
       "consistency",
       "Diamond Hands",
-      "Maintain a 7-day streak",
+      "Maintained a 7-day streak",
       "💎",
       currentStreak,
       7
@@ -853,7 +853,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "two_weeks_strong",
       "consistency",
       "Two Weeks Strong",
-      "Maintain a 14-day streak",
+      "Maintained a 14-day streak",
       "🏃",
       currentStreak,
       14
@@ -862,7 +862,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "monthly_investor",
       "consistency",
       "Monthly Investor",
-      "Maintain a 30-day streak",
+      "Maintained a 30-day streak",
       "🏆",
       currentStreak,
       30
@@ -873,7 +873,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "curator",
       "engagement",
       "Curator",
-      "Like 5 articles",
+      "Liked 5 articles",
       "❤️",
       likedCount,
       5
@@ -882,7 +882,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "topic_explorer",
       "discovery",
       "Topic Explorer",
-      "Read articles across 3 different topics",
+      "Read articles across 3 topics",
       "🗺️",
       uniqueTopics,
       3
@@ -891,7 +891,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "saver",
       "discovery",
       "Saver",
-      "Save 5 articles",
+      "Saved 5 articles",
       "🔖",
       totalSaved,
       5
@@ -902,7 +902,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "market_analyst",
       "engagement",
       "Market Analyst",
-      "Earn 500 XP",
+      "Earned 500 XP",
       "📊",
       totalXP,
       500

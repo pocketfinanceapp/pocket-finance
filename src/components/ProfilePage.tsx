@@ -501,8 +501,8 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
                     {progressionState.nextLevelXP.toLocaleString()} XP
                   </p>
                   <p className="text-[11px] text-zinc-600">
-                    {progressionState.nextLevelXP - totalXP} to{" "}
-                    {LEVELS[progressionState.level]?.title ?? "max"}
+                    {progressionState.nextLevelXP - totalXP} XP to{" "}
+                    {LEVELS[progressionState.level + 1]?.title ?? "max"}
                   </p>
                 </div>
               </>
@@ -718,7 +718,7 @@ function TodayGoalCard({ goal }: { goal: DailyGoalState }) {
     >
       {goal.isComplete ? (
         /* Completed state */
-        <div className="flex items-center gap-3 px-4 py-4">
+        <div className="flex items-center gap-3 px-4 py-3">
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
             style={{
@@ -749,8 +749,8 @@ function TodayGoalCard({ goal }: { goal: DailyGoalState }) {
         </div>
       ) : (
         /* Incomplete state */
-        <div className="px-4 py-4">
-          <div className="mb-3 flex items-center justify-between">
+        <div className="px-4 py-3">
+          <div className="mb-2.5 flex items-center justify-between">
             <p className="text-[13px] font-bold text-white">
               Today&apos;s Market Goal
             </p>
@@ -762,7 +762,7 @@ function TodayGoalCard({ goal }: { goal: DailyGoalState }) {
           {goal.tasks.map((task, idx) => (
             <div
               key={task.id}
-              className={`flex items-center gap-3 ${idx > 0 ? "mt-2.5" : ""}`}
+              className={`flex items-center gap-3 ${idx > 0 ? "mt-1.5" : ""}`}
             >
               {task.completed >= task.required ? (
                 <div
@@ -791,7 +791,7 @@ function TodayGoalCard({ goal }: { goal: DailyGoalState }) {
           ))}
 
           {/* 4 compact progress segments (3 for articles + 1 for briefing) */}
-          <div className="mt-3 flex gap-1">
+          <div className="mt-2 flex gap-1">
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
@@ -836,7 +836,7 @@ function StreakCard({ streakState }: { streakState: StreakState }) {
 
   const subtitle =
     currentStreak === 0
-      ? "Complete today's goal to begin your first streak."
+      ? "Complete today's goal to begin."
       : goalCompletedToday
         ? "Goal complete — come back tomorrow!"
         : `Complete today's goal to keep your ${currentStreak}-day streak alive`;
@@ -851,7 +851,7 @@ function StreakCard({ streakState }: { streakState: StreakState }) {
         boxShadow: "inset 0 1px 0 rgba(255,180,0,0.06)",
       }}
     >
-      <div className="px-4 pb-4 pt-4">
+      <div className="px-4 pb-3 pt-3">
         {/* Header row */}
         <div className="flex items-center gap-3">
           {/* Amber flame tile */}
@@ -886,7 +886,7 @@ function StreakCard({ streakState }: { streakState: StreakState }) {
         </div>
 
         {/* Mon–Sun weekly strip */}
-        <div className="mt-3 flex justify-between">
+        <div className="mt-2 flex justify-between">
           {weeklyStrip.map(({ day, completed, isToday }) => (
             <div key={day} className="flex flex-col items-center gap-1">
               <div
@@ -924,10 +924,10 @@ function StreakCard({ streakState }: { streakState: StreakState }) {
 // ---------------------------------------------------------------------------
 
 function YourWeekCard({ weekly }: { weekly: WeeklyActivity }) {
-  const hasActivity =
-    weekly.articlesRead > 0 ||
-    weekly.briefingsCompleted > 0 ||
-    weekly.xpEarned > 0;
+  // Only consider articles opened and briefings completed as qualifying activity;
+  // XP from baseline/migration events should not falsely show an active week.
+  const hasActivity = weekly.articlesRead > 0 || weekly.briefingsCompleted > 0;
+  const displayXP = hasActivity ? weekly.xpEarned : 0;
 
   return (
     <div className="mt-5 overflow-hidden rounded-2xl" style={CARD_STYLE}>
@@ -940,7 +940,7 @@ function YourWeekCard({ weekly }: { weekly: WeeklyActivity }) {
           <div className="flex items-baseline gap-6">
             <WeekMetric value={weekly.articlesRead} label="Articles" />
             <WeekMetric value={weekly.briefingsCompleted} label="Briefings" />
-            <WeekMetric value={weekly.xpEarned} label="XP" />
+            <WeekMetric value={displayXP} label="XP" />
           </div>
           <p className="mt-2.5 text-[12px] leading-snug text-zinc-500">
             {weekly.mostReadTopic

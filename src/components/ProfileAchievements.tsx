@@ -22,6 +22,18 @@ const CATEGORY_FILTERS: { id: AchievementCategory | "all"; label: string }[] =
     { id: "engagement", label: "Engagement" },
   ];
 
+/**
+ * Sort order: unlocked first, then in-progress sorted by ratio desc, then not-started.
+ */
+function sortAchievements(list: Achievement[]): Achievement[] {
+  return [...list].sort((a, b) => {
+    if (a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
+    const ra = a.required > 0 ? a.progress / a.required : 0;
+    const rb = b.required > 0 ? b.progress / b.required : 0;
+    return rb - ra;
+  });
+}
+
 /** Order that sections appear in the "All" grouped view. */
 const SECTION_ORDER: AchievementCategory[] = [
   "reading",
@@ -82,7 +94,7 @@ export function ProfileAchievements({
   const displayAchievements = useMemo(() => {
     if (maxItems) return buildPreview4(allAchievements);
     if (activeCategory === "all") return allAchievements;
-    return allAchievements.filter((a) => a.category === activeCategory);
+    return sortAchievements(allAchievements.filter((a) => a.category === activeCategory));
   }, [allAchievements, maxItems, activeCategory]);
 
   const unlockedCount = allAchievements.filter((a) => a.unlocked).length;
@@ -144,7 +156,7 @@ export function ProfileAchievements({
       {showCategoryFilter && activeCategory === "all" ? (
         <div className="mt-3 space-y-5">
           {SECTION_ORDER.map((cat) => {
-            const group = allAchievements.filter((a) => a.category === cat);
+            const group = sortAchievements(allAchievements.filter((a) => a.category === cat));
             if (group.length === 0) return null;
             const catLabel =
               CATEGORY_FILTERS.find((f) => f.id === cat)?.label ?? cat;

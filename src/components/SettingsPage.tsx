@@ -183,7 +183,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
             label="My Topics"
             onClick={() => setScreen("topics")}
           />
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3.5 last:border-b-0">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3 last:border-b-0">
             <div className="flex items-center gap-3">
               <Bell className="h-5 w-5 text-zinc-400" />
               <span className="font-medium text-white">Notifications</span>
@@ -195,7 +195,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
               aria-checked={notificationsOn}
               onClick={handleNotificationsToggle}
               className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-                notificationsOn ? "bg-[#3B6EF5]" : "bg-zinc-700"
+                notificationsOn ? "bg-[#00C6C6]" : "bg-zinc-700"
               }`}
             >
               <span
@@ -208,7 +208,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
         </SettingsSection>
 
         <SettingsSection title="Account">
-          <div className="border-b border-white/[0.06] px-4 py-3.5">
+          <div className="border-b border-white/[0.06] px-4 py-3">
             <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
               Email
             </p>
@@ -238,11 +238,18 @@ function SettingsSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-8">
+    <section className="mt-6">
       <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
         {title}
       </h3>
-      <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+      <div
+        className="overflow-hidden rounded-2xl"
+        style={{
+          backgroundColor: "rgba(10,11,16,0.97)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,.04)",
+        }}
+      >
         {children}
       </div>
     </section>
@@ -263,7 +270,7 @@ function SettingsRow({
       type="button"
       data-no-drag
       onClick={onClick}
-      className="flex w-full items-center justify-between border-b border-white/[0.06] px-4 py-3.5 text-left last:border-b-0 active:bg-white/[0.06]"
+      className="flex w-full items-center justify-between border-b border-white/[0.06] px-4 py-3 text-left last:border-b-0 active:bg-white/[0.06]"
     >
       <div className="flex items-center gap-3">
         {icon}
