@@ -40,6 +40,7 @@ import {
   migrateActivityData,
   recordActivityEvent,
 } from "@/lib/progression";
+import { restoreWatchlistTicker } from "@/lib/watchlistStore";
 
 export interface MarketsSnapshot {
   markets: GlobalMarket[];
@@ -234,6 +235,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (article: NewsArticle) => {
       if (!appUserId) return false;
       if (savedArticles.some((s) => s.articleId === article.id)) return true;
+
+      // If this ticker was previously dismissed from the Watchlist, restore it
+      // before the optimistic update so WatchlistPage re-renders immediately.
+      restoreWatchlistTicker(resolveArticleTicker(article));
 
       const optimistic: SavedArticleEntry = {
         id: `optimistic-${article.id}`,

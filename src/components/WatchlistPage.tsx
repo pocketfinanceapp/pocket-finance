@@ -12,11 +12,19 @@ import {
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { getStockProfile } from "@/lib/stockData";
-import { isMarketThemeTicker } from "@/lib/marketThemes";
 import { getTickerMetaBySymbol, resolveSavedTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { shouldShowWatchlistPrice } from "@/lib/usStockTickers";
+import {
+  buildWatchlistItems,
+  type WatchlistItem,
+} from "@/lib/watchlistUtils";
+import {
+  dismissWatchlistTicker,
+  getDismissedWatchlistTickers,
+} from "@/lib/watchlistStore";
+import { recordActivityEvent } from "@/lib/progression";
 import { CompanyLogo } from "./CompanyLogo";
 import { ProfileArticlePreview } from "./ProfileArticlePreview";
 import { StockPanel } from "./StockPanel";
@@ -50,44 +58,9 @@ function getThemeMeta(ticker: string): { title: string; Icon: LucideIcon } {
   return THEME_META[ticker.toUpperCase()] ?? { title: ticker, Icon: TrendingUp };
 }
 
-/* ─── Data model ────────────────────────────────────────────────────────── */
+/* ─── Synthetic article for StockPanel ─────────────────────────────────── */
 
-interface WatchlistItem {
-  ticker: string;
-  type: "asset" | "theme";
-  /** Most recent saved entry for this ticker — used for headline + timestamp */
-  latestEntry: SavedArticleEntry;
-  /** All saved entries for this ticker — used for bulk remove */
-  allEntries: SavedArticleEntry[];
-}
-
-function buildWatchlistItems(savedArticles: SavedArticleEntry[]): WatchlistItem[] {
-  const byTicker = new Map<string, SavedArticleEntry[]>();
-
-  for (const entry of savedArticles) {
-    const ticker = resolveSavedTicker(entry).toUpperCase();
-    if (!byTicker.has(ticker)) byTicker.set(ticker, []);
-    byTicker.get(ticker)!.push(entry);
-  }
-
-  const items: WatchlistItem[] = [];
-  for (const [ticker, entries] of byTicker) {
-    const sorted = [...entries].sort(
-      (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
-    );
-    const type = isMarketThemeTicker(ticker) ? "theme" : "asset";
-    items.push({ ticker, type, latestEntry: sorted[0], allEntries: sorted });
-  }
-
-  // Sort by most recently added
-  return items.sort(
-    (a, b) =>
-      new Date(b.latestEntry.savedAt).getTime() -
-      new Date(a.latestEntry.savedAt).getTime()
-  );
-}
-
-/** Build a minimal synthetic NewsArticle so StockPanel can render for a given ticker. */
+/** Build a minimal synthetic NewsArticle so StockPanel can render for a ticker. */
 function articleFromEntry(entry: SavedArticleEntry, ticker: string): NewsArticle {
   const meta = getTickerMetaBySymbol(ticker);
   return {
@@ -141,7 +114,8 @@ function SummaryCard({
   worstPct,
 }: SummaryCardProps) {
   const showMovers = bestTicker !== null || worstTicker !== null;
-  const showBoth = bestTicker !== null && worstTicker !== null && bestTicker !== worstTicker;
+  const showBoth =
+    bestTicker !== null && worstTicker !== null && bestTicker !== worstTicker;
 
   return (
     <div
@@ -167,22 +141,26 @@ function SummaryCard({
 
       {showMovers && (
         <div className="mt-3.5 space-y-1.5">
-          {bestTicker !== null && bestPct !== null && (showBoth || worstTicker === null) && (
-            <div className="flex items-center justify-between">
-              <span className="text-[12px] text-zinc-500">Best</span>
-              <span className="text-[12px] font-semibold tabular-nums text-emerald-400">
-                {bestTicker}&nbsp;+{bestPct.toFixed(2)}%
-              </span>
-            </div>
-          )}
-          {worstTicker !== null && worstPct !== null && (showBoth || bestTicker === null) && (
-            <div className="flex items-center justify-between">
-              <span className="text-[12px] text-zinc-500">Worst</span>
-              <span className="text-[12px] font-semibold tabular-nums text-red-400">
-                {worstTicker}&nbsp;{worstPct.toFixed(2)}%
-              </span>
-            </div>
-          )}
+          {bestTicker !== null &&
+            bestPct !== null &&
+            (showBoth || worstTicker === null) && (
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-zinc-500">Best</span>
+                <span className="text-[12px] font-semibold tabular-nums text-emerald-400">
+                  {bestTicker}&nbsp;+{bestPct.toFixed(2)}%
+                </span>
+              </div>
+            )}
+          {worstTicker !== null &&
+            worstPct !== null &&
+            (showBoth || bestTicker === null) && (
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-zinc-500">Worst</span>
+                <span className="text-[12px] font-semibold tabular-nums text-red-400">
+                  {worstTicker}&nbsp;{worstPct.toFixed(2)}%
+                </span>
+              </div>
+            )}
         </div>
       )}
     </div>
@@ -205,8 +183,10 @@ function AssetRow({ item, editMode, onTap, onRemove }: AssetRowProps) {
   const up = stock ? stock.changePercent >= 0 : false;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.03]" style={{ minHeight: 72 }}>
-      {/* Edit mode remove button */}
+    <div
+      className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.03]"
+      style={{ minHeight: 72 }}
+    >
       {editMode && (
         <button
           type="button"
@@ -219,7 +199,6 @@ function AssetRow({ item, editMode, onTap, onRemove }: AssetRowProps) {
         </button>
       )}
 
-      {/* Company logo */}
       <button
         type="button"
         data-no-drag
@@ -228,16 +207,21 @@ function AssetRow({ item, editMode, onTap, onRemove }: AssetRowProps) {
         disabled={editMode}
       >
         <div className="shrink-0 overflow-hidden rounded-xl">
-          <CompanyLogo ticker={item.ticker} color={meta.logoColor} size={44} shape="square" />
+          <CompanyLogo
+            ticker={item.ticker}
+            color={meta.logoColor}
+            size={44}
+            shape="square"
+          />
         </div>
 
-        {/* Identity */}
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-bold tracking-tight text-white">{item.ticker}</p>
+          <p className="text-[14px] font-bold tracking-tight text-white">
+            {item.ticker}
+          </p>
           <p className="truncate text-[12px] text-zinc-500">{meta.companyName}</p>
         </div>
 
-        {/* Price */}
         {stock && showPrice && (
           <div className="shrink-0 text-right">
             <p className="text-[14px] font-semibold tabular-nums text-white">
@@ -253,9 +237,11 @@ function AssetRow({ item, editMode, onTap, onRemove }: AssetRowProps) {
           </div>
         )}
 
-        {/* Chevron */}
         {!editMode && (
-          <ChevronRight className="h-4 w-4 shrink-0 text-zinc-700" strokeWidth={2} />
+          <ChevronRight
+            className="h-4 w-4 shrink-0 text-zinc-700"
+            strokeWidth={2}
+          />
         )}
       </button>
     </div>
@@ -275,8 +261,10 @@ function ThemeRow({ item, editMode, onTap, onRemove }: ThemeRowProps) {
   const { title, Icon } = getThemeMeta(item.ticker);
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.03]" style={{ minHeight: 72 }}>
-      {/* Edit mode remove button */}
+    <div
+      className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.03]"
+      style={{ minHeight: 72 }}
+    >
       {editMode && (
         <button
           type="button"
@@ -296,7 +284,6 @@ function ThemeRow({ item, editMode, onTap, onRemove }: ThemeRowProps) {
         className="flex flex-1 items-center gap-3 text-left"
         disabled={editMode}
       >
-        {/* Icon tile */}
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
           style={{
@@ -307,10 +294,12 @@ function ThemeRow({ item, editMode, onTap, onRemove }: ThemeRowProps) {
           <Icon className="h-5 w-5 text-zinc-400" strokeWidth={1.75} />
         </div>
 
-        {/* Text */}
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-bold tracking-tight text-white">{title}</p>
-          <p className="line-clamp-1 text-[12px] leading-snug text-zinc-500">
+          <p className="text-[14px] font-bold tracking-tight text-white">
+            {title}
+          </p>
+          {/* Slightly brighter than zinc-500 for readability while staying secondary */}
+          <p className="line-clamp-1 text-[12px] leading-snug text-zinc-400">
             {item.latestEntry.articleTitle}
           </p>
           <p className="mt-0.5 text-[11px] text-zinc-600">
@@ -319,7 +308,10 @@ function ThemeRow({ item, editMode, onTap, onRemove }: ThemeRowProps) {
         </div>
 
         {!editMode && (
-          <ChevronRight className="h-4 w-4 shrink-0 text-zinc-700" strokeWidth={2} />
+          <ChevronRight
+            className="h-4 w-4 shrink-0 text-zinc-700"
+            strokeWidth={2}
+          />
         )}
       </button>
     </div>
@@ -351,15 +343,26 @@ function EmptyState() {
 /* ─── Main component ────────────────────────────────────────────────────── */
 
 export function WatchlistPage() {
-  const { savedArticles, unsaveArticle } = useApp();
+  const { savedArticles } = useApp();
   const [editMode, setEditMode] = useState(false);
   const [activeItem, setActiveItem] = useState<WatchlistItem | null>(null);
 
-  /* Deduplicated watchlist items */
-  const watchlistItems = useMemo(
-    () => buildWatchlistItems(savedArticles),
-    [savedArticles]
-  );
+  /**
+   * dismissedTick bumps whenever the user removes a ticker from the Watchlist.
+   * This causes the memo below to re-run and read the updated localStorage state
+   * without triggering any Supabase mutation.
+   */
+  const [dismissedTick, setDismissedTick] = useState(0);
+
+  /* Deduplicated items excluding dismissed tickers */
+  const watchlistItems = useMemo(() => {
+    const dismissed = getDismissedWatchlistTickers();
+    return buildWatchlistItems(savedArticles).filter(
+      (item) => !dismissed.has(item.ticker)
+    );
+    // dismissedTick is an intentional signal to re-read localStorage after a dismiss
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedArticles, dismissedTick]);
 
   const assets = useMemo(
     () => watchlistItems.filter((i) => i.type === "asset"),
@@ -371,7 +374,7 @@ export function WatchlistPage() {
     [watchlistItems]
   );
 
-  /* Summary card — best/worst movers (assets with live price only) */
+  /* Best/worst asset movers for summary card */
   const { bestTicker, bestPct, worstTicker, worstPct } = useMemo(() => {
     const movers = assets
       .filter((a) => shouldShowWatchlistPrice(a.ticker))
@@ -383,14 +386,18 @@ export function WatchlistPage() {
     }
 
     const best = movers.reduce((b, c) =>
-      (c.stock?.changePercent ?? -Infinity) > (b.stock?.changePercent ?? -Infinity) ? c : b
+      (c.stock?.changePercent ?? -Infinity) > (b.stock?.changePercent ?? -Infinity)
+        ? c
+        : b
     );
     const worst = movers.reduce((w, c) =>
-      (c.stock?.changePercent ?? Infinity) < (w.stock?.changePercent ?? Infinity) ? c : w
+      (c.stock?.changePercent ?? Infinity) < (w.stock?.changePercent ?? Infinity)
+        ? c
+        : w
     );
 
-    // Only show worst if it's genuinely negative (or different from best)
-    const showWorst = worst.ticker !== best.ticker || (worst.stock?.changePercent ?? 0) < 0;
+    const showWorst =
+      worst.ticker !== best.ticker || (worst.stock?.changePercent ?? 0) < 0;
 
     return {
       bestTicker: best.ticker,
@@ -400,27 +407,27 @@ export function WatchlistPage() {
     };
   }, [assets]);
 
-  /* 3 most recent articles from watched items */
-  const latestArticles = useMemo(
-    () =>
-      savedArticles
-        .slice()
-        .sort(
-          (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
-        )
-        .slice(0, 3),
-    [savedArticles]
-  );
+  /* 3 most recent articles from all watched items for the "Latest" section */
+  const latestArticles = useMemo(() => {
+    // Only include articles whose ticker is still visible in the watchlist
+    const visibleTickers = new Set(watchlistItems.map((i) => i.ticker));
+    return savedArticles
+      .filter((e) => visibleTickers.has(resolveSavedTicker(e).toUpperCase()))
+      .slice()
+      .sort(
+        (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+      )
+      .slice(0, 3);
+  }, [savedArticles, watchlistItems]);
 
-  /* Remove all entries for a ticker */
-  const removeTicker = useCallback(
-    async (item: WatchlistItem) => {
-      for (const entry of item.allEntries) {
-        await unsaveArticle(entry.articleId);
-      }
-    },
-    [unsaveArticle]
-  );
+  /**
+   * Dismiss a ticker from the Watchlist without touching savedArticles.
+   * The article remains in Saved Articles (Profile / Settings).
+   */
+  const removeTicker = useCallback((item: WatchlistItem) => {
+    dismissWatchlistTicker(item.ticker);
+    setDismissedTick((t) => t + 1);
+  }, []);
 
   /* ── Stock Panel overlay ── */
   if (activeItem) {
@@ -511,7 +518,7 @@ export function WatchlistPage() {
                           setEditMode(false);
                           setActiveItem(item);
                         }}
-                        onRemove={() => void removeTicker(item)}
+                        onRemove={() => removeTicker(item)}
                       />
                     ))}
                   </div>
@@ -534,7 +541,7 @@ export function WatchlistPage() {
                           setEditMode(false);
                           setActiveItem(item);
                         }}
-                        onRemove={() => void removeTicker(item)}
+                        onRemove={() => removeTicker(item)}
                       />
                     ))}
                   </div>
@@ -557,8 +564,14 @@ export function WatchlistPage() {
                           source={ticker}
                           ticker={ticker}
                           timestamp={timeAgo(entry.savedAt)}
-                          href={entry.articleUrl}
                           endIcon="link"
+                          onClick={() => {
+                            recordActivityEvent("article_opened", entry.articleId, {
+                              articleId: entry.articleId,
+                              category: ticker,
+                            });
+                            window.open(entry.articleUrl, "_blank", "noopener,noreferrer");
+                          }}
                         />
                       );
                     })}

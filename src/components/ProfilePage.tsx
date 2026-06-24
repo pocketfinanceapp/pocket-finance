@@ -35,6 +35,8 @@ import {
 } from "@/lib/progression";
 import type { LikedArticleEntry, SavedArticleEntry } from "@/lib/types";
 import { fetchLikedArticles, fetchSavedArticles } from "@/lib/userInteractions";
+import { buildWatchlistItems } from "@/lib/watchlistUtils";
+import { getDismissedWatchlistTickers } from "@/lib/watchlistStore";
 import { timeAgo } from "@/lib/utils";
 import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ProfileAchievements } from "./ProfileAchievements";
@@ -173,6 +175,17 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [progressionTick]
   );
+
+  /**
+   * Watchlist count uses the same canonical deduplication as WatchlistPage:
+   * group savedArticles by ticker, exclude dismissed tickers, count all items.
+   */
+  const watchlistCount = useMemo(() => {
+    const dismissed = getDismissedWatchlistTickers();
+    return buildWatchlistItems(savedArticles).filter(
+      (item) => !dismissed.has(item.ticker)
+    ).length;
+  }, [savedArticles]);
 
   /* ── Level-up modal ─────────────────────────────────────────────────── */
   const [levelUpData, setLevelUpData] = useState<{
@@ -475,7 +488,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
             <StatCell label="Articles Opened" value={String(uniqueArticlesOpened)} />
             <StatCell label="Liked" value={String(likedArticlesCount)} />
-            <StatCell label="Watchlist" value={String(savedArticles.length)} />
+            <StatCell label="Watchlist" value={String(watchlistCount)} />
           </div>
         </div>
 

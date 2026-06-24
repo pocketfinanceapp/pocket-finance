@@ -16,6 +16,7 @@ import {
   loadNotificationsEnabled,
   saveNotificationsEnabled,
 } from "@/lib/notificationPreferences";
+import { recordActivityEvent } from "@/lib/progression";
 import {
   fetchLikedArticles,
   fetchSavedArticles,
@@ -140,6 +141,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
                 screen === "liked"
                   ? likedArticles.map((a) => ({
                       id: a.id,
+                      articleId: a.articleId,
                       title: a.articleTitle,
                       url: a.articleUrl,
                       meta: `${a.ticker} · ${timeAgo(a.likedAt)}`,
@@ -147,6 +149,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
                     }))
                   : savedArticles.map((a) => ({
                       id: a.id,
+                      articleId: a.articleId,
                       title: a.articleTitle,
                       url: a.articleUrl,
                       meta: `${a.ticker} · ${timeAgo(a.savedAt)}`,
@@ -327,7 +330,7 @@ function ArticleList({
   loading,
   countLabel,
 }: {
-  items: Array<{ id: string; title: string; url: string; meta: string; ticker: string }>;
+  items: Array<{ id: string; articleId: string; title: string; url: string; meta: string; ticker: string }>;
   emptyMessage: string;
   loading: boolean;
   countLabel?: string;
@@ -356,6 +359,12 @@ function ArticleList({
               rel="noopener noreferrer"
               data-no-drag
               className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.04]"
+              onClick={() =>
+                recordActivityEvent("article_opened", item.articleId, {
+                  articleId: item.articleId,
+                  category: item.ticker,
+                })
+              }
             >
               {/* Only known company tickers get the coloured logo tile */}
               {isKnownTicker(item.ticker) ? (
