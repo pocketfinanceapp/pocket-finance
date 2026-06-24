@@ -19,6 +19,7 @@ import {
   PF_TOPICS_STORAGE_KEY,
   type ProfileTopic,
 } from "@/lib/profileStorage";
+import { recordActivityEvent } from "@/lib/progression";
 import {
   getForYouTopArticleIds,
   rankTrendingArticles,
@@ -244,6 +245,10 @@ export function NewsFeed({
       article
     ) {
       addRecentlyRead(article);
+      recordActivityEvent("article_opened", article.id, {
+        articleId: article.id,
+        category: article.tags[0] ?? article.sector ?? undefined,
+      });
     }
     prevPanelIndex.current = panelIndex;
   }, [panelIndex, article]);

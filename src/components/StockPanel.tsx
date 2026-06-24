@@ -32,6 +32,7 @@ import {
   type StockMetricExplanation,
 } from "@/lib/stockMetricExplanations";
 import { markFirstStockViewed } from "@/lib/achievements";
+import { recordActivityEvent } from "@/lib/progression";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { FinancialTermPopup } from "./FinancialTermPopup";
@@ -119,6 +120,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   }, []);
 
   useEffect(() => {
+    recordActivityEvent("stock_panel_opened", ticker, { ticker });
+  }, [ticker]);
+
+  useEffect(() => {
     setActiveTab("Overview");
     scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }, [article.id, ticker]);
@@ -194,6 +199,9 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
       setToast(ok ? "Removed from watchlist" : "Could not remove");
     } else {
       const ok = await saveArticle(article);
+      if (ok) {
+        recordActivityEvent("stock_watchlisted", ticker, { ticker });
+      }
       setToast(ok ? "Added to watchlist" : "Could not save");
     }
     setTimeout(() => setToast(null), 1500);

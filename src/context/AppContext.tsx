@@ -35,6 +35,10 @@ import {
 } from "@/lib/markets";
 import { resolveArticleTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
+import {
+  migrateActivityData,
+  recordActivityEvent,
+} from "@/lib/progression";
 
 export interface MarketsSnapshot {
   markets: GlobalMarket[];
@@ -212,6 +216,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const liked = await fetchUserLikedCount(userId);
       setStoriesRead(stories);
       setLikedArticlesCount(liked);
+
+      // One-time baseline migration — runs only on first load, then no-ops
+      migrateActivityData({
+        articlesRead: stories,
+        savedArticles: articles,
+      });
     },
     [appUserId, watchlistLoaded]
   );
@@ -237,6 +247,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setSavedArticles((prev) =>
           prev.filter((s) => s.articleId !== article.id)
         );
+      } else {
+        recordActivityEvent("article_saved", article.id, {
+          articleId: article.id,
+        });
       }
       return ok;
     },
