@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  evaluateDailyGoalCompletion,
+  markBriefingCompleted,
+} from "@/lib/progression";
 
 interface ArticleAISummaryProps {
   headline: string;
@@ -25,10 +29,28 @@ export function ArticleAISummary({
   const [loading, setLoading] = useState(true);
   const [bullets, setBullets] = useState<string[] | null>(null);
 
+  // Completion tracking refs — never trigger re-renders
+  const completionFiredRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Fetch the AI summary
   useEffect(() => {
     let cancelled = false;
+
+    // New article — reset completion gate
+    completionFiredRef.current = false;
     setLoading(true);
     setBullets(null);
+
+    // Clean up any pending completion logic from the previous article
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    observerRef.current?.disconnect();
+    observerRef.current = null;
 
     void (async () => {
       try {
@@ -55,6 +77,60 @@ export function ArticleAISummary({
       cancelled = true;
     };
   }, [articleId, headline, snippet]);
+
+  // Wire up completion logic once the briefing has fully generated
+  useEffect(() => {
+    // Guard: only run after generation is complete and content exists
+    if (loading || !bullets) return;
+    if (completionFiredRef.current) return;
+
+    const fireCompletion = () => {
+      if (completionFiredRef.current) return;
+      completionFiredRef.current = true;
+
+      // Clean up sibling trigger
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+
+      // Record the briefing completion (also calls evaluateDailyGoalCompletion internally)
+      markBriefingCompleted(articleId);
+      // Explicit call per spec — idempotent if already called inside markBriefingCompleted
+      evaluateDailyGoalCompletion();
+      // Notify Profile UI to refresh progression state
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("pf-progression-updated"));
+      }
+    };
+
+    // Fallback: fire after 10 seconds of the briefing being visible
+    timerRef.current = setTimeout(fireCompletion, 10_000);
+
+    // Primary: fire as soon as the bottom of the briefing scrolls into view
+    if (bottomRef.current && typeof IntersectionObserver !== "undefined") {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            fireCompletion();
+          }
+        },
+        { threshold: 1.0 }
+      );
+      observerRef.current.observe(bottomRef.current);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+    };
+  }, [loading, bullets, articleId]);
 
   if (!loading && !bullets) return null;
 
@@ -88,6 +164,8 @@ export function ArticleAISummary({
               </li>
             ))}
           </ul>
+          {/* Zero-height sentinel — IntersectionObserver fires when this is visible */}
+          <div ref={bottomRef} aria-hidden />
         </>
       )}
     </div>
