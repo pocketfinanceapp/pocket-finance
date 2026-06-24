@@ -1,6 +1,7 @@
 /**
- * Core progression engine — append-only activity log, XP, and level system.
- * All persistence is via localStorage (no UI, no routing dependencies).
+ * Core progression engine — activity log, XP, levels, daily goal, streak,
+ * weekly activity, and achievements.
+ * All persistence is via localStorage. No UI or routing dependencies.
  */
 
 // ---------------------------------------------------------------------------
@@ -16,7 +17,7 @@ export type ActivityEventType =
   | "daily_goal_completed";
 
 export type ActivityEvent = {
-  id: string; // crypto.randomUUID()
+  id: string;
   type: ActivityEventType;
   entityId: string;
   timestamp: number;
@@ -57,8 +58,72 @@ export type LevelState = {
   progressPercent: number;
 };
 
-type SessionSnapshot = {
+export type DailyGoalState = {
+  tasks: [
+    {
+      id: "read_articles";
+      label: "Read 3 articles";
+      required: 3;
+      completed: number;
+    },
+    {
+      id: "complete_briefing";
+      label: "Complete 1 AI Briefing";
+      required: 1;
+      completed: number;
+    },
+  ];
+  totalTasks: number;
+  completedTasks: number;
+  isComplete: boolean;
+  xpReward: 15;
+};
+
+type StreakStore = { bestStreak: number };
+
+export type StreakState = {
+  currentStreak: number;
+  bestStreak: number;
+  lastCompletedDate: string | null;
+  weeklyStrip: Array<{
+    day: string;
+    completed: boolean;
+    isToday: boolean;
+  }>;
+  nextMilestone: number;
+  goalCompletedToday: boolean;
+};
+
+export type WeeklyActivity = {
+  articlesRead: number;
+  briefingsCompleted: number;
+  topicsExplored: number;
+  watchlistViewed: number;
+  xpEarned: number;
+  mostReadTopic: string | null;
+};
+
+export type AchievementCategory =
+  | "reading"
+  | "markets"
+  | "consistency"
+  | "discovery"
+  | "engagement";
+
+export type Achievement = {
+  id: string;
+  category: AchievementCategory;
+  title: string;
+  description: string;
+  icon: string;
+  progress: number;
+  required: number;
+  unlocked: boolean;
+};
+
+export type SessionSnapshot = {
   initialLevel: number;
+  initialUnlockedAchievementIds: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -67,6 +132,7 @@ type SessionSnapshot = {
 
 const ACTIVITY_STORE_KEY = "pf_activity_v1";
 const BASELINE_KEY = "pf_baseline_v1";
+const STREAK_STORE_KEY = "pf_streak_v1";
 
 const LEVELS: LevelDef[] = [
   { level: 1, title: "Market Starter", xpRequired: 0 },
@@ -87,6 +153,10 @@ const XP_CONFIG: Record<ActivityEventType, number> = {
   daily_goal_completed: 15,
 };
 
+const STREAK_MILESTONES = [3, 7, 14, 30] as const;
+
+const WEEK_DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
 // ---------------------------------------------------------------------------
 // In-memory session snapshot (never persisted)
 // ---------------------------------------------------------------------------
@@ -94,7 +164,7 @@ const XP_CONFIG: Record<ActivityEventType, number> = {
 let sessionSnapshot: SessionSnapshot | null = null;
 
 // ---------------------------------------------------------------------------
-// Storage helpers
+// Storage helpers — activity store
 // ---------------------------------------------------------------------------
 
 function emptyStore(): ActivityStore {
@@ -121,6 +191,10 @@ function saveStore(store: ActivityStore): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Storage helpers — baseline
+// ---------------------------------------------------------------------------
+
 function loadBaseline(): ProgressionBaseline | null {
   if (typeof window === "undefined") return null;
   try {
@@ -131,13 +205,100 @@ function loadBaseline(): ProgressionBaseline | null {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Storage helpers — streak best score
+// ---------------------------------------------------------------------------
+
+function loadStreakStore(): StreakStore {
+  if (typeof window === "undefined") return { bestStreak: 0 };
+  try {
+    const raw = localStorage.getItem(STREAK_STORE_KEY);
+    return raw ? (JSON.parse(raw) as StreakStore) : { bestStreak: 0 };
+  } catch {
+    return { bestStreak: 0 };
+  }
+}
+
+function saveStreakStore(s: StreakStore): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STREAK_STORE_KEY, JSON.stringify(s));
+  } catch {
+    /* storage blocked */
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Date helpers
+// ---------------------------------------------------------------------------
+
 function getLocalDate(): string {
   const d = new Date();
+  return formatLocalDate(d);
+}
+
+function formatLocalDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+/** Subtract one calendar day from a YYYY-MM-DD string. */
+function subtractDay(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00`);
+  d.setDate(d.getDate() - 1);
+  return formatLocalDate(d);
+}
+
+/** Add N calendar days to a YYYY-MM-DD string. */
+function addDays(dateStr: string, n: number): string {
+  const d = new Date(`${dateStr}T00:00:00`);
+  d.setDate(d.getDate() + n);
+  return formatLocalDate(d);
+}
+
+/** YYYY-MM-DD of the Monday of the week containing today. */
+function getCurrentMonday(): string {
+  const d = new Date();
+  const dow = d.getDay(); // 0=Sun, 1=Mon, …
+  const diff = dow === 0 ? 6 : dow - 1; // days since Monday
+  d.setDate(d.getDate() - diff);
+  return formatLocalDate(d);
+}
+
+// ---------------------------------------------------------------------------
+// Misc helpers
+// ---------------------------------------------------------------------------
+
+function getMostFrequent(arr: string[]): string | null {
+  if (arr.length === 0) return null;
+  const counts = new Map<string, number>();
+  for (const s of arr) counts.set(s, (counts.get(s) ?? 0) + 1);
+  let max = 0;
+  let best: string | null = null;
+  for (const [s, n] of counts) {
+    if (n > max) {
+      max = n;
+      best = s;
+    }
+  }
+  return best;
+}
+
+/** Check legacy achievements.ts flag without importing from that module. */
+function hasLegacyStockViewed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem("pf-first-stock-viewed") === "1";
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reward key builder
+// ---------------------------------------------------------------------------
 
 function buildRewardKey(
   type: ActivityEventType,
@@ -182,7 +343,9 @@ export function calculateLevel(totalXP: number): LevelState {
   const nextLevelXP = nextLevel.xpRequired;
   const progressXP = isMax ? 0 : totalXP - currentLevelXP;
   const rangeXP = isMax ? 1 : nextLevelXP - currentLevelXP;
-  const progressPercent = isMax ? 100 : Math.min(100, Math.round((progressXP / rangeXP) * 100));
+  const progressPercent = isMax
+    ? 100
+    : Math.min(100, Math.round((progressXP / rangeXP) * 100));
 
   return {
     level: currentLevel.level,
@@ -195,7 +358,7 @@ export function calculateLevel(totalXP: number): LevelState {
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Core public API — XP & events
 // ---------------------------------------------------------------------------
 
 /** Baseline importedXP + sum of all xpAwarded events. */
@@ -210,6 +373,7 @@ export function getTotalXP(): number {
 /**
  * Append a new activity event. XP is awarded only when the rewardKey has not
  * been used before. Every valid action records an event for analytics.
+ * For article_opened and briefing_completed, also evaluates daily goal completion.
  */
 export function recordActivityEvent(
   type: ActivityEventType,
@@ -249,12 +413,19 @@ export function recordActivityEvent(
     importedXP + store.events.reduce((sum, e) => sum + e.xpAwarded, 0);
 
   saveStore(store);
+
+  // Evaluate daily goal after article_opened and briefing_completed events
+  if (type === "article_opened" || type === "briefing_completed") {
+    evaluateDailyGoalCompletion();
+  }
+
   return event;
 }
 
 /**
- * Fire briefing XP only after briefing has fully generated AND user has viewed
- * it for at least 10 seconds or scrolled to the end. Do NOT call on panel open.
+ * Fire briefing XP only after briefing has fully generated AND the user has
+ * viewed it for at least 10 seconds or scrolled to the end.
+ * Do NOT call on panel open.
  */
 export function markBriefingCompleted(articleId: string): ActivityEvent {
   return recordActivityEvent("briefing_completed", articleId, { articleId });
@@ -280,17 +451,486 @@ export function getActivityEventsForDate(localDate: string): ActivityEvent[] {
  * mondayDate must be a Monday; no validation is performed.
  */
 export function getActivityEventsForWeek(mondayDate: string): ActivityEvent[] {
-  const monday = new Date(`${mondayDate}T00:00:00`);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  const end = [
-    sunday.getFullYear(),
-    String(sunday.getMonth() + 1).padStart(2, "0"),
-    String(sunday.getDate()).padStart(2, "0"),
-  ].join("-");
+  const end = addDays(mondayDate, 6);
   return loadStore().events.filter(
     (e) => e.localDate >= mondayDate && e.localDate <= end
   );
+}
+
+// ---------------------------------------------------------------------------
+// Daily goal
+// ---------------------------------------------------------------------------
+
+/**
+ * Pure getter — no side effects, no localStorage writes.
+ * Counts unique entities only; reopening the same article/briefing does not
+ * inflate progress.
+ */
+export function getDailyGoalState(): DailyGoalState {
+  const todayEvents = getActivityEventsForDate(getLocalDate());
+
+  const uniqueArticlesRead = new Set(
+    todayEvents
+      .filter((e) => e.type === "article_opened")
+      .map((e) => e.metadata?.articleId ?? e.entityId)
+  ).size;
+
+  const uniqueBriefingsDone = new Set(
+    todayEvents
+      .filter((e) => e.type === "briefing_completed")
+      .map((e) => e.metadata?.articleId ?? e.entityId)
+  ).size;
+
+  const readCompleted = Math.min(uniqueArticlesRead, 3);
+  const briefingCompleted = Math.min(uniqueBriefingsDone, 1);
+
+  const completedTasks =
+    (readCompleted >= 3 ? 1 : 0) + (briefingCompleted >= 1 ? 1 : 0);
+  const isComplete = completedTasks === 2;
+
+  return {
+    tasks: [
+      {
+        id: "read_articles",
+        label: "Read 3 articles",
+        required: 3,
+        completed: readCompleted,
+      },
+      {
+        id: "complete_briefing",
+        label: "Complete 1 AI Briefing",
+        required: 1,
+        completed: briefingCompleted,
+      },
+    ],
+    totalTasks: 2,
+    completedTasks,
+    isComplete,
+    xpReward: 15,
+  };
+}
+
+/**
+ * Check whether the daily goal is complete and, if so, record the
+ * daily_goal_completed event (which awards 15 XP, once per day).
+ * Never call inside a getter or render cycle — call after article_opened or
+ * briefing_completed events have been persisted.
+ */
+export function evaluateDailyGoalCompletion(): void {
+  const state = getDailyGoalState();
+  if (!state.isComplete) return;
+
+  const today = getLocalDate();
+  const todayKey = `daily_goal_completed:${today}`;
+  const store = loadStore();
+
+  if (!store.usedRewardKeys.includes(todayKey)) {
+    recordActivityEvent("daily_goal_completed", today);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Streak
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute the current streak length from a sorted (descending) list of
+ * unique dates on which the daily goal was completed.
+ */
+function computeStreak(sortedDates: string[], today: string): number {
+  if (sortedDates.length === 0) return 0;
+
+  const yesterday = subtractDay(today);
+  const mostRecent = sortedDates[0];
+
+  // Streak is broken if the most recent completion was 2+ days ago
+  if (mostRecent < yesterday) return 0;
+
+  // Walk backwards counting consecutive days
+  let streak = 1;
+  for (let i = 1; i < sortedDates.length; i++) {
+    const expected = subtractDay(sortedDates[i - 1]);
+    if (sortedDates[i] === expected) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+export function getStreakState(): StreakState {
+  const store = loadStore();
+  const today = getLocalDate();
+
+  // All unique dates where daily goal was completed, sorted descending
+  const completionDates = [
+    ...new Set(
+      store.events
+        .filter((e) => e.type === "daily_goal_completed")
+        .map((e) => e.entityId) // entityId is the localDate for this event type
+    ),
+  ].sort((a, b) => (a > b ? -1 : 1));
+
+  const currentStreak = computeStreak(completionDates, today);
+  const goalCompletedToday = completionDates[0] === today;
+
+  // Update best streak if current exceeds stored best
+  const streakStore = loadStreakStore();
+  if (currentStreak > streakStore.bestStreak) {
+    streakStore.bestStreak = currentStreak;
+    saveStreakStore(streakStore);
+  }
+  const bestStreak = Math.max(streakStore.bestStreak, currentStreak);
+
+  const lastCompletedDate = completionDates[0] ?? null;
+
+  // Weekly strip: Mon–Sun of current week
+  const monday = getCurrentMonday();
+  const completionSet = new Set(completionDates);
+  const weeklyStrip = WEEK_DAY_LABELS.map((day, i) => {
+    const date = addDays(monday, i);
+    return {
+      day,
+      completed: completionSet.has(date),
+      isToday: date === today,
+    };
+  });
+
+  const nextMilestone =
+    STREAK_MILESTONES.find((m) => m > currentStreak) ??
+    STREAK_MILESTONES[STREAK_MILESTONES.length - 1];
+
+  return {
+    currentStreak,
+    bestStreak,
+    lastCompletedDate,
+    weeklyStrip,
+    nextMilestone,
+    goalCompletedToday,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Weekly activity
+// ---------------------------------------------------------------------------
+
+export function getWeeklyActivity(): WeeklyActivity {
+  const monday = getCurrentMonday();
+  const weekEvents = getActivityEventsForWeek(monday);
+
+  const articlesRead = new Set(
+    weekEvents
+      .filter((e) => e.type === "article_opened")
+      .map((e) => e.metadata?.articleId ?? e.entityId)
+  ).size;
+
+  const briefingsCompleted = new Set(
+    weekEvents
+      .filter((e) => e.type === "briefing_completed")
+      .map((e) => e.metadata?.articleId ?? e.entityId)
+  ).size;
+
+  const categories = weekEvents
+    .filter((e) => e.metadata?.category)
+    .map((e) => e.metadata!.category!);
+  const topicsExplored = new Set(categories).size;
+  const mostReadTopic = getMostFrequent(categories);
+
+  const watchlistViewed = new Set(
+    weekEvents
+      .filter((e) => e.type === "stock_panel_opened")
+      .map((e) => e.metadata?.ticker ?? e.entityId)
+  ).size;
+
+  const xpEarned = weekEvents.reduce((sum, e) => sum + e.xpAwarded, 0);
+
+  return {
+    articlesRead,
+    briefingsCompleted,
+    topicsExplored,
+    watchlistViewed,
+    xpEarned,
+    mostReadTopic,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Achievements
+// ---------------------------------------------------------------------------
+
+export interface GetAchievementsOptions {
+  /** Pass from AppContext likedArticlesCount (Supabase-sourced). Defaults to 0. */
+  likedArticlesCount?: number;
+}
+
+/**
+ * Derive all achievement progress purely from the activity log and baseline.
+ * For liked articles, pass the count from Supabase via opts — no article_liked
+ * event is emitted by the system.
+ */
+export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
+  const store = loadStore();
+  const baseline = loadBaseline();
+  const likedCount = opts?.likedArticlesCount ?? 0;
+  const totalXP = getTotalXP();
+
+  // --- Article reads: baseline history + unique new opens in activity log ---
+  const uniqueOpenedInLog = store.usedRewardKeys.filter((k) =>
+    k.startsWith("article_opened:")
+  ).length;
+  const totalArticlesRead = (baseline?.articlesRead ?? 0) + uniqueOpenedInLog;
+
+  // --- Briefings: unique all-time from log only ---
+  const uniqueBriefings = store.usedRewardKeys.filter((k) =>
+    k.startsWith("briefing_completed:")
+  ).length;
+
+  // --- Stock panels: unique tickers from log + legacy localStorage flag ---
+  const uniqueStockPanelsInLog = store.usedRewardKeys.filter((k) =>
+    k.startsWith("stock_panel_opened:")
+  ).length;
+  const hasAnyStockViewed =
+    hasLegacyStockViewed() || uniqueStockPanelsInLog > 0;
+  const totalStockPanels = uniqueStockPanelsInLog + (hasLegacyStockViewed() && uniqueStockPanelsInLog === 0 ? 1 : 0);
+
+  // --- Watchlisted: baseline.watchlistCount + new tickers in log ---
+  const newWatchlisted = store.usedRewardKeys.filter((k) =>
+    k.startsWith("stock_watchlisted:")
+  ).length;
+  const totalWatchlisted = (baseline?.watchlistCount ?? 0) + newWatchlisted;
+
+  // --- Saved articles: all article_saved keys in usedRewardKeys ---
+  // Includes baseline-seeded keys + new saves, so no double-counting.
+  const totalSaved = store.usedRewardKeys.filter((k) =>
+    k.startsWith("article_saved:")
+  ).length;
+
+  // --- Topic diversity: unique categories across all time ---
+  const allCategories = store.events
+    .filter((e) => e.metadata?.category)
+    .map((e) => e.metadata!.category!);
+  const uniqueTopics = new Set(allCategories).size;
+
+  // --- News junkie: max unique articles read on any single day ---
+  const byDate = new Map<string, Set<string>>();
+  for (const e of store.events) {
+    if (e.type === "article_opened") {
+      const id = e.metadata?.articleId ?? e.entityId;
+      if (!byDate.has(e.localDate)) byDate.set(e.localDate, new Set());
+      byDate.get(e.localDate)!.add(id);
+    }
+  }
+  const maxArticlesInADay = Math.max(0, ...[...byDate.values()].map((s) => s.size));
+
+  // --- Streak (read once for consistency) ---
+  const streak = getStreakState();
+  const currentStreak = streak.currentStreak;
+
+  // Helper
+  function make(
+    id: string,
+    category: AchievementCategory,
+    title: string,
+    description: string,
+    icon: string,
+    progress: number,
+    required: number
+  ): Achievement {
+    return {
+      id,
+      category,
+      title,
+      description,
+      icon,
+      progress: Math.min(progress, required),
+      required,
+      unlocked: progress >= required,
+    };
+  }
+
+  return [
+    // Reading
+    make(
+      "first_briefing",
+      "reading",
+      "First Briefing",
+      "Complete your first AI Briefing",
+      "⚡",
+      uniqueBriefings,
+      1
+    ),
+    make(
+      "news_regular",
+      "reading",
+      "News Regular",
+      "Read 10 articles",
+      "📰",
+      totalArticlesRead,
+      10
+    ),
+    make(
+      "deep_reader",
+      "reading",
+      "Deep Reader",
+      "Read 50 articles",
+      "📚",
+      totalArticlesRead,
+      50
+    ),
+    make(
+      "century_club",
+      "reading",
+      "Century Club",
+      "Read 100 articles",
+      "💯",
+      totalArticlesRead,
+      100
+    ),
+    make(
+      "news_obsessed",
+      "reading",
+      "News Obsessed",
+      "Read 500 articles",
+      "🗞️",
+      totalArticlesRead,
+      500
+    ),
+
+    // Markets
+    make(
+      "market_watcher",
+      "markets",
+      "Market Watcher",
+      "Open your first stock panel",
+      "📈",
+      hasAnyStockViewed ? 1 : 0,
+      1
+    ),
+    make(
+      "stock_follower",
+      "markets",
+      "Stock Follower",
+      "Add 1 stock to your watchlist",
+      "⭐",
+      totalWatchlisted,
+      1
+    ),
+    make(
+      "market_explorer",
+      "markets",
+      "Market Explorer",
+      "Open 5 different stock panels",
+      "🔭",
+      totalStockPanels,
+      5
+    ),
+
+    // Consistency
+    make(
+      "first_steps",
+      "consistency",
+      "First Steps",
+      "Read your first article",
+      "🌱",
+      totalArticlesRead,
+      1
+    ),
+    make(
+      "rising_star",
+      "consistency",
+      "Rising Star",
+      "Maintain a 3-day streak",
+      "🌟",
+      currentStreak,
+      3
+    ),
+    make(
+      "diamond_hands",
+      "consistency",
+      "Diamond Hands",
+      "Maintain a 7-day streak",
+      "💎",
+      currentStreak,
+      7
+    ),
+    make(
+      "two_weeks_strong",
+      "consistency",
+      "Two Weeks Strong",
+      "Maintain a 14-day streak",
+      "🏃",
+      currentStreak,
+      14
+    ),
+    make(
+      "monthly_investor",
+      "consistency",
+      "Monthly Investor",
+      "Maintain a 30-day streak",
+      "🏆",
+      currentStreak,
+      30
+    ),
+
+    // Discovery
+    make(
+      "curator",
+      "discovery",
+      "Curator",
+      "Like 5 articles",
+      "❤️",
+      likedCount,
+      5
+    ),
+    make(
+      "topic_explorer",
+      "discovery",
+      "Topic Explorer",
+      "Read articles across 3 different topics",
+      "🗺️",
+      uniqueTopics,
+      3
+    ),
+    make(
+      "saver",
+      "discovery",
+      "Saver",
+      "Save 5 articles",
+      "🔖",
+      totalSaved,
+      5
+    ),
+
+    // Engagement
+    make(
+      "news_junkie",
+      "engagement",
+      "News Junkie",
+      "Read 10 articles in one day",
+      "⚡",
+      maxArticlesInADay,
+      10
+    ),
+    make(
+      "market_analyst",
+      "engagement",
+      "Market Analyst",
+      "Earn 500 XP",
+      "📊",
+      totalXP,
+      500
+    ),
+    make(
+      "on_fire",
+      "engagement",
+      "On Fire",
+      "Read 50 articles total",
+      "🔥",
+      totalArticlesRead,
+      50
+    ),
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -308,9 +948,9 @@ export interface MigrateOptions {
 
 /**
  * Run once on app init before initSessionSnapshot().
- * Reads existing user totals and creates a one-time importedXP baseline.
- * Seeds usedRewardKeys for all identifiable saved articles and watchlist tickers
- * so that re-saving or re-adding existing items does not award XP again.
+ * Reads existing user totals, creates a one-time importedXP baseline, and
+ * seeds usedRewardKeys for identifiable saved articles / watchlist tickers to
+ * prevent re-saving existing items from awarding XP again.
  * Safe to call multiple times — exits immediately after the first run.
  */
 export function migrateActivityData(opts?: MigrateOptions): void {
@@ -332,7 +972,7 @@ export function migrateActivityData(opts?: MigrateOptions): void {
 
   const baseline: ProgressionBaseline = {
     articlesRead,
-    likedArticles: 0, // likes are not rewarded retroactively
+    likedArticles: 0, // likes not rewarded retroactively
     savedArticles: savedCount,
     watchlistCount,
     importedXP,
@@ -350,8 +990,8 @@ export function migrateActivityData(opts?: MigrateOptions): void {
   const existingKeys = new Set(store.usedRewardKeys);
 
   for (const sa of savedArticlesArr) {
-    // Skip optimistic entries that haven't been persisted to DB yet
     const articleId = sa.articleId ?? sa.id;
+    // Skip optimistic entries that have not yet been persisted to DB
     if (articleId && !articleId.startsWith("optimistic-")) {
       const key = `article_saved:${articleId}`;
       if (!existingKeys.has(key)) {
@@ -376,17 +1016,22 @@ export function migrateActivityData(opts?: MigrateOptions): void {
 }
 
 // ---------------------------------------------------------------------------
-// Session snapshot — level only (achievement snapshot added in Prompt 2)
+// Session snapshot
 // ---------------------------------------------------------------------------
 
 /**
- * Capture initial level in memory on app startup (after migrateActivityData).
- * Used in future prompts for level-up detection. Not persisted to localStorage.
+ * Capture initial level and unlocked achievements in memory at app startup
+ * (after migrateActivityData has run). Used for level-up and achievement-unlock
+ * detection later in the session. Not persisted to localStorage.
  */
-export function initSessionSnapshot(): void {
+export function initSessionSnapshot(opts?: GetAchievementsOptions): void {
   const totalXP = getTotalXP();
   const { level } = calculateLevel(totalXP);
-  sessionSnapshot = { initialLevel: level };
+  const achievements = getAchievements(opts);
+  const initialUnlockedAchievementIds = achievements
+    .filter((a) => a.unlocked)
+    .map((a) => a.id);
+  sessionSnapshot = { initialLevel: level, initialUnlockedAchievementIds };
 }
 
 /** Returns the in-memory session snapshot, or null if not yet initialised. */
