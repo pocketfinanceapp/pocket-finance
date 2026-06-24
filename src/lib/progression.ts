@@ -453,6 +453,24 @@ export function getUniqueArticlesOpened(): number {
     .length;
 }
 
+/**
+ * Lifetime unique articles opened for display in the Profile identity card.
+ * Mirrors the same calculation used by reading achievements in getAchievements():
+ *   baseline.articlesRead  (historical opens before the activity log existed)
+ *   + unique article_opened keys in usedRewardKeys  (new opens since log started)
+ *
+ * This avoids showing 0 for users who already had a reading history before the
+ * activity log was introduced.
+ */
+export function getLifetimeArticlesOpened(): number {
+  const baseline = loadBaseline();
+  const store = loadStore();
+  const uniqueOpenedInLog = store.usedRewardKeys.filter((k) =>
+    k.startsWith("article_opened:")
+  ).length;
+  return (baseline?.articlesRead ?? 0) + uniqueOpenedInLog;
+}
+
 /** Full append-only event log. */
 export function getActivityEvents(): ActivityEvent[] {
   return loadStore().events;

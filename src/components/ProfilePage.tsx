@@ -21,11 +21,11 @@ import {
 import {
   getAchievements,
   getDailyGoalState,
+  getLifetimeArticlesOpened,
   getProgressionState,
   getSessionSnapshot,
   getStreakState,
   getTotalXP,
-  getUniqueArticlesOpened,
   getWeeklyActivity,
   type Achievement,
   type DailyGoalState,
@@ -171,7 +171,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     [likedArticlesCount, progressionTick]
   );
   const uniqueArticlesOpened = useMemo(
-    () => getUniqueArticlesOpened(),
+    () => getLifetimeArticlesOpened(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [progressionTick]
   );
