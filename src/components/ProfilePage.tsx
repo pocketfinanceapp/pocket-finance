@@ -445,11 +445,11 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
                     }}
                   />
                 </div>
-                {/* XP label */}
+                {/* XP label — show progress within current level, not lifetime totals */}
                 <div className="mt-1.5 flex items-baseline justify-between">
                   <p className="text-[11px] tabular-nums text-zinc-600">
-                    {totalXP.toLocaleString()}&thinsp;/&thinsp;
-                    {progressionState.nextLevelXP.toLocaleString()} XP
+                    {progressionState.progressXP.toLocaleString()}&thinsp;/&thinsp;
+                    {(progressionState.nextLevelXP - progressionState.currentLevelXP).toLocaleString()} XP
                   </p>
                   <p className="text-[11px] text-zinc-600">
                     {progressionState.nextLevelXP - totalXP} XP to{" "}
@@ -874,11 +874,44 @@ function StreakCard({ streakState }: { streakState: StreakState }) {
 // Your Week card
 // ---------------------------------------------------------------------------
 
+/** Map raw activity-log category/ticker values to human-readable topic labels. */
+const TOPIC_DISPLAY: Record<string, string> = {
+  FED: "Federal Reserve",
+  MARKET: "Markets",
+  OIL: "Energy",
+  BTC: "Crypto",
+  ETH: "Crypto",
+  TSLA: "Technology",
+  NVDA: "Technology",
+  AAPL: "Technology",
+  META: "Technology",
+  GOOGL: "Technology",
+  MSFT: "Technology",
+  AMZN: "Technology",
+  SPY: "Markets",
+  NASDAQ: "Markets",
+  NYSE: "Markets",
+  SPACEX: "Technology",
+};
+
+function toDisplayTopic(raw: string): string {
+  const mapped = TOPIC_DISPLAY[raw.toUpperCase()];
+  if (mapped) return mapped;
+  // Title-case unmapped values
+  return raw
+    .split(/[\s_-]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function YourWeekCard({ weekly }: { weekly: WeeklyActivity }) {
   // Only consider articles opened and briefings completed as qualifying activity;
   // XP from baseline/migration events should not falsely show an active week.
   const hasActivity = weekly.articlesRead > 0 || weekly.briefingsCompleted > 0;
   const displayXP = hasActivity ? weekly.xpEarned : 0;
+  const displayTopic = weekly.mostReadTopic
+    ? toDisplayTopic(weekly.mostReadTopic)
+    : null;
 
   return (
     <div className="mt-5 overflow-hidden rounded-2xl" style={CARD_STYLE}>
@@ -894,8 +927,8 @@ function YourWeekCard({ weekly }: { weekly: WeeklyActivity }) {
             <WeekMetric value={displayXP} label="XP" />
           </div>
           <p className="mt-2.5 text-[12px] leading-snug text-zinc-500">
-            {weekly.mostReadTopic
-              ? `${weekly.mostReadTopic} was your most-read topic.`
+            {displayTopic
+              ? `${displayTopic} was your most-read topic.`
               : "Keep reading to discover your top topic."}
           </p>
         </div>
