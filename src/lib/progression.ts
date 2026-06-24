@@ -45,6 +45,7 @@ export type ProgressionBaseline = {
   watchlistCount: number;
   importedXP: number;
   recordedAt: number;
+  migrationVersion?: number;
 };
 
 type LevelDef = { level: number; title: string; xpRequired: number };
@@ -414,6 +415,11 @@ export function recordActivityEvent(
 
   saveStore(store);
 
+  // Notify UI listeners that progression state may have changed
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("pf-progression-updated"));
+  }
+
   // Evaluate daily goal after article_opened and briefing_completed events
   if (type === "article_opened" || type === "briefing_completed") {
     evaluateDailyGoalCompletion();
@@ -712,17 +718,6 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     .map((e) => e.metadata!.category!);
   const uniqueTopics = new Set(allCategories).size;
 
-  // --- News junkie: max unique articles read on any single day ---
-  const byDate = new Map<string, Set<string>>();
-  for (const e of store.events) {
-    if (e.type === "article_opened") {
-      const id = e.metadata?.articleId ?? e.entityId;
-      if (!byDate.has(e.localDate)) byDate.set(e.localDate, new Set());
-      byDate.get(e.localDate)!.add(id);
-    }
-  }
-  const maxArticlesInADay = Math.max(0, ...[...byDate.values()].map((s) => s.size));
-
   // --- Streak (read once for consistency) ---
   const streak = getStreakState();
   const currentStreak = streak.currentStreak;
@@ -753,7 +748,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     // Reading
     make(
       "first_briefing",
-      "reading",
+      "discovery",
       "First Briefing",
       "Complete your first AI Briefing",
       "⚡",
@@ -876,7 +871,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     // Discovery
     make(
       "curator",
-      "discovery",
+      "engagement",
       "Curator",
       "Like 5 articles",
       "❤️",
@@ -903,15 +898,6 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     ),
 
     // Engagement
-    make(
-      "news_junkie",
-      "engagement",
-      "News Junkie",
-      "Read 10 articles in one day",
-      "⚡",
-      maxArticlesInADay,
-      10
-    ),
     make(
       "market_analyst",
       "engagement",
@@ -947,28 +933,43 @@ export interface MigrateOptions {
 }
 
 /**
- * Run once on app init before initSessionSnapshot().
- * Reads existing user totals, creates a one-time importedXP baseline, and
- * seeds usedRewardKeys for identifiable saved articles / watchlist tickers to
- * prevent re-saving existing items from awarding XP again.
- * Safe to call multiple times — exits immediately after the first run.
+ * Run on app init before initSessionSnapshot().
+ * Creates or upgrades the importedXP baseline to v2 (founding-bonus model).
+ *
+ * v1 (old): importedXP = articlesRead × 5 + savedArticles × 3 + watchlist × 5
+ *           → destructive: pushed heavy readers to max level instantly.
+ * v2 (new): importedXP = foundingBonus (150 if >10 articles, else 0)
+ *                        + savedArticles × 3 + savedArticles × 5
+ *           → watchlistCount is seeded from savedArticles (watchlist = saves in this app).
+ *           → historical achievements (Deep Reader, Century Club) remain intact via raw articlesRead.
+ *
+ * Safe to call multiple times. Skips only if migrationVersion >= 2 already present.
  */
 export function migrateActivityData(opts?: MigrateOptions): void {
   if (typeof window === "undefined") return;
 
+  // Check existing baseline version
+  let existingBaseline: ProgressionBaseline | null = null;
   try {
-    if (localStorage.getItem(BASELINE_KEY)) return; // already migrated
+    const raw = localStorage.getItem(BASELINE_KEY);
+    if (raw) existingBaseline = JSON.parse(raw) as ProgressionBaseline;
   } catch {
-    return;
+    // corrupt — re-migrate
   }
+
+  // Already at v2 or later — no-op
+  if (existingBaseline && (existingBaseline.migrationVersion ?? 1) >= 2) return;
 
   const articlesRead = opts?.articlesRead ?? 0;
   const savedArticlesArr = opts?.savedArticles ?? [];
   const savedCount = savedArticlesArr.length;
   const watchlistTickers = opts?.watchlistTickers ?? [];
-  const watchlistCount = watchlistTickers.length;
 
-  const importedXP = articlesRead * 5 + savedCount * 3 + watchlistCount * 5;
+  // v2 XP: flat founding bonus replaces articlesRead × 5
+  const foundingBonus = articlesRead > 10 ? 150 : 0;
+  // watchlistCount mirrors savedArticles (same concept in this app)
+  const watchlistCount = savedCount;
+  const importedXP = foundingBonus + savedCount * 3 + watchlistCount * 5;
 
   const baseline: ProgressionBaseline = {
     articlesRead,
@@ -976,7 +977,8 @@ export function migrateActivityData(opts?: MigrateOptions): void {
     savedArticles: savedCount,
     watchlistCount,
     importedXP,
-    recordedAt: Date.now(),
+    recordedAt: existingBaseline?.recordedAt ?? Date.now(),
+    migrationVersion: 2,
   };
 
   try {
@@ -985,7 +987,7 @@ export function migrateActivityData(opts?: MigrateOptions): void {
     return;
   }
 
-  // Seed usedRewardKeys to prevent double-awarding for pre-existing items
+  // Seed usedRewardKeys for pre-existing saved articles (skip if key already present)
   const store = loadStore();
   const existingKeys = new Set(store.usedRewardKeys);
 
@@ -1009,6 +1011,7 @@ export function migrateActivityData(opts?: MigrateOptions): void {
     }
   }
 
+  // Recalculate cachedTotalXP against the corrected baseline
   store.cachedTotalXP =
     importedXP + store.events.reduce((sum, e) => sum + e.xpAwarded, 0);
 

@@ -22,6 +22,15 @@ const CATEGORY_FILTERS: { id: AchievementCategory | "all"; label: string }[] =
     { id: "engagement", label: "Engagement" },
   ];
 
+/** Order that sections appear in the "All" grouped view. */
+const SECTION_ORDER: AchievementCategory[] = [
+  "reading",
+  "markets",
+  "consistency",
+  "discovery",
+  "engagement",
+];
+
 interface ProfileAchievementsProps {
   likedArticlesCount?: number;
   /**
@@ -131,12 +140,36 @@ export function ProfileAchievements({
         </div>
       )}
 
-      {/* 2-column grid */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {displayAchievements.map((a) => (
-          <AchievementCard key={a.id} achievement={a} />
-        ))}
-      </div>
+      {/* Full-screen "All" view: render grouped sections with headers */}
+      {showCategoryFilter && activeCategory === "all" ? (
+        <div className="mt-3 space-y-5">
+          {SECTION_ORDER.map((cat) => {
+            const group = allAchievements.filter((a) => a.category === cat);
+            if (group.length === 0) return null;
+            const catLabel =
+              CATEGORY_FILTERS.find((f) => f.id === cat)?.label ?? cat;
+            return (
+              <div key={cat}>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+                  {catLabel}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {group.map((a) => (
+                    <AchievementCard key={a.id} achievement={a} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Flat grid: preview mode OR filtered-by-category view */
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {displayAchievements.map((a) => (
+            <AchievementCard key={a.id} achievement={a} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -219,7 +252,7 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
         style={{
           color: a.unlocked
             ? "rgba(255,255,255,0.92)"
-            : "rgba(255,255,255,0.33)",
+            : "rgba(255,255,255,0.52)",
         }}
       >
         {a.title}

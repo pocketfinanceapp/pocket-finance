@@ -3,18 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
-  BookOpen,
   Calendar,
   Check,
   ChevronRight,
-  Hash,
-  Layers,
-  Newspaper,
   Settings,
   Sparkles,
-  Star,
-  TrendingUp,
-  Zap,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
@@ -106,6 +99,15 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     onSubPageChange?.(isSubPage);
   }, [isSubPage, onSubPageChange]);
 
+  /* ── Progression tick — incremented when pf-progression-updated fires ── */
+  const [progressionTick, setProgressionTick] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setProgressionTick((t) => t + 1);
+    window.addEventListener("pf-progression-updated", handler);
+    return () => window.removeEventListener("pf-progression-updated", handler);
+  }, []);
+
   /* ── Data state ─────────────────────────────────────────────────────── */
   const [recentlyRead, setRecentlyRead] = useState<RecentlyReadEntry[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -132,35 +134,36 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
       .catch(() => {});
   }, [user?.id]);
 
-  /* ── Progression data (re-derived when Supabase data changes) ───────── */
+  /* ── Progression data (re-derived when Supabase data or activity changes) */
   const progressionState: LevelState = useMemo(
     () => getProgressionState(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [likedArticlesCount, storiesRead]
+    [likedArticlesCount, storiesRead, progressionTick]
   );
   const totalXP = useMemo(
     () => getTotalXP(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [likedArticlesCount, storiesRead]
+    [likedArticlesCount, storiesRead, progressionTick]
   );
   const dailyGoal: DailyGoalState = useMemo(
     () => getDailyGoalState(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [likedArticlesCount]
+    [likedArticlesCount, progressionTick]
   );
   const streakState: StreakState = useMemo(
     () => getStreakState(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [likedArticlesCount]
+    [likedArticlesCount, progressionTick]
   );
   const weeklyActivity: WeeklyActivity = useMemo(
     () => getWeeklyActivity(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [likedArticlesCount]
+    [likedArticlesCount, progressionTick]
   );
   const allAchievements = useMemo(
     () => getAchievements({ likedArticlesCount }),
-    [likedArticlesCount]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [likedArticlesCount, progressionTick]
   );
 
   /* ── Level-up modal ─────────────────────────────────────────────────── */
@@ -471,40 +474,39 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
           {/* XP progress section */}
           <div className="px-5 pb-4">
-            {/* Bar */}
-            <div
-              className="overflow-hidden rounded-full"
-              style={{ height: 4, backgroundColor: "rgba(255,255,255,0.07)" }}
-            >
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: isMaxLevel
-                    ? "100%"
-                    : `${progressionState.progressPercent}%`,
-                  background: "linear-gradient(90deg, #7C6CF8, #5B8EF0)",
-                }}
-              />
-            </div>
-            {/* XP label */}
-            <div className="mt-1.5 flex items-baseline justify-between">
-              <p className="text-[11px] tabular-nums text-zinc-600">
-                {isMaxLevel ? (
-                  <span>{totalXP.toLocaleString()} XP · Max level</span>
-                ) : (
-                  <span>
+            {isMaxLevel ? (
+              /* Max level: no bar, just lifetime XP + title */
+              <p className="text-[12px] tabular-nums text-zinc-500">
+                {totalXP.toLocaleString()} lifetime XP · {progressionState.title}
+              </p>
+            ) : (
+              <>
+                {/* Bar */}
+                <div
+                  className="overflow-hidden rounded-full"
+                  style={{ height: 4, backgroundColor: "rgba(255,255,255,0.07)" }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${progressionState.progressPercent}%`,
+                      background: "linear-gradient(90deg, #7C6CF8, #5B8EF0)",
+                    }}
+                  />
+                </div>
+                {/* XP label */}
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <p className="text-[11px] tabular-nums text-zinc-600">
                     {totalXP.toLocaleString()}&thinsp;/&thinsp;
                     {progressionState.nextLevelXP.toLocaleString()} XP
-                  </span>
-                )}
-              </p>
-              {!isMaxLevel && (
-                <p className="text-[11px] text-zinc-600">
-                  {progressionState.nextLevelXP - totalXP} to{" "}
-                  {LEVELS[progressionState.level]?.title ?? "max"}
-                </p>
-              )}
-            </div>
+                  </p>
+                  <p className="text-[11px] text-zinc-600">
+                    {progressionState.nextLevelXP - totalXP} to{" "}
+                    {LEVELS[progressionState.level]?.title ?? "max"}
+                  </p>
+                </div>
+              </>
+            )}
 
             {/* Joined date */}
             {joined && (
@@ -834,7 +836,7 @@ function StreakCard({ streakState }: { streakState: StreakState }) {
 
   const subtitle =
     currentStreak === 0
-      ? "Start your streak by completing today's goal"
+      ? "Complete today's goal to begin your first streak."
       : goalCompletedToday
         ? "Goal complete — come back tomorrow!"
         : `Complete today's goal to keep your ${currentStreak}-day streak alive`;
@@ -866,7 +868,7 @@ function StreakCard({ streakState }: { streakState: StreakState }) {
 
           <div className="min-w-0 flex-1">
             <p className="text-[16px] font-bold leading-tight text-white">
-              {currentStreak} day streak
+              {currentStreak === 0 ? "Start your streak" : `${currentStreak} day streak`}
             </p>
             <p className="mt-0.5 text-[12px] leading-snug text-zinc-500">
               {subtitle}
@@ -927,68 +929,47 @@ function YourWeekCard({ weekly }: { weekly: WeeklyActivity }) {
     weekly.briefingsCompleted > 0 ||
     weekly.xpEarned > 0;
 
-  if (!hasActivity) return null;
-
   return (
-    <div
-      className="mt-5 overflow-hidden rounded-2xl"
-      style={CARD_STYLE}
-    >
-      <div className="px-4 py-4">
-        <p className="mb-3 text-[14px] font-bold text-white">Your Week</p>
-
-        <WeekRow
-          Icon={BookOpen}
-          label="Articles opened"
-          value={weekly.articlesRead}
-        />
-        <WeekRow
-          Icon={Zap}
-          label="Briefings completed"
-          value={weekly.briefingsCompleted}
-        />
-        <WeekRow
-          Icon={Layers}
-          label="Topics explored"
-          value={weekly.topicsExplored}
-        />
-        <WeekRow
-          Icon={TrendingUp}
-          label="XP earned"
-          value={weekly.xpEarned}
-        />
-        <div className="flex items-center justify-between py-1.5">
-          <div className="flex items-center gap-2.5">
-            <Hash className="h-4 w-4 text-zinc-600" />
-            <span className="text-[13px] text-zinc-500">Most-read topic</span>
+    <div className="mt-5 overflow-hidden rounded-2xl" style={CARD_STYLE}>
+      {hasActivity ? (
+        /* Active: 3 headline metrics + topic insight */
+        <div className="px-4 py-4">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+            Your Week
+          </p>
+          <div className="flex items-baseline gap-6">
+            <WeekMetric value={weekly.articlesRead} label="Articles" />
+            <WeekMetric value={weekly.briefingsCompleted} label="Briefings" />
+            <WeekMetric value={weekly.xpEarned} label="XP" />
           </div>
-          <span className="text-[13px] font-semibold text-zinc-400">
-            {weekly.mostReadTopic ?? "—"}
-          </span>
+          <p className="mt-2.5 text-[12px] leading-snug text-zinc-500">
+            {weekly.mostReadTopic
+              ? `${weekly.mostReadTopic} was your most-read topic.`
+              : "Keep reading to discover your top topic."}
+          </p>
         </div>
-      </div>
+      ) : (
+        /* Empty state */
+        <div className="px-4 py-4">
+          <p className="text-[13px] font-bold text-white">
+            Your week is just getting started
+          </p>
+          <p className="mt-1 text-[12px] text-zinc-600">
+            Read your first story to begin tracking this week.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
-function WeekRow({
-  Icon,
-  label,
-  value,
-}: {
-  Icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-}) {
+function WeekMetric({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex items-center justify-between py-1.5">
-      <div className="flex items-center gap-2.5">
-        <Icon className="h-4 w-4 text-zinc-600" />
-        <span className="text-[13px] text-zinc-500">{label}</span>
-      </div>
-      <span className="text-[13px] font-semibold tabular-nums text-white">
+    <div className="flex items-baseline gap-1">
+      <span className="text-[22px] font-bold tabular-nums text-white">
         {value}
       </span>
+      <span className="text-[12px] text-zinc-500">{label}</span>
     </div>
   );
 }
