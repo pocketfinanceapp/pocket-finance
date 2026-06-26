@@ -14,7 +14,6 @@ import { estimateImageIsDark, hasUsableFeedImage } from "@/lib/feedImage";
 import { isInteractiveTarget } from "@/lib/gesture";
 import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
-import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
@@ -115,7 +114,9 @@ export function FeedCard({
 
     let cancelled = false;
     void estimateImageIsDark(article.imageUrl).then((dark) => {
-      if (!cancelled) setIsDarkImage(dark);
+      if (cancelled) return;
+      setIsDarkImage(dark);
+      if (dark) setImageFailed(true);
     });
 
     return () => {
@@ -260,7 +261,14 @@ export function FeedCard({
         </>
       ) : (
         <>
-          <FeedCardFallbackBackground article={article} />
+          <div
+            style={{ background: "linear-gradient(135deg, #3B6EF5, #00C6C6)" }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <span className="text-sm font-medium text-white/60">
+              {categoryTag || "Markets"}
+            </span>
+          </div>
           <FeedCardOverlays />
         </>
       )}
