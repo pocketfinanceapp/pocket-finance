@@ -308,6 +308,39 @@ function MarketSummaryBar({
   );
 }
 
+function NewsThumb({ imageUrl }: { imageUrl: string }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
+
+  const showFallback = !imageUrl || imageFailed;
+
+  if (showFallback) {
+    return (
+      <div
+        className="h-14 w-14 shrink-0 rounded-xl"
+        style={{ background: "linear-gradient(135deg, #3B6EF5, #00C6C6)" }}
+      />
+    );
+  }
+
+  return (
+    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
+      <Image
+        src={imageUrl}
+        alt=""
+        fill
+        className="object-cover"
+        sizes="56px"
+        unoptimized
+        onError={() => setImageFailed(true)}
+      />
+    </div>
+  );
+}
+
 function MarketNewsSection({
   articles,
   onViewAll,
@@ -327,20 +360,7 @@ function MarketNewsSection({
                 i < articles.length - 1 ? "border-b border-white/[0.06]" : ""
               }`}
             >
-              {article.imageUrl ? (
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
-                  <Image
-                    src={article.imageUrl}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="56px"
-                    unoptimized
-                  />
-                </div>
-              ) : (
-                <div className="h-14 w-14 shrink-0 rounded-xl bg-zinc-900" />
-              )}
+              <NewsThumb imageUrl={article.imageUrl} />
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-white">
                   {cleanArticleTitle(article.headline)}

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { hasUsableFeedImage } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { getArticleSubheading } from "@/lib/articlePreview";
@@ -26,33 +25,28 @@ interface ArticlePanelProps {
 }
 
 function ArticleHeroImage({ article }: { article: NewsArticle }) {
-  const usableInitial = hasUsableFeedImage(article.imageUrl);
-  const [showImage, setShowImage] = useState(usableInitial);
-  const [imgSrc, setImgSrc] = useState(usableInitial ? article.imageUrl : "");
+  const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
-    const usable = hasUsableFeedImage(article.imageUrl);
-    setShowImage(usable);
-    setImgSrc(usable ? article.imageUrl : "");
-  }, [article.id, article.imageUrl]);
+    setImageFailed(false);
+  }, [article.imageUrl, article.id]);
+
+  const showFallback = !article.imageUrl || imageFailed;
 
   return (
     <div className="relative mt-3 aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#0a0a0a]">
-      {showImage && imgSrc ? (
+      {showFallback ? (
+        <FeedCardFallbackBackground article={article} />
+      ) : (
         <Image
-          src={imgSrc}
+          src={article.imageUrl}
           alt=""
           fill
           className="object-cover"
           sizes="(max-width: 430px) 100vw"
           unoptimized
-          onError={() => {
-            setShowImage(false);
-            setImgSrc("");
-          }}
+          onError={() => setImageFailed(true)}
         />
-      ) : (
-        <FeedCardFallbackBackground article={article} />
       )}
     </div>
   );

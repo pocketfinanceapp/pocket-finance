@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -384,6 +384,11 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     return filterArticlesByBrowseCategory(articles, category);
   }, [articles, category]);
 
+  const [topStoryImageFailed, setTopStoryImageFailed] = useState(false);
+  useEffect(() => {
+    setTopStoryImageFailed(false);
+  }, [category]);
+
   const openInFeed = (article: NewsArticle) => {
     requestFeedJump(article.id);
     navigation.navigate("home");
@@ -476,7 +481,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                       boxShadow: `0 0 28px ${accent}0B`,
                     }}
                   >
-                    {topStory.imageUrl ? (
+                    {topStory.imageUrl && !topStoryImageFailed ? (
                       <div className="relative aspect-[16/8] w-full overflow-hidden">
                         <Image
                           src={topStory.imageUrl}
@@ -485,6 +490,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                           className="object-cover"
                           sizes="(max-width: 430px) calc(100vw - 2rem)"
                           unoptimized
+                          onError={() => setTopStoryImageFailed(true)}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       </div>

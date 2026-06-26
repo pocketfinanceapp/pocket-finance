@@ -80,9 +80,7 @@ export function FeedCard({
   const { user, isGuest, requestSignIn } = useAuth();
   const { liked, toggleLike, likeOnly } = useArticleLikes(article);
 
-  const usableInitial = hasUsableFeedImage(article.imageUrl);
-  const [showImage, setShowImage] = useState(usableInitial);
-  const [imgSrc, setImgSrc] = useState(usableInitial ? article.imageUrl : "");
+  const [imageFailed, setImageFailed] = useState(false);
   const saved = isArticleSaved(article.id);
   const [toast, setToast] = useState<string | null>(null);
   const [guestPrompt, setGuestPrompt] = useState<string | null>(null);
@@ -102,17 +100,18 @@ export function FeedCard({
   const categoryTag = getFeedCategoryTag(article, displayMarket);
   const feedChip = resolveFeedChip(article, categoryTag);
   const contextLine = getArticleContextLine(article);
-  const hasHeroImage = showImage && !!imgSrc;
+  const showFallback = !hasUsableFeedImage(article.imageUrl) || imageFailed;
+  const hasHeroImage = !showFallback;
   const useSoftOverlay = hasHeroImage && isDarkImage;
   const iconClass = "h-[21px] w-[21px] text-white opacity-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]";
 
   useEffect(() => {
-    const usable = hasUsableFeedImage(article.imageUrl);
-    setShowImage(usable);
-    setImgSrc(usable ? article.imageUrl : "");
+    setImageFailed(false);
     setIsDarkImage(false);
+  }, [article.id, article.imageUrl]);
 
-    if (!usable || !article.imageUrl) return;
+  useEffect(() => {
+    if (!hasUsableFeedImage(article.imageUrl) || !article.imageUrl) return;
 
     let cancelled = false;
     void estimateImageIsDark(article.imageUrl).then((dark) => {
@@ -246,7 +245,7 @@ export function FeedCard({
       {hasHeroImage ? (
         <>
           <Image
-            src={imgSrc}
+            src={article.imageUrl}
             alt=""
             fill
             className={`absolute inset-0 h-full w-full object-cover contrast-[1.02] saturate-[0.92] ${
@@ -255,7 +254,7 @@ export function FeedCard({
             sizes="100vw"
             unoptimized
             priority={active}
-            onError={() => setShowImage(false)}
+            onError={() => setImageFailed(true)}
           />
           <FeedCardOverlays soft={useSoftOverlay} />
         </>
