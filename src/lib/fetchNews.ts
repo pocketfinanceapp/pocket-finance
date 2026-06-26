@@ -1,5 +1,6 @@
 import { NEWS_API_BLOCKED_TERMS } from "./articleFilter";
 import { isExcludedArticle } from "./articleText";
+import { filterFinanceArticles } from "./financeRelevance";
 import { mapNewsApiArticle, DEMO_ARTICLES } from "./newsMapper";
 import type { NewsArticle } from "./types";
 
@@ -81,7 +82,7 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
-    return DEMO_ARTICLES;
+    return filterFinanceArticles(DEMO_ARTICLES);
   }
 
   try {
@@ -112,9 +113,9 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       }
     }
 
-    return mergeWithDemo(articles);
+    return filterFinanceArticles(mergeWithDemo(articles));
   } catch {
-    return DEMO_ARTICLES;
+    return filterFinanceArticles(DEMO_ARTICLES);
   }
 }
 
