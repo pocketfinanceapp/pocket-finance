@@ -17,11 +17,7 @@ const LOW_QUALITY_URL_PATTERNS = [
   "thumbnail",
   "speaker",
   "headline-shot",
-  "chart",
-  "graph",
   "candlestick",
-  "stock-chart",
-  "market-chart",
   "tradingview",
 ] as const;
 

@@ -73,5 +73,5 @@ export function getFinanceScore(article: NewsArticle): number {
 }
 
 export function filterFinanceArticles(articles: NewsArticle[]): NewsArticle[] {
-  return articles.filter((article) => getFinanceScore(article) >= 3);
+  return articles.filter((article) => getFinanceScore(article) >= 1);
 }
