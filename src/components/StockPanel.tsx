@@ -21,6 +21,7 @@ import {
   type PrivateCompanyProfile,
 } from "@/lib/privateTickers";
 import type { MassiveStockQuote } from "@/lib/massiveApi";
+import { fetchStockQuote } from "@/lib/stockQuoteClient";
 import {
   isCryptoTicker,
   isNonStockMarketTicker,
@@ -140,18 +141,10 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 
     let cancelled = false;
 
-    void fetch(`/api/stock?ticker=${encodeURIComponent(ticker)}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: MassiveStockQuote | null) => {
-        if (
-          !cancelled &&
-          (data?.source === "massive" || data?.source === "override")
-        ) {
+    void fetchStockQuote(ticker).then((data) => {
+        if (!cancelled && data) {
           setLiveQuote(data);
         }
-      })
-      .catch(() => {
-        /* fall back to demo price */
       });
 
     return () => {

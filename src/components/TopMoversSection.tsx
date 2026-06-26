@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   TOP_MOVER_TABS,
   formatStockPrice,
@@ -9,6 +9,8 @@ import {
   type TopMover,
   type TopMoverTab,
 } from "@/lib/topMovers";
+import type { MassiveStockQuote } from "@/lib/massiveApi";
+import { fetchStockQuote } from "@/lib/stockQuoteClient";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { CompanyLogo } from "./CompanyLogo";
 import { MarketSparkline } from "./MarketSparkline";
@@ -17,6 +19,33 @@ import { SectionTabs } from "./SectionTabs";
 export function TopMoversSection() {
   const [tab, setTab] = useState<TopMoverTab>("active");
   const movers = useMemo(() => getTopMovers(tab), [tab]);
+  const [liveQuotes, setLiveQuotes] = useState<
+    Record<string, MassiveStockQuote>
+  >({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setLiveQuotes({});
+
+    void Promise.all(
+      movers.map(async (mover) => {
+        const quote = await fetchStockQuote(mover.ticker);
+        return [mover.ticker, quote] as const;
+      })
+    ).then((results) => {
+      if (cancelled) return;
+
+      const next: Record<string, MassiveStockQuote> = {};
+      for (const [ticker, quote] of results) {
+        if (quote) next[ticker] = quote;
+      }
+      setLiveQuotes(next);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [movers]);
 
   return (
     <section className="mt-5">
@@ -26,13 +55,24 @@ export function TopMoversSection() {
       <SectionTabs tabs={TOP_MOVER_TABS} active={tab} onChange={setTab} />
       <div className="mx-4 mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
         <ul>
-          {movers.map((mover, i) => (
+          {movers.map((mover, i) => {
+            const quote = liveQuotes[mover.ticker];
+            const displayMover: TopMover = quote
+              ? {
+                  ...mover,
+                  price: quote.price,
+                  changePercent: quote.changePercent,
+                }
+              : mover;
+
+            return (
             <TopMoverRow
               key={`${tab}-${mover.ticker}`}
-              mover={mover}
+              mover={displayMover}
               showDivider={i < movers.length - 1}
             />
-          ))}
+            );
+          })}
         </ul>
       </div>
     </section>
