@@ -191,6 +191,30 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
     isCryptoTicker(ticker) || marketTheme ? "Related assets" : "Competitors";
   const competitors = stock?.competitors ?? [];
 
+  // Determine which tabs have real content to show.
+  // Set to true / non-empty when that tab's content is implemented.
+  const hasFinancialData = false;
+  const relatedNews: NewsArticle[] | null = null;
+  const assetAnalysis: unknown = null;
+
+  const availableTabs = (
+    [
+      { id: "Overview", available: true },
+      { id: "Financials", available: hasFinancialData },
+      { id: "News", available: (relatedNews ?? []).length > 0 },
+      { id: "Analysis", available: Boolean(assetAnalysis) },
+    ] as Array<{ id: (typeof TABS)[number]; available: boolean }>
+  ).filter((tab) => tab.available);
+
+  // Reset to Overview if the active tab is no longer in the available list
+  // (e.g. when navigating to a ticker that has fewer tabs).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!availableTabs.some((tab) => tab.id === activeTab)) {
+      setActiveTab("Overview");
+    }
+  }, [availableTabs, activeTab]);
+
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   const toggleSave = async () => {
@@ -273,7 +297,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
 
         {showTabs && (
           <nav className="relative flex w-full border-b border-white/[0.08] bg-black px-4 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
-            {TABS.map((tab) => (
+            {availableTabs.map(({ id: tab }) => (
               <button
                 key={tab}
                 type="button"
