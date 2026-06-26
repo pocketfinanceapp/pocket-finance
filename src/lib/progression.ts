@@ -69,7 +69,7 @@ export type DailyGoalState = {
     },
     {
       id: "complete_briefing";
-      label: "Complete 1 AI Briefing";
+      label: "Read 1 Pocket Briefing";
       required: 1;
       completed: number;
     },
@@ -533,7 +533,7 @@ export function getDailyGoalState(): DailyGoalState {
       },
       {
         id: "complete_briefing",
-        label: "Complete 1 AI Briefing",
+        label: "Read 1 Pocket Briefing",
         required: 1,
         completed: briefingCompleted,
       },
@@ -779,7 +779,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "first_briefing",
       "discovery",
       "First Briefing",
-      "Completed your first AI briefing",
+      "Completed your first Pocket Briefing",
       "⚡",
       uniqueBriefings,
       1

@@ -152,8 +152,11 @@ export function ArticleAISummary({
       ) : (
         <>
           <span className="inline-block rounded-full bg-[#00C6C6]/10 px-2 py-0.5 text-[11px] font-medium text-[#00C6C6]">
-            AI Briefing
+            Pocket Briefing
           </span>
+          <p className="mt-0.5 text-[10px] text-zinc-500">
+            AI-generated summary based on the original article.
+          </p>
           <ul className="mt-2">
             {bullets?.map((bullet) => (
               <li

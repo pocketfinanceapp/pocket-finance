@@ -81,7 +81,7 @@ export function ArticleCardPreview() {
         </p>
         <div className="rounded-lg border border-[#00C6C6]/20 bg-[#00C6C6]/5 p-2">
           <p className="text-[8px] font-semibold uppercase tracking-wide text-[#00C6C6]">
-            AI Briefing
+            Pocket Briefing
           </p>
           <p className="mt-1 text-[8px] leading-relaxed text-[#9ca3af]">
             Chipmakers rally as data-centre AI spending accelerates across the

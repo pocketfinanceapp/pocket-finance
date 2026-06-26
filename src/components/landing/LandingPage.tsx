@@ -22,7 +22,7 @@ import { WaitlistForm } from "./WaitlistForm";
 const TRUST_CHIPS = [
   "ASX + US Markets",
   "Live Prices",
-  "AI Briefings",
+  "Pocket Briefings",
   "50+ Sources",
 ] as const;
 
