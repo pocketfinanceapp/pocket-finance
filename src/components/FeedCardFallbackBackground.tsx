@@ -6,6 +6,35 @@ import {
 
 interface FeedCardFallbackBackgroundProps {
   article: NewsArticle;
+  category?: string;
+}
+
+function resolveVariantFromCategory(
+  category: string,
+  article: NewsArticle
+): FeedFallbackVariant {
+  const upper = category.toUpperCase();
+
+  if (
+    upper.includes("CRYPTO") ||
+    upper.includes("BITCOIN") ||
+    upper.includes("BTC") ||
+    upper.includes("ETH")
+  ) {
+    return "crypto";
+  }
+  if (upper === "AI" || upper.includes("TECH")) return "tech";
+  if (upper.includes("MINING") || upper.includes("MATERIALS")) return "mining";
+  if (
+    upper.includes("ENERGY") ||
+    upper.includes("COMMODIT") ||
+    upper.includes("OIL")
+  ) {
+    return "energy";
+  }
+  if (upper.includes("FINANCE") || upper.includes("BANK")) return "finance";
+
+  return resolveFeedFallbackVariant(article);
 }
 
 const BOTTOM_SCRIM =
@@ -14,8 +43,11 @@ const BOTTOM_SCRIM =
 /** Premium category-specific fallback when an article has no usable image */
 export function FeedCardFallbackBackground({
   article,
+  category,
 }: FeedCardFallbackBackgroundProps) {
-  const variant = resolveFeedFallbackVariant(article);
+  const variant = category
+    ? resolveVariantFromCategory(category, article)
+    : resolveFeedFallbackVariant(article);
   const uid = article.id.replace(/[^a-zA-Z0-9_-]/g, "");
 
   return (

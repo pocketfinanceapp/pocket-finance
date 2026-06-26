@@ -15,6 +15,7 @@ import { isInteractiveTarget } from "@/lib/gesture";
 import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
+import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
@@ -261,14 +262,7 @@ export function FeedCard({
         </>
       ) : (
         <>
-          <div
-            style={{ background: "linear-gradient(135deg, #3B6EF5, #00C6C6)" }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            <span className="text-sm font-medium text-white/60">
-              {categoryTag || "Markets"}
-            </span>
-          </div>
+          <FeedCardFallbackBackground article={article} category={categoryTag} />
           <FeedCardOverlays />
         </>
       )}
