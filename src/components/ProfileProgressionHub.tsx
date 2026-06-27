@@ -1,28 +1,16 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { ProfileAvatarWithRing } from "@/components/ProfileAvatarWithRing";
-import { StreakFlameIcon } from "@/components/icons/StreakFlameIcon";
 import { tabEnterStyle } from "@/lib/tabEnterAnimation";
-import type {
-  DailyGoalState,
-  LevelState,
-  StreakState,
-  WeeklyActivity,
-} from "@/lib/progression";
+import { DAILY_GOAL_XP_REWARD, XP_REWARDS, type DailyGoalTask, type DailyGoalState, type LevelState, type WeeklyActivity } from "@/lib/progression";
 
 const CARD =
   "overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]";
 
 interface ProfileProgressionHubProps {
-  displayName: string;
-  initials: string;
-  email?: string | null;
-  joined: string | null;
   progression: LevelState;
   totalXP: number;
   dailyGoal: DailyGoalState;
-  streak: StreakState;
   weekly: WeeklyActivity;
   articlesOpened: number;
   likedCount: number;
@@ -31,14 +19,9 @@ interface ProfileProgressionHubProps {
 }
 
 export function ProfileProgressionHub({
-  displayName,
-  initials,
-  email,
-  joined,
   progression,
   totalXP,
   dailyGoal,
-  streak,
   weekly,
   articlesOpened,
   likedCount,
@@ -51,71 +34,22 @@ export function ProfileProgressionHub({
   const goalPct = Math.round(
     (dailyGoal.completedTasks / dailyGoal.totalTasks) * 100
   );
-  const xpToNext = progression.nextLevelXP - progression.currentLevelXP;
 
   return (
-    <div className="mt-2 space-y-4">
-      {/* ── Who you are ─────────────────────────────────────────────────── */}
-      <section className={`${CARD} px-5 py-5`} style={tabEnterStyle(animateIn, 0)}>
-        <div className="flex flex-col items-center text-center">
-          <ProfileAvatarWithRing
-            initials={initials}
-            progression={progression}
-            animateIn={animateIn}
-          />
-          <h2 className="mt-4 text-[20px] font-bold leading-tight text-white">
-            {displayName}
-          </h2>
-          {email && (
-            <p className="mt-1 max-w-full truncate text-[13px] text-zinc-500">
-              {email}
-            </p>
-          )}
-          <p className="mt-1.5 text-[13px] font-medium text-[#9DA8FF]">
-            {progression.title}
-          </p>
-
-          {!isMaxLevel ? (
-            <div className="mt-4 w-full">
-              <div className="flex items-center justify-between text-[11px] text-zinc-500">
-                <span>Level {progression.level}</span>
-                <span className="tabular-nums">
-                  {progression.progressXP.toLocaleString()} /{" "}
-                  {xpToNext.toLocaleString()} XP
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#7C6CF8] via-[#5B8EF0] to-[#00C6C6]"
-                  style={{ width: `${progression.progressPercent}%` }}
-                />
-              </div>
-            </div>
-          ) : (
-            <p className="mt-3 text-[12px] tabular-nums text-zinc-500">
-              {totalXP.toLocaleString()} lifetime XP
-            </p>
-          )}
-
-          {joined && (
-            <p className="mt-3 text-[11px] text-zinc-600">Member since {joined}</p>
-          )}
-        </div>
-      </section>
-
+    <div className="space-y-4">
       {/* ── Today ───────────────────────────────────────────────────────── */}
-      <section className={CARD} style={tabEnterStyle(animateIn, 120)}>
+      <section className={CARD} style={tabEnterStyle(animateIn, 0)}>
         <div className="border-b border-white/[0.06] px-4 py-3">
-          <h3 className="text-[14px] font-semibold text-white">Today</h3>
+          <h3 className="text-[14px] font-semibold text-white">Today&apos;s goal</h3>
           <p className="mt-0.5 text-[12px] text-zinc-500">
             {dailyGoal.isComplete
-              ? "You finished your daily goal"
-              : "Complete these to earn +15 XP"}
+              ? `Nice work — +${DAILY_GOAL_XP_REWARD} XP earned`
+              : `Complete all ${dailyGoal.totalTasks} tasks for +${DAILY_GOAL_XP_REWARD} XP`}
           </p>
         </div>
 
-        <div className="px-4 py-3.5">
-          <div className="flex items-center gap-3">
+        <div className="px-4 py-4">
+          <div className="flex items-start gap-3">
             <div
               className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
               style={{
@@ -132,11 +66,11 @@ export function ProfileProgressionHub({
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-semibold text-white">
                 {dailyGoal.isComplete
-                  ? "Goal complete"
-                  : `${dailyGoal.completedTasks} of ${dailyGoal.totalTasks} tasks`}
+                  ? "All done for today"
+                  : `${dailyGoal.completedTasks} of ${dailyGoal.totalTasks} complete`}
               </p>
               {!dailyGoal.isComplete && (
-                <div className="mt-2 space-y-2">
+                <div className="mt-3 space-y-2.5">
                   {dailyGoal.tasks.map((task) => (
                     <TaskRow key={task.id} task={task} />
                   ))}
@@ -145,62 +79,10 @@ export function ProfileProgressionHub({
             </div>
           </div>
         </div>
-
-        <div className="border-t border-white/[0.06] px-4 py-3.5">
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-              style={{
-                background: "rgba(245,158,11,0.14)",
-                border: "1px solid rgba(245,158,11,0.22)",
-              }}
-            >
-              <StreakFlameIcon size={18} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold text-white">
-                {streak.currentStreak === 0
-                  ? "No streak yet"
-                  : `${streak.currentStreak}-day streak`}
-              </p>
-              <p className="text-[12px] text-zinc-500">
-                {streak.currentStreak === 0
-                  ? "Finish today's goal to start one"
-                  : streak.goalCompletedToday
-                    ? "Come back tomorrow to keep it going"
-                    : `Best streak: ${streak.bestStreak} days`}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 flex justify-between px-0.5">
-            {streak.weeklyStrip.map(({ day, completed, isToday }) => (
-              <div key={day} className="flex flex-col items-center gap-1">
-                <div
-                  className="flex h-6 w-6 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: completed
-                      ? "rgba(245,158,11,0.85)"
-                      : "transparent",
-                    border: isToday
-                      ? `2px solid ${completed ? "rgba(245,158,11,1)" : "rgba(245,158,11,0.4)"}`
-                      : completed
-                        ? "none"
-                        : "1.5px solid rgba(255,255,255,0.12)",
-                  }}
-                >
-                  {completed && (
-                    <Check className="h-2.5 w-2.5 text-black/80" strokeWidth={3} />
-                  )}
-                </div>
-                <span className="text-[9px] text-zinc-600">{day}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* ── Activity ────────────────────────────────────────────────────── */}
-      <section className={CARD} style={tabEnterStyle(animateIn, 240)}>
+      <section className={CARD} style={tabEnterStyle(animateIn, 120)}>
         <div className="border-b border-white/[0.06] px-4 py-3">
           <h3 className="text-[14px] font-semibold text-white">Your activity</h3>
         </div>
@@ -223,18 +105,29 @@ export function ProfileProgressionHub({
               Read a story to start tracking your week.
             </p>
           )}
+          {isMaxLevel && (
+            <p className="mt-2 text-[11px] tabular-nums text-zinc-600">
+              {totalXP.toLocaleString()} lifetime XP
+            </p>
+          )}
         </div>
       </section>
     </div>
   );
 }
 
-function TaskRow({
-  task,
-}: {
-  task: DailyGoalState["tasks"][number];
-}) {
+function TaskRow({ task }: { task: DailyGoalTask }) {
   const done = task.completed >= task.required;
+  const xpLabel =
+    task.id === "read_articles"
+      ? `+${XP_REWARDS.article_opened} each`
+      : task.id === "complete_briefing"
+        ? `+${XP_REWARDS.briefing_completed}`
+        : task.id === "like_article"
+          ? `+${XP_REWARDS.article_liked}`
+          : task.id === "save_article"
+            ? `+${XP_REWARDS.article_saved}`
+            : `+${XP_REWARDS.stock_panel_opened}`;
 
   return (
     <div className="flex items-center gap-2.5">
@@ -249,6 +142,7 @@ function TaskRow({
         />
       )}
       <span className="flex-1 text-[12px] text-zinc-400">{task.label}</span>
+      <span className="text-[10px] font-medium text-[#00C6C6]/80">{xpLabel}</span>
       <span className="text-[11px] tabular-nums text-zinc-600">
         {task.completed}/{task.required}
       </span>

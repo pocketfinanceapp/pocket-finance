@@ -169,3 +169,64 @@ export function addRecentlyRead(article: NewsArticle): void {
   const next = [entry, ...withoutDup].slice(0, MAX_RECENT);
   localStorage.setItem(RECENT_KEY, JSON.stringify(next));
 }
+
+// ---------------------------------------------------------------------------
+// Profile avatar (local image, keyed by user id)
+// ---------------------------------------------------------------------------
+
+export const PF_AVATAR_CHANGED_EVENT = "pf-avatar-changed";
+
+function avatarStorageKey(userId: string): string {
+  return `pf-profile-avatar-${userId}`;
+}
+
+export function loadProfileAvatar(userId: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(avatarStorageKey(userId));
+  } catch {
+    return null;
+  }
+}
+
+export function saveProfileAvatar(userId: string, dataUrl: string | null): void {
+  if (typeof window === "undefined") return;
+  const key = avatarStorageKey(userId);
+  if (!dataUrl) {
+    localStorage.removeItem(key);
+  } else {
+    localStorage.setItem(key, dataUrl);
+  }
+  window.dispatchEvent(new CustomEvent(PF_AVATAR_CHANGED_EVENT));
+}
+
+export function compressAvatarFile(
+  file: File,
+  maxSize = 256
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read image"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Invalid image"));
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas unavailable"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}

@@ -44,7 +44,9 @@ import { timeAgo } from "@/lib/utils";
 import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ProfileAchievements } from "./ProfileAchievements";
 import { ProfileArticlePreview } from "./ProfileArticlePreview";
+import { ProfileIdentitySection } from "./ProfileIdentitySection";
 import { ProfileProgressionHub } from "./ProfileProgressionHub";
+import { ProfileStreakCard } from "./ProfileStreakCard";
 import { AchievementIcon } from "./icons/AchievementIcon";
 import { ScreenHeader } from "./ScreenHeader";
 import { SettingsPage } from "./SettingsPage";
@@ -332,10 +334,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         <div className="relative flex flex-1 flex-col overflow-hidden px-5">
           <div className="pointer-events-none select-none blur-[2px] opacity-40">
             <ProfileProgressionHub
-              displayName="Your profile"
-              initials="?"
-              email={null}
-              joined={null}
               progression={{
                 level: 2,
                 title: "News Reader",
@@ -355,16 +353,49 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
                   },
                   {
                     id: "complete_briefing",
-                    label: "Read 1 Pocket Briefing",
+                    label: "Finish 1 Pocket Briefing",
+                    required: 1,
+                    completed: 0,
+                  },
+                  {
+                    id: "like_article",
+                    label: "Like 1 article",
+                    required: 1,
+                    completed: 0,
+                  },
+                  {
+                    id: "save_article",
+                    label: "Save 1 article",
+                    required: 1,
+                    completed: 0,
+                  },
+                  {
+                    id: "explore_stock",
+                    label: "Open 1 stock panel",
                     required: 1,
                     completed: 0,
                   },
                 ],
-                totalTasks: 2,
+                totalTasks: 5,
                 completedTasks: 0,
                 isComplete: false,
-                xpReward: 15,
+                xpReward: 35,
               }}
+              weekly={{
+                articlesRead: 0,
+                briefingsCompleted: 0,
+                topicsExplored: 0,
+                watchlistViewed: 0,
+                xpEarned: 0,
+                mostReadTopic: null,
+              }}
+              articlesOpened={0}
+              likedCount={0}
+              watchlistCount={0}
+            />
+          </div>
+          <div className="mt-4 opacity-40 blur-[2px]">
+            <ProfileStreakCard
               streak={{
                 currentStreak: 0,
                 bestStreak: 0,
@@ -379,17 +410,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
                 nextMilestone: 3,
                 goalCompletedToday: false,
               }}
-              weekly={{
-                articlesRead: 0,
-                briefingsCompleted: 0,
-                topicsExplored: 0,
-                watchlistViewed: 0,
-                xpEarned: 0,
-                mostReadTopic: null,
-              }}
-              articlesOpened={0}
-              likedCount={0}
-              watchlistCount={0}
             />
           </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
@@ -444,28 +464,44 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
       {/* Scrollable content */}
       <div
-        className="min-h-0 flex-1 overflow-y-auto px-5"
+        className="min-h-0 flex-1 overflow-y-auto px-5 pf-scroll"
         style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
       >
-        {/* ── Progression hub (identity, goal, streak, week, stats) ─────── */}
-        <ProfileProgressionHub
-          displayName={displayName}
-          initials={initials}
-          email={user?.email}
-          joined={joined}
-          progression={progressionState}
-          totalXP={totalXP}
-          dailyGoal={dailyGoal}
-          streak={streakState}
-          weekly={weeklyActivity}
-          articlesOpened={uniqueArticlesOpened}
-          likedCount={likedArticlesCount}
-          watchlistCount={watchlistCount}
-          animateIn={profileEntered}
-        />
+        {/* ── Identity (avatar + name) ──────────────────────────────────── */}
+        {user && (
+          <ProfileIdentitySection
+            user={user}
+            displayName={displayName}
+            initials={initials}
+            email={user.email}
+            joined={joined}
+            progression={progressionState}
+            totalXP={totalXP}
+            animateIn={profileEntered}
+          />
+        )}
+
+        {/* ── Daily streak ─────────────────────────────────────────────── */}
+        <div className="mt-4" style={tabEnterStyle(profileEntered, 100)}>
+          <ProfileStreakCard streak={streakState} animateIn={profileEntered} />
+        </div>
+
+        {/* ── Goals + activity ─────────────────────────────────────────── */}
+        <div className="mt-4" style={tabEnterStyle(profileEntered, 200)}>
+          <ProfileProgressionHub
+            progression={progressionState}
+            totalXP={totalXP}
+            dailyGoal={dailyGoal}
+            weekly={weeklyActivity}
+            articlesOpened={uniqueArticlesOpened}
+            likedCount={likedArticlesCount}
+            watchlistCount={watchlistCount}
+            animateIn={profileEntered}
+          />
+        </div>
 
         {/* ── Personalise feed ─────────────────────────────────────────── */}
-        <section className="mt-4" style={tabEnterStyle(profileEntered, 320)}>
+        <section className="mt-4" style={tabEnterStyle(profileEntered, 360)}>
           <QuickActionRow
             icon={Tag}
             title="My topics"
@@ -479,7 +515,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         </section>
 
         {/* ── Achievements ─────────────────────────────────────────────── */}
-        <section className="mt-5" style={tabEnterStyle(profileEntered, 400)}>
+        <section className="mt-5" style={tabEnterStyle(profileEntered, 440)}>
           <ProfileAchievements
             likedArticlesCount={likedArticlesCount}
             maxItems={4}
@@ -491,7 +527,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         {(savedPreview.length > 0 ||
           likedPreview.length > 0 ||
           recentlyReadPreview.length > 0) && (
-          <section className="mt-5" style={tabEnterStyle(profileEntered, 480)}>
+          <section className="mt-5" style={tabEnterStyle(profileEntered, 520)}>
             <SectionHeader title="Your library" />
             <div className="mt-3 space-y-3">
               {savedPreview.length > 0 && (

@@ -40,6 +40,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<AuthResult>;
   signInWithApple: () => Promise<AuthResult>;
+  updateDisplayName: (displayName: string) => Promise<AuthResult>;
   isGuest: boolean;
   continueAsGuest: () => void;
   requestSignIn: () => void;
@@ -233,6 +234,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [signInWithOAuth]
   );
 
+  const updateDisplayName = useCallback(
+    async (displayName: string): Promise<AuthResult> => {
+      const trimmed = displayName.trim();
+      if (!trimmed) return { error: "Name cannot be empty" };
+
+      const supabase = getSupabase();
+      const { data, error } = await supabase.auth.updateUser({
+        data: { display_name: trimmed },
+      });
+
+      if (error) return { error: error.message };
+      if (data.user) setUser(data.user);
+      return { error: null };
+    },
+    []
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -245,6 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       signInWithGoogle,
       signInWithApple,
+      updateDisplayName,
       isGuest,
       continueAsGuest,
       requestSignIn,
@@ -260,6 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       signInWithGoogle,
       signInWithApple,
+      updateDisplayName,
       isGuest,
       continueAsGuest,
       requestSignIn,

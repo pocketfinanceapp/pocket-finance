@@ -181,6 +181,82 @@ export function AchievementIcon({
           />
         </svg>
       );
+    case "loyal_reader":
+      return (
+        <svg {...common}>
+          <path d="M5 4h14v16H5z" stroke={stroke} strokeWidth="1.75" />
+          <path d="M9 4v16M5 8h4" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "market_veteran":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" stroke={stroke} strokeWidth="1.75" />
+          <path d="M12 8v4l3 2" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "watchlist_builder":
+      return (
+        <svg {...common}>
+          <path d="M8 6h11v14H8z" stroke={stroke} strokeWidth="1.75" />
+          <path d="M5 10h3M5 14h3M5 18h3" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "streak_starter":
+      return (
+        <svg {...common}>
+          <path d="M12 3v4M8.5 5.5l2.5 2.5M15.5 5.5L13 8" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+          <circle cx="12" cy="14" r="5" stroke={stroke} strokeWidth="1.75" />
+        </svg>
+      );
+    case "daily_champion":
+      return (
+        <svg {...common}>
+          <path d="M8 18h8l-1-6H9l-1 6zM10 6h4l1 3H9l1-3z" stroke={stroke} strokeWidth="1.75" strokeLinejoin="round" />
+          <path d="M12 3v2" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "heart_collector":
+      return (
+        <svg {...common}>
+          <path d="M12 20l-1.2-1.1C7.5 15.8 5 13.5 5 10.5a3.5 3.5 0 016-2 3.5 3.5 0 016 2c0 3-2.5 5.3-5.8 8.4L12 20z" stroke={stroke} strokeWidth="1.75" strokeLinejoin="round" />
+        </svg>
+      );
+    case "topic_master":
+      return (
+        <svg {...common}>
+          <path d="M4 7h16M4 12h10M4 17h14" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+          <circle cx="19" cy="12" r="2" stroke={stroke} strokeWidth="1.75" />
+        </svg>
+      );
+    case "super_saver":
+      return (
+        <svg {...common}>
+          <path d="M6 4h9l3 3v13H6z" stroke={stroke} strokeWidth="1.75" strokeLinejoin="round" />
+          <path d="M15 4v3h3" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "briefing_master":
+      return (
+        <svg {...common}>
+          <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke={stroke} strokeWidth="1.75" strokeLinejoin="round" />
+          <path d="M17 17l2 2 4-4" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "xp_hunter":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" stroke={stroke} strokeWidth="1.75" />
+          <path d="M12 8v8M8 12h8" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "portfolio_scholar":
+      return (
+        <svg {...common}>
+          <path d="M4 19V5l8-2 8 2v14l-8 2-8-2z" stroke={stroke} strokeWidth="1.75" strokeLinejoin="round" />
+          <path d="M12 3v16" stroke={stroke} strokeWidth="1.75" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>

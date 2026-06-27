@@ -14,6 +14,7 @@ export type ActivityEventType =
   | "stock_panel_opened"
   | "article_saved"
   | "stock_watchlisted"
+  | "article_liked"
   | "daily_goal_completed";
 
 export type ActivityEvent = {
@@ -59,25 +60,24 @@ export type LevelState = {
   progressPercent: number;
 };
 
+export type DailyGoalTask = {
+  id:
+    | "read_articles"
+    | "complete_briefing"
+    | "like_article"
+    | "save_article"
+    | "explore_stock";
+  label: string;
+  required: number;
+  completed: number;
+};
+
 export type DailyGoalState = {
-  tasks: [
-    {
-      id: "read_articles";
-      label: "Read 3 articles";
-      required: 3;
-      completed: number;
-    },
-    {
-      id: "complete_briefing";
-      label: "Read 1 Pocket Briefing";
-      required: 1;
-      completed: number;
-    },
-  ];
+  tasks: DailyGoalTask[];
   totalTasks: number;
   completedTasks: number;
   isComplete: boolean;
-  xpReward: 15;
+  xpReward: number;
 };
 
 type StreakStore = { bestStreak: number };
@@ -116,6 +116,7 @@ export type Achievement = {
   category: AchievementCategory;
   title: string;
   description: string;
+  howToUnlock: string;
   icon: string;
   progress: number;
   required: number;
@@ -146,13 +147,19 @@ const LEVELS: LevelDef[] = [
 ];
 
 const XP_CONFIG: Record<ActivityEventType, number> = {
-  article_opened: 5,
-  briefing_completed: 8,
-  stock_panel_opened: 4,
-  article_saved: 3,
-  stock_watchlisted: 5,
-  daily_goal_completed: 15,
+  article_opened: 8,
+  briefing_completed: 12,
+  stock_panel_opened: 6,
+  article_saved: 5,
+  stock_watchlisted: 8,
+  article_liked: 6,
+  daily_goal_completed: 35,
 };
+
+export const DAILY_GOAL_XP_REWARD = XP_CONFIG.daily_goal_completed;
+
+/** Shown in UI — per-action XP values for motivation. */
+export const XP_REWARDS = XP_CONFIG;
 
 const STREAK_MILESTONES = [3, 7, 14, 30] as const;
 
@@ -317,6 +324,8 @@ function buildRewardKey(
       return `article_saved:${metadata?.articleId ?? entityId}`;
     case "stock_watchlisted":
       return `stock_watchlisted:${metadata?.ticker ?? entityId}`;
+    case "article_liked":
+      return `article_liked:${metadata?.articleId ?? entityId}`;
     case "daily_goal_completed":
       return `daily_goal_completed:${entityId}`;
   }
@@ -420,8 +429,14 @@ export function recordActivityEvent(
     window.dispatchEvent(new CustomEvent("pf-progression-updated"));
   }
 
-  // Evaluate daily goal after article_opened and briefing_completed events
-  if (type === "article_opened" || type === "briefing_completed") {
+  // Evaluate daily goal after qualifying events
+  if (
+    type === "article_opened" ||
+    type === "briefing_completed" ||
+    type === "article_liked" ||
+    type === "article_saved" ||
+    type === "stock_panel_opened"
+  ) {
     evaluateDailyGoalCompletion();
   }
 
@@ -435,6 +450,11 @@ export function recordActivityEvent(
  */
 export function markBriefingCompleted(articleId: string): ActivityEvent {
   return recordActivityEvent("briefing_completed", articleId, { articleId });
+}
+
+/** Award XP when a user likes an article (once per article). */
+export function markArticleLiked(articleId: string): ActivityEvent {
+  return recordActivityEvent("article_liked", articleId, { articleId });
 }
 
 /** Current level state derived from total XP. */
@@ -516,38 +536,74 @@ export function getDailyGoalState(): DailyGoalState {
       .map((e) => e.metadata?.articleId ?? e.entityId)
   ).size;
 
-  const readCompleted = Math.min(uniqueArticlesRead, 3);
-  const briefingCompleted = Math.min(uniqueBriefingsDone, 1);
+  const uniqueLikesToday = new Set(
+    todayEvents
+      .filter((e) => e.type === "article_liked")
+      .map((e) => e.metadata?.articleId ?? e.entityId)
+  ).size;
 
-  const completedTasks =
-    (readCompleted >= 3 ? 1 : 0) + (briefingCompleted >= 1 ? 1 : 0);
-  const isComplete = completedTasks === 2;
+  const uniqueSavesToday = new Set(
+    todayEvents
+      .filter((e) => e.type === "article_saved")
+      .map((e) => e.metadata?.articleId ?? e.entityId)
+  ).size;
+
+  const uniqueStocksToday = new Set(
+    todayEvents
+      .filter((e) => e.type === "stock_panel_opened")
+      .map((e) => e.metadata?.ticker ?? e.entityId)
+  ).size;
+
+  const tasks: DailyGoalTask[] = [
+    {
+      id: "read_articles",
+      label: "Read 3 articles",
+      required: 3,
+      completed: Math.min(uniqueArticlesRead, 3),
+    },
+    {
+      id: "complete_briefing",
+      label: "Finish 1 Pocket Briefing",
+      required: 1,
+      completed: Math.min(uniqueBriefingsDone, 1),
+    },
+    {
+      id: "like_article",
+      label: "Like 1 article",
+      required: 1,
+      completed: Math.min(uniqueLikesToday, 1),
+    },
+    {
+      id: "save_article",
+      label: "Save 1 article",
+      required: 1,
+      completed: Math.min(uniqueSavesToday, 1),
+    },
+    {
+      id: "explore_stock",
+      label: "Open 1 stock panel",
+      required: 1,
+      completed: Math.min(uniqueStocksToday, 1),
+    },
+  ];
+
+  const completedTasks = tasks.filter(
+    (t) => t.completed >= t.required
+  ).length;
+  const isComplete = completedTasks === tasks.length;
 
   return {
-    tasks: [
-      {
-        id: "read_articles",
-        label: "Read 3 articles",
-        required: 3,
-        completed: readCompleted,
-      },
-      {
-        id: "complete_briefing",
-        label: "Read 1 Pocket Briefing",
-        required: 1,
-        completed: briefingCompleted,
-      },
-    ],
-    totalTasks: 2,
+    tasks,
+    totalTasks: tasks.length,
     completedTasks,
     isComplete,
-    xpReward: 15,
+    xpReward: DAILY_GOAL_XP_REWARD,
   };
 }
 
 /**
  * Check whether the daily goal is complete and, if so, record the
- * daily_goal_completed event (which awards 15 XP, once per day).
+ * daily_goal_completed event (which awards bonus XP, once per day).
  * Never call inside a getter or render cycle — call after article_opened or
  * briefing_completed events have been persisted.
  */
@@ -751,12 +807,19 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
   const streak = getStreakState();
   const currentStreak = streak.currentStreak;
 
+  const dailyGoalsCompleted = new Set(
+    store.events
+      .filter((e) => e.type === "daily_goal_completed")
+      .map((e) => e.entityId)
+  ).size;
+
   // Helper
   function make(
     id: string,
     category: AchievementCategory,
     title: string,
     description: string,
+    howToUnlock: string,
     icon: string,
     progress: number,
     required: number
@@ -766,6 +829,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       category,
       title,
       description,
+      howToUnlock,
       icon,
       progress: Math.min(progress, required),
       required,
@@ -780,6 +844,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "discovery",
       "First Briefing",
       "Completed your first Pocket Briefing",
+      "Open any article and finish reading its Pocket Briefing summary.",
       "⚡",
       uniqueBriefings,
       1
@@ -789,15 +854,27 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "reading",
       "News Regular",
       "Opened 10 articles",
+      "Read 10 different articles from your feed — each unique open counts once.",
       "📰",
       totalArticlesRead,
       10
+    ),
+    make(
+      "loyal_reader",
+      "reading",
+      "Loyal Reader",
+      "Opened 25 articles",
+      "Keep reading — 25 unique articles unlocks this badge.",
+      "📖",
+      totalArticlesRead,
+      25
     ),
     make(
       "deep_reader",
       "reading",
       "Deep Reader",
       "Opened 50 articles",
+      "Stay curious. Open 50 unique articles across any topic.",
       "📚",
       totalArticlesRead,
       50
@@ -807,6 +884,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "reading",
       "Century Club",
       "Opened 100 articles",
+      "A true habit — reach 100 unique articles opened.",
       "💯",
       totalArticlesRead,
       100
@@ -816,6 +894,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "reading",
       "News Obsessed",
       "Opened 500 articles",
+      "Power-user status: 500 unique articles opened all time.",
       "🗞️",
       totalArticlesRead,
       500
@@ -827,6 +906,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "markets",
       "Market Watcher",
       "Viewed your first stock panel",
+      "Tap a ticker on any article to open its stock panel.",
       "📈",
       hasAnyStockViewed ? 1 : 0,
       1
@@ -836,6 +916,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "markets",
       "Stock Follower",
       "Added a stock to your watchlist",
+      "Save a ticker to your watchlist from a stock panel or article.",
       "⭐",
       totalWatchlisted,
       1
@@ -845,8 +926,29 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "markets",
       "Market Explorer",
       "Opened 5 different stock panels",
+      "Explore 5 different tickers — each unique panel counts once.",
       "🔭",
       totalStockPanels,
+      5
+    ),
+    make(
+      "market_veteran",
+      "markets",
+      "Market Veteran",
+      "Opened 15 different stock panels",
+      "Deep dive into 15 unique tickers over time.",
+      "🎯",
+      totalStockPanels,
+      15
+    ),
+    make(
+      "watchlist_builder",
+      "markets",
+      "Watchlist Builder",
+      "Added 5 stocks to your watchlist",
+      "Track the market — add 5 tickers to your watchlist.",
+      "📋",
+      totalWatchlisted,
       5
     ),
 
@@ -856,8 +958,19 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "consistency",
       "First Steps",
       "Opened your first article",
+      "Open any article from the home feed to get started.",
       "🌱",
       totalArticlesRead,
+      1
+    ),
+    make(
+      "streak_starter",
+      "consistency",
+      "Streak Starter",
+      "Maintained a 1-day streak",
+      "Complete today's daily goal to earn your first streak day.",
+      "✨",
+      currentStreak,
       1
     ),
     make(
@@ -865,6 +978,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "consistency",
       "Rising Star",
       "Maintained a 3-day streak",
+      "Finish every daily goal task for 3 days in a row.",
       "🌟",
       currentStreak,
       3
@@ -874,6 +988,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "consistency",
       "Diamond Hands",
       "Maintained a 7-day streak",
+      "Keep showing up — 7 consecutive days of completed daily goals.",
       "💎",
       currentStreak,
       7
@@ -883,6 +998,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "consistency",
       "Two Weeks Strong",
       "Maintained a 14-day streak",
+      "Fourteen days straight of completed daily goals.",
       "🏃",
       currentStreak,
       14
@@ -892,9 +1008,20 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "consistency",
       "Monthly Investor",
       "Maintained a 30-day streak",
+      "The ultimate habit — 30 consecutive days of daily goals.",
       "🏆",
       currentStreak,
       30
+    ),
+    make(
+      "daily_champion",
+      "consistency",
+      "Daily Champion",
+      "Completed the daily goal 7 times",
+      "Finish all 5 daily tasks on 7 separate days.",
+      "🎖️",
+      dailyGoalsCompleted,
+      7
     ),
 
     // Discovery
@@ -903,27 +1030,70 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "engagement",
       "Curator",
       "Liked 5 articles",
+      "Tap the heart on 5 articles you enjoy.",
       "❤️",
       likedCount,
       5
+    ),
+    make(
+      "heart_collector",
+      "engagement",
+      "Heart Collector",
+      "Liked 20 articles",
+      "Spread the love — like 20 articles total.",
+      "💖",
+      likedCount,
+      20
     ),
     make(
       "topic_explorer",
       "discovery",
       "Topic Explorer",
       "Read articles across 3 topics",
+      "Read stories from at least 3 different categories.",
       "🗺️",
       uniqueTopics,
       3
+    ),
+    make(
+      "topic_master",
+      "discovery",
+      "Topic Master",
+      "Read articles across 8 topics",
+      "Broaden your view — explore 8 different topics.",
+      "🧭",
+      uniqueTopics,
+      8
     ),
     make(
       "saver",
       "discovery",
       "Saver",
       "Saved 5 articles",
+      "Bookmark 5 articles to read later.",
       "🔖",
       totalSaved,
       5
+    ),
+    make(
+      "super_saver",
+      "discovery",
+      "Super Saver",
+      "Saved 20 articles",
+      "Build your library — save 20 articles.",
+      "📥",
+      totalSaved,
+      20
+    ),
+    make(
+      "briefing_master",
+      "discovery",
+      "Briefing Master",
+      "Completed 10 Pocket Briefings",
+      "Finish reading 10 unique Pocket Briefing summaries.",
+      "⚡",
+      uniqueBriefings,
+      10
     ),
 
     // Engagement
@@ -932,15 +1102,37 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "engagement",
       "Market Analyst",
       "Earned 500 XP",
+      "Earn XP by reading, liking, saving, and completing daily goals.",
       "📊",
       totalXP,
       500
+    ),
+    make(
+      "xp_hunter",
+      "engagement",
+      "XP Hunter",
+      "Earned 1,000 XP",
+      "Stay active — rack up 1,000 lifetime XP.",
+      "🏅",
+      totalXP,
+      1000
+    ),
+    make(
+      "portfolio_scholar",
+      "engagement",
+      "Portfolio Scholar",
+      "Earned 2,000 XP",
+      "Elite engagement — reach 2,000 lifetime XP.",
+      "🎓",
+      totalXP,
+      2000
     ),
     make(
       "on_fire",
       "engagement",
       "On Fire",
       "Opened 50 articles total",
+      "Momentum matters — open 50 unique articles.",
       "🔥",
       totalArticlesRead,
       50

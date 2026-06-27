@@ -73,6 +73,58 @@ body {
   display: none;
 }
 
+/* Pocket Finance custom scrollbar — gradient thumb, soft glow */
+@keyframes pf-scroll-thumb-shift {
+  0%,
+  100% {
+    background-position: 0% 0%;
+    box-shadow: 0 0 6px rgba(0, 198, 198, 0.25);
+  }
+  50% {
+    background-position: 0% 100%;
+    box-shadow: 0 0 10px rgba(124, 108, 248, 0.35);
+  }
+}
+
+html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide)),
+html.app-route :where(.overflow-y-auto.overscroll-contain:not(.scrollbar-hide)) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 198, 198, 0.55) rgba(255, 255, 255, 0.04);
+}
+
+html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide))::-webkit-scrollbar,
+html.app-route
+  :where(.overflow-y-auto.overscroll-contain:not(.scrollbar-hide))::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide))::-webkit-scrollbar-track,
+html.app-route
+  :where(.overflow-y-auto.overscroll-contain:not(.scrollbar-hide))::-webkit-scrollbar-track {
+  margin: 6px 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+}
+
+html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide))::-webkit-scrollbar-thumb,
+html.app-route
+  :where(.overflow-y-auto.overscroll-contain:not(.scrollbar-hide))::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, #7c6cf8 0%, #5b8ef0 45%, #00c6c6 100%);
+  background-size: 100% 200%;
+  animation: pf-scroll-thumb-shift 4s ease-in-out infinite;
+}
+
+html.app-route
+  :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide))::-webkit-scrollbar-thumb:hover,
+html.app-route
+  :where(.overflow-y-auto.overscroll-contain:not(.scrollbar-hide))::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9da8ff 0%, #6ba3ff 45%, #00e5e5 100%);
+  background-size: 100% 200%;
+}
+
 .tab-panel-active {
   opacity: 1;
   pointer-events: auto;
@@ -268,6 +320,87 @@ body {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+@keyframes streak-flame-flicker {
+  0%,
+  100% {
+    transform: scale(1) translateY(0);
+  }
+  35% {
+    transform: scale(1.04) translateY(-1px);
+  }
+  70% {
+    transform: scale(0.98) translateY(0.5px);
+  }
+}
+
+@keyframes streak-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes streak-day-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes streak-badge-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes streak-today-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+.streak-flame-animate {
+  animation: streak-flame-flicker 2.8s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.streak-glow-pulse {
+  animation: streak-glow-pulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.streak-day-complete {
+  animation: streak-day-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.streak-badge-pop {
+  animation: streak-badge-pop 640ms cubic-bezier(0.22, 1, 0.36, 1) 200ms backwards;
+}
+
+.streak-today-pulse {
+  animation: streak-today-pulse 2s ease-in-out infinite;
 }
 
 @keyframes badge-unlock-pulse {

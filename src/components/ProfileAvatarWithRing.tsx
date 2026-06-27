@@ -10,6 +10,7 @@ const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 interface ProfileAvatarWithRingProps {
   initials: string;
   progression: LevelState;
+  imageUrl?: string | null;
   animateIn?: boolean;
 }
 
@@ -17,6 +18,7 @@ interface ProfileAvatarWithRingProps {
 export function ProfileAvatarWithRing({
   initials,
   progression,
+  imageUrl = null,
   animateIn = true,
 }: ProfileAvatarWithRingProps) {
   const gradId = useId().replace(/:/g, "");
@@ -119,15 +121,27 @@ export function ProfileAvatarWithRing({
       </svg>
 
       <div
-        className="absolute left-1/2 top-1/2 flex h-[58px] w-[58px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[22px] font-bold text-white"
+        className="absolute left-1/2 top-1/2 h-[58px] w-[58px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full"
         style={{
-          background:
-            "linear-gradient(145deg, rgba(59,110,245,0.82) 0%, rgba(0,198,198,0.52) 100%)",
+          background: imageUrl
+            ? undefined
+            : "linear-gradient(145deg, rgba(59,110,245,0.82) 0%, rgba(0,198,198,0.52) 100%)",
           boxShadow:
             "inset 0 1px 0 rgba(255,255,255,0.22), 0 4px 16px rgba(0,0,0,0.35)",
         }}
       >
-        {initials}
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-[22px] font-bold text-white">
+            {initials}
+          </span>
+        )}
       </div>
 
       <span

@@ -1,17 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Check, Lock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Info, Lock, X } from "lucide-react";
 import { AchievementIcon } from "@/components/icons/AchievementIcon";
 import {
   getAchievements,
   type Achievement,
   type AchievementCategory,
 } from "@/lib/progression";
-
-// ---------------------------------------------------------------------------
-// Types & constants
-// ---------------------------------------------------------------------------
 
 const CATEGORY_FILTERS: { id: AchievementCategory | "all"; label: string }[] =
   [
@@ -23,9 +19,6 @@ const CATEGORY_FILTERS: { id: AchievementCategory | "all"; label: string }[] =
     { id: "engagement", label: "Engagement" },
   ];
 
-/**
- * Sort order: unlocked first, then in-progress sorted by ratio desc, then not-started.
- */
 function sortAchievements(list: Achievement[]): Achievement[] {
   return [...list].sort((a, b) => {
     if (a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
@@ -35,7 +28,6 @@ function sortAchievements(list: Achievement[]): Achievement[] {
   });
 }
 
-/** Order that sections appear in the "All" grouped view. */
 const SECTION_ORDER: AchievementCategory[] = [
   "reading",
   "markets",
@@ -46,20 +38,10 @@ const SECTION_ORDER: AchievementCategory[] = [
 
 interface ProfileAchievementsProps {
   likedArticlesCount?: number;
-  /**
-   * When set, renders exactly 4 prioritised achievements (2 unlocked +
-   * 2 closest to completion). Omit for the full list.
-   */
   maxItems?: number;
-  /** Renders a "View all" button when provided. */
   onViewAll?: () => void;
-  /** Full-screen mode: shows category filter tabs. */
   showCategoryFilter?: boolean;
 }
-
-// ---------------------------------------------------------------------------
-// Prioritisation for preview (4 cards)
-// ---------------------------------------------------------------------------
 
 function buildPreview4(achievements: Achievement[]): Achievement[] {
   const unlocked = achievements.filter((a) => a.unlocked);
@@ -73,10 +55,6 @@ function buildPreview4(achievements: Achievement[]): Achievement[] {
   return result.slice(0, 4);
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 export function ProfileAchievements({
   likedArticlesCount = 0,
   maxItems,
@@ -86,6 +64,9 @@ export function ProfileAchievements({
   const [activeCategory, setActiveCategory] = useState<
     AchievementCategory | "all"
   >("all");
+  const [infoAchievement, setInfoAchievement] = useState<Achievement | null>(
+    null
+  );
 
   const allAchievements = useMemo(
     () => getAchievements({ likedArticlesCount }),
@@ -95,7 +76,9 @@ export function ProfileAchievements({
   const displayAchievements = useMemo(() => {
     if (maxItems) return buildPreview4(allAchievements);
     if (activeCategory === "all") return allAchievements;
-    return sortAchievements(allAchievements.filter((a) => a.category === activeCategory));
+    return sortAchievements(
+      allAchievements.filter((a) => a.category === activeCategory)
+    );
   }, [allAchievements, maxItems, activeCategory]);
 
   const unlockedCount = allAchievements.filter((a) => a.unlocked).length;
@@ -110,102 +93,119 @@ export function ProfileAchievements({
   }, [allAchievements]);
 
   return (
-    <section>
-      {/* Section header */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-[15px] font-bold text-white">Achievements</h3>
-          <p className="mt-0.5 text-[12px] text-zinc-500">
-            {unlockedCount} of {allAchievements.length} unlocked
-            {nextLocked && maxItems
-              ? ` · Next up: ${nextLocked.title}`
-              : nextLocked && !maxItems
+    <>
+      <section>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-[15px] font-bold text-white">Achievements</h3>
+            <p className="mt-0.5 text-[12px] text-zinc-500">
+              {unlockedCount} of {allAchievements.length} unlocked
+              {nextLocked && maxItems
                 ? ` · Next up: ${nextLocked.title}`
-                : ""}
-          </p>
+                : nextLocked && !maxItems
+                  ? ` · Next up: ${nextLocked.title}`
+                  : ""}
+            </p>
+          </div>
+          {onViewAll && (
+            <button
+              type="button"
+              data-no-drag
+              onClick={onViewAll}
+              className="text-[12px] font-semibold text-[#00C6C6] active:opacity-60"
+            >
+              View all
+            </button>
+          )}
         </div>
-        {onViewAll && (
-          <button
-            type="button"
-            data-no-drag
-            onClick={onViewAll}
-            className="text-[12px] font-semibold text-[#00C6C6] active:opacity-60"
-          >
-            View all
-          </button>
-        )}
-      </div>
 
-      {/* Category filter tabs (full-screen mode only) */}
-      {showCategoryFilter && (
-        <div className="-mx-5 mt-3 overflow-x-auto px-5">
-          <div className="flex gap-2 pb-1">
-            {CATEGORY_FILTERS.map((f) => {
-              const active = activeCategory === f.id;
+        {showCategoryFilter && (
+          <div className="-mx-5 mt-3 overflow-x-auto px-5 pf-scroll">
+            <div className="flex gap-2 pb-1">
+              {CATEGORY_FILTERS.map((f) => {
+                const active = activeCategory === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    data-no-drag
+                    onClick={() => setActiveCategory(f.id)}
+                    className="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors active:opacity-70"
+                    style={{
+                      backgroundColor: active
+                        ? "rgba(0,198,198,0.15)"
+                        : "rgba(255,255,255,0.05)",
+                      color: active ? "#00C6C6" : "rgba(255,255,255,0.42)",
+                      border: active
+                        ? "1px solid rgba(0,198,198,0.25)"
+                        : "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {showCategoryFilter && activeCategory === "all" ? (
+          <div className="mt-3 space-y-5">
+            {SECTION_ORDER.map((cat) => {
+              const group = sortAchievements(
+                allAchievements.filter((a) => a.category === cat)
+              );
+              if (group.length === 0) return null;
+              const catLabel =
+                CATEGORY_FILTERS.find((f) => f.id === cat)?.label ?? cat;
               return (
-                <button
-                  key={f.id}
-                  type="button"
-                  data-no-drag
-                  onClick={() => setActiveCategory(f.id)}
-                  className="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors active:opacity-70"
-                  style={{
-                    backgroundColor: active
-                      ? "rgba(0,198,198,0.15)"
-                      : "rgba(255,255,255,0.05)",
-                    color: active ? "#00C6C6" : "rgba(255,255,255,0.42)",
-                    border: active
-                      ? "1px solid rgba(0,198,198,0.25)"
-                      : "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  {f.label}
-                </button>
+                <div key={cat}>
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+                    {catLabel}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {group.map((a) => (
+                      <AchievementCard
+                        key={a.id}
+                        achievement={a}
+                        onInfo={() => setInfoAchievement(a)}
+                      />
+                    ))}
+                  </div>
+                </div>
               );
             })}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {displayAchievements.map((a) => (
+              <AchievementCard
+                key={a.id}
+                achievement={a}
+                onInfo={() => setInfoAchievement(a)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
-      {/* Full-screen "All" view: render grouped sections with headers */}
-      {showCategoryFilter && activeCategory === "all" ? (
-        <div className="mt-3 space-y-5">
-          {SECTION_ORDER.map((cat) => {
-            const group = sortAchievements(allAchievements.filter((a) => a.category === cat));
-            if (group.length === 0) return null;
-            const catLabel =
-              CATEGORY_FILTERS.find((f) => f.id === cat)?.label ?? cat;
-            return (
-              <div key={cat}>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-600">
-                  {catLabel}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {group.map((a) => (
-                    <AchievementCard key={a.id} achievement={a} />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        /* Flat grid: preview mode OR filtered-by-category view */
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {displayAchievements.map((a) => (
-            <AchievementCard key={a.id} achievement={a} />
-          ))}
-        </div>
+      {infoAchievement && (
+        <AchievementInfoSheet
+          achievement={infoAchievement}
+          onClose={() => setInfoAchievement(null)}
+        />
       )}
-    </section>
+    </>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Achievement card
-// ---------------------------------------------------------------------------
-
-function AchievementCard({ achievement: a }: { achievement: Achievement }) {
+function AchievementCard({
+  achievement: a,
+  onInfo,
+}: {
+  achievement: Achievement;
+  onInfo: () => void;
+}) {
   const pct = Math.min(100, Math.round((a.progress / a.required) * 100));
   const inProgress = !a.unlocked && a.progress > 0;
 
@@ -225,7 +225,6 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
         boxShadow: "inset 0 1px 0 rgba(255,255,255,.03)",
       }}
     >
-      {/* Left accent line — unlocked only */}
       {a.unlocked && (
         <div
           className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full"
@@ -236,10 +235,9 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
         />
       )}
 
-      {/* Top row: icon tile + status badge */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-1">
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-xl"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
           style={{
             background: a.unlocked
               ? "linear-gradient(135deg, rgba(59,110,245,0.22), rgba(0,198,198,0.16))"
@@ -254,32 +252,39 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
           <AchievementIcon id={a.id} size={17} unlocked={a.unlocked} />
         </div>
 
-        {a.unlocked ? (
-          <div
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-            style={{
-              background: "linear-gradient(135deg, #009faa 0%, #007080 100%)",
-            }}
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            data-no-drag
+            onClick={onInfo}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.06] text-zinc-400 active:bg-white/[0.12] active:text-white"
+            aria-label={`How to unlock ${a.title}`}
           >
-            <Check
-              className="h-[10px] w-[10px] text-white"
-              strokeWidth={3}
-            />
-          </div>
-        ) : (
-          <div
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-            style={{
-              backgroundColor: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.09)",
-            }}
-          >
-            <Lock className="h-[9px] w-[9px] text-zinc-600" />
-          </div>
-        )}
+            <Info className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+          {a.unlocked ? (
+            <div
+              className="flex h-5 w-5 items-center justify-center rounded-full"
+              style={{
+                background: "linear-gradient(135deg, #009faa 0%, #007080 100%)",
+              }}
+            >
+              <Check className="h-[10px] w-[10px] text-white" strokeWidth={3} />
+            </div>
+          ) : (
+            <div
+              className="flex h-5 w-5 items-center justify-center rounded-full"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.09)",
+              }}
+            >
+              <Lock className="h-[9px] w-[9px] text-zinc-600" />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Title */}
       <p
         className="mt-2 text-[12px] font-semibold leading-snug"
         style={{
@@ -291,7 +296,6 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
         {a.title}
       </p>
 
-      {/* Progress text or description */}
       {a.unlocked ? (
         <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
           {a.description}
@@ -302,7 +306,6 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
         </p>
       )}
 
-      {/* Progress bar — shown for in-progress locked achievements */}
       {inProgress && (
         <div
           className="mt-2 overflow-hidden rounded-full"
@@ -317,6 +320,112 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function AchievementInfoSheet({
+  achievement,
+  onClose,
+}: {
+  achievement: Achievement;
+  onClose: () => void;
+}) {
+  const pct = Math.min(
+    100,
+    Math.round((achievement.progress / achievement.required) * 100)
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center"
+      style={{ background: "rgba(3,3,5,0.72)", backdropFilter: "blur(6px)" }}
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-labelledby="achievement-info-title"
+        className="w-full max-w-sm animate-[feed-search-result-in_320ms_cubic-bezier(0.22,1,0.36,1)_both] rounded-t-3xl border border-white/[0.10] px-5 pb-8 pt-5 sm:rounded-3xl"
+        style={{
+          background:
+            "linear-gradient(165deg, rgba(14,16,36,0.98) 0%, rgba(6,7,12,0.99) 100%)",
+          paddingBottom: "max(2rem, env(safe-area-inset-bottom))",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(59,110,245,0.22), rgba(0,198,198,0.16))",
+                border: "1px solid rgba(0,198,198,0.22)",
+                color: "#00C6C6",
+              }}
+            >
+              <AchievementIcon
+                id={achievement.id}
+                size={20}
+                unlocked={achievement.unlocked}
+              />
+            </div>
+            <div>
+              <p
+                id="achievement-info-title"
+                className="text-[16px] font-bold text-white"
+              >
+                {achievement.title}
+              </p>
+              <p className="mt-0.5 text-[11px] text-zinc-500">
+                {achievement.unlocked ? "Unlocked" : `${pct}% complete`}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            data-no-drag
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] text-zinc-400 active:bg-white/[0.10]"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#00C6C6]">
+            How to unlock
+          </p>
+          <p className="mt-2 text-[14px] leading-relaxed text-zinc-300">
+            {achievement.howToUnlock}
+          </p>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">
+          <span className="text-[12px] text-zinc-500">Progress</span>
+          <span className="text-[13px] font-semibold tabular-nums text-white">
+            {achievement.progress} / {achievement.required}
+          </span>
+        </div>
+
+        {!achievement.unlocked && (
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#7C6CF8] to-[#00C6C6] transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
