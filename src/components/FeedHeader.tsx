@@ -32,8 +32,11 @@ export function FeedHeader({
   const { marketFilters, sectorFilters, searchQuery, clearFilters } = useApp();
   const navRef = useRef<HTMLElement>(null);
   const tabRefs = useRef<Partial<Record<FeedMode, HTMLButtonElement>>>({});
+  const feedModeRef = useRef(feedMode);
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
   const [indicatorReady, setIndicatorReady] = useState(false);
+
+  feedModeRef.current = feedMode;
 
   const filterLabels = getExplicitFilterLabels(
     marketFilters,
@@ -48,24 +51,27 @@ export function FeedHeader({
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
-  const measureIndicator = useCallback((mode: FeedMode = feedMode) => {
+  const measureIndicator = useCallback((mode: FeedMode) => {
     const nav = navRef.current;
     const tab = tabRefs.current[mode];
     if (!nav || !tab) return;
 
     const navRect = nav.getBoundingClientRect();
     const tabRect = tab.getBoundingClientRect();
+    if (tabRect.width <= 0) return;
+
     setIndicator({
       left: tabRect.left - navRect.left,
       width: tabRect.width,
     });
-  }, [feedMode]);
+    setIndicatorReady(true);
+  }, []);
 
   useLayoutEffect(() => {
-    measureIndicator("forYou");
-    setIndicatorReady(true);
+    measureIndicator(feedModeRef.current);
+    // Mount-only — feedMode is the initial value; tab changes animate via useEffect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [measureIndicator]);
 
   useEffect(() => {
     const syncIndicator = () => measureIndicator(feedMode);
@@ -82,13 +88,36 @@ export function FeedHeader({
   }, [feedMode, measureIndicator]);
 
   useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const ro = new ResizeObserver(() => measureIndicator(feedModeRef.current));
+    ro.observe(nav);
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          measureIndicator(feedModeRef.current);
+        }
+      },
+      { threshold: 0 }
+    );
+    io.observe(nav);
+
+    return () => {
+      ro.disconnect();
+      io.disconnect();
+    };
+  }, [measureIndicator]);
+
+  useEffect(() => {
     const onResize = () => measureIndicator(feedMode);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [feedMode, measureIndicator]);
 
   return (
-    <header className={`relative isolate ${className}`}>
+    <header className={`relative z-50 ${className}`}>
       <div
         className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}

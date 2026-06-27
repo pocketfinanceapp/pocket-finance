@@ -150,7 +150,10 @@ export function NewsFeed({
   }, [navigation?.navTab, feedMode, refreshTopics]);
 
   useEffect(() => {
-    if (feedMode === displayedFeedMode) return;
+    if (feedMode === displayedFeedMode) {
+      setTabContentVisible(true);
+      return;
+    }
 
     setTabContentVisible(false);
     let fadeInTimer: number | undefined;
@@ -599,19 +602,18 @@ export function NewsFeed({
 
           <div
             data-feed-column
-            className="relative isolate shrink-0 overflow-hidden bg-[#0a0a0a]"
+            className="relative shrink-0 overflow-hidden bg-[#0a0a0a]"
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,
               touchAction: "none",
-              transform: "translateZ(0)",
             }}
           >
             <FeedHeader
               feedMode={feedMode}
               onFeedModeChange={setFeedMode}
               onOpenSearch={() => setSearchOpen(true)}
-              className="pointer-events-auto absolute left-0 right-0 top-0 z-40"
+              className="pointer-events-auto absolute inset-x-0 top-0"
             />
 
             {verticalFeedArticles.length === 0 ? (

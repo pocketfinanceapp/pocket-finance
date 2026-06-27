@@ -29,7 +29,6 @@ function TabPanels({
   const { activeTab, navTab, navigate } = useNavigation();
   const { setMarketFilters, ensureMarketsLoaded, ensureWatchlistLoaded } =
     useApp();
-  const [fadeKey, setFadeKey] = useState(0);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [profileSubPageOpen, setProfileSubPageOpen] = useState(false);
 
@@ -38,10 +37,6 @@ function TabPanels({
     ensureWatchlistLoaded();
     recordAppVisit();
   }, [ensureMarketsLoaded, ensureWatchlistLoaded]);
-
-  useEffect(() => {
-    setFadeKey((k) => k + 1);
-  }, [activeTab]);
 
   const openMarketFeed = useCallback(
     (market: MarketFilter) => {
@@ -57,7 +52,7 @@ function TabPanels({
   return (
     <MobilePageShell activeTab={navTab} hideBottomNav={hideBottomNav}>
       <div className="relative h-full w-full">
-        <TabPanel active={activeTab === "home"} fadeKey={fadeKey}>
+        <TabPanel active={activeTab === "home"}>
           <FeedErrorBoundary>
             <NewsFeed
               initialArticles={initialArticles}
@@ -69,22 +64,22 @@ function TabPanels({
           </FeedErrorBoundary>
         </TabPanel>
 
-        <TabPanel active={activeTab === "markets"} fadeKey={fadeKey}>
+        <TabPanel active={activeTab === "markets"}>
           <MarketsPage
             onOpenMarketFeed={openMarketFeed}
             articles={initialArticles}
           />
         </TabPanel>
 
-        <TabPanel active={activeTab === "browse"} fadeKey={fadeKey}>
+        <TabPanel active={activeTab === "browse"}>
           <BrowsePage articles={initialArticles} />
         </TabPanel>
 
-        <TabPanel active={activeTab === "watchlist"} fadeKey={fadeKey}>
+        <TabPanel active={activeTab === "watchlist"}>
           <WatchlistPage />
         </TabPanel>
 
-        <TabPanel active={activeTab === "profile"} fadeKey={fadeKey}>
+        <TabPanel active={activeTab === "profile"}>
           <ProfilePage
             onClose={() => navigate("home")}
             onSubPageChange={setProfileSubPageOpen}
@@ -97,16 +92,13 @@ function TabPanels({
 
 function TabPanel({
   active,
-  fadeKey,
   children,
 }: {
   active: boolean;
-  fadeKey: number;
   children: React.ReactNode;
 }) {
   return (
     <div
-      key={active ? `active-${fadeKey}` : undefined}
       className={`tab-panel absolute inset-0 h-full w-full ${
         active ? "tab-panel-active" : "tab-panel-hidden"
       }`}
