@@ -93,7 +93,7 @@ export function FeedHeader({
         <div className="h-10 w-10 shrink-0" aria-hidden />
         <nav
           ref={navRef}
-          className="relative flex min-h-[48px] items-center justify-center gap-1 py-3 sm:gap-2"
+          className="relative flex min-h-[36px] items-center justify-center gap-0.5 py-1.5 sm:gap-1"
         >
           {FEED_TABS.map((tab) => {
             const active = feedMode === tab.id;
@@ -107,7 +107,7 @@ export function FeedHeader({
                 data-no-drag
                 onPointerDown={stop}
                 onClick={() => onFeedModeChange(tab.id)}
-                className={`relative flex min-h-[48px] shrink-0 items-center whitespace-nowrap px-4 text-[16px] transition-all duration-200 ${TAB_SHADOW} ${
+                className={`relative flex min-h-[36px] shrink-0 items-center whitespace-nowrap px-2.5 text-[13px] transition-all duration-200 ${TAB_SHADOW} ${
                   active
                     ? "font-semibold text-white"
                     : "font-normal text-white/45"
@@ -119,7 +119,7 @@ export function FeedHeader({
           })}
           <span
             aria-hidden
-            className={`pointer-events-none absolute bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] transition-[left,width] duration-200 ease-out ${
+            className={`pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] transition-[left,width] duration-200 ease-out ${
               indicatorReady && indicator.width > 0 ? "opacity-100" : "opacity-0"
             }`}
             style={{
