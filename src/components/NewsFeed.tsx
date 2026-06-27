@@ -199,6 +199,11 @@ export function NewsFeed({
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
+  useEffect(() => {
+    resetFeedIndex();
+    setDragY(0);
+  }, [resetFeedIndex]);
+
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const axis = useRef<LockedAxis>(null);
@@ -680,7 +685,7 @@ export function NewsFeed({
                       <FeedCard
                         article={a}
                         active={i === feedIndex}
-                        showBottomChrome={i === feedIndex && !isDragging}
+                        showBottomChrome
                         isFirstCard={i === 0}
                         showTrendingLabel={displayedFeedMode === "trending"}
                         onOpenComments={() => setCommentsOpen(true)}

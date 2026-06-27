@@ -373,15 +373,7 @@ export function FeedCard({
       )}
 
       {showBottomChrome && (
-      <div
-        className="absolute inset-x-0 bottom-0 z-20"
-        style={{
-          contain: "paint",
-          transform: "translate3d(0, 0, 0)",
-          WebkitBackfaceVisibility: "hidden",
-          backfaceVisibility: "hidden",
-        }}
-      >
+      <div className="absolute inset-x-0 bottom-0 z-20">
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[50%]"
           style={{

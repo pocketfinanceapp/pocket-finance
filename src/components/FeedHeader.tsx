@@ -62,21 +62,24 @@ export function FeedHeader({
   }, [feedMode]);
 
   useLayoutEffect(() => {
-    measureIndicator(feedMode);
+    measureIndicator("forYou");
     setIndicatorReady(true);
-    // Initial layout only — tab switches animate via useEffect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!indicatorReady) return;
+    const syncIndicator = () => measureIndicator(feedMode);
 
-    const frame = requestAnimationFrame(() => {
-      measureIndicator(feedMode);
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(syncIndicator);
     });
 
-    return () => cancelAnimationFrame(frame);
-  }, [feedMode, indicatorReady, measureIndicator]);
+    if (document.fonts?.ready) {
+      void document.fonts.ready.then(syncIndicator);
+    }
+
+    return () => cancelAnimationFrame(raf);
+  }, [feedMode, measureIndicator]);
 
   useEffect(() => {
     const onResize = () => measureIndicator(feedMode);

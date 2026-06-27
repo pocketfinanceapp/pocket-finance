@@ -187,6 +187,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const complete = isOnboardingComplete(userId);
         setOnboardingComplete(complete);
         if (complete) {
+          markOnboardingComplete(userId);
           setFollowedMarketsState(loadFollowedMarkets());
           setSectorInterestsState(loadSectorInterests());
         } else {
