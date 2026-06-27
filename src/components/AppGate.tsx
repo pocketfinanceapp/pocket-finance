@@ -6,10 +6,11 @@ import { AuthScreen } from "@/components/AuthScreen";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
+import { isOnboardingComplete } from "@/lib/onboarding";
 
 const SPLASH_MAX_MS = 2500;
 
-/** Auth + onboarding gate — renders children only when the user can use the app */
+/** Auth + onboarding gate — app shell stays mounted; overlays block interaction */
 export function AppGate({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading, isGuest } = useAuth();
   const { ready, onboardingComplete, syncAppUser } = useApp();
@@ -27,18 +28,35 @@ export function AppGate({ children }: { children: React.ReactNode }) {
   }, [user?.id, authLoading, syncAppUser]);
 
   const showSplash = !splashElapsed && (authLoading || !ready);
+  const showAuth = !showSplash && !user && !isGuest;
+  const onboardingDone =
+    onboardingComplete || (user ? isOnboardingComplete(user.id) : false);
+  const showOnboarding = !showSplash && Boolean(user) && !onboardingDone;
+  const appInteractive = !showSplash && !showAuth && !showOnboarding;
 
-  if (showSplash) {
-    return <AppBootSplash />;
-  }
+  useEffect(() => {
+    if (!appInteractive) return;
 
-  if (!user && !isGuest) {
-    return <AuthScreen />;
-  }
+    const raf = requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [appInteractive]);
 
-  if (user && !onboardingComplete) {
-    return <OnboardingFlow />;
-  }
+  return (
+    <>
+      <div className={appInteractive ? undefined : "pointer-events-none"}>
+        {children}
+      </div>
 
-  return <>{children}</>;
+      {showSplash && (
+        <div className="fixed inset-0 z-[110]">
+          <AppBootSplash />
+        </div>
+      )}
+
+      {showAuth && <AuthScreen />}
+      {showOnboarding && <OnboardingFlow />}
+    </>
+  );
 }

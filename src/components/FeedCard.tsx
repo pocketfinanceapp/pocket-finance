@@ -44,9 +44,9 @@ function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
   return (
     <>
       <div
-        className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-32 bg-gradient-to-b ${
-          soft ? "from-black/55 via-black/25" : "from-black/75 via-black/40"
-        } to-transparent`}
+        className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-16 bg-gradient-to-b ${
+          soft ? "from-black/35 to-transparent" : "from-black/45 to-transparent"
+        }`}
       />
       <div
         className="pointer-events-none absolute inset-0 z-[1] mix-blend-soft-light"
@@ -251,7 +251,7 @@ export function FeedCard({
             src={article.imageUrl}
             alt=""
             fill
-            className={`absolute inset-0 h-full w-full object-cover contrast-[1.02] saturate-[0.92] ${
+            className={`absolute inset-0 h-full w-full object-cover object-top contrast-[1.02] saturate-[0.92] ${
               useSoftOverlay ? "brightness-[0.84]" : "brightness-[0.72]"
             }`}
             sizes="100vw"

@@ -111,7 +111,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [feedJumpArticleId, setFeedJumpArticleId] = useState<string | null>(
     null
   );
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return isOnboardingComplete();
+  });
   const [appUserId, setAppUserId] = useState<string | null>(null);
   const [watchlistLoaded, setWatchlistLoaded] = useState(false);
   const [marketsSnapshot, setMarketsSnapshot] =

@@ -119,13 +119,20 @@ export function FeedHeader({
   return (
     <header className={`relative z-50 ${className}`}>
       <div
-        className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 sm:px-4"
+        className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/35 to-transparent"
+        style={{
+          height: "calc(max(0.625rem, env(safe-area-inset-top)) + 2.75rem)",
+        }}
+        aria-hidden
+      />
+      <div
+        className="relative z-10 grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
         <div className="h-10 w-10 shrink-0" aria-hidden />
         <nav
           ref={navRef}
-          className="relative flex items-end justify-center gap-3 py-1"
+          className="relative flex items-end justify-center gap-3 pb-0.5 pt-1"
         >
           {FEED_TABS.map((tab) => {
             const active = feedMode === tab.id;

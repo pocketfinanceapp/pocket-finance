@@ -8,8 +8,8 @@
   --pocket-blue: #3B6EF5;
   --app-vh: 100vh;
   --app-feed-vh: calc(100vh - 65px);
-  /* Header + safe-area band — cards must not paint above this line */
-  --feed-header-zone: calc(max(0.625rem, env(safe-area-inset-top)) + 3.625rem);
+  /* Header + safe-area band — matches FeedHeader scrim height */
+  --feed-header-zone: calc(max(0.625rem, env(safe-area-inset-top)) + 2.75rem);
 }
 
 @supports (height: 100svh) {
@@ -76,14 +76,12 @@ body {
 .tab-panel-active {
   opacity: 1;
   pointer-events: auto;
-  visibility: visible;
   z-index: 10;
 }
 
 .tab-panel-hidden {
   opacity: 0;
   pointer-events: none;
-  visibility: hidden;
   z-index: 0;
 }
 
