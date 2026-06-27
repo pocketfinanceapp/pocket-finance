@@ -89,6 +89,8 @@ export function NewsFeed({
   const navigation = useNavigationOptional();
 
   const [feedMode, setFeedMode] = useState<FeedMode>("forYou");
+  const [displayedFeedMode, setDisplayedFeedMode] = useState<FeedMode>("forYou");
+  const [tabContentVisible, setTabContentVisible] = useState(true);
   const [articleOverride, setArticleOverride] = useState<NewsArticle | null>(
     null
   );
@@ -147,11 +149,28 @@ export function NewsFeed({
     prevNavTabRef.current = navTab;
   }, [navigation?.navTab, feedMode, refreshTopics]);
 
+  useEffect(() => {
+    if (feedMode === displayedFeedMode) return;
+
+    setTabContentVisible(false);
+    let fadeInTimer: number | undefined;
+
+    const fadeOutTimer = window.setTimeout(() => {
+      setDisplayedFeedMode(feedMode);
+      fadeInTimer = window.setTimeout(() => setTabContentVisible(true), 50);
+    }, 200);
+
+    return () => {
+      window.clearTimeout(fadeOutTimer);
+      if (fadeInTimer !== undefined) window.clearTimeout(fadeInTimer);
+    };
+  }, [feedMode, displayedFeedMode]);
+
   const filteredArticles = useMemo(
     () =>
       buildFeedArticles(
         allArticles,
-        feedMode,
+        displayedFeedMode,
         followedMarkets,
         marketFilters,
         sectorFilters,
@@ -161,7 +180,7 @@ export function NewsFeed({
       ),
     [
       allArticles,
-      feedMode,
+      displayedFeedMode,
       followedMarkets,
       marketFilters,
       sectorFilters,
@@ -214,7 +233,7 @@ export function NewsFeed({
   );
 
   const verticalFeedArticles =
-    feedMode === "trending" ? trendingArticles : filteredArticles;
+    displayedFeedMode === "trending" ? trendingArticles : filteredArticles;
   const swipeArticle =
     verticalFeedArticles[feedIndex] ?? verticalFeedArticles[0];
   const article = articleOverride ?? swipeArticle;
@@ -591,8 +610,12 @@ export function NewsFeed({
             />
 
             {verticalFeedArticles.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-                {feedMode === "following" && favouriteTopics.length === 0 ? (
+              <div
+                className={`flex h-full flex-col items-center justify-center px-8 text-center transition-opacity duration-200 ease-out ${
+                  tabContentVisible ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {displayedFeedMode === "following" && favouriteTopics.length === 0 ? (
                   <>
                     <p className="text-lg font-semibold text-white">
                       Personalise your feed — select topics in your Profile
@@ -609,12 +632,12 @@ export function NewsFeed({
                 ) : (
                   <>
                     <p className="text-lg font-semibold text-white">
-                      {feedMode === "following"
+                      {displayedFeedMode === "following"
                         ? "No stories match your topics"
                         : "No stories match"}
                     </p>
                     <p className="mt-2 text-sm text-zinc-500">
-                      {feedMode === "following"
+                      {displayedFeedMode === "following"
                         ? "Try adding more topics in your Profile."
                         : "Adjust filters or search to see more news."}
                     </p>
@@ -622,19 +645,23 @@ export function NewsFeed({
                       type="button"
                       data-no-drag
                       onClick={() =>
-                        feedMode === "following"
+                        displayedFeedMode === "following"
                           ? openProfile()
                           : setFilterOpen(true)
                       }
                       className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
                     >
-                      {feedMode === "following" ? "Go to Profile" : "Open filters"}
+                      {displayedFeedMode === "following" ? "Go to Profile" : "Open filters"}
                     </button>
                   </>
                 )}
               </div>
             ) : (
-              <div className="feed-column-viewport">
+              <div
+                className={`feed-column-viewport transition-opacity duration-200 ease-out ${
+                  tabContentVisible ? "opacity-100" : "opacity-0"
+                }`}
+              >
                 <div
                   className={`w-full touch-none ${trackTransition}`}
                   style={{
@@ -655,7 +682,7 @@ export function NewsFeed({
                         active={i === feedIndex}
                         showBottomChrome={i === feedIndex && !isDragging}
                         isFirstCard={i === 0}
-                        showTrendingLabel={feedMode === "trending"}
+                        showTrendingLabel={displayedFeedMode === "trending"}
                         onOpenComments={() => setCommentsOpen(true)}
                         commentRefreshKey={commentRefreshKey}
                       />

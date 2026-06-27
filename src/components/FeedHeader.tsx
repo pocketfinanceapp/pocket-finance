@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import type { FeedMode } from "@/lib/filterArticles";
 import { useApp } from "@/context/AppContext";
 import {
@@ -29,6 +30,9 @@ export function FeedHeader({
   className = "",
 }: FeedHeaderProps) {
   const { marketFilters, sectorFilters, searchQuery, clearFilters } = useApp();
+  const navRef = useRef<HTMLElement>(null);
+  const tabRefs = useRef<Partial<Record<FeedMode, HTMLButtonElement>>>({});
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
   const filterLabels = getExplicitFilterLabels(
     marketFilters,
@@ -43,31 +47,66 @@ export function FeedHeader({
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
+  useLayoutEffect(() => {
+    const updateIndicator = () => {
+      const nav = navRef.current;
+      const tab = tabRefs.current[feedMode];
+      if (!nav || !tab) return;
+
+      const navRect = nav.getBoundingClientRect();
+      const tabRect = tab.getBoundingClientRect();
+      setIndicator({
+        left: tabRect.left - navRect.left,
+        width: tabRect.width,
+      });
+    };
+
+    updateIndicator();
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [feedMode]);
+
   return (
     <header className={`relative isolate ${className}`}>
       <div
-        className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 pb-1 sm:px-4"
+        className="relative grid grid-cols-[40px_1fr_40px] items-center gap-1 px-3 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
         <div className="h-10 w-10 shrink-0" aria-hidden />
-        <nav className="flex items-center justify-center gap-3 overflow-hidden sm:gap-4">
-          {FEED_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              data-no-drag
-              onPointerDown={stop}
-              onClick={() => onFeedModeChange(tab.id)}
-              className={`relative shrink-0 whitespace-nowrap pb-2 text-[11px] font-semibold tracking-wide sm:text-[12px] ${TAB_SHADOW} ${
-                feedMode === tab.id ? "text-white" : "text-white/45"
-              }`}
-            >
-              {tab.label}
-              {feedMode === tab.id && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
-              )}
-            </button>
-          ))}
+        <nav
+          ref={navRef}
+          className="relative flex items-center justify-center gap-1 overflow-hidden py-3 sm:gap-2"
+        >
+          {FEED_TABS.map((tab) => {
+            const active = feedMode === tab.id;
+            return (
+              <button
+                key={tab.id}
+                ref={(el) => {
+                  if (el) tabRefs.current[tab.id] = el;
+                }}
+                type="button"
+                data-no-drag
+                onPointerDown={stop}
+                onClick={() => onFeedModeChange(tab.id)}
+                className={`relative shrink-0 whitespace-nowrap px-4 text-base transition-all duration-200 ${TAB_SHADOW} ${
+                  active
+                    ? "font-semibold text-white"
+                    : "font-normal text-white/45"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] transition-all duration-200 ease-out"
+            style={{
+              left: indicator.left,
+              width: indicator.width,
+            }}
+          />
         </nav>
         <button
           type="button"
