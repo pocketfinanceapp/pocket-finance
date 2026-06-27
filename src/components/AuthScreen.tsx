@@ -8,6 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 type AuthMode = "signIn" | "signUp";
 type AuthView = "form" | "checkInbox";
 
+const REMEMBERED_EMAIL_KEY = "pf_remembered_email";
+
 export function AuthScreen() {
   const {
     signIn,
@@ -23,6 +25,7 @@ export function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [confirmedEmail, setConfirmedEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +39,18 @@ export function AuthScreen() {
       setError(null);
     }
   }, [authBanner]);
+
+  useEffect(() => {
+    try {
+      const savedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberMe(true);
+      }
+    } catch {
+      /* ignore storage errors */
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +69,19 @@ export function AuthScreen() {
         }
       } else {
         const result = await signIn(email.trim(), password);
-        if (result.error) setError(result.error);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          try {
+            if (rememberMe) {
+              localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
+            } else {
+              localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+            }
+          } catch {
+            /* ignore storage errors */
+          }
+        }
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -257,6 +284,18 @@ export function AuthScreen() {
             required
             minLength={6}
           />
+
+          {!isSignUp && (
+            <label className="mt-3 flex cursor-pointer items-center gap-2.5">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 shrink-0 rounded border-white/20 bg-white/[0.05] accent-[#00C6C6] focus:ring-2 focus:ring-[#3B6EF5]/40 focus:ring-offset-0"
+              />
+              <span className="text-sm text-zinc-400">Remember me</span>
+            </label>
+          )}
 
           {error && (
             <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
