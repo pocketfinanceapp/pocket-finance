@@ -695,7 +695,7 @@ function TopicsSubPage({
               <p className="text-[13px] font-semibold text-white">Your feed</p>
               <p className="mt-0.5 text-[12px] leading-relaxed text-zinc-500">
                 Selected topics shape the Following tab and help personalise
-                your Discover recommendations.
+                your Explore recommendations.
               </p>
             </div>
           </div>

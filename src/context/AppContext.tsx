@@ -36,6 +36,7 @@ import {
 import { resolveArticleTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
 import {
+  grantAchievementRewards,
   initSessionSnapshot,
   migrateActivityData,
   recordActivityEvent,
@@ -231,6 +232,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Capture session snapshot after all Supabase data is loaded so the
       // curator achievement (liked count) is accurate from the start.
       initSessionSnapshot({ likedArticlesCount: liked });
+      grantAchievementRewards({ likedArticlesCount: liked });
     },
     [appUserId, watchlistLoaded]
   );

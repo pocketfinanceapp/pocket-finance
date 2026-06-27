@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
 interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
   title?: string;
-  children: React.ReactNode;
+  children: ReactNode;
+  /** Fixed footer outside scroll area (e.g. comment input) */
+  footer?: ReactNode;
   tall?: boolean;
 }
 
@@ -16,6 +18,7 @@ export function BottomSheet({
   onClose,
   title,
   children,
+  footer,
   tall,
 }: BottomSheetProps) {
   const [mounted, setMounted] = useState(false);
@@ -56,18 +59,17 @@ export function BottomSheet({
         onClick={onClose}
       />
       <div
-        className={`relative mx-auto w-full max-w-mobile rounded-t-3xl border-t border-white/10 bg-[#111111] shadow-2xl transition-transform ${
+        className={`relative mx-auto flex w-full max-w-mobile flex-col rounded-t-3xl border-t border-white/10 bg-[#111111] shadow-2xl transition-transform ${
           entered
             ? "translate-y-0 duration-300 ease-out"
             : "translate-y-full duration-200 ease-in"
         } ${tall ? "max-h-[88dvh]" : "max-h-[75dvh]"}`}
-        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex shrink-0 justify-center pt-3 pb-1">
           <div className="h-1 w-10 rounded-full bg-white/20" />
         </div>
         {title && (
-          <div className="flex items-center justify-between px-5 pb-3">
+          <div className="flex shrink-0 items-center justify-between px-5 pb-3">
             <h2 className="text-lg font-bold text-white">{title}</h2>
             <button
               type="button"
@@ -79,7 +81,19 @@ export function BottomSheet({
             </button>
           </div>
         )}
-        <div className="overflow-y-auto overscroll-contain">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
+        {footer ? (
+          <div
+            className="shrink-0 border-t border-white/10 bg-[#111111] px-4 pt-3"
+            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))" }}
+          >
+            {footer}
+          </div>
+        ) : (
+          <div style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))" }} />
+        )}
       </div>
     </div>
   );

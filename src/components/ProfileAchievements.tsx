@@ -15,16 +15,15 @@ const CATEGORY_FILTERS: { id: AchievementCategory | "all"; label: string }[] =
     { id: "reading", label: "Reading" },
     { id: "markets", label: "Markets" },
     { id: "consistency", label: "Consistency" },
-    { id: "discovery", label: "Discovery" },
+    { id: "discovery", label: "Explore" },
     { id: "engagement", label: "Engagement" },
   ];
 
 function sortAchievements(list: Achievement[]): Achievement[] {
   return [...list].sort((a, b) => {
     if (a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
-    const ra = a.required > 0 ? a.progress / a.required : 0;
-    const rb = b.required > 0 ? b.progress / b.required : 0;
-    return rb - ra;
+    if (a.required !== b.required) return a.required - b.required;
+    return a.xpReward - b.xpReward;
   });
 }
 
@@ -46,7 +45,7 @@ interface ProfileAchievementsProps {
 function buildPreview4(achievements: Achievement[]): Achievement[] {
   const unlocked = achievements.filter((a) => a.unlocked);
   const locked = [...achievements.filter((a) => !a.unlocked)].sort(
-    (a, b) => b.progress / b.required - a.progress / a.required
+    (a, b) => a.required - b.required
   );
   const result: Achievement[] = [
     ...unlocked.slice(0, 2),
@@ -296,6 +295,15 @@ function AchievementCard({
         {a.title}
       </p>
 
+      <p
+        className="mt-0.5 text-[10px] font-medium"
+        style={{
+          color: a.unlocked ? "rgba(0,198,198,0.75)" : "rgba(255,255,255,0.35)",
+        }}
+      >
+        {a.unlocked ? `+${a.xpReward} XP earned` : `+${a.xpReward} XP`}
+      </p>
+
       {a.unlocked ? (
         <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
           {a.description}
@@ -408,6 +416,13 @@ function AchievementInfoSheet({
           <p className="mt-2 text-[14px] leading-relaxed text-zinc-300">
             {achievement.howToUnlock}
           </p>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">
+          <span className="text-[12px] text-zinc-500">XP reward</span>
+          <span className="text-[13px] font-semibold tabular-nums text-[#00C6C6]">
+            +{achievement.xpReward} XP
+          </span>
         </div>
 
         <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">

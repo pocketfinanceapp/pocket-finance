@@ -48,7 +48,7 @@ export function FilterPanel({ open, onClose }: FilterPanelProps) {
   } = useApp();
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Discover" tall>
+    <BottomSheet open={open} onClose={onClose} title="Explore" tall>
       <div className="space-y-6 px-5 pb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />

@@ -257,6 +257,47 @@ export function AchievementIcon({
           <path d="M12 3v16" stroke={stroke} strokeWidth="1.75" />
         </svg>
       );
+    case "marathon_reader":
+    case "library_legend":
+      return (
+        <svg {...common}>
+          <path d="M4 6h16v14H4z" stroke={stroke} strokeWidth="1.75" />
+          <path d="M8 6v14M12 10h4M12 14h4" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "ticker_hunter":
+    case "portfolio_architect":
+      return (
+        <svg {...common}>
+          <path d="M4 18l4-6 4 3 5-8 3 5" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="18" cy="6" r="2" stroke={stroke} strokeWidth="1.75" />
+        </svg>
+      );
+    case "goal_machine":
+    case "iron_will":
+    case "quarterly_devotee":
+      return (
+        <svg {...common}>
+          <path d="M12 3l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4z" stroke={stroke} strokeWidth="1.75" strokeLinejoin="round" />
+        </svg>
+      );
+    case "briefing_sage":
+    case "polymath":
+    case "archive_keeper":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" stroke={stroke} strokeWidth="1.75" />
+          <path d="M12 8v4l3 2" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+      );
+    case "super_curator":
+    case "xp_titan":
+    case "xp_legend":
+      return (
+        <svg {...common}>
+          <path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6l3-6z" stroke={stroke} strokeWidth="1.75" strokeLinejoin="round" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>

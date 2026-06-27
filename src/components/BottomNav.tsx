@@ -85,14 +85,6 @@ export function BottomNav({ active }: BottomNavProps) {
     >
       <div className="grid h-full w-full grid-cols-5 items-end pb-1">
         <NavItem
-          label="Home"
-          active={homeActive}
-          onClick={() => navigate("home")}
-        >
-          <HomeIcon active={homeActive} />
-        </NavItem>
-
-        <NavItem
           label="Markets"
           active={marketsActive}
           onClick={() => navigate("markets")}
@@ -104,17 +96,6 @@ export function BottomNav({ active }: BottomNavProps) {
         </NavItem>
 
         <NavItem
-          label="Discover"
-          active={browseActive}
-          onClick={() => navigate("browse")}
-        >
-          <Compass
-            className={`h-[26px] w-[26px] ${browseActive ? "text-[#00C6C6]" : "text-white/45"}`}
-            strokeWidth={browseActive ? 2.5 : 2}
-          />
-        </NavItem>
-
-        <NavItem
           label="Watchlist"
           active={watchlistActive}
           onClick={() => navigate("watchlist")}
@@ -122,6 +103,26 @@ export function BottomNav({ active }: BottomNavProps) {
           <Bookmark
             className={`h-[26px] w-[26px] ${watchlistActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={watchlistActive ? 2.5 : 2}
+          />
+        </NavItem>
+
+        <NavItem
+          label="Home"
+          active={homeActive}
+          onClick={() => navigate("home")}
+          center
+        >
+          <HomeIcon active={homeActive} />
+        </NavItem>
+
+        <NavItem
+          label="Explore"
+          active={browseActive}
+          onClick={() => navigate("browse")}
+        >
+          <Compass
+            className={`h-[26px] w-[26px] ${browseActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            strokeWidth={browseActive ? 2.5 : 2}
           />
         </NavItem>
 
@@ -167,20 +168,36 @@ function NavItem({
   label,
   active,
   onClick,
+  center = false,
 }: {
   children: React.ReactNode;
   label: string;
   active: boolean;
   onClick: () => void;
+  center?: boolean;
 }) {
   return (
     <button
       type="button"
       data-no-drag
       onClick={onClick}
-      className="flex flex-col items-center justify-end gap-0.5 pb-0.5 transition-opacity active:opacity-70"
+      className={`flex flex-col items-center justify-end gap-0.5 pb-0.5 transition-opacity active:opacity-70 ${
+        center ? "-mt-1" : ""
+      }`}
     >
-      {children}
+      {center ? (
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-colors ${
+            active
+              ? "bg-gradient-to-br from-[#3B6EF5]/25 to-[#00C6C6]/20 ring-1 ring-[#00C6C6]/30"
+              : "bg-white/[0.04]"
+          }`}
+        >
+          {children}
+        </div>
+      ) : (
+        children
+      )}
       <span
         className={`text-[10px] font-medium tracking-wide ${
           active

@@ -66,14 +66,42 @@ export function CommentSheet({
     }
   };
 
+  const commentInput = (
+    <div className="flex items-end gap-2.5">
+      <div className="min-w-0 flex-1 rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-2.5 focus-within:border-pocket-teal/40 focus-within:bg-white/[0.08]">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && void submit()}
+          placeholder={user ? "Add a comment…" : "Sign in to comment"}
+          data-no-drag
+          disabled={!user || submitting}
+          className="w-full bg-transparent text-sm text-white placeholder:text-zinc-500 focus:outline-none disabled:opacity-50"
+        />
+      </div>
+      <button
+        type="button"
+        data-no-drag
+        onClick={() => void submit()}
+        disabled={submitting || !user || !input.trim()}
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pocket-teal text-black transition hover:bg-pocket-teal/90 active:scale-95 disabled:opacity-40"
+        aria-label="Send"
+      >
+        <Send className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
       title={article ? `Comments · ${article.ticker}` : "Comments"}
       tall
+      footer={commentInput}
     >
-      <ul className="max-h-[55dvh] space-y-4 overflow-y-auto px-5 pb-4">
+      <ul className="space-y-4 px-5 pb-4">
         {loading && comments.length === 0 && (
           <li className="py-8 text-center text-sm text-zinc-500">
             Loading comments…
@@ -106,29 +134,6 @@ export function CommentSheet({
           </li>
         ))}
       </ul>
-
-      <div className="flex gap-2 border-t border-white/10 px-4 py-3">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && void submit()}
-          placeholder="Add a comment..."
-          data-no-drag
-          disabled={!user}
-          className="flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-pocket-teal/50 focus:outline-none disabled:opacity-50"
-        />
-        <button
-          type="button"
-          data-no-drag
-          onClick={() => void submit()}
-          disabled={submitting || !user}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pocket-teal text-black active:scale-95 disabled:opacity-50"
-          aria-label="Send"
-        >
-          <Send className="h-4 w-4" />
-        </button>
-      </div>
     </BottomSheet>
   );
 }

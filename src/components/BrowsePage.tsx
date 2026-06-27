@@ -577,7 +577,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
         style={{ background: PAGE_BG, ...tabEnterStyle(tabEntered, 0) }}
       >
         <header className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-          <h1 className="text-[28px] font-bold tracking-tight text-white">Discover</h1>
+          <h1 className="text-[28px] font-bold tracking-tight text-white">Explore</h1>
           <p className="mt-0.5 text-[13px] text-zinc-500">
             Find the stories and themes moving markets
           </p>

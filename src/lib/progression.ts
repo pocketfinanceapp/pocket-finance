@@ -15,7 +15,8 @@ export type ActivityEventType =
   | "article_saved"
   | "stock_watchlisted"
   | "article_liked"
-  | "daily_goal_completed";
+  | "daily_goal_completed"
+  | "achievement_unlocked";
 
 export type ActivityEvent = {
   id: string;
@@ -120,6 +121,7 @@ export type Achievement = {
   icon: string;
   progress: number;
   required: number;
+  xpReward: number;
   unlocked: boolean;
 };
 
@@ -154,6 +156,7 @@ const XP_CONFIG: Record<ActivityEventType, number> = {
   stock_watchlisted: 8,
   article_liked: 6,
   daily_goal_completed: 35,
+  achievement_unlocked: 0,
 };
 
 export const DAILY_GOAL_XP_REWARD = XP_CONFIG.daily_goal_completed;
@@ -328,6 +331,8 @@ function buildRewardKey(
       return `article_liked:${metadata?.articleId ?? entityId}`;
     case "daily_goal_completed":
       return `daily_goal_completed:${entityId}`;
+    case "achievement_unlocked":
+      return `achievement_unlocked:${entityId}`;
   }
 }
 
@@ -439,6 +444,8 @@ export function recordActivityEvent(
   ) {
     evaluateDailyGoalCompletion();
   }
+
+  grantAchievementRewards();
 
   return event;
 }
@@ -822,7 +829,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     howToUnlock: string,
     icon: string,
     progress: number,
-    required: number
+    required: number,
+    xpReward: number
   ): Achievement {
     return {
       id,
@@ -833,22 +841,13 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       icon,
       progress: Math.min(progress, required),
       required,
+      xpReward,
       unlocked: progress >= required,
     };
   }
 
   return [
-    // Reading
-    make(
-      "first_briefing",
-      "discovery",
-      "First Briefing",
-      "Completed your first Pocket Briefing",
-      "Open any article and finish reading its Pocket Briefing summary.",
-      "⚡",
-      uniqueBriefings,
-      1
-    ),
+    // Reading — easiest → hardest
     make(
       "news_regular",
       "reading",
@@ -857,7 +856,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Read 10 different articles from your feed — each unique open counts once.",
       "📰",
       totalArticlesRead,
-      10
+      10,
+      25
     ),
     make(
       "loyal_reader",
@@ -867,7 +867,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Keep reading — 25 unique articles unlocks this badge.",
       "📖",
       totalArticlesRead,
-      25
+      25,
+      40
     ),
     make(
       "deep_reader",
@@ -877,7 +878,19 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Stay curious. Open 50 unique articles across any topic.",
       "📚",
       totalArticlesRead,
-      50
+      50,
+      60
+    ),
+    make(
+      "on_fire",
+      "reading",
+      "On Fire",
+      "Opened 75 articles",
+      "Momentum matters — open 75 unique articles.",
+      "🔥",
+      totalArticlesRead,
+      75,
+      75
     ),
     make(
       "century_club",
@@ -887,7 +900,19 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "A true habit — reach 100 unique articles opened.",
       "💯",
       totalArticlesRead,
-      100
+      100,
+      90
+    ),
+    make(
+      "library_legend",
+      "reading",
+      "Library Legend",
+      "Opened 250 articles",
+      "Serious reader — 250 unique articles all time.",
+      "📚",
+      totalArticlesRead,
+      250,
+      130
     ),
     make(
       "news_obsessed",
@@ -897,10 +922,22 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Power-user status: 500 unique articles opened all time.",
       "🗞️",
       totalArticlesRead,
-      500
+      500,
+      180
+    ),
+    make(
+      "marathon_reader",
+      "reading",
+      "Marathon Reader",
+      "Opened 1,000 articles",
+      "Elite dedication — 1,000 unique articles opened.",
+      "🏅",
+      totalArticlesRead,
+      1000,
+      300
     ),
 
-    // Markets
+    // Markets — easiest → hardest
     make(
       "market_watcher",
       "markets",
@@ -909,7 +946,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Tap a ticker on any article to open its stock panel.",
       "📈",
       hasAnyStockViewed ? 1 : 0,
-      1
+      1,
+      20
     ),
     make(
       "stock_follower",
@@ -919,7 +957,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Save a ticker to your watchlist from a stock panel or article.",
       "⭐",
       totalWatchlisted,
-      1
+      1,
+      25
     ),
     make(
       "market_explorer",
@@ -929,17 +968,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Explore 5 different tickers — each unique panel counts once.",
       "🔭",
       totalStockPanels,
-      5
-    ),
-    make(
-      "market_veteran",
-      "markets",
-      "Market Veteran",
-      "Opened 15 different stock panels",
-      "Deep dive into 15 unique tickers over time.",
-      "🎯",
-      totalStockPanels,
-      15
+      5,
+      40
     ),
     make(
       "watchlist_builder",
@@ -949,10 +979,44 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Track the market — add 5 tickers to your watchlist.",
       "📋",
       totalWatchlisted,
-      5
+      5,
+      50
+    ),
+    make(
+      "market_veteran",
+      "markets",
+      "Market Veteran",
+      "Opened 15 different stock panels",
+      "Deep dive into 15 unique tickers over time.",
+      "🎯",
+      totalStockPanels,
+      15,
+      70
+    ),
+    make(
+      "ticker_hunter",
+      "markets",
+      "Ticker Hunter",
+      "Opened 30 different stock panels",
+      "Research mode — open 30 unique ticker panels.",
+      "🔍",
+      totalStockPanels,
+      30,
+      100
+    ),
+    make(
+      "portfolio_architect",
+      "markets",
+      "Portfolio Architect",
+      "Added 15 stocks to your watchlist",
+      "Build a serious watchlist — track 15 tickers.",
+      "🏗️",
+      totalWatchlisted,
+      15,
+      120
     ),
 
-    // Consistency
+    // Consistency — easiest → hardest
     make(
       "first_steps",
       "consistency",
@@ -961,7 +1025,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Open any article from the home feed to get started.",
       "🌱",
       totalArticlesRead,
-      1
+      1,
+      15
     ),
     make(
       "streak_starter",
@@ -971,7 +1036,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Complete today's daily goal to earn your first streak day.",
       "✨",
       currentStreak,
-      1
+      1,
+      20
     ),
     make(
       "rising_star",
@@ -981,7 +1047,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Finish every daily goal task for 3 days in a row.",
       "🌟",
       currentStreak,
-      3
+      3,
+      35
     ),
     make(
       "diamond_hands",
@@ -991,27 +1058,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Keep showing up — 7 consecutive days of completed daily goals.",
       "💎",
       currentStreak,
-      7
-    ),
-    make(
-      "two_weeks_strong",
-      "consistency",
-      "Two Weeks Strong",
-      "Maintained a 14-day streak",
-      "Fourteen days straight of completed daily goals.",
-      "🏃",
-      currentStreak,
-      14
-    ),
-    make(
-      "monthly_investor",
-      "consistency",
-      "Monthly Investor",
-      "Maintained a 30-day streak",
-      "The ultimate habit — 30 consecutive days of daily goals.",
-      "🏆",
-      currentStreak,
-      30
+      7,
+      55
     ),
     make(
       "daily_champion",
@@ -1021,28 +1069,75 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Finish all 5 daily tasks on 7 separate days.",
       "🎖️",
       dailyGoalsCompleted,
-      7
+      7,
+      65
+    ),
+    make(
+      "two_weeks_strong",
+      "consistency",
+      "Two Weeks Strong",
+      "Maintained a 14-day streak",
+      "Fourteen days straight of completed daily goals.",
+      "🏃",
+      currentStreak,
+      14,
+      80
+    ),
+    make(
+      "monthly_investor",
+      "consistency",
+      "Monthly Investor",
+      "Maintained a 30-day streak",
+      "The ultimate habit — 30 consecutive days of daily goals.",
+      "🏆",
+      currentStreak,
+      30,
+      120
+    ),
+    make(
+      "goal_machine",
+      "consistency",
+      "Goal Machine",
+      "Completed the daily goal 30 times",
+      "Crush your daily tasks on 30 separate days.",
+      "⚙️",
+      dailyGoalsCompleted,
+      30,
+      150
+    ),
+    make(
+      "iron_will",
+      "consistency",
+      "Iron Will",
+      "Maintained a 60-day streak",
+      "Two months straight — 60 consecutive daily goals.",
+      "🛡️",
+      currentStreak,
+      60,
+      250
+    ),
+    make(
+      "quarterly_devotee",
+      "consistency",
+      "Quarterly Devotee",
+      "Maintained a 90-day streak",
+      "Three months of unbroken daily goals.",
+      "👑",
+      currentStreak,
+      90,
+      400
     ),
 
-    // Discovery
+    // Explore / discovery — easiest → hardest
     make(
-      "curator",
-      "engagement",
-      "Curator",
-      "Liked 5 articles",
-      "Tap the heart on 5 articles you enjoy.",
-      "❤️",
-      likedCount,
-      5
-    ),
-    make(
-      "heart_collector",
-      "engagement",
-      "Heart Collector",
-      "Liked 20 articles",
-      "Spread the love — like 20 articles total.",
-      "💖",
-      likedCount,
+      "first_briefing",
+      "discovery",
+      "First Briefing",
+      "Completed your first Pocket Briefing",
+      "Open any article and finish reading its Pocket Briefing summary.",
+      "⚡",
+      uniqueBriefings,
+      1,
       20
     ),
     make(
@@ -1053,17 +1148,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Read stories from at least 3 different categories.",
       "🗺️",
       uniqueTopics,
-      3
-    ),
-    make(
-      "topic_master",
-      "discovery",
-      "Topic Master",
-      "Read articles across 8 topics",
-      "Broaden your view — explore 8 different topics.",
-      "🧭",
-      uniqueTopics,
-      8
+      3,
+      30
     ),
     make(
       "saver",
@@ -1073,17 +1159,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Bookmark 5 articles to read later.",
       "🔖",
       totalSaved,
-      5
-    ),
-    make(
-      "super_saver",
-      "discovery",
-      "Super Saver",
-      "Saved 20 articles",
-      "Build your library — save 20 articles.",
-      "📥",
-      totalSaved,
-      20
+      5,
+      35
     ),
     make(
       "briefing_master",
@@ -1093,10 +1170,88 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Finish reading 10 unique Pocket Briefing summaries.",
       "⚡",
       uniqueBriefings,
-      10
+      10,
+      50
+    ),
+    make(
+      "topic_master",
+      "discovery",
+      "Topic Master",
+      "Read articles across 8 topics",
+      "Broaden your view — explore 8 different topics.",
+      "🧭",
+      uniqueTopics,
+      8,
+      60
+    ),
+    make(
+      "super_saver",
+      "discovery",
+      "Super Saver",
+      "Saved 20 articles",
+      "Build your library — save 20 articles.",
+      "📥",
+      totalSaved,
+      20,
+      70
+    ),
+    make(
+      "briefing_sage",
+      "discovery",
+      "Briefing Sage",
+      "Completed 50 Pocket Briefings",
+      "Master the summaries — finish 50 unique briefings.",
+      "🧠",
+      uniqueBriefings,
+      50,
+      120
+    ),
+    make(
+      "polymath",
+      "discovery",
+      "Polymath",
+      "Read articles across 12 topics",
+      "True breadth — read from 12 different categories.",
+      "🎓",
+      uniqueTopics,
+      12,
+      100
+    ),
+    make(
+      "archive_keeper",
+      "discovery",
+      "Archive Keeper",
+      "Saved 50 articles",
+      "Curate a deep library — save 50 articles.",
+      "🗄️",
+      totalSaved,
+      50,
+      110
     ),
 
-    // Engagement
+    // Engagement — easiest → hardest
+    make(
+      "curator",
+      "engagement",
+      "Curator",
+      "Liked 5 articles",
+      "Tap the heart on 5 articles you enjoy.",
+      "❤️",
+      likedCount,
+      5,
+      25
+    ),
+    make(
+      "heart_collector",
+      "engagement",
+      "Heart Collector",
+      "Liked 20 articles",
+      "Spread the love — like 20 articles total.",
+      "💖",
+      likedCount,
+      20,
+      45
+    ),
     make(
       "market_analyst",
       "engagement",
@@ -1105,7 +1260,19 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Earn XP by reading, liking, saving, and completing daily goals.",
       "📊",
       totalXP,
-      500
+      500,
+      50
+    ),
+    make(
+      "super_curator",
+      "engagement",
+      "Super Curator",
+      "Liked 100 articles",
+      "Share your taste — like 100 articles total.",
+      "💝",
+      likedCount,
+      100,
+      90
     ),
     make(
       "xp_hunter",
@@ -1115,7 +1282,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Stay active — rack up 1,000 lifetime XP.",
       "🏅",
       totalXP,
-      1000
+      1000,
+      75
     ),
     make(
       "portfolio_scholar",
@@ -1125,19 +1293,88 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Elite engagement — reach 2,000 lifetime XP.",
       "🎓",
       totalXP,
-      2000
+      2000,
+      100
     ),
     make(
-      "on_fire",
+      "xp_titan",
       "engagement",
-      "On Fire",
-      "Opened 50 articles total",
-      "Momentum matters — open 50 unique articles.",
-      "🔥",
-      totalArticlesRead,
-      50
+      "XP Titan",
+      "Earned 5,000 XP",
+      "Power user — accumulate 5,000 lifetime XP.",
+      "⚡",
+      totalXP,
+      5000,
+      200
+    ),
+    make(
+      "xp_legend",
+      "engagement",
+      "XP Legend",
+      "Earned 10,000 XP",
+      "Top tier — reach 10,000 lifetime XP.",
+      "🌟",
+      totalXP,
+      10000,
+      350
     ),
   ];
+}
+
+/**
+ * Award one-time XP for newly unlocked achievements. Safe to call repeatedly.
+ * Runs in a short loop so cascading XP milestones unlock in one pass.
+ */
+export function grantAchievementRewards(
+  opts?: GetAchievementsOptions
+): void {
+  if (typeof window === "undefined") return;
+
+  let changed = false;
+
+  for (let pass = 0; pass < 8; pass++) {
+    const achievements = getAchievements(opts);
+    const store = loadStore();
+    let passChanged = false;
+
+    for (const a of achievements) {
+      if (!a.unlocked || a.xpReward <= 0) continue;
+
+      const rewardKey = `achievement_unlocked:${a.id}`;
+      if (store.usedRewardKeys.includes(rewardKey)) continue;
+
+      const event: ActivityEvent = {
+        id:
+          typeof crypto !== "undefined" &&
+          typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        type: "achievement_unlocked",
+        entityId: a.id,
+        timestamp: Date.now(),
+        localDate: getLocalDate(),
+        xpAwarded: a.xpReward,
+        rewardKey,
+      };
+
+      store.events.push(event);
+      store.usedRewardKeys.push(rewardKey);
+      passChanged = true;
+    }
+
+    if (!passChanged) break;
+
+    const baseline = loadBaseline();
+    const importedXP = baseline?.importedXP ?? 0;
+    store.cachedTotalXP =
+      importedXP + store.events.reduce((sum, e) => sum + e.xpAwarded, 0);
+    saveStore(store);
+    changed = true;
+  }
+
+  if (changed && typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("pf-progression-updated"));
+  }
 }
 
 // ---------------------------------------------------------------------------
