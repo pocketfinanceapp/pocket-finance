@@ -103,7 +103,8 @@ export function FeedCard({
   const showFallback = !hasUsableFeedImage(article.imageUrl) || imageFailed;
   const hasHeroImage = !showFallback;
   const useSoftOverlay = hasHeroImage && isDarkImage;
-  const iconClass = "h-[21px] w-[21px] text-white opacity-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]";
+  const iconClass =
+    "h-[26px] w-[26px] text-white opacity-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]";
 
   useEffect(() => {
     setImageFailed(false);
@@ -520,7 +521,7 @@ function ActionButton({
         e.stopPropagation();
         onClick();
       }}
-      className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-md transition-transform active:scale-90 ${
+      className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition-transform active:scale-90 ${
         active
           ? "border-[#00C6C6]/40 bg-[#00C6C6]/12 shadow-[0_4px_20px_rgba(0,198,198,0.18)]"
           : "border-white/10 bg-black/40 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"

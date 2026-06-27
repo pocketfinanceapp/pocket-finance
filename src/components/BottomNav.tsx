@@ -86,7 +86,7 @@ export function BottomNav({ active }: BottomNavProps) {
           onClick={() => navigate("markets")}
         >
           <BarChart2
-            className={`h-[22px] w-[22px] ${marketsActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            className={`h-[26px] w-[26px] ${marketsActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={marketsActive ? 2.5 : 2}
           />
         </NavItem>
@@ -97,7 +97,7 @@ export function BottomNav({ active }: BottomNavProps) {
           onClick={() => navigate("browse")}
         >
           <Compass
-            className={`h-[22px] w-[22px] ${browseActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            className={`h-[26px] w-[26px] ${browseActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={browseActive ? 2.5 : 2}
           />
         </NavItem>
@@ -108,7 +108,7 @@ export function BottomNav({ active }: BottomNavProps) {
           onClick={() => navigate("watchlist")}
         >
           <Bookmark
-            className={`h-[22px] w-[22px] ${watchlistActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            className={`h-[26px] w-[26px] ${watchlistActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={watchlistActive ? 2.5 : 2}
           />
         </NavItem>
@@ -119,7 +119,7 @@ export function BottomNav({ active }: BottomNavProps) {
           onClick={() => navigate("profile")}
         >
           <User
-            className={`h-[22px] w-[22px] ${profileActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            className={`h-[26px] w-[26px] ${profileActive ? "text-[#00C6C6]" : "text-white/45"}`}
             strokeWidth={profileActive ? 2.5 : 2}
           />
         </NavItem>
@@ -135,8 +135,8 @@ function HomeIcon({ active }: { active: boolean }) {
 
   return (
     <svg
-      width="22"
-      height="22"
+      width="26"
+      height="26"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

@@ -18,23 +18,28 @@ export function BottomSheet({
   children,
   tall,
 }: BottomSheetProps) {
-  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [entered, setEntered] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setVisible(true);
+      setMounted(true);
       document.body.style.overflow = "hidden";
-    } else {
-      const t = setTimeout(() => setVisible(false), 320);
-      document.body.style.overflow = "";
-      return () => clearTimeout(t);
+
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setEntered(true));
+      });
+
+      return () => cancelAnimationFrame(raf);
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
+
+    setEntered(false);
+    document.body.style.overflow = "";
+    const t = window.setTimeout(() => setMounted(false), 200);
+    return () => window.clearTimeout(t);
   }, [open]);
 
-  if (!open && !visible) return null;
+  if (!mounted) return null;
 
   return (
     <div
@@ -46,13 +51,15 @@ export function BottomSheet({
         type="button"
         aria-label="Close"
         className={`absolute inset-0 bg-black/70 transition-opacity duration-300 ${
-          open ? "opacity-100" : "opacity-0"
+          entered ? "opacity-100" : "opacity-0"
         }`}
         onClick={onClose}
       />
       <div
-        className={`relative mx-auto w-full max-w-mobile rounded-t-3xl border-t border-white/10 bg-[#111111] shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          open ? "translate-y-0" : "translate-y-full"
+        className={`relative mx-auto w-full max-w-mobile rounded-t-3xl border-t border-white/10 bg-[#111111] shadow-2xl transition-transform ${
+          entered
+            ? "translate-y-0 duration-300 ease-out"
+            : "translate-y-full duration-200 ease-in"
         } ${tall ? "max-h-[88dvh]" : "max-h-[75dvh]"}`}
         style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       >

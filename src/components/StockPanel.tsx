@@ -257,7 +257,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
                 style={{ touchAction: "manipulation" }}
               >
                 <Bookmark
-                  className={`h-5 w-5 ${saved ? "fill-white text-white" : "text-white"}`}
+                  className={`h-6 w-6 ${saved ? "fill-white text-white" : "text-white"}`}
                 />
               </button>
               <button
@@ -274,7 +274,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
                 aria-label="Share"
                 style={{ touchAction: "manipulation" }}
               >
-                <Share2 className="h-5 w-5" />
+                <Share2 className="h-6 w-6" />
               </button>
             </div>
           </div>
