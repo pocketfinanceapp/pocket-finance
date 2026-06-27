@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, Lock } from "lucide-react";
+import { AchievementIcon } from "@/components/icons/AchievementIcon";
 import {
   getAchievements,
   type Achievement,
@@ -98,15 +99,32 @@ export function ProfileAchievements({
   }, [allAchievements, maxItems, activeCategory]);
 
   const unlockedCount = allAchievements.filter((a) => a.unlocked).length;
+  const nextLocked = useMemo(() => {
+    return [...allAchievements]
+      .filter((a) => !a.unlocked)
+      .sort(
+        (a, b) =>
+          b.progress / Math.max(b.required, 1) -
+          a.progress / Math.max(a.required, 1)
+      )[0];
+  }, [allAchievements]);
 
   return (
     <section>
       {/* Section header */}
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-bold text-white">Achievements</h3>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#00C6C6]">
+            Your progress
+          </p>
+          <h3 className="mt-0.5 text-[16px] font-bold text-white">Achievements</h3>
           <p className="mt-0.5 text-[11px] text-zinc-500">
             {unlockedCount} of {allAchievements.length} unlocked
+            {nextLocked && !maxItems
+              ? ` · Next: ${nextLocked.title}`
+              : nextLocked && maxItems
+                ? ` · ${nextLocked.title} ${Math.round((nextLocked.progress / nextLocked.required) * 100)}%`
+                : ""}
           </p>
         </div>
         {onViewAll && (
@@ -196,7 +214,9 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-3"
+      className={`relative overflow-hidden rounded-2xl p-3 ${
+        a.unlocked ? "badge-unlock-animate" : ""
+      }`}
       style={{
         minHeight: 96,
         backgroundColor: a.unlocked
@@ -222,15 +242,19 @@ function AchievementCard({ achievement: a }: { achievement: Achievement }) {
       {/* Top row: icon tile + status badge */}
       <div className="flex items-start justify-between">
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-xl text-lg leading-none"
+          className="flex h-9 w-9 items-center justify-center rounded-xl"
           style={{
-            backgroundColor: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            opacity: a.unlocked ? 1 : 0.28,
-            filter: a.unlocked ? undefined : "grayscale(100%)",
+            background: a.unlocked
+              ? "linear-gradient(135deg, rgba(59,110,245,0.22), rgba(0,198,198,0.16))"
+              : "rgba(255,255,255,0.05)",
+            border: a.unlocked
+              ? "1px solid rgba(0,198,198,0.22)"
+              : "1px solid rgba(255,255,255,0.08)",
+            color: a.unlocked ? "#00C6C6" : "rgba(255,255,255,0.35)",
+            opacity: a.unlocked ? 1 : 0.85,
           }}
         >
-          {a.icon}
+          <AchievementIcon id={a.id} size={17} unlocked={a.unlocked} />
         </div>
 
         {a.unlocked ? (

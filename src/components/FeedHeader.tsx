@@ -7,11 +7,13 @@ import {
   getExplicitFilterLabels,
   hasExplicitFilters,
 } from "@/lib/activeFilters";
+import { FeedSearchIcon } from "@/components/icons/FeedSearchIcon";
 
 interface FeedHeaderProps {
   feedMode: FeedMode;
   onFeedModeChange: (mode: FeedMode) => void;
   onOpenSearch: () => void;
+  searchOpen?: boolean;
   className?: string;
 }
 
@@ -27,6 +29,7 @@ export function FeedHeader({
   feedMode,
   onFeedModeChange,
   onOpenSearch,
+  searchOpen = false,
   className = "",
 }: FeedHeaderProps) {
   const { marketFilters, sectorFilters, searchQuery, clearFilters } = useApp();
@@ -172,13 +175,10 @@ export function FeedHeader({
           data-no-drag
           onPointerDown={stop}
           onClick={onOpenSearch}
-          className={`flex h-10 w-10 items-center justify-center justify-self-end rounded-full text-white/90 active:bg-white/10 ${TAB_SHADOW}`}
+          className={`relative flex h-10 w-10 items-center justify-center justify-self-end rounded-full active:scale-95 ${TAB_SHADOW}`}
           aria-label="Search"
         >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="7" strokeWidth="2" />
-            <path strokeWidth="2" d="M20 20l-4-4" />
-          </svg>
+          <FeedSearchIcon active={searchOpen} />
         </button>
       </div>
       {showFilterPill && (

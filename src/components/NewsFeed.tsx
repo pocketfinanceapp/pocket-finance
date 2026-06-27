@@ -613,6 +613,7 @@ export function NewsFeed({
               feedMode={feedMode}
               onFeedModeChange={setFeedMode}
               onOpenSearch={() => setSearchOpen(true)}
+              searchOpen={searchOpen}
               className="pointer-events-auto absolute inset-x-0 top-0"
             />
 

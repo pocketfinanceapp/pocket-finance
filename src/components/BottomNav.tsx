@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart2, Bookmark, Compass, User } from "lucide-react";
+import { BarChart2, Bookmark, Compass } from "lucide-react";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { APP_BASE, appPath } from "@/lib/appPaths";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
+import { getProgressionState } from "@/lib/progression";
+import { ProfileNavIcon } from "@/components/icons/ProfileNavIcon";
 
 export type NavTab = "home" | "markets" | "browse" | "watchlist" | "profile";
 
@@ -25,6 +28,15 @@ export function BottomNav({ active }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const navigation = useNavigationOptional();
+  const [profileLevel, setProfileLevel] = useState(1);
+
+  useEffect(() => {
+    const sync = () => setProfileLevel(getProgressionState().level);
+    sync();
+    window.addEventListener("pf-progression-updated", sync);
+    return () => window.removeEventListener("pf-progression-updated", sync);
+  }, []);
+
   const resolvedActive = active ?? navigation?.navTab ?? tabFromPath(pathname);
 
   const homeActive = resolvedActive === "home";
@@ -118,10 +130,7 @@ export function BottomNav({ active }: BottomNavProps) {
           active={profileActive}
           onClick={() => navigate("profile")}
         >
-          <User
-            className={`h-[26px] w-[26px] ${profileActive ? "text-[#00C6C6]" : "text-white/45"}`}
-            strokeWidth={profileActive ? 2.5 : 2}
-          />
+          <ProfileNavIcon active={profileActive} level={profileLevel} />
         </NavItem>
       </div>
     </nav>
