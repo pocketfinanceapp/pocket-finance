@@ -281,9 +281,11 @@ export function NewsFeed({
 
   useEffect(() => {
     onSidePanelChange?.(
-      panelIndex === PANEL_STOCK || panelIndex === PANEL_ARTICLE
+      panelIndex === PANEL_STOCK ||
+        panelIndex === PANEL_ARTICLE ||
+        commentsOpen
     );
-  }, [panelIndex, onSidePanelChange]);
+  }, [panelIndex, commentsOpen, onSidePanelChange]);
 
   const goToPanel = useCallback((index: number) => {
     setPanelIndex(index);
@@ -734,7 +736,14 @@ export function NewsFeed({
   }
 
   return (
-    <MobilePageShell activeTab="home" hideBottomNav={panelIndex === PANEL_STOCK || panelIndex === PANEL_ARTICLE}>
+    <MobilePageShell
+      activeTab="home"
+      hideBottomNav={
+        panelIndex === PANEL_STOCK ||
+        panelIndex === PANEL_ARTICLE ||
+        commentsOpen
+      }
+    >
       {feedContent}
     </MobilePageShell>
   );
