@@ -286,15 +286,10 @@ export function AuthScreen() {
           />
 
           {!isSignUp && (
-            <label className="mt-3 flex cursor-pointer items-center gap-2.5">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 shrink-0 rounded border-white/20 bg-white/[0.05] accent-[#00C6C6] focus:ring-2 focus:ring-[#3B6EF5]/40 focus:ring-offset-0"
-              />
-              <span className="text-sm text-zinc-400">Remember me</span>
-            </label>
+            <RememberMeToggle
+              checked={rememberMe}
+              onChange={setRememberMe}
+            />
           )}
 
           {error && (
@@ -317,6 +312,46 @@ export function AuthScreen() {
         </form>
       </div>
     </AuthShell>
+  );
+}
+
+function RememberMeToggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="mt-3 flex cursor-pointer select-none items-center gap-3">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
+      <span
+        aria-hidden
+        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border transition-all duration-200 ease-out peer-focus-visible:ring-2 peer-focus-visible:ring-[#3B6EF5]/50 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#0a0a0a] ${
+          checked
+            ? "border-transparent bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] shadow-[0_0_14px_rgba(0,198,198,0.22)]"
+            : "border-white/10 bg-white/[0.06]"
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.35)] transition-transform duration-200 ease-out ${
+            checked ? "translate-x-5" : "translate-x-0"
+          }`}
+        />
+      </span>
+      <span
+        className={`text-sm transition-colors duration-200 ease-out ${
+          checked ? "text-zinc-300" : "text-zinc-400"
+        }`}
+      >
+        Remember me
+      </span>
+    </label>
   );
 }
 
