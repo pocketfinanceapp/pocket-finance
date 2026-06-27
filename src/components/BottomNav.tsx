@@ -110,7 +110,6 @@ export function BottomNav({ active }: BottomNavProps) {
           label="Home"
           active={homeActive}
           onClick={() => navigate("home")}
-          center
         >
           <HomeIcon active={homeActive} />
         </NavItem>
@@ -168,36 +167,20 @@ function NavItem({
   label,
   active,
   onClick,
-  center = false,
 }: {
   children: React.ReactNode;
   label: string;
   active: boolean;
   onClick: () => void;
-  center?: boolean;
 }) {
   return (
     <button
       type="button"
       data-no-drag
       onClick={onClick}
-      className={`flex flex-col items-center justify-end gap-0.5 pb-0.5 transition-opacity active:opacity-70 ${
-        center ? "-mt-1" : ""
-      }`}
+      className="flex flex-col items-center justify-end gap-0.5 pb-0.5 transition-opacity active:opacity-70"
     >
-      {center ? (
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-colors ${
-            active
-              ? "bg-gradient-to-br from-[#3B6EF5]/25 to-[#00C6C6]/20 ring-1 ring-[#00C6C6]/30"
-              : "bg-white/[0.04]"
-          }`}
-        >
-          {children}
-        </div>
-      ) : (
-        children
-      )}
+      {children}
       <span
         className={`text-[10px] font-medium tracking-wide ${
           active

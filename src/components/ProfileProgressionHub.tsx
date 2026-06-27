@@ -2,7 +2,14 @@
 
 import { Check } from "lucide-react";
 import { tabEnterStyle } from "@/lib/tabEnterAnimation";
-import { DAILY_GOAL_XP_REWARD, XP_REWARDS, type DailyGoalTask, type DailyGoalState, type LevelState, type WeeklyActivity } from "@/lib/progression";
+import {
+  DAILY_GOAL_XP_REWARD,
+  XP_REWARDS,
+  type DailyGoalState,
+  type DailyGoalTask,
+  type LevelState,
+  type WeeklyActivity,
+} from "@/lib/progression";
 
 const CARD =
   "overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]";
@@ -16,6 +23,124 @@ interface ProfileProgressionHubProps {
   likedCount: number;
   watchlistCount: number;
   animateIn?: boolean;
+  showActivity?: boolean;
+  showDailyGoal?: boolean;
+}
+
+export function ProfileActivitySection({
+  progression,
+  totalXP,
+  weekly,
+  articlesOpened,
+  likedCount,
+  watchlistCount,
+  animateIn = true,
+  enterDelay = 120,
+}: {
+  progression: LevelState;
+  totalXP: number;
+  weekly: WeeklyActivity;
+  articlesOpened: number;
+  likedCount: number;
+  watchlistCount: number;
+  animateIn?: boolean;
+  enterDelay?: number;
+}) {
+  const isMaxLevel = progression.level === 7;
+  const hasWeeklyActivity =
+    weekly.articlesRead > 0 || weekly.briefingsCompleted > 0;
+
+  return (
+    <section className={CARD} style={tabEnterStyle(animateIn, enterDelay)}>
+      <div className="border-b border-white/[0.06] px-4 py-3">
+        <h3 className="text-[14px] font-semibold text-white">Your activity</h3>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
+        <StatTile label="Articles read" value={String(articlesOpened)} />
+        <StatTile label="Liked" value={String(likedCount)} />
+        <StatTile label="Watchlist" value={String(watchlistCount)} />
+      </div>
+      <div className="border-t border-white/[0.06] px-4 py-3">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-600">
+          This week
+        </p>
+        {hasWeeklyActivity ? (
+          <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-400">
+            {weekly.articlesRead} articles · {weekly.briefingsCompleted}{" "}
+            briefings · {weekly.xpEarned} XP earned
+          </p>
+        ) : (
+          <p className="mt-1.5 text-[13px] text-zinc-500">
+            Read a story to start tracking your week.
+          </p>
+        )}
+        {isMaxLevel && (
+          <p className="mt-2 text-[11px] tabular-nums text-zinc-600">
+            {totalXP.toLocaleString()} lifetime XP
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function ProfileDailyGoalSection({
+  dailyGoal,
+  animateIn = true,
+  enterDelay = 0,
+}: {
+  dailyGoal: DailyGoalState;
+  animateIn?: boolean;
+  enterDelay?: number;
+}) {
+  const goalPct = Math.round(
+    (dailyGoal.completedTasks / dailyGoal.totalTasks) * 100
+  );
+
+  return (
+    <section className={CARD} style={tabEnterStyle(animateIn, enterDelay)}>
+      <div className="border-b border-white/[0.06] px-4 py-3">
+        <h3 className="text-[14px] font-semibold text-white">Today&apos;s goal</h3>
+        <p className="mt-0.5 text-[12px] text-zinc-500">
+          {dailyGoal.isComplete
+            ? `Nice work — +${DAILY_GOAL_XP_REWARD} XP earned`
+            : `Complete all ${dailyGoal.totalTasks} tasks for +${DAILY_GOAL_XP_REWARD} XP`}
+        </p>
+      </div>
+
+      <div className="px-4 py-4">
+        <div className="flex items-start gap-3">
+          <div
+            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+            style={{
+              background: `conic-gradient(#00C6C6 ${goalPct}%, rgba(255,255,255,0.08) 0)`,
+            }}
+          >
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold tabular-nums text-white"
+              style={{ background: "rgba(8,9,14,0.94)" }}
+            >
+              {goalPct}%
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-semibold text-white">
+              {dailyGoal.isComplete
+                ? "All done for today"
+                : `${dailyGoal.completedTasks} of ${dailyGoal.totalTasks} complete`}
+            </p>
+            {!dailyGoal.isComplete && (
+              <div className="mt-3 space-y-2.5">
+                {dailyGoal.tasks.map((task) => (
+                  <TaskRow key={task.id} task={task} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export function ProfileProgressionHub({
@@ -27,91 +152,25 @@ export function ProfileProgressionHub({
   likedCount,
   watchlistCount,
   animateIn = true,
+  showActivity = true,
+  showDailyGoal = true,
 }: ProfileProgressionHubProps) {
-  const isMaxLevel = progression.level === 7;
-  const hasWeeklyActivity =
-    weekly.articlesRead > 0 || weekly.briefingsCompleted > 0;
-  const goalPct = Math.round(
-    (dailyGoal.completedTasks / dailyGoal.totalTasks) * 100
-  );
-
   return (
     <div className="space-y-4">
-      {/* ── Today ───────────────────────────────────────────────────────── */}
-      <section className={CARD} style={tabEnterStyle(animateIn, 0)}>
-        <div className="border-b border-white/[0.06] px-4 py-3">
-          <h3 className="text-[14px] font-semibold text-white">Today&apos;s goal</h3>
-          <p className="mt-0.5 text-[12px] text-zinc-500">
-            {dailyGoal.isComplete
-              ? `Nice work — +${DAILY_GOAL_XP_REWARD} XP earned`
-              : `Complete all ${dailyGoal.totalTasks} tasks for +${DAILY_GOAL_XP_REWARD} XP`}
-          </p>
-        </div>
-
-        <div className="px-4 py-4">
-          <div className="flex items-start gap-3">
-            <div
-              className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-              style={{
-                background: `conic-gradient(#00C6C6 ${goalPct}%, rgba(255,255,255,0.08) 0)`,
-              }}
-            >
-              <div
-                className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold tabular-nums text-white"
-                style={{ background: "rgba(8,9,14,0.94)" }}
-              >
-                {goalPct}%
-              </div>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold text-white">
-                {dailyGoal.isComplete
-                  ? "All done for today"
-                  : `${dailyGoal.completedTasks} of ${dailyGoal.totalTasks} complete`}
-              </p>
-              {!dailyGoal.isComplete && (
-                <div className="mt-3 space-y-2.5">
-                  {dailyGoal.tasks.map((task) => (
-                    <TaskRow key={task.id} task={task} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Activity ────────────────────────────────────────────────────── */}
-      <section className={CARD} style={tabEnterStyle(animateIn, 120)}>
-        <div className="border-b border-white/[0.06] px-4 py-3">
-          <h3 className="text-[14px] font-semibold text-white">Your activity</h3>
-        </div>
-        <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
-          <StatTile label="Articles read" value={String(articlesOpened)} />
-          <StatTile label="Liked" value={String(likedCount)} />
-          <StatTile label="Watchlist" value={String(watchlistCount)} />
-        </div>
-        <div className="border-t border-white/[0.06] px-4 py-3">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-600">
-            This week
-          </p>
-          {hasWeeklyActivity ? (
-            <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-400">
-              {weekly.articlesRead} articles · {weekly.briefingsCompleted} briefings
-              · {weekly.xpEarned} XP earned
-            </p>
-          ) : (
-            <p className="mt-1.5 text-[13px] text-zinc-500">
-              Read a story to start tracking your week.
-            </p>
-          )}
-          {isMaxLevel && (
-            <p className="mt-2 text-[11px] tabular-nums text-zinc-600">
-              {totalXP.toLocaleString()} lifetime XP
-            </p>
-          )}
-        </div>
-      </section>
+      {showActivity && (
+        <ProfileActivitySection
+          progression={progression}
+          totalXP={totalXP}
+          weekly={weekly}
+          articlesOpened={articlesOpened}
+          likedCount={likedCount}
+          watchlistCount={watchlistCount}
+          animateIn={animateIn}
+        />
+      )}
+      {showDailyGoal && (
+        <ProfileDailyGoalSection dailyGoal={dailyGoal} animateIn={animateIn} />
+      )}
     </div>
   );
 }

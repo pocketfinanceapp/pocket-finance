@@ -16,6 +16,7 @@ import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
+import { PopReaction } from "./PopReaction";
 import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
@@ -287,12 +288,17 @@ export function FeedCard({
         data-no-drag
         data-interactive
       >
-        <ActionButton
-          label={liked ? "Unlike" : "Like"}
-          active={liked}
+        <PopReaction
+          aria-label={liked ? "Unlike" : "Like"}
+          burst={!liked}
           onClick={() =>
             guardGuestAction("Sign in to like this", () => void toggleLike())
           }
+          className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition-transform active:scale-90 ${
+            liked
+              ? "border-[#00C6C6]/40 bg-[#00C6C6]/12 shadow-[0_4px_20px_rgba(0,198,198,0.18)]"
+              : "border-white/10 bg-black/40 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+          }`}
         >
           <Heart
             className={`${iconClass} transition-colors ${
@@ -300,7 +306,7 @@ export function FeedCard({
             }`}
             strokeWidth={2.25}
           />
-        </ActionButton>
+        </PopReaction>
 
         <ActionButton
           label="Comment"

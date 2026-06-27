@@ -45,7 +45,11 @@ import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ProfileAchievements } from "./ProfileAchievements";
 import { ProfileArticlePreview } from "./ProfileArticlePreview";
 import { ProfileIdentitySection } from "./ProfileIdentitySection";
-import { ProfileProgressionHub } from "./ProfileProgressionHub";
+import {
+  ProfileActivitySection,
+  ProfileDailyGoalSection,
+  ProfileProgressionHub,
+} from "./ProfileProgressionHub";
 import { ProfileStreakCard } from "./ProfileStreakCard";
 import { AchievementIcon } from "./icons/AchievementIcon";
 import { ScreenHeader } from "./ScreenHeader";
@@ -486,17 +490,26 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           <ProfileStreakCard streak={streakState} animateIn={profileEntered} />
         </div>
 
-        {/* ── Goals + activity ─────────────────────────────────────────── */}
-        <div className="mt-4" style={tabEnterStyle(profileEntered, 200)}>
-          <ProfileProgressionHub
+        {/* ── Your activity ────────────────────────────────────────────── */}
+        <div className="mt-4" style={tabEnterStyle(profileEntered, 160)}>
+          <ProfileActivitySection
             progression={progressionState}
             totalXP={totalXP}
-            dailyGoal={dailyGoal}
             weekly={weeklyActivity}
             articlesOpened={uniqueArticlesOpened}
             likedCount={likedArticlesCount}
             watchlistCount={watchlistCount}
             animateIn={profileEntered}
+            enterDelay={0}
+          />
+        </div>
+
+        {/* ── Today's goal ─────────────────────────────────────────────── */}
+        <div className="mt-4" style={tabEnterStyle(profileEntered, 220)}>
+          <ProfileDailyGoalSection
+            dailyGoal={dailyGoal}
+            animateIn={profileEntered}
+            enterDelay={0}
           />
         </div>
 

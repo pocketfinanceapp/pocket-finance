@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
+import { PopReaction } from "@/components/PopReaction";
 import { useApp } from "@/context/AppContext";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
@@ -462,21 +463,51 @@ function MarketRow({
 
       <MarketSparkline points={sparkline} up={up} />
 
+      <FollowMarketButton isFollowing={isFollowing} onFollow={onFollow} />
+    </li>
+  );
+}
+
+function FollowMarketButton({
+  isFollowing,
+  onFollow,
+}: {
+  isFollowing: boolean;
+  onFollow: () => void;
+}) {
+  const [unfollowAnim, setUnfollowAnim] = useState(false);
+
+  const handleClick = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (isFollowing) {
+      setUnfollowAnim(true);
+      window.setTimeout(() => setUnfollowAnim(false), 280);
+    }
+    onFollow();
+  };
+
+  if (isFollowing) {
+    return (
       <button
         type="button"
         data-no-drag
-        onClick={(e) => {
-          e.stopPropagation();
-          onFollow();
-        }}
-        className={`h-7 shrink-0 rounded-full px-3 text-[11px] font-semibold transition-colors ${
-          isFollowing
-            ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white shadow-[0_2px_12px_rgba(59,110,245,0.3)]"
-            : "border border-white/25 bg-transparent text-zinc-400"
+        onClick={handleClick}
+        className={`h-7 shrink-0 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-3 text-[11px] font-semibold text-white shadow-[0_2px_12px_rgba(59,110,245,0.3)] transition-all duration-300 ${
+          unfollowAnim ? "pf-follow-unfollow" : ""
         }`}
       >
-        {isFollowing ? "Following" : "Follow"}
+        Following
       </button>
-    </li>
+    );
+  }
+
+  return (
+    <PopReaction
+      aria-label="Follow market"
+      onClick={() => handleClick()}
+      className="h-7 shrink-0 rounded-full border border-white/25 bg-transparent px-3 text-[11px] font-semibold text-zinc-400 transition-colors duration-300 hover:border-white/40 hover:text-white"
+    >
+      Follow
+    </PopReaction>
   );
 }
