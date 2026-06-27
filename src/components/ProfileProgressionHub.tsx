@@ -3,22 +3,13 @@
 import { Calendar, Check } from "lucide-react";
 import { ProfileAvatarWithRing } from "@/components/ProfileAvatarWithRing";
 import { StreakFlameIcon } from "@/components/icons/StreakFlameIcon";
+import { tabEnterStyle } from "@/lib/tabEnterAnimation";
 import type {
   DailyGoalState,
   LevelState,
   StreakState,
   WeeklyActivity,
 } from "@/lib/progression";
-
-const ENTER_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-
-function enterStyle(active: boolean, delayMs: number) {
-  return {
-    opacity: active ? 1 : 0,
-    transform: active ? "translateY(0)" : "translateY(12px)",
-    transition: `opacity 520ms ${ENTER_EASE} ${delayMs}ms, transform 640ms ${ENTER_EASE} ${delayMs}ms`,
-  } as const;
-}
 
 interface ProfileProgressionHubProps {
   displayName: string;
@@ -61,7 +52,7 @@ export function ProfileProgressionHub({
     <div
       className="relative mt-3 overflow-hidden rounded-[22px]"
       style={{
-        ...enterStyle(animateIn, 0),
+        ...tabEnterStyle(animateIn, 0),
         background:
           "linear-gradient(165deg, rgba(14,16,36,0.98) 0%, rgba(6,7,12,0.99) 52%, rgba(10,8,6,0.98) 100%)",
         border: "1px solid rgba(255,255,255,0.08)",
@@ -92,7 +83,7 @@ export function ProfileProgressionHub({
           animateIn={animateIn}
         />
 
-        <div className="min-w-0 flex-1" style={enterStyle(animateIn, 120)}>
+        <div className="min-w-0 flex-1" style={tabEnterStyle(animateIn, 120)}>
           <p className="text-[18px] font-bold leading-tight text-white">{displayName}</p>
           {email && (
             <p className="mt-0.5 truncate text-[12px] text-zinc-500">{email}</p>
@@ -113,7 +104,7 @@ export function ProfileProgressionHub({
       <div
         className="mx-4 rounded-2xl px-4 py-3"
         style={{
-          ...enterStyle(animateIn, 200),
+          ...tabEnterStyle(animateIn, 200),
           background: dailyGoal.isComplete
             ? "rgba(0,198,198,0.08)"
             : "rgba(255,255,255,0.03)",
@@ -176,7 +167,7 @@ export function ProfileProgressionHub({
       </div>
 
       {/* Streak strip */}
-      <div className="mt-3 px-5 pb-4" style={enterStyle(animateIn, 280)}>
+      <div className="mt-3 px-5 pb-4" style={tabEnterStyle(animateIn, 280)}>
         <div className="flex items-center gap-3">
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
@@ -231,7 +222,7 @@ export function ProfileProgressionHub({
       <div
         className="border-t border-white/[0.06] px-5 py-3"
         style={{
-          ...enterStyle(animateIn, 360),
+          ...tabEnterStyle(animateIn, 360),
           background: "rgba(255,255,255,0.02)",
         }}
       >
@@ -252,7 +243,7 @@ export function ProfileProgressionHub({
       </div>
 
       {/* Stats + joined */}
-      <div className="border-t border-white/[0.06]" style={enterStyle(animateIn, 440)}>
+      <div className="border-t border-white/[0.06]" style={tabEnterStyle(animateIn, 440)}>
         <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
           <HubStat label="Opened" value={String(articlesOpened)} />
           <HubStat label="Liked" value={String(likedCount)} />

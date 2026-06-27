@@ -10,6 +10,7 @@ import {
   type FeedMode,
 } from "@/lib/filterArticles";
 import { appPath } from "@/lib/appPaths";
+import { tabEnterFadeStyle, tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import { isInteractiveTarget } from "@/lib/gesture";
 import { APP_VIEWPORT_HEIGHT, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
 import {
@@ -87,6 +88,7 @@ export function NewsFeed({
     clearFeedJump,
   } = useApp();
   const navigation = useNavigationOptional();
+  const homeTabEntered = useTabPageEntered("home", embedded);
 
   const [feedMode, setFeedMode] = useState<FeedMode>("forYou");
   const [displayedFeedMode, setDisplayedFeedMode] = useState<FeedMode>("forYou");
@@ -609,14 +611,22 @@ export function NewsFeed({
               touchAction: "none",
             }}
           >
-            <FeedHeader
-              feedMode={feedMode}
-              onFeedModeChange={setFeedMode}
-              onOpenSearch={() => setSearchOpen(true)}
-              searchOpen={searchOpen}
+            <div
               className="pointer-events-auto absolute inset-x-0 top-0"
-            />
+              style={embedded ? tabEnterStyle(homeTabEntered, 0) : undefined}
+            >
+              <FeedHeader
+                feedMode={feedMode}
+                onFeedModeChange={setFeedMode}
+                onOpenSearch={() => setSearchOpen(true)}
+                searchOpen={searchOpen}
+              />
+            </div>
 
+            <div
+              className="h-full"
+              style={embedded ? tabEnterFadeStyle(homeTabEntered, 100) : undefined}
+            >
             {verticalFeedArticles.length === 0 ? (
               <div
                 className={`flex h-full flex-col items-center justify-center px-8 text-center transition-opacity duration-200 ease-out ${
@@ -699,6 +709,7 @@ export function NewsFeed({
                 </div>
               </div>
             )}
+            </div>
           </div>
 
           <div

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
-import { useNavigationOptional } from "@/context/NavigationContext";
+import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import {
   loadFavouriteTopics,
   loadRecentlyRead,
@@ -92,8 +92,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   const { storiesRead, likedArticlesCount, savedArticles, reloadProfileStats } =
     useApp();
   const { user, isGuest, requestSignIn } = useAuth();
-  const navigation = useNavigationOptional();
-  const [profileEntered, setProfileEntered] = useState(false);
 
   /* ── Sub-screen state ───────────────────────────────────────────────── */
   const [showSettings, setShowSettings] = useState(false);
@@ -104,26 +102,10 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
   const isSubPage =
     showSettings || showTopics || showAllAchievements || showAllRecentlyRead;
+  const profileEntered = useTabPageEntered("profile", !isSubPage);
   useEffect(() => {
     onSubPageChange?.(isSubPage);
   }, [isSubPage, onSubPageChange]);
-
-  useEffect(() => {
-    if (navigation?.activeTab !== "profile" || isSubPage) {
-      setProfileEntered(false);
-      return;
-    }
-
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => setProfileEntered(true));
-    });
-
-    return () => {
-      cancelAnimationFrame(raf1);
-      if (raf2) cancelAnimationFrame(raf2);
-    };
-  }, [navigation?.activeTab, isSubPage]);
 
   /* ── Progression tick — incremented when pf-progression-updated fires ── */
   const [progressionTick, setProgressionTick] = useState(0);
@@ -448,10 +430,12 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-black">
       {/* Sticky root header */}
-      <ProfileRootHeader
-        level={progressionState.level}
-        onSettings={() => openSettings()}
-      />
+      <div style={tabEnterStyle(profileEntered, 0)}>
+        <ProfileRootHeader
+          level={progressionState.level}
+          onSettings={() => openSettings()}
+        />
+      </div>
 
       {/* Achievement toast (fixed at top) */}
       {currentToast && (
@@ -481,15 +465,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         />
 
         {/* ── Achievements preview ─────────────────────────────────────── */}
-        <section
-          className="mt-5"
-          style={{
-            opacity: profileEntered ? 1 : 0,
-            transform: profileEntered ? "translateY(0)" : "translateY(12px)",
-            transition:
-              "opacity 520ms cubic-bezier(0.22, 1, 0.36, 1) 520ms, transform 640ms cubic-bezier(0.22, 1, 0.36, 1) 520ms",
-          }}
-        >
+        <section className="mt-5" style={tabEnterStyle(profileEntered, 520)}>
           <ProfileAchievements
             likedArticlesCount={likedArticlesCount}
             maxItems={4}
@@ -499,7 +475,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
         {/* ── Saved articles preview ────────────────────────────────── */}
         {savedPreview.length > 0 && (
-          <section className="mt-5">
+          <section className="mt-5" style={tabEnterStyle(profileEntered, 600)}>
             <SectionHeader
               title="Saved articles"
               action="View all"
@@ -523,7 +499,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
         {/* ── 7. Liked articles preview ────────────────────────────────── */}
         {likedPreview.length > 0 && (
-          <section className="mt-5">
+          <section className="mt-5" style={tabEnterStyle(profileEntered, 680)}>
             <SectionHeader
               title="Liked articles"
               action="View all"
@@ -547,7 +523,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
         {/* ── 8. Recently Read ─────────────────────────────────────────── */}
         {recentlyReadPreview.length > 0 && (
-          <section className="mt-5">
+          <section className="mt-5" style={tabEnterStyle(profileEntered, 760)}>
             <SectionHeader
               title="Recently read"
               action="View history"
@@ -569,7 +545,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         )}
 
         {/* ── 9. My Topics compact row ─────────────────────────────────── */}
-        <section className="mt-5">
+        <section className="mt-5" style={tabEnterStyle(profileEntered, 840)}>
           <button
             type="button"
             data-no-drag

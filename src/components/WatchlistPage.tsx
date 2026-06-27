@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import { getStockProfile } from "@/lib/stockData";
 import { getTickerMetaBySymbol, resolveSavedTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
@@ -344,6 +345,7 @@ function EmptyState() {
 
 export function WatchlistPage() {
   const { savedArticles } = useApp();
+  const tabEntered = useTabPageEntered("watchlist");
   const [editMode, setEditMode] = useState(false);
   const [activeItem, setActiveItem] = useState<WatchlistItem | null>(null);
 
@@ -454,6 +456,7 @@ export function WatchlistPage() {
           position: "sticky",
           top: 0,
           zIndex: 10,
+          ...tabEnterStyle(tabEntered, 0),
         }}
       >
         <div className="flex items-center justify-between">
@@ -490,22 +493,26 @@ export function WatchlistPage() {
         style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
       >
         {watchlistItems.length === 0 ? (
-          <EmptyState />
+          <div style={tabEnterStyle(tabEntered, 120)}>
+            <EmptyState />
+          </div>
         ) : (
           <>
             {/* Summary card */}
-            <SummaryCard
-              assetCount={assets.length}
-              themeCount={themes.length}
-              bestTicker={bestTicker}
-              bestPct={bestPct}
-              worstTicker={worstTicker}
-              worstPct={worstPct}
-            />
+            <div style={tabEnterStyle(tabEntered, 120)}>
+              <SummaryCard
+                assetCount={assets.length}
+                themeCount={themes.length}
+                bestTicker={bestTicker}
+                bestPct={bestPct}
+                worstTicker={worstTicker}
+                worstPct={worstPct}
+              />
+            </div>
 
             {/* Tracked assets */}
             {assets.length > 0 && (
-              <section>
+              <section style={tabEnterStyle(tabEntered, 240)}>
                 <SectionHeader>Tracked assets</SectionHeader>
                 <div className="mx-5 rounded-2xl" style={CARD_STYLE}>
                   <div className="divide-y divide-white/[0.05]">
@@ -528,7 +535,7 @@ export function WatchlistPage() {
 
             {/* Market themes */}
             {themes.length > 0 && (
-              <section>
+              <section style={tabEnterStyle(tabEntered, 360)}>
                 <SectionHeader>Market themes</SectionHeader>
                 <div className="mx-5 rounded-2xl" style={CARD_STYLE}>
                   <div className="divide-y divide-white/[0.05]">
@@ -551,7 +558,7 @@ export function WatchlistPage() {
 
             {/* Latest from your watchlist */}
             {latestArticles.length > 0 && (
-              <section>
+              <section style={tabEnterStyle(tabEntered, 480)}>
                 <SectionHeader>Latest from your watchlist</SectionHeader>
                 <div className="mx-5 rounded-2xl" style={CARD_STYLE}>
                   <div className="divide-y divide-white/[0.05]">

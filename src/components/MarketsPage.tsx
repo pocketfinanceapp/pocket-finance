@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useNavigationOptional } from "@/context/NavigationContext";
+import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import type { MarketFilter } from "@/lib/filters";
 import {
   MARKET_REGIONS,
@@ -55,6 +56,7 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
     ensureMarketsLoaded,
   } = useApp();
   const navigation = useNavigationOptional();
+  const tabEntered = useTabPageEntered("markets");
 
   useEffect(() => {
     ensureMarketsLoaded();
@@ -101,7 +103,10 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
       data-markets-list={MARKETS_LIST_VERSION}
       className="flex h-full min-h-0 flex-col bg-black text-white"
     >
-      <div className="relative z-20 shrink-0 border-b border-white/[0.08] bg-black after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:z-10 after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
+      <div
+        className="relative z-20 shrink-0 border-b border-white/[0.08] bg-black after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:z-10 after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']"
+        style={tabEnterStyle(tabEntered, 0)}
+      >
         <header className="px-4 pb-2.5 pt-[max(12px,env(safe-area-inset-top))]">
           <h1 className="text-[28px] font-bold tracking-tight">Markets</h1>
         </header>
@@ -111,29 +116,41 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         style={{ paddingBottom: MARKETS_SCROLL_PADDING }}
       >
-        <div className="px-4 pt-3">
+        <div className="px-4 pt-3" style={tabEnterStyle(tabEntered, 80)}>
           <MarketSummaryBar movers={movers} session={session} />
         </div>
 
         {followingMarkets.length > 0 && (
-          <FollowingSection
-            markets={followingMarkets}
-            onOpen={onOpenMarketFeed}
-          />
+          <div style={tabEnterStyle(tabEntered, 160)}>
+            <FollowingSection
+              markets={followingMarkets}
+              onOpen={onOpenMarketFeed}
+            />
+          </div>
         )}
 
-        <GlobalIndexesSection />
-        <TopMoversSection />
+        <div style={tabEnterStyle(tabEntered, 240)}>
+          <GlobalIndexesSection />
+        </div>
+        <div style={tabEnterStyle(tabEntered, 320)}>
+          <TopMoversSection />
+        </div>
 
         {marketNews.length > 0 && (
-          <MarketNewsSection
-            articles={marketNews}
-            onViewAll={() => navigation?.navigate("home")}
-          />
+          <div style={tabEnterStyle(tabEntered, 400)}>
+            <MarketNewsSection
+              articles={marketNews}
+              onViewAll={() => navigation?.navigate("home")}
+            />
+          </div>
         )}
 
-        {regions.map((region) => (
-          <section key={region.id} className={MARKETS_SECTION_SPACING}>
+        {regions.map((region, regionIndex) => (
+          <section
+            key={region.id}
+            className={MARKETS_SECTION_SPACING}
+            style={tabEnterStyle(tabEntered, 480 + regionIndex * 60)}
+          >
             <h2 className={MARKETS_SECTION_HEADING}>{region.label}</h2>
             <div className={MARKETS_SECTION_CARD}>
               <ul>
@@ -152,7 +169,10 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
           </section>
         ))}
 
-        <p className="mx-4 mt-6 px-1 pb-1 text-center text-[11px] leading-relaxed text-zinc-600">
+        <p
+          className="mx-4 mt-6 px-1 pb-1 text-center text-[11px] leading-relaxed text-zinc-600"
+          style={tabEnterStyle(tabEntered, 540)}
+        >
           Market data is provided for informational purposes only and should
           not be considered investment advice.
         </p>

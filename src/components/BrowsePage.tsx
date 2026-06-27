@@ -30,6 +30,7 @@ import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
 import { appPath } from "@/lib/appPaths";
+import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 
 interface BrowsePageProps {
   articles: NewsArticle[];
@@ -326,6 +327,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
 
   const categorySlug = pathname.match(/^\/app\/browse\/([^/]+)$/)?.[1] ?? null;
   const category = categorySlug ? categoryFromSlug(categorySlug) : null;
+  const tabEntered = useTabPageEntered("browse", true, categorySlug ?? "landing");
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -410,7 +412,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
         {/* Pinned header */}
         <div
           className="relative z-20 shrink-0 border-b border-white/[0.06] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
-          style={{ background: PAGE_BG }}
+          style={{ background: PAGE_BG, ...tabEnterStyle(tabEntered, 0) }}
         >
           <header className="flex items-center gap-2 px-2 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
             <button
@@ -433,7 +435,11 @@ export function BrowsePage({ articles }: BrowsePageProps) {
           {/* Category summary card */}
           <div
             className="relative mx-4 mt-4 overflow-hidden rounded-xl border border-white/[0.07]"
-            style={{ background: CARD_SURFACE, boxShadow: `inset 0 0 40px ${accent}06` }}
+            style={{
+              background: CARD_SURFACE,
+              boxShadow: `inset 0 0 40px ${accent}06`,
+              ...tabEnterStyle(tabEntered, 120),
+            }}
           >
             <div className="absolute inset-0" style={GRID_TEXTURE} />
             <div className="relative flex items-center gap-3 px-4 py-3.5">
@@ -467,7 +473,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
           ) : (
             <>
               {topStory && (
-                <section className="mt-5 px-4">
+                <section className="mt-5 px-4" style={tabEnterStyle(tabEntered, 220)}>
                   <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
                     Top story
                   </p>
@@ -517,7 +523,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
               )}
 
               {latestStories.length > 0 && (
-                <section className="mt-5 px-4">
+                <section className="mt-5 px-4" style={tabEnterStyle(tabEntered, 320)}>
                   <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
                     Latest stories
                   </p>
@@ -568,7 +574,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
       {/* Pinned header */}
       <div
         className="relative z-20 shrink-0 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
-        style={{ background: PAGE_BG }}
+        style={{ background: PAGE_BG, ...tabEnterStyle(tabEntered, 0) }}
       >
         <header className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
           <h1 className="text-[28px] font-bold tracking-tight text-white">Discover</h1>
@@ -583,25 +589,26 @@ export function BrowsePage({ articles }: BrowsePageProps) {
         style={{ paddingBottom: BOTTOM_PADDING }}
       >
         {/* ── Top stories by topic ──────────────────────────────────────── */}
-        <section className="px-4 pt-3">
+        <section className="px-4 pt-3" style={tabEnterStyle(tabEntered, 120)}>
           <p className="mb-3 text-[13px] font-semibold text-white">
             Top stories by topic
           </p>
           <div className="flex flex-col gap-2.5">
-            {FEATURED_CATEGORIES.map((item) => (
-              <TopStoryCard
-                key={item}
-                item={item}
-                article={featuredTopArticle.get(item) ?? null}
-                count={categoryCounts.get(item) ?? 0}
-                onClick={() => navigateTo(item)}
-              />
+            {FEATURED_CATEGORIES.map((item, index) => (
+              <div key={item} style={tabEnterStyle(tabEntered, 180 + index * 60)}>
+                <TopStoryCard
+                  item={item}
+                  article={featuredTopArticle.get(item) ?? null}
+                  count={categoryCounts.get(item) ?? 0}
+                  onClick={() => navigateTo(item)}
+                />
+              </div>
             ))}
           </div>
         </section>
 
         {/* ── All topics ───────────────────────────────────────────────── */}
-        <section className="mt-5 px-4">
+        <section className="mt-5 px-4" style={tabEnterStyle(tabEntered, 420)}>
           <p className="mb-3 text-[13px] font-semibold text-white">All topics</p>
           <div
             className="overflow-hidden rounded-xl border border-white/[0.06]"
