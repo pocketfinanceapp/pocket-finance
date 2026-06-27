@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, Check } from "lucide-react";
+import { ProfileAvatarWithRing } from "@/components/ProfileAvatarWithRing";
 import { StreakFlameIcon } from "@/components/icons/StreakFlameIcon";
 import type {
   DailyGoalState,
@@ -8,6 +9,16 @@ import type {
   StreakState,
   WeeklyActivity,
 } from "@/lib/progression";
+
+const ENTER_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+function enterStyle(active: boolean, delayMs: number) {
+  return {
+    opacity: active ? 1 : 0,
+    transform: active ? "translateY(0)" : "translateY(12px)",
+    transition: `opacity 520ms ${ENTER_EASE} ${delayMs}ms, transform 640ms ${ENTER_EASE} ${delayMs}ms`,
+  } as const;
+}
 
 interface ProfileProgressionHubProps {
   displayName: string;
@@ -22,6 +33,7 @@ interface ProfileProgressionHubProps {
   articlesOpened: number;
   likedCount: number;
   watchlistCount: number;
+  animateIn?: boolean;
 }
 
 export function ProfileProgressionHub({
@@ -37,6 +49,7 @@ export function ProfileProgressionHub({
   articlesOpened,
   likedCount,
   watchlistCount,
+  animateIn = true,
 }: ProfileProgressionHubProps) {
   const isMaxLevel = progression.level === 7;
   const hasWeeklyActivity = weekly.articlesRead > 0 || weekly.briefingsCompleted > 0;
@@ -48,6 +61,7 @@ export function ProfileProgressionHub({
     <div
       className="relative mt-3 overflow-hidden rounded-[22px]"
       style={{
+        ...enterStyle(animateIn, 0),
         background:
           "linear-gradient(165deg, rgba(14,16,36,0.98) 0%, rgba(6,7,12,0.99) 52%, rgba(10,8,6,0.98) 100%)",
         border: "1px solid rgba(255,255,255,0.08)",
@@ -72,58 +86,13 @@ export function ProfileProgressionHub({
 
       {/* Identity + XP ring */}
       <div className="relative flex items-center gap-4 px-5 pb-4 pt-5">
-        <div className="relative shrink-0">
-          <svg
-            className="absolute -inset-1 h-[66px] w-[66px] -rotate-90"
-            viewBox="0 0 64 64"
-            aria-hidden
-          >
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth="3"
-            />
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill="none"
-              stroke="url(#pf-xp-ring)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeDasharray={`${2 * Math.PI * 28}`}
-              strokeDashoffset={`${2 * Math.PI * 28 * (1 - progression.progressPercent / 100)}`}
-              className="transition-all duration-700"
-            />
-            <defs>
-              <linearGradient id="pf-xp-ring" x1="0" y1="0" x2="64" y2="64">
-                <stop stopColor="#7C6CF8" />
-                <stop offset="1" stopColor="#5B8EF0" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div
-            className="relative flex h-[58px] w-[58px] items-center justify-center rounded-[16px] text-2xl font-bold text-white"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(59,110,245,0.75), rgba(0,198,198,0.45))",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-            }}
-          >
-            {initials}
-          </div>
-          <span
-            className="absolute -bottom-1 -right-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
-            style={{ background: "linear-gradient(90deg, #7C6CF8, #5B8EF0)" }}
-          >
-            {progression.level}
-          </span>
-        </div>
+        <ProfileAvatarWithRing
+          initials={initials}
+          progression={progression}
+          animateIn={animateIn}
+        />
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1" style={enterStyle(animateIn, 120)}>
           <p className="text-[18px] font-bold leading-tight text-white">{displayName}</p>
           {email && (
             <p className="mt-0.5 truncate text-[12px] text-zinc-500">{email}</p>
@@ -144,6 +113,7 @@ export function ProfileProgressionHub({
       <div
         className="mx-4 rounded-2xl px-4 py-3"
         style={{
+          ...enterStyle(animateIn, 200),
           background: dailyGoal.isComplete
             ? "rgba(0,198,198,0.08)"
             : "rgba(255,255,255,0.03)",
@@ -206,7 +176,7 @@ export function ProfileProgressionHub({
       </div>
 
       {/* Streak strip */}
-      <div className="mt-3 px-5 pb-4">
+      <div className="mt-3 px-5 pb-4" style={enterStyle(animateIn, 280)}>
         <div className="flex items-center gap-3">
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
@@ -260,7 +230,10 @@ export function ProfileProgressionHub({
       {/* Weekly pulse */}
       <div
         className="border-t border-white/[0.06] px-5 py-3"
-        style={{ background: "rgba(255,255,255,0.02)" }}
+        style={{
+          ...enterStyle(animateIn, 360),
+          background: "rgba(255,255,255,0.02)",
+        }}
       >
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-600">
           This week
@@ -279,7 +252,7 @@ export function ProfileProgressionHub({
       </div>
 
       {/* Stats + joined */}
-      <div className="border-t border-white/[0.06]">
+      <div className="border-t border-white/[0.06]" style={enterStyle(animateIn, 440)}>
         <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
           <HubStat label="Opened" value={String(articlesOpened)} />
           <HubStat label="Liked" value={String(likedCount)} />
