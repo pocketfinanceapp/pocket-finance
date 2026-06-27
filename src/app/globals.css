@@ -561,17 +561,19 @@ html.app-route
   animation: pf-particle-fly 520ms ease-out forwards;
 }
 
-@keyframes pf-follow-fade {
+@keyframes pf-follow-unfollow-subtle {
   0% {
-    opacity: 1;
     transform: scale(1);
   }
   100% {
-    opacity: 0.85;
-    transform: scale(0.96);
+    transform: scale(0.98);
   }
 }
 
-.pf-follow-unfollow {
-  animation: pf-follow-fade 280ms ease-out;
+.pf-follow-unfollow-subtle {
+  animation: pf-follow-unfollow-subtle 180ms ease-out;
+}
+
+.pf-follow-pop {
+  animation: pf-pop-bounce 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }

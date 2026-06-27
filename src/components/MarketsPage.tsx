@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-import { PopReaction } from "@/components/PopReaction";
 import { useApp } from "@/context/AppContext";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
@@ -26,7 +25,7 @@ import { MarketSparkline } from "./MarketSparkline";
 import { GlobalIndexesSection } from "./GlobalIndexesSection";
 import { TopMoversSection } from "./TopMoversSection";
 
-export const MARKETS_LIST_VERSION = "global-indexes-movers-v8";
+export const MARKETS_LIST_VERSION = "following-list-v9";
 
 const MARKETS_SCROLL_PADDING =
   "calc(2.5rem + max(1.25rem, env(safe-area-inset-bottom)))";
@@ -42,6 +41,8 @@ export const MARKETS_SECTION_HEADING =
   "px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500";
 
 export const MARKETS_SECTION_SPACING = "mt-5";
+
+const PARTICLE_COUNT = 8;
 
 interface MarketsPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
@@ -123,6 +124,7 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
             <FollowingSection
               markets={followingMarkets}
               onOpen={onOpenMarketFeed}
+              onUnfollow={toggleFollowMarket}
             />
           </div>
         )}
@@ -182,100 +184,38 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
 function FollowingSection({
   markets,
   onOpen,
+  onUnfollow,
 }: {
   markets: GlobalMarket[];
   onOpen: (market: MarketFilter) => void;
+  onUnfollow: (marketId: MarketFilter) => void;
 }) {
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const handleScroll = () => {
-    const el = carouselRef.current;
-    if (!el) return;
-    // card = 68vw, gap-3 = 12px; no container padding (margins on first/last card)
-    const cardWidth = el.clientWidth * 0.68;
-    const gap = 12;
-    const index = Math.round(el.scrollLeft / (cardWidth + gap));
-    setActiveIndex(Math.min(markets.length - 1, Math.max(0, index)));
-  };
-
   return (
     <section className={MARKETS_SECTION_SPACING}>
-      <h2 className={MARKETS_SECTION_HEADING}>Following</h2>
-      {/*
-        No container padding — first card gets ml-[16vw] and last gets mr-[16vw].
-        (100vw - 68vw) / 2 = 16vw so snap-center aligns perfectly without scroll-padding.
-      */}
-      <div
-        ref={carouselRef}
-        onScroll={handleScroll}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-hide"
-      >
-        {markets.map((market) => (
-          <FollowingMarketCard
-            key={market.id}
-            market={market}
-            onOpen={() => onOpen(market.id)}
-          />
-        ))}
+      <div className="px-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+          Following
+        </h2>
+        <p className="mt-1 text-[12px] text-zinc-600">
+          {markets.length} market{markets.length === 1 ? "" : "s"} · tap to open feed
+        </p>
       </div>
-      {markets.length > 1 && (
-        <div className="mt-2.5 flex justify-center gap-1.5">
-          {markets.map((_, i) => (
-            <span
-              key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i === activeIndex
-                  ? "w-4 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
-                  : "w-1.5 bg-zinc-700"
-              }`}
-              aria-hidden
+      <div className={MARKETS_SECTION_CARD}>
+        <ul>
+          {markets.map((market, i) => (
+            <MarketRow
+              key={market.id}
+              market={market}
+              isFollowing
+              onOpen={() => onOpen(market.id)}
+              onFollow={() => onUnfollow(market.id)}
+              showDivider={i < markets.length - 1}
+              accentFollowing
             />
           ))}
-        </div>
-      )}
+        </ul>
+      </div>
     </section>
-  );
-}
-
-function FollowingMarketCard({
-  market,
-  onOpen,
-}: {
-  market: GlobalMarket;
-  onOpen: () => void;
-}) {
-  const up = market.changePercent >= 0;
-  const sparkline = useMemo(() => getMarketSparkline(market), [market]);
-
-  return (
-    <button
-      type="button"
-      data-no-drag
-      onClick={onOpen}
-      className="w-[68vw] shrink-0 snap-center rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5 text-left transition-colors active:bg-white/[0.06] first:ml-[16vw] last:mr-[16vw]"
-    >
-      <div className="flex items-center gap-2">
-        <span className="text-base leading-none">{market.flag}</span>
-        <span className="truncate text-sm font-semibold text-white">
-          {market.name}
-        </span>
-      </div>
-      <p className="mt-2.5 truncate text-[20px] font-bold leading-tight tabular-nums text-white">
-        {formatIndexValue(market.value)}
-      </p>
-      <p
-        className={`mt-0.5 text-[13px] font-semibold tabular-nums ${
-          up ? "text-[#34c759]" : "text-[#ff453a]"
-        }`}
-      >
-        {up ? "+" : ""}
-        {market.changePercent.toFixed(2)}%
-      </p>
-      <div className="mt-2.5">
-        <MarketSparkline points={sparkline} up={up} width={200} height={26} />
-      </div>
-    </button>
   );
 }
 
@@ -410,22 +350,34 @@ function MarketRow({
   onOpen,
   onFollow,
   showDivider,
+  accentFollowing = false,
 }: {
   market: GlobalMarket;
   isFollowing: boolean;
   onOpen: () => void;
   onFollow: () => void;
   showDivider: boolean;
+  accentFollowing?: boolean;
 }) {
   const up = market.changePercent >= 0;
   const sparkline = useMemo(() => getMarketSparkline(market), [market]);
 
   return (
     <li
-      className={`flex items-center gap-2 px-4 py-3 ${
+      className={`relative flex items-center gap-2 px-4 py-3 ${
         showDivider ? "border-b border-white/[0.06]" : ""
-      }`}
+      } ${accentFollowing ? "bg-white/[0.02]" : ""}`}
     >
+      {accentFollowing && (
+        <div
+          className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0,198,198,0.55), rgba(59,110,245,0.25))",
+          }}
+        />
+      )}
+
       <button
         type="button"
         data-no-drag
@@ -465,6 +417,19 @@ function MarketRow({
   );
 }
 
+function spawnFollowParticles() {
+  return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
+    const angle = (Math.PI * 2 * i) / PARTICLE_COUNT + Math.random() * 0.35;
+    const dist = 10 + Math.random() * 12;
+    return {
+      id: Date.now() + i + Math.random(),
+      dx: Math.cos(angle) * dist,
+      dy: Math.sin(angle) * dist,
+      color: i % 2 === 0 ? "#00C6C6" : "#3B6EF5",
+    };
+  });
+}
+
 function FollowMarketButton({
   isFollowing,
   onFollow,
@@ -472,39 +437,59 @@ function FollowMarketButton({
   isFollowing: boolean;
   onFollow: () => void;
 }) {
+  const [followPop, setFollowPop] = useState(false);
   const [unfollowAnim, setUnfollowAnim] = useState(false);
+  const [particles, setParticles] = useState<
+    { id: number; dx: number; dy: number; color: string }[]
+  >([]);
 
-  const handleClick = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
     if (isFollowing) {
       setUnfollowAnim(true);
-      window.setTimeout(() => setUnfollowAnim(false), 280);
+      window.setTimeout(() => setUnfollowAnim(false), 180);
+    } else {
+      setFollowPop(true);
+      setParticles(spawnFollowParticles());
+      window.setTimeout(() => {
+        setFollowPop(false);
+        setParticles([]);
+      }, 520);
     }
+
     onFollow();
   };
 
-  if (isFollowing) {
-    return (
-      <button
-        type="button"
-        data-no-drag
-        onClick={handleClick}
-        className={`h-7 shrink-0 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-3 text-[11px] font-semibold text-white shadow-[0_2px_12px_rgba(59,110,245,0.3)] transition-all duration-300 ${
-          unfollowAnim ? "pf-follow-unfollow" : ""
-        }`}
-      >
-        Following
-      </button>
-    );
-  }
-
   return (
-    <PopReaction
-      aria-label="Follow market"
-      onClick={() => handleClick()}
-      className="h-7 shrink-0 rounded-full border border-white/25 bg-transparent px-3 text-[11px] font-semibold text-zinc-400 transition-colors duration-300 hover:border-white/40 hover:text-white"
+    <button
+      type="button"
+      data-no-drag
+      aria-label={isFollowing ? "Unfollow market" : "Follow market"}
+      onClick={handleClick}
+      className={`relative shrink-0 overflow-visible rounded-full px-3 text-[11px] font-semibold transition-colors duration-200 ${
+        isFollowing
+          ? "h-7 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white shadow-[0_2px_10px_rgba(59,110,245,0.25)]"
+          : "h-7 border border-white/25 bg-transparent text-zinc-400 hover:border-white/40 hover:text-white"
+      } ${followPop ? "pf-follow-pop" : ""} ${
+        unfollowAnim ? "pf-follow-unfollow-subtle" : ""
+      }`}
     >
-      Follow
-    </PopReaction>
+      {particles.map((p) => (
+        <span
+          key={p.id}
+          className="pf-pop-particle"
+          style={
+            {
+              "--dx": `${p.dx}px`,
+              "--dy": `${p.dy}px`,
+              backgroundColor: p.color,
+            } as React.CSSProperties
+          }
+          aria-hidden
+        />
+      ))}
+      {isFollowing ? "Following" : "Follow"}
+    </button>
   );
 }
