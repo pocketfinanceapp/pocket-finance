@@ -79,7 +79,7 @@ export function FeedCard({
 }: FeedCardProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const { user, isGuest, requestSignIn } = useAuth();
-  const { liked, toggleLike, likeOnly } = useArticleLikes(article);
+  const { liked, likeCount, toggleLike, likeOnly } = useArticleLikes(article);
 
   const [imageFailed, setImageFailed] = useState(false);
   const saved = isArticleSaved(article.id);
@@ -284,40 +284,43 @@ export function FeedCard({
       ))}
 
       <aside
-        className="absolute right-3 top-[46%] z-30 flex -translate-y-1/2 flex-col items-center gap-5 sm:right-4 sm:gap-6"
+        className="absolute right-3 top-[46%] z-30 flex -translate-y-1/2 flex-col items-center gap-4 sm:right-4"
         data-no-drag
         data-interactive
       >
-        <PopReaction
-          aria-label={liked ? "Unlike" : "Like"}
-          burst={!liked}
-          onClick={() =>
-            guardGuestAction("Sign in to like this", () => void toggleLike())
-          }
-          className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition-transform active:scale-90 ${
-            liked
-              ? "border-[#00C6C6]/40 bg-[#00C6C6]/12 shadow-[0_4px_20px_rgba(0,198,198,0.18)]"
-              : "border-white/10 bg-black/40 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
-          }`}
-        >
-          <Heart
-            className={`${iconClass} transition-colors ${
-              liked ? "fill-[#00C6C6] text-[#00C6C6] opacity-100" : ""
-            }`}
-            strokeWidth={2.25}
-          />
-        </PopReaction>
+        <div className="flex flex-col items-center">
+          <PopReaction
+            aria-label={liked ? "Unlike" : "Like"}
+            burst={!liked}
+            onClick={() =>
+              guardGuestAction("Sign in to like this", () => void toggleLike())
+            }
+            className="flex h-11 w-11 items-center justify-center transition-transform active:scale-90"
+          >
+            <Heart
+              className={`${iconClass} transition-colors ${
+                liked ? "fill-[#00C6C6] text-[#00C6C6]" : ""
+              }`}
+              strokeWidth={2.25}
+            />
+          </PopReaction>
+          {likeCount > 0 && (
+            <span className="-mt-0.5 text-[11px] font-semibold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
+              {formatLikeCount(likeCount)}
+            </span>
+          )}
+        </div>
 
-        <ActionButton
+        <RailAction
           label="Comment"
           onClick={() =>
             guardGuestAction("Sign in to comment", onOpenComments)
           }
         >
           <MessageCircle className={iconClass} strokeWidth={2.25} />
-        </ActionButton>
+        </RailAction>
 
-        <ActionButton
+        <RailAction
           label="Share"
           onClick={async () => {
             const payload = {
@@ -338,11 +341,10 @@ export function FeedCard({
           }}
         >
           <Share2 className={iconClass} strokeWidth={2.25} />
-        </ActionButton>
+        </RailAction>
 
-        <ActionButton
+        <RailAction
           label={saved ? "Unsave" : "Save"}
-          active={saved}
           onClick={() =>
             guardGuestAction("Sign in to save this", () => {
               void (async () => {
@@ -359,11 +361,11 @@ export function FeedCard({
         >
           <Bookmark
             className={`${iconClass} transition-colors ${
-              saved ? "fill-[#00C6C6] text-[#00C6C6] opacity-100" : ""
+              saved ? "fill-[#00C6C6] text-[#00C6C6]" : ""
             }`}
             strokeWidth={2.25}
           />
-        </ActionButton>
+        </RailAction>
       </aside>
 
       {showSwipeHint && isFirstCard && (
@@ -498,16 +500,29 @@ function FeedChip({
   );
 }
 
-function ActionButton({
+function formatLikeCount(count: number): string {
+  if (count >= 1_000_000) {
+    const v = count / 1_000_000;
+    return `${v >= 10 ? Math.round(v) : v.toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (count >= 10_000) {
+    const v = count / 1_000;
+    return `${v >= 100 ? Math.round(v) : v.toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  if (count >= 1_000) {
+    return `${(count / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  return String(count);
+}
+
+function RailAction({
   children,
   label,
   onClick,
-  active = false,
 }: {
   children: React.ReactNode;
   label: string;
   onClick: () => void;
-  active?: boolean;
 }) {
   return (
     <button
@@ -519,11 +534,7 @@ function ActionButton({
         e.stopPropagation();
         onClick();
       }}
-      className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition-transform active:scale-90 ${
-        active
-          ? "border-[#00C6C6]/40 bg-[#00C6C6]/12 shadow-[0_4px_20px_rgba(0,198,198,0.18)]"
-          : "border-white/10 bg-black/40 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
-      }`}
+      className="flex h-11 w-11 items-center justify-center transition-transform active:scale-90"
       style={{ touchAction: "manipulation" }}
     >
       {children}

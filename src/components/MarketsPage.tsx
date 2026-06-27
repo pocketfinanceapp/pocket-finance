@@ -89,14 +89,11 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
     () =>
       MARKET_REGIONS.map((region) => ({
         ...region,
-        markets: getMarketsByRegion(region).sort((a, b) => {
-          const aFollowed = followedMarkets.includes(a.id);
-          const bFollowed = followedMarkets.includes(b.id);
-          if (aFollowed !== bFollowed) return aFollowed ? -1 : 1;
-          return a.name.localeCompare(b.name);
-        }),
+        markets: getMarketsByRegion(region).sort((a, b) =>
+          a.name.localeCompare(b.name)
+        ),
       })),
-    [followedMarkets]
+    []
   );
 
   return (
