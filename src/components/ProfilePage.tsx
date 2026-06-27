@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
-  Check,
+  Bookmark,
   ChevronRight,
+  Clock3,
+  Heart,
   Settings,
   Sparkles,
+  Tag,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
@@ -325,7 +328,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   if (isGuest && !user) {
     return (
       <div className="flex h-full min-h-0 flex-col bg-black">
-        <ProfileRootHeader level={1} onSettings={() => openSettings()} />
+        <ProfileRootHeader onSettings={() => openSettings()} />
         <div className="relative flex flex-1 flex-col overflow-hidden px-5">
           <div className="pointer-events-none select-none blur-[2px] opacity-40">
             <ProfileProgressionHub
@@ -431,10 +434,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
     <div className="relative flex h-full min-h-0 flex-col bg-black">
       {/* Sticky root header */}
       <div style={tabEnterStyle(profileEntered, 0)}>
-        <ProfileRootHeader
-          level={progressionState.level}
-          onSettings={() => openSettings()}
-        />
+        <ProfileRootHeader onSettings={() => openSettings()} />
       </div>
 
       {/* Achievement toast (fixed at top) */}
@@ -464,8 +464,22 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           animateIn={profileEntered}
         />
 
-        {/* ── Achievements preview ─────────────────────────────────────── */}
-        <section className="mt-5" style={tabEnterStyle(profileEntered, 520)}>
+        {/* ── Personalise feed ─────────────────────────────────────────── */}
+        <section className="mt-4" style={tabEnterStyle(profileEntered, 320)}>
+          <QuickActionRow
+            icon={Tag}
+            title="My topics"
+            subtitle={
+              selectedTopics.length === 0
+                ? "Choose topics for your Following feed"
+                : `${selectedTopics.length} topic${selectedTopics.length === 1 ? "" : "s"} selected`
+            }
+            onClick={() => setShowTopics(true)}
+          />
+        </section>
+
+        {/* ── Achievements ─────────────────────────────────────────────── */}
+        <section className="mt-5" style={tabEnterStyle(profileEntered, 400)}>
           <ProfileAchievements
             likedArticlesCount={likedArticlesCount}
             maxItems={4}
@@ -473,125 +487,74 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           />
         </section>
 
-        {/* ── Saved articles preview ────────────────────────────────── */}
-        {savedPreview.length > 0 && (
-          <section className="mt-5" style={tabEnterStyle(profileEntered, 600)}>
-            <SectionHeader
-              title="Saved articles"
-              action="View all"
-              onAction={() => openSettings("saved")}
-            />
-            <ArticleGroupCard className="mt-3">
-              {savedPreview.map((item) => (
-                <ProfileArticlePreview
-                  key={item.id}
-                  title={item.articleTitle}
-                  source={item.ticker}
-                  ticker={item.ticker}
-                  timestamp={timeAgo(item.savedAt)}
-                  endIcon="chevron"
-                  onClick={() => openSettings("saved")}
-                />
-              ))}
-            </ArticleGroupCard>
-          </section>
-        )}
+        {/* ── Library (saved, liked, recently read) ────────────────────── */}
+        {(savedPreview.length > 0 ||
+          likedPreview.length > 0 ||
+          recentlyReadPreview.length > 0) && (
+          <section className="mt-5" style={tabEnterStyle(profileEntered, 480)}>
+            <SectionHeader title="Your library" />
+            <div className="mt-3 space-y-3">
+              {savedPreview.length > 0 && (
+                <LibraryGroup
+                  title="Saved"
+                  action="View all"
+                  onAction={() => openSettings("saved")}
+                >
+                  {savedPreview.map((item) => (
+                    <ProfileArticlePreview
+                      key={item.id}
+                      title={item.articleTitle}
+                      source={item.ticker}
+                      ticker={item.ticker}
+                      timestamp={timeAgo(item.savedAt)}
+                      endIcon="chevron"
+                      onClick={() => openSettings("saved")}
+                    />
+                  ))}
+                </LibraryGroup>
+              )}
 
-        {/* ── 7. Liked articles preview ────────────────────────────────── */}
-        {likedPreview.length > 0 && (
-          <section className="mt-5" style={tabEnterStyle(profileEntered, 680)}>
-            <SectionHeader
-              title="Liked articles"
-              action="View all"
-              onAction={() => openSettings("liked")}
-            />
-            <ArticleGroupCard className="mt-3">
-              {likedPreview.map((item) => (
-                <ProfileArticlePreview
-                  key={item.id}
-                  title={item.articleTitle}
-                  source={item.ticker}
-                  ticker={item.ticker}
-                  timestamp={timeAgo(item.likedAt)}
-                  endIcon="chevron"
-                  onClick={() => openSettings("liked")}
-                />
-              ))}
-            </ArticleGroupCard>
-          </section>
-        )}
+              {likedPreview.length > 0 && (
+                <LibraryGroup
+                  title="Liked"
+                  action="View all"
+                  onAction={() => openSettings("liked")}
+                >
+                  {likedPreview.map((item) => (
+                    <ProfileArticlePreview
+                      key={item.id}
+                      title={item.articleTitle}
+                      source={item.ticker}
+                      ticker={item.ticker}
+                      timestamp={timeAgo(item.likedAt)}
+                      endIcon="chevron"
+                      onClick={() => openSettings("liked")}
+                    />
+                  ))}
+                </LibraryGroup>
+              )}
 
-        {/* ── 8. Recently Read ─────────────────────────────────────────── */}
-        {recentlyReadPreview.length > 0 && (
-          <section className="mt-5" style={tabEnterStyle(profileEntered, 760)}>
-            <SectionHeader
-              title="Recently read"
-              action="View history"
-              onAction={() => setShowAllRecentlyRead(true)}
-            />
-            <ArticleGroupCard className="mt-3">
-              {recentlyReadPreview.map((item) => (
-                <ProfileArticlePreview
-                  key={item.id}
-                  title={item.headline}
-                  source={item.sourceName}
-                  timestamp={timeAgo(item.readAt)}
-                  href={item.sourceUrl}
-                  endIcon="link"
-                />
-              ))}
-            </ArticleGroupCard>
-          </section>
-        )}
-
-        {/* ── 9. My Topics compact row ─────────────────────────────────── */}
-        <section className="mt-5" style={tabEnterStyle(profileEntered, 840)}>
-          <button
-            type="button"
-            data-no-drag
-            onClick={() => setShowTopics(true)}
-            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:bg-white/[0.05]"
-            style={CARD_STYLE}
-          >
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-              style={{
-                background: "rgba(59,110,245,0.15)",
-                border: "1px solid rgba(59,110,245,0.20)",
-              }}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="rgba(99,143,255,0.9)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                <line x1="7" y1="7" x2="7.01" y2="7" />
-              </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold text-white">My Topics</p>
-              {selectedTopics.length === 0 ? (
-                <p className="mt-0.5 text-[12px] text-zinc-500">
-                  Choose topics to personalise your Following feed.
-                </p>
-              ) : (
-                <p className="mt-0.5 text-[12px] text-zinc-500">
-                  {`Following ${selectedTopics.length} topic${selectedTopics.length === 1 ? "" : "s"}`}
-                  {" · "}
-                  {selectedTopics.slice(0, 3).join(", ")}
-                  {selectedTopics.length > 3 ? "…" : ""}
-                </p>
+              {recentlyReadPreview.length > 0 && (
+                <LibraryGroup
+                  title="Recently read"
+                  action="View history"
+                  onAction={() => setShowAllRecentlyRead(true)}
+                >
+                  {recentlyReadPreview.map((item) => (
+                    <ProfileArticlePreview
+                      key={item.id}
+                      title={item.headline}
+                      source={item.sourceName}
+                      timestamp={timeAgo(item.readAt)}
+                      href={item.sourceUrl}
+                      endIcon="link"
+                    />
+                  ))}
+                </LibraryGroup>
               )}
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-zinc-600" />
-          </button>
-        </section>
+          </section>
+        )}
 
         {/* ── 10. Footer ───────────────────────────────────────────────── */}
         <p className="mt-10 text-center text-[11px] text-zinc-700">
@@ -881,27 +844,20 @@ function AchievementToast({
 // ---------------------------------------------------------------------------
 
 function ProfileRootHeader({
-  level,
   onSettings,
 }: {
-  level?: number;
   onSettings: () => void;
 }) {
   return (
     <header
-      className="flex shrink-0 items-center border-b border-white/[0.06] bg-black px-4 pb-2"
-      style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
+      className="flex shrink-0 items-center border-b border-white/[0.06] bg-black px-4 pb-3"
+      style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <h1 className="text-lg font-bold text-white">Profile</h1>
-        {level != null && level > 0 && (
-          <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-            style={{ background: "linear-gradient(90deg, #7C6CF8, #5B8EF0)" }}
-          >
-            Lvl {level}
-          </span>
-        )}
+      <div className="min-w-0 flex-1">
+        <h1 className="text-[22px] font-bold tracking-tight text-white">Profile</h1>
+        <p className="mt-0.5 text-[13px] text-zinc-500">
+          Your progress, library, and preferences
+        </p>
       </div>
       <button
         type="button"
@@ -913,6 +869,78 @@ function ProfileRootHeader({
         <Settings className="h-5 w-5 text-zinc-400" />
       </button>
     </header>
+  );
+}
+
+function QuickActionRow({
+  icon: Icon,
+  title,
+  subtitle,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-no-drag
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:bg-white/[0.05]"
+      style={CARD_STYLE}
+    >
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={{
+          background: "rgba(59,110,245,0.14)",
+          border: "1px solid rgba(59,110,245,0.18)",
+        }}
+      >
+        <Icon className="h-[18px] w-[18px] text-[#8BA8FF]" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] font-semibold text-white">{title}</p>
+        <p className="mt-0.5 text-[12px] text-zinc-500">{subtitle}</p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-zinc-600" />
+    </button>
+  );
+}
+
+function LibraryGroup({
+  title,
+  action,
+  onAction,
+  children,
+}: {
+  title: string;
+  action: string;
+  onAction: () => void;
+  children: React.ReactNode;
+}) {
+  const GroupIcon =
+    title === "Saved" ? Bookmark : title === "Liked" ? Heart : Clock3;
+
+  return (
+    <div className="overflow-hidden rounded-2xl" style={CARD_STYLE}>
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <GroupIcon className="h-3.5 w-3.5 text-zinc-500" />
+          <p className="text-[13px] font-semibold text-white">{title}</p>
+        </div>
+        <button
+          type="button"
+          data-no-drag
+          onClick={onAction}
+          className="text-[12px] font-semibold text-[#00C6C6] active:opacity-60"
+        >
+          {action}
+        </button>
+      </div>
+      <div className="divide-y divide-white/[0.05]">{children}</div>
+    </div>
   );
 }
 
