@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { FeedMode } from "@/lib/filterArticles";
 import { useApp } from "@/context/AppContext";
 import {
@@ -33,6 +33,7 @@ export function FeedHeader({
   const navRef = useRef<HTMLElement>(null);
   const tabRefs = useRef<Partial<Record<FeedMode, HTMLButtonElement>>>({});
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+  const [indicatorReady, setIndicatorReady] = useState(false);
 
   const filterLabels = getExplicitFilterLabels(
     marketFilters,
@@ -47,24 +48,41 @@ export function FeedHeader({
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
-  useLayoutEffect(() => {
-    const updateIndicator = () => {
-      const nav = navRef.current;
-      const tab = tabRefs.current[feedMode];
-      if (!nav || !tab) return;
+  const measureIndicator = useCallback((mode: FeedMode = feedMode) => {
+    const nav = navRef.current;
+    const tab = tabRefs.current[mode];
+    if (!nav || !tab) return;
 
-      const navRect = nav.getBoundingClientRect();
-      const tabRect = tab.getBoundingClientRect();
-      setIndicator({
-        left: tabRect.left - navRect.left,
-        width: tabRect.width,
-      });
-    };
-
-    updateIndicator();
-    window.addEventListener("resize", updateIndicator);
-    return () => window.removeEventListener("resize", updateIndicator);
+    const navRect = nav.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    setIndicator({
+      left: tabRect.left - navRect.left,
+      width: tabRect.width,
+    });
   }, [feedMode]);
+
+  useLayoutEffect(() => {
+    measureIndicator(feedMode);
+    setIndicatorReady(true);
+    // Initial layout only — tab switches animate via useEffect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!indicatorReady) return;
+
+    const frame = requestAnimationFrame(() => {
+      measureIndicator(feedMode);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [feedMode, indicatorReady, measureIndicator]);
+
+  useEffect(() => {
+    const onResize = () => measureIndicator(feedMode);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [feedMode, measureIndicator]);
 
   return (
     <header className={`relative isolate ${className}`}>
@@ -75,7 +93,7 @@ export function FeedHeader({
         <div className="h-10 w-10 shrink-0" aria-hidden />
         <nav
           ref={navRef}
-          className="relative flex items-center justify-center gap-1 overflow-hidden py-3 sm:gap-2"
+          className="relative flex min-h-[48px] items-center justify-center gap-1 py-3 sm:gap-2"
         >
           {FEED_TABS.map((tab) => {
             const active = feedMode === tab.id;
@@ -89,7 +107,7 @@ export function FeedHeader({
                 data-no-drag
                 onPointerDown={stop}
                 onClick={() => onFeedModeChange(tab.id)}
-                className={`relative shrink-0 whitespace-nowrap px-4 text-base transition-all duration-200 ${TAB_SHADOW} ${
+                className={`relative flex min-h-[48px] shrink-0 items-center whitespace-nowrap px-4 text-[16px] transition-all duration-200 ${TAB_SHADOW} ${
                   active
                     ? "font-semibold text-white"
                     : "font-normal text-white/45"
@@ -101,7 +119,9 @@ export function FeedHeader({
           })}
           <span
             aria-hidden
-            className="pointer-events-none absolute bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] transition-all duration-200 ease-out"
+            className={`pointer-events-none absolute bottom-0 h-[3px] rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] transition-[left,width] duration-200 ease-out ${
+              indicatorReady && indicator.width > 0 ? "opacity-100" : "opacity-0"
+            }`}
             style={{
               left: indicator.left,
               width: indicator.width,

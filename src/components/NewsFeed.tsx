@@ -606,7 +606,7 @@ export function NewsFeed({
               feedMode={feedMode}
               onFeedModeChange={setFeedMode}
               onOpenSearch={() => setSearchOpen(true)}
-              className="absolute left-0 right-0 top-0 z-30"
+              className="pointer-events-auto absolute left-0 right-0 top-0 z-40"
             />
 
             {verticalFeedArticles.length === 0 ? (
@@ -658,7 +658,7 @@ export function NewsFeed({
               </div>
             ) : (
               <div
-                className={`feed-column-viewport transition-opacity duration-200 ease-out ${
+                className={`feed-column-viewport z-0 transition-opacity duration-200 ease-out ${
                   tabContentVisible ? "opacity-100" : "opacity-0"
                 }`}
               >
