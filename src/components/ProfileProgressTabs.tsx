@@ -36,12 +36,15 @@ export function ProfileProgressTabs({
   return (
     <section className={CARD} style={tabEnterStyle(animateIn, 80)}>
       <div className="px-5 py-5">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-pocket-muted">
+          Streak
+        </p>
         <div className="flex items-start gap-4">
           <div className="relative shrink-0 pf-streak-hero-enter">
             <StreakHeroIcon
               uid={uid}
               active={streakActive || loginStreak.visitedToday}
-              size={64}
+              size={60}
               className="drop-shadow-[0_6px_20px_rgba(251,146,60,0.22)]"
             />
             {streakActive && (
@@ -57,12 +60,12 @@ export function ProfileProgressTabs({
             )}
           </div>
 
-          <div className="min-w-0 flex-1 pt-0.5">
+          <div className="min-w-0 flex-1 pt-1">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <p className="text-[36px] font-black leading-none tabular-nums tracking-tight text-pocket-text pf-streak-number-enter">
+              <p className="text-[34px] font-black leading-none tabular-nums tracking-tight text-pocket-text pf-streak-number-enter">
                 {streakActive ? loginStreak.currentStreak : 0}
               </p>
-              <p className="text-[13px] font-bold uppercase tracking-[0.1em] text-[#FB923C]">
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[#FB923C]">
                 day streak
               </p>
             </div>
@@ -81,72 +84,49 @@ export function ProfileProgressTabs({
           </div>
         </div>
 
-        <div className="mt-5 flex w-full justify-between gap-1.5">
-          {loginStreak.weeklyStrip.map(({ day, completed, isToday }, index) => (
-            <div key={day} className="flex flex-1 flex-col items-center gap-1.5">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold transition-all ${
-                  completed
-                    ? "bg-gradient-to-b from-amber-400 to-orange-500 text-black shadow-[0_0_10px_rgba(251,146,60,0.3)]"
-                    : isToday
-                      ? "border-2 border-amber-500/60 bg-[var(--pocket-surface-hover)] text-amber-500"
-                      : "border border-[var(--pocket-border)] bg-[var(--pocket-card)] text-pocket-muted"
-                }`}
-                style={{ animationDelay: `${index * 40}ms` }}
-              >
-                {completed ? "✓" : isToday ? "•" : ""}
-              </div>
-              <span
-                className={`text-[9px] font-semibold ${
-                  isToday ? "text-amber-500" : "text-pocket-muted"
-                }`}
-              >
-                {day}
-              </span>
-            </div>
-          ))}
-        </div>
-
         <div className="my-5 border-t border-[var(--pocket-border)]" />
 
-        <div className="flex items-start gap-4">
-          <div className="pf-level-badge-enter relative flex h-16 w-16 shrink-0 items-center justify-center rounded-[18px] bg-gradient-to-br from-[#7C6CF8] via-[#5B8EF0] to-[#00C6C6] shadow-[0_6px_22px_rgba(91,142,240,0.3)]">
-            <span className="text-[28px] font-black tabular-nums text-white">
+        <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-pocket-muted">
+          Level
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="pf-level-badge-enter relative flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-[#7C6CF8] via-[#5B8EF0] to-[#00C6C6] shadow-[0_6px_22px_rgba(91,142,240,0.28)]">
+            <span className="text-[26px] font-black tabular-nums text-white">
               {progression.level}
             </span>
           </div>
 
-          <div className="min-w-0 flex-1 pt-0.5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8BA8FF]">
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-bold leading-tight text-pocket-text">
               {progression.title}
             </p>
-            <p className="mt-0.5 text-[26px] font-black leading-none tracking-tight text-pocket-text">
-              Level {progression.level}
+            <p className="mt-1 text-[12px] font-medium text-pocket-muted">
+              {isMaxLevel
+                ? `${totalXP.toLocaleString()} lifetime XP · Max level`
+                : `Level ${progression.level} of 7`}
             </p>
-
-            {!isMaxLevel ? (
-              <div className="mt-3">
-                <div className="mb-1.5 flex items-center justify-between gap-2 text-[11px] font-semibold text-pocket-muted">
-                  <span>Progress to Level {progression.level + 1}</span>
-                  <span className="shrink-0 tabular-nums text-pocket-text">
-                    {progression.progressXP.toLocaleString()} /{" "}
-                    {xpToNext.toLocaleString()} XP
-                  </span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-[var(--pocket-surface-hover)]">
-                  <div
-                    className="pf-level-bar-fill h-full rounded-full bg-gradient-to-r from-[#7C6CF8] via-[#5B8EF0] to-[#00C6C6] transition-all duration-700"
-                    style={{ width: `${progression.progressPercent}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <p className="mt-2 text-[12px] font-semibold tabular-nums text-pocket-muted">
-                {totalXP.toLocaleString()} lifetime XP · Max level
-              </p>
-            )}
           </div>
         </div>
+
+        {!isMaxLevel && (
+          <div className="mt-4">
+            <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-semibold">
+              <span className="text-pocket-muted">
+                Progress to Level {progression.level + 1}
+              </span>
+              <span className="shrink-0 tabular-nums text-pocket-text">
+                {progression.progressXP.toLocaleString()} /{" "}
+                {xpToNext.toLocaleString()} XP
+              </span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-[var(--pocket-surface-hover)]">
+              <div
+                className="pf-level-bar-fill h-full rounded-full bg-gradient-to-r from-[#7C6CF8] via-[#5B8EF0] to-[#00C6C6] transition-all duration-700"
+                style={{ width: `${progression.progressPercent}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { useApp } from "@/context/AppContext";
@@ -61,6 +61,9 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
   } = useApp();
   const navigation = useNavigationOptional();
   const tabEntered = useTabPageEntered("markets");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const followingBlockRef = useRef<HTMLDivElement>(null);
+  const prevFollowingCountRef = useRef(followedMarkets.length);
 
   useEffect(() => {
     ensureMarketsLoaded();
@@ -82,6 +85,19 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
         .filter((m): m is GlobalMarket => m !== undefined),
     [followedMarkets]
   );
+
+  useLayoutEffect(() => {
+    const prev = prevFollowingCountRef.current;
+    const next = followingMarkets.length;
+    const scrollEl = scrollRef.current;
+    const blockEl = followingBlockRef.current;
+
+    if (scrollEl && blockEl && next > prev && prev === 0) {
+      scrollEl.scrollTop += blockEl.offsetHeight;
+    }
+
+    prevFollowingCountRef.current = next;
+  }, [followingMarkets.length]);
 
   const marketNews = useMemo(
     () => articles.slice(0, 2),
@@ -114,19 +130,21 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
       </div>
 
       <div
+        ref={scrollRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
-        style={{ paddingBottom: MARKETS_SCROLL_PADDING }}
+        style={{ paddingBottom: MARKETS_SCROLL_PADDING, overflowAnchor: "none" }}
       >
         <div className="px-4 pt-3" style={tabEnterStyle(tabEntered, 80)}>
           <MarketSummaryBar movers={movers} session={session} />
         </div>
 
         {followingMarkets.length > 0 && (
-          <div style={tabEnterStyle(tabEntered, 160)}>
+          <div ref={followingBlockRef} style={tabEnterStyle(tabEntered, 160)}>
             <FollowingSection
               markets={followingMarkets}
               onOpen={onOpenMarketFeed}
               onUnfollow={toggleFollowMarket}
+              scrollRef={scrollRef}
             />
           </div>
         )}
@@ -187,14 +205,27 @@ function FollowingSection({
   markets,
   onOpen,
   onUnfollow,
+  scrollRef,
 }: {
   markets: GlobalMarket[];
   onOpen: (market: MarketFilter) => void;
   onUnfollow: (marketId: MarketFilter) => void;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [exitingIds, setExitingIds] = useState<Set<string>>(() => new Set());
+  const sectionRef = useRef<HTMLElement>(null);
 
   const handleUnfollow = (marketId: MarketFilter) => {
+    const scrollEl = scrollRef.current;
+    const scrollTop = scrollEl?.scrollTop ?? 0;
+    const isLast = markets.length === 1;
+    const rowEl = scrollEl?.querySelector(
+      `[data-following-row="${marketId}"]`
+    ) as HTMLElement | null;
+    const removedHeight = isLast
+      ? sectionRef.current?.offsetHeight ?? 120
+      : rowEl?.offsetHeight ?? 72;
+
     setExitingIds((prev) => new Set(prev).add(marketId));
     window.setTimeout(() => {
       onUnfollow(marketId);
@@ -203,11 +234,16 @@ function FollowingSection({
         next.delete(marketId);
         return next;
       });
+      requestAnimationFrame(() => {
+        if (scrollEl) {
+          scrollEl.scrollTop = Math.max(0, scrollTop - removedHeight);
+        }
+      });
     }, 340);
   };
 
   return (
-    <section className={MARKETS_SECTION_SPACING}>
+    <section ref={sectionRef} className={MARKETS_SECTION_SPACING}>
       <div className="px-4">
         <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
           Following
@@ -221,6 +257,7 @@ function FollowingSection({
           {markets.map((market, i) => (
             <li
               key={market.id}
+              data-following-row={market.id}
               className={
                 exitingIds.has(market.id) ? "pf-market-row-exit overflow-hidden" : "pf-market-row-enter"
               }
@@ -489,7 +526,7 @@ function FollowMarketButton({
       data-no-drag
       aria-label={isFollowing ? "Unfollow market" : "Follow market"}
       onClick={handleClick}
-      className={`relative shrink-0 overflow-visible rounded-full px-3 text-[11px] font-semibold transition-colors duration-200 ${
+      className={`relative inline-flex h-7 min-w-[88px] shrink-0 items-center justify-center overflow-visible rounded-full px-3 text-[11px] font-semibold transition-colors duration-200 ${
         isFollowing
           ? "h-7 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white shadow-[0_2px_10px_rgba(59,110,245,0.25)]"
           : "h-7 border border-[var(--pocket-border)] bg-transparent text-pocket-muted hover:border-[var(--pocket-border-strong)] hover:text-pocket-text"

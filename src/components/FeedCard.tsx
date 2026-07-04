@@ -288,11 +288,19 @@ export function FeedCard({
       ))}
 
       <aside
-        className="absolute right-3 top-[46%] z-30 flex -translate-y-1/2 flex-col items-center gap-4 sm:right-4"
+        className="absolute right-3 top-[46%] z-30 flex -translate-y-1/2 flex-col items-center gap-5 sm:right-4"
         data-no-drag
         data-interactive
       >
-        <div className="flex min-h-[52px] flex-col items-center justify-start">
+        <RailActionSlot
+          meta={
+            likeCount > 0 ? (
+              <span className="text-[11px] font-bold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
+                {formatLikeCount(likeCount)}
+              </span>
+            ) : null
+          }
+        >
           <PopReaction
             aria-label={liked ? "Unlike" : "Like"}
             burst={!liked}
@@ -308,66 +316,69 @@ export function FeedCard({
               strokeWidth={2.25}
             />
           </PopReaction>
-          <span className="mt-0.5 flex h-4 items-center text-[11px] font-bold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
-            {likeCount > 0 ? formatLikeCount(likeCount) : ""}
-          </span>
-        </div>
+        </RailActionSlot>
 
-        <RailAction
-          label="Comment"
-          onClick={() =>
-            guardGuestAction("Sign in to comment", onOpenComments)
-          }
-        >
-          <MessageCircle className={iconClass} strokeWidth={2.25} />
-        </RailAction>
-
-        <RailAction
-          label="Share"
-          onClick={async () => {
-            const payload = {
-              title: article.headline,
-              text: article.subheading,
-              url: article.sourceUrl,
-            };
-            if (navigator.share) {
-              try {
-                await navigator.share(payload);
-                return;
-              } catch {
-                /* cancelled */
-              }
+        <RailActionSlot>
+          <RailAction
+            label="Comment"
+            onClick={() =>
+              guardGuestAction("Sign in to comment", onOpenComments)
             }
-            flash("Link copied to clipboard");
-            void navigator.clipboard?.writeText(article.sourceUrl);
-          }}
-        >
-          <Share2 className={iconClass} strokeWidth={2.25} />
-        </RailAction>
+          >
+            <MessageCircle className={iconClass} strokeWidth={2.25} />
+          </RailAction>
+        </RailActionSlot>
 
-        <RailAction
-          label={saved ? "Unsave" : "Save"}
-          onClick={() =>
-            guardGuestAction("Sign in to save this", () => {
-              void (async () => {
-                if (saved) {
-                  const ok = await unsaveArticle(article.id);
-                  flash(ok ? "Removed" : "Could not remove");
-                } else {
-                  const ok = await saveArticle(article);
-                  flash(ok ? "Article saved" : "Could not save");
+        <RailActionSlot>
+          <RailAction
+            label="Share"
+            onClick={async () => {
+              const payload = {
+                title: article.headline,
+                text: article.subheading,
+                url: article.sourceUrl,
+              };
+              if (navigator.share) {
+                try {
+                  await navigator.share(payload);
+                  return;
+                } catch {
+                  /* cancelled */
                 }
-              })();
-            })
-          }
-        >
-          <Bookmark
-            className={`${iconClass} transition-colors ${
-              saved ? "fill-[#00C6C6] text-[#00C6C6]" : ""
-            }`}
-            strokeWidth={2.25}
-          />
-        </RailAction>
+              }
+              flash("Link copied to clipboard");
+              void navigator.clipboard?.writeText(article.sourceUrl);
+            }}
+          >
+            <Share2 className={iconClass} strokeWidth={2.25} />
+          </RailAction>
+        </RailActionSlot>
+
+        <RailActionSlot>
+          <RailAction
+            label={saved ? "Unsave" : "Save"}
+            onClick={() =>
+              guardGuestAction("Sign in to save this", () => {
+                void (async () => {
+                  if (saved) {
+                    const ok = await unsaveArticle(article.id);
+                    flash(ok ? "Removed" : "Could not remove");
+                  } else {
+                    const ok = await saveArticle(article);
+                    flash(ok ? "Article saved" : "Could not save");
+                  }
+                })();
+              })
+            }
+          >
+            <Bookmark
+              className={`${iconClass} transition-colors ${
+                saved ? "fill-[#00C6C6] text-[#00C6C6]" : ""
+              }`}
+              strokeWidth={2.25}
+            />
+          </RailAction>
+        </RailActionSlot>
       </aside>
 
       {showSwipeHint && isFirstCard && (
@@ -523,6 +534,23 @@ function formatLikeCount(count: number): string {
     return `${(count / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
   }
   return String(count);
+}
+
+function RailActionSlot({
+  children,
+  meta,
+}: {
+  children: React.ReactNode;
+  meta?: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-[52px] flex-col items-center justify-start">
+      {children}
+      <span className="mt-0.5 flex h-4 items-center justify-center">
+        {meta}
+      </span>
+    </div>
+  );
 }
 
 function RailAction({

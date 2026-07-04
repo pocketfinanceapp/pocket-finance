@@ -136,7 +136,7 @@ export function FeedHeader({
         <div className="h-10 w-10 shrink-0" aria-hidden />
         <nav
           ref={navRef}
-          className="pf-feed-tab-bar relative flex items-end justify-center gap-1 rounded-full px-2 pb-0.5 pt-1"
+          className="pf-feed-tab-bar relative flex w-full max-w-[280px] items-end justify-between px-0 pb-0.5 pt-1"
         >
           {FEED_TABS.map((tab) => {
             const active = feedMode === tab.id;
@@ -150,7 +150,7 @@ export function FeedHeader({
                 data-no-drag
                 onPointerDown={stop}
                 onClick={() => onFeedModeChange(tab.id)}
-                className={`relative shrink-0 whitespace-nowrap px-2 pb-1 text-[13px] leading-none transition-all duration-200 ${TAB_SHADOW} ${
+                className={`relative flex-1 whitespace-nowrap px-1 pb-1 text-center text-[13px] leading-none transition-all duration-200 ${TAB_SHADOW} ${
                   active
                     ? "font-bold text-pocket-text"
                     : "font-semibold text-pocket-muted"

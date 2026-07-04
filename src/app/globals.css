@@ -334,6 +334,13 @@ html.app-route
   backdrop-filter: blur(12px);
 }
 
+html.app-route[data-theme="light"] .pf-feed-tab-bar,
+html.app-route[data-theme="modern-light"] .pf-feed-tab-bar {
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
 .pf-feed-overlay-enter {
   animation: pf-feed-overlay-enter 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -797,6 +804,57 @@ html.app-route[data-theme="modern-light"] html.app-route :where(.pf-scroll, .ove
   animation: badge-unlock-pulse 0.6s ease-in-out;
 }
 
+@keyframes pf-achievement-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pf-achievement-enter {
+  animation: pf-achievement-enter 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pf-achievement-grid-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pf-achievement-grid-enter {
+  animation: pf-achievement-grid-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pf-achievement-sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pf-achievement-sheet-enter {
+  animation: pf-achievement-sheet-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pf-achievement-unlocked {
+  box-shadow:
+    var(--pocket-card-inset),
+    0 0 0 1px rgba(0, 198, 198, 0.08);
+}
+
 @keyframes feed-search-ring-pulse {
   0%,
   100% {
@@ -1162,15 +1220,11 @@ html.app-route[data-theme="modern-light"] html.app-route :where(.pf-scroll, .ove
 @keyframes pf-market-row-exit {
   from {
     opacity: 1;
-    transform: translateX(0) scale(1);
-    max-height: 120px;
+    transform: translateX(0);
   }
   to {
     opacity: 0;
-    transform: translateX(24px) scale(0.96);
-    max-height: 0;
-    margin: 0;
-    padding: 0;
+    transform: translateX(20px);
   }
 }
 
