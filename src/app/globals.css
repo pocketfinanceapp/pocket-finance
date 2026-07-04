@@ -285,6 +285,33 @@ html.app-route
   box-shadow: var(--pocket-card-inset), var(--pocket-shadow);
 }
 
+/* Comment thread connectors */
+.pf-thread-trunk {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 198, 198, 0.55) 0%,
+    rgba(59, 110, 245, 0.45) 100%
+  );
+}
+
+.pf-thread-branch {
+  border-color: rgba(0, 198, 198, 0.62);
+}
+
+[data-theme="light"] .pf-thread-trunk,
+[data-theme="modern-light"] .pf-thread-trunk {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 198, 198, 0.72) 0%,
+    rgba(59, 110, 245, 0.55) 100%
+  );
+}
+
+[data-theme="light"] .pf-thread-branch,
+[data-theme="modern-light"] .pf-thread-branch {
+  border-color: rgba(0, 160, 170, 0.75);
+}
+
 .pf-page {
   background: var(--pocket-bg);
   color: var(--pocket-text);
@@ -950,8 +977,172 @@ html.app-route[data-theme="modern-light"] html.app-route :where(.pf-scroll, .ove
   }
 }
 
+@keyframes pf-tab-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pf-tab-panel-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+.pf-tab-panel-enter {
+  animation: pf-tab-panel-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pf-tab-panel-exit {
+  animation: pf-tab-panel-exit 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes pf-streak-hero-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.82) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pf-streak-number-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pf-level-badge-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+  }
+  60% {
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes pf-level-badge-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+}
+
+@keyframes pf-avatar-plain-enter-keyframes {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pf-streak-hero-enter {
+  animation: pf-streak-hero-enter 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pf-streak-number-enter {
+  animation: pf-streak-number-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+.pf-level-badge-enter {
+  animation: pf-level-badge-enter 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pf-avatar-plain-enter {
+  transition: opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes pf-market-row-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pf-market-row-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 120px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.pf-market-row-enter {
+  animation: pf-market-row-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pf-market-row-exit {
+  animation: pf-market-row-exit 340ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes pf-follow-unfollow-exit {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.75;
+  }
+}
+
+.pf-bottom-nav {
+  box-shadow: 0 -1px 0 var(--pocket-border);
+}
+
+html.app-route[data-theme="light"] .pf-feed-chrome .text-pocket-text,
+html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-pocket-text {
+  color: var(--pocket-text) !important;
+}
+
+html.app-route[data-theme="light"] .pf-feed-chrome .text-pocket-muted,
+html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-pocket-muted {
+  color: var(--pocket-text-muted) !important;
+}
+
 .pf-follow-unfollow-subtle {
-  animation: pf-follow-unfollow-subtle 180ms ease-out;
+  animation: pf-follow-unfollow-exit 220ms ease-out;
 }
 
 .pf-follow-pop {

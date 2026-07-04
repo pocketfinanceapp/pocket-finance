@@ -332,3 +332,25 @@ export function appendReplyToTree(
     };
   });
 }
+
+/** Parent comment ids from root down to (but not including) targetId. */
+export function getAncestorIds(
+  comments: ThreadComment[],
+  targetId: string
+): string[] {
+  const path: string[] = [];
+
+  function walk(list: ThreadComment[], ancestors: string[]): boolean {
+    for (const c of list) {
+      if (c.id === targetId) {
+        path.push(...ancestors);
+        return true;
+      }
+      if (walk(c.replies, [...ancestors, c.id])) return true;
+    }
+    return false;
+  }
+
+  walk(comments, []);
+  return path;
+}

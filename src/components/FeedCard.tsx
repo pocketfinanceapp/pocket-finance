@@ -288,14 +288,14 @@ export function FeedCard({
         data-no-drag
         data-interactive
       >
-        <div className="flex flex-col items-center">
+        <div className="flex min-h-[52px] flex-col items-center justify-start">
           <PopReaction
             aria-label={liked ? "Unlike" : "Like"}
             burst={!liked}
             onClick={() =>
               guardGuestAction("Sign in to like this", () => void toggleLike())
             }
-            className="flex h-11 w-11 items-center justify-center transition-transform active:scale-90"
+            className="flex h-11 w-11 shrink-0 items-center justify-center transition-transform active:scale-90"
           >
             <Heart
               className={`${iconClass} transition-colors ${
@@ -304,11 +304,9 @@ export function FeedCard({
               strokeWidth={2.25}
             />
           </PopReaction>
-          {likeCount > 0 && (
-            <span className="-mt-0.5 text-[11px] font-semibold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
-              {formatLikeCount(likeCount)}
-            </span>
-          )}
+          <span className="mt-0.5 flex h-4 items-center text-[11px] font-bold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
+            {likeCount > 0 ? formatLikeCount(likeCount) : ""}
+          </span>
         </div>
 
         <RailAction

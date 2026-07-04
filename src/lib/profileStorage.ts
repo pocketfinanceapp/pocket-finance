@@ -47,6 +47,7 @@ const MAX_RECENT = 5;
 interface StreakData {
   count: number;
   lastVisitDate: string;
+  bestStreak?: number;
 }
 
 function localDateKey(date = new Date()): string {
@@ -91,7 +92,8 @@ export function recordAppVisit(): number {
   const count =
     data.lastVisitDate === yesterdayDateKey() ? data.count + 1 : 1;
 
-  saveStreakData({ count, lastVisitDate: today });
+  const bestStreak = Math.max(data.bestStreak ?? 0, count);
+  saveStreakData({ count, lastVisitDate: today, bestStreak });
   return count;
 }
 
@@ -105,6 +107,43 @@ export function getReadingStreak(): number {
     return data.count;
   }
   return 0;
+}
+
+const WEEK_STRIP_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+export function getLoginStreakState() {
+  const data = loadStreakData();
+  const today = localDateKey();
+  const visitedToday = data.lastVisitDate === today;
+  const currentStreak = getReadingStreak();
+  const bestStreak = Math.max(data.bestStreak ?? 0, currentStreak);
+
+  const todayDate = new Date();
+  const dayIndex = (todayDate.getDay() + 6) % 7;
+  const weeklyStrip = WEEK_STRIP_LABELS.map((day, i) => {
+    const offset = i - dayIndex;
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    const key = localDateKey(d);
+    const completed =
+      data.lastVisitDate === key ||
+      (currentStreak > 0 &&
+        visitedToday &&
+        offset <= 0 &&
+        offset > -currentStreak);
+    return {
+      day,
+      completed,
+      isToday: i === dayIndex,
+    };
+  });
+
+  return {
+    currentStreak,
+    bestStreak,
+    visitedToday,
+    weeklyStrip,
+  };
 }
 
 export function loadFavouriteTopics(): ProfileTopic[] {

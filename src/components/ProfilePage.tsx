@@ -27,13 +27,11 @@ import {
   getLifetimeArticlesOpened,
   getProgressionState,
   getSessionSnapshot,
-  getStreakState,
   getTotalXP,
   getWeeklyActivity,
   type Achievement,
   type DailyGoalState,
   type LevelState,
-  type StreakState,
   type WeeklyActivity,
 } from "@/lib/progression";
 import type { LikedArticleEntry, SavedArticleEntry } from "@/lib/types";
@@ -47,10 +45,9 @@ import { ProfileArticlePreview } from "./ProfileArticlePreview";
 import { ProfileIdentitySection } from "./ProfileIdentitySection";
 import {
   ProfileActivitySection,
-  ProfileDailyGoalSection,
   ProfileProgressionHub,
 } from "./ProfileProgressionHub";
-import { ProfileStreakCard } from "./ProfileStreakCard";
+import { ProfileProgressTabs } from "./ProfileProgressTabs";
 import { AchievementIcon } from "./icons/AchievementIcon";
 import { ScreenHeader } from "./ScreenHeader";
 import { SettingsPage } from "./SettingsPage";
@@ -160,11 +157,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   );
   const dailyGoal: DailyGoalState = useMemo(
     () => getDailyGoalState(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [likedArticlesCount, progressionTick]
-  );
-  const streakState: StreakState = useMemo(
-    () => getStreakState(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [likedArticlesCount, progressionTick]
   );
@@ -395,21 +387,17 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             />
           </div>
           <div className="mt-4 opacity-40 blur-[2px]">
-            <ProfileStreakCard
-              streak={{
-                currentStreak: 0,
-                bestStreak: 0,
-                lastCompletedDate: null,
-                weeklyStrip: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                  (day) => ({
-                    day,
-                    completed: false,
-                    isToday: day === "Fri",
-                  })
-                ),
-                nextMilestone: 3,
-                goalCompletedToday: false,
+            <ProfileProgressTabs
+              progression={{
+                level: 2,
+                title: "News Reader",
+                currentLevelXP: 100,
+                nextLevelXP: 250,
+                progressXP: 42,
+                progressPercent: 28,
               }}
+              totalXP={142}
+              animateIn={false}
             />
           </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
@@ -475,15 +463,17 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             initials={initials}
             email={user.email}
             joined={joined}
-            progression={progressionState}
-            totalXP={totalXP}
             animateIn={profileEntered}
           />
         )}
 
-        {/* ── Daily streak ─────────────────────────────────────────────── */}
+        {/* ── Streak & Level tabs ──────────────────────────────────────── */}
         <div className="mt-4" style={tabEnterStyle(profileEntered, 100)}>
-          <ProfileStreakCard streak={streakState} animateIn={profileEntered} />
+          <ProfileProgressTabs
+            progression={progressionState}
+            totalXP={totalXP}
+            animateIn={profileEntered}
+          />
         </div>
 
         {/* ── Your activity ────────────────────────────────────────────── */}
@@ -500,17 +490,8 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           />
         </div>
 
-        {/* ── Today's goal ─────────────────────────────────────────────── */}
-        <div className="mt-4" style={tabEnterStyle(profileEntered, 220)}>
-          <ProfileDailyGoalSection
-            dailyGoal={dailyGoal}
-            animateIn={profileEntered}
-            enterDelay={0}
-          />
-        </div>
-
         {/* ── Personalise feed ─────────────────────────────────────────── */}
-        <section className="mt-4" style={tabEnterStyle(profileEntered, 360)}>
+        <section className="mt-4" style={tabEnterStyle(profileEntered, 280)}>
           <QuickActionRow
             icon={Tag}
             title="My topics"
@@ -893,8 +874,8 @@ function ProfileRootHeader({
       style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
     >
       <div className="min-w-0 flex-1">
-        <h1 className="text-[22px] font-bold tracking-tight text-white">Profile</h1>
-        <p className="mt-0.5 text-[13px] text-zinc-500">
+        <h1 className="text-[24px] font-black tracking-tight text-pocket-text">Profile</h1>
+        <p className="mt-0.5 text-[14px] font-medium text-pocket-muted">
           Your progress, library, and preferences
         </p>
       </div>

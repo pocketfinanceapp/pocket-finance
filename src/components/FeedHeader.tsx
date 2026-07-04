@@ -150,10 +150,10 @@ export function FeedHeader({
                 data-no-drag
                 onPointerDown={stop}
                 onClick={() => onFeedModeChange(tab.id)}
-                className={`relative shrink-0 whitespace-nowrap px-1.5 pb-1 text-[12px] leading-none transition-all duration-200 ${TAB_SHADOW} ${
+                className={`relative shrink-0 whitespace-nowrap px-2 pb-1 text-[13px] leading-none transition-all duration-200 ${TAB_SHADOW} ${
                   active
-                    ? "font-semibold text-white"
-                    : "font-normal text-white/45"
+                    ? "font-bold text-pocket-text"
+                    : "font-semibold text-pocket-muted"
                 }`}
               >
                 {tab.label}
@@ -188,10 +188,10 @@ export function FeedHeader({
             type="button"
             onPointerDown={stop}
             onClick={clearFilters}
-            className={`max-w-full truncate rounded-full border border-white/12 bg-black/35 px-3 py-1 text-[11px] font-medium text-white/70 active:bg-white/10 ${TAB_SHADOW}`}
+            className={`max-w-full truncate rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-3 py-1.5 text-[12px] font-semibold text-pocket-text active:opacity-80 ${TAB_SHADOW}`}
           >
             {filterLabels.join(" · ")}
-            <span className="ml-1.5 text-white/40">×</span>
+            <span className="ml-1.5 text-pocket-muted">×</span>
           </button>
         </div>
       )}

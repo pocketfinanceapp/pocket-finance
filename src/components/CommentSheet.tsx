@@ -17,6 +17,7 @@ import {
   appendReplyToTree,
   buildDiscussionThread,
   countThreadComments,
+  getAncestorIds,
   toggleCommentLike,
   updateCommentLikeInTree,
   type ThreadComment,
@@ -46,6 +47,7 @@ export function CommentSheet({
   const [entered, setEntered] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [replyTo, setReplyTo] = useState<ThreadComment | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +88,7 @@ export function CommentSheet({
     setEntered(false);
     setKeyboardInset(0);
     setReplyTo(null);
+    setExpandedIds(new Set());
     document.body.style.overflow = "";
     const t = window.setTimeout(() => setMounted(false), 280);
     return () => window.clearTimeout(t);
@@ -119,6 +122,20 @@ export function CommentSheet({
     };
   }, [open]);
 
+  const ensureThreadExpanded = useCallback(
+    (commentId: string) => {
+      setExpandedIds((prev) => {
+        const next = new Set(prev);
+        next.add(commentId);
+        for (const id of getAncestorIds(comments, commentId)) {
+          next.add(id);
+        }
+        return next;
+      });
+    },
+    [comments]
+  );
+
   const handleLike = (commentId: string) => {
     const liked = toggleCommentLike(commentId);
     setComments((prev) => updateCommentLikeInTree(prev, commentId, liked));
@@ -131,9 +148,9 @@ export function CommentSheet({
     setSubmitting(true);
 
     if (replyTo) {
-      addCommentReply(article.id, replyTo.id, text, displayName);
+      const stored = addCommentReply(article.id, replyTo.id, text, displayName);
       const reply: ThreadComment = {
-        id: `reply-${Date.now()}`,
+        id: stored.id,
         username: displayName,
         avatar: userInitial.length >= 2 ? userInitial : displayName.slice(0, 2).toUpperCase(),
         avatarColor: "#3B6EF5",
@@ -145,9 +162,16 @@ export function CommentSheet({
         parentId: replyTo.id,
       };
       setComments((prev) => appendReplyToTree(prev, replyTo.id, reply));
+      ensureThreadExpanded(replyTo.id);
       setInput("");
       setReplyTo(null);
       setSubmitting(false);
+      requestAnimationFrame(() => {
+        document.getElementById(`comment-${stored.id}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      });
       return;
     }
 
@@ -286,10 +310,20 @@ export function CommentSheet({
                   depth={0}
                   onLike={handleLike}
                   onReply={(c) => {
+                    ensureThreadExpanded(c.id);
                     setReplyTo(c);
                     inputRef.current?.focus();
                   }}
                   replyTargetId={replyTo?.id ?? null}
+                  expandedIds={expandedIds}
+                  onToggleExpanded={(id, open) => {
+                    setExpandedIds((prev) => {
+                      const next = new Set(prev);
+                      if (open) next.add(id);
+                      else next.delete(id);
+                      return next;
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -387,38 +421,118 @@ export function CommentSheet({
   );
 }
 
+const THREAD_AVATAR = 36;
+const THREAD_GAP = 12;
+/** px from reply-row start to parent avatar column center */
+const THREAD_BRANCH_OFFSET = THREAD_AVATAR + THREAD_GAP - THREAD_AVATAR / 2;
+
+function CommentAvatar({
+  comment,
+  compact = false,
+}: {
+  comment: ThreadComment;
+  compact?: boolean;
+}) {
+  const size = compact ? "h-8 w-8 text-[10px]" : "h-9 w-9 text-[11px]";
+  return (
+    <div
+      className={`relative z-[1] flex shrink-0 items-center justify-center rounded-full font-bold text-white ${size}`}
+      style={{ backgroundColor: comment.avatarColor }}
+    >
+      {comment.avatar}
+    </div>
+  );
+}
+
 function CommentThread({
   comment,
   depth,
   onLike,
   onReply,
   replyTargetId,
+  expandedIds,
+  onToggleExpanded,
+  isLast = true,
 }: {
   comment: ThreadComment;
   depth: number;
   onLike: (id: string) => void;
   onReply: (comment: ThreadComment) => void;
   replyTargetId: string | null;
+  expandedIds: Set<string>;
+  onToggleExpanded: (id: string, open: boolean) => void;
+  isLast?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(depth === 0);
+  const [localExpanded, setLocalExpanded] = useState(depth === 0);
   const hasReplies = comment.replies.length > 0;
-  const indent = depth > 0 ? "ml-8 border-l border-white/[0.08] pl-3" : "";
+  const expanded = expandedIds.has(comment.id) || localExpanded;
+  const isReplyTarget = replyTargetId === comment.id;
+
+  const toggleExpanded = () => {
+    const next = !expanded;
+    setLocalExpanded(next);
+    onToggleExpanded(comment.id, next);
+  };
 
   return (
-    <div className={`py-2.5 ${indent}`}>
-      <div className="flex gap-3">
-        <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-          style={{ backgroundColor: comment.avatarColor }}
-        >
-          {comment.avatar}
+    <article
+      id={`comment-${comment.id}`}
+      className={`relative ${depth === 0 ? "py-2.5" : "pt-3"}`}
+    >
+      {depth > 0 && (
+        <>
+          <div
+            className="pf-thread-branch pointer-events-none absolute top-0 z-0 rounded-bl-[12px] border-b-2 border-l-2"
+            style={{
+              left: -THREAD_BRANCH_OFFSET,
+              width: THREAD_BRANCH_OFFSET + THREAD_AVATAR / 2,
+              height: THREAD_AVATAR / 2 + 2,
+            }}
+            aria-hidden
+          />
+          <span
+            className="pointer-events-none absolute z-[1] rounded-full bg-[#00C6C6] ring-2 ring-[var(--pocket-sheet,#08090e)]"
+            style={{
+              left: THREAD_AVATAR / 2 - 3,
+              top: THREAD_AVATAR / 2 - 3,
+              width: 6,
+              height: 6,
+            }}
+            aria-hidden
+          />
+          {!isLast && (
+            <div
+              className="pf-thread-trunk pointer-events-none absolute z-0 w-[2px]"
+              style={{
+                left: -THREAD_BRANCH_OFFSET + 1,
+                top: THREAD_AVATAR / 2 + 4,
+                bottom: 0,
+              }}
+              aria-hidden
+            />
+          )}
+        </>
+      )}
+
+      <div className="relative z-[1] flex gap-3">
+        <div className="flex w-9 shrink-0 flex-col items-center">
+          <CommentAvatar comment={comment} compact={depth > 0} />
+          {hasReplies && expanded && (
+            <div
+              className="pf-thread-trunk mt-2 w-[2px] flex-1 rounded-full"
+              style={{ minHeight: 10 }}
+              aria-hidden
+            />
+          )}
         </div>
 
         <div className="min-w-0 flex-1">
           <div
-            className={`rounded-2xl px-3.5 py-2.5 ${
-              depth > 0 ? "rounded-tl-lg" : "rounded-tl-md"
-            } border border-white/[0.06] bg-white/[0.04]`}
+            className={`rounded-2xl border px-3.5 py-2.5 transition-colors ${
+              isReplyTarget
+                ? "border-[#00C6C6]/45 bg-[#00C6C6]/[0.07] shadow-[0_0_0_1px_rgba(0,198,198,0.12)]"
+                : "border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)]"
+            } ${depth > 0 ? "rounded-tl-md" : "rounded-tl-lg"}`}
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <span className="text-[13px] font-semibold text-white">
@@ -456,7 +570,7 @@ function CommentThread({
               data-no-drag
               onClick={() => onReply(comment)}
               className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
-                replyTargetId === comment.id
+                isReplyTarget
                   ? "text-[#00C6C6]"
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
@@ -469,7 +583,7 @@ function CommentThread({
             <button
               type="button"
               data-no-drag
-              onClick={() => setExpanded((v) => !v)}
+              onClick={toggleExpanded}
               className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-[#00C6C6]/90"
             >
               {expanded ? (
@@ -489,8 +603,17 @@ function CommentThread({
           )}
 
           {expanded && hasReplies && (
-            <div className="mt-1 space-y-0">
-              {comment.replies.map((reply) => (
+            <div className="relative mt-1">
+              <div
+                className="pf-thread-trunk pointer-events-none absolute z-0 w-[2px] rounded-full"
+                style={{
+                  left: -(THREAD_GAP + THREAD_AVATAR / 2) + 1,
+                  top: 0,
+                  bottom: 0,
+                }}
+                aria-hidden
+              />
+              {comment.replies.map((reply, index) => (
                 <CommentThread
                   key={reply.id}
                   comment={reply}
@@ -498,12 +621,15 @@ function CommentThread({
                   onLike={onLike}
                   onReply={onReply}
                   replyTargetId={replyTargetId}
+                  expandedIds={expandedIds}
+                  onToggleExpanded={onToggleExpanded}
+                  isLast={index === comment.replies.length - 1}
                 />
               ))}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 }

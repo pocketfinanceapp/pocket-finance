@@ -190,28 +190,48 @@ function FollowingSection({
   onOpen: (market: MarketFilter) => void;
   onUnfollow: (marketId: MarketFilter) => void;
 }) {
+  const [exitingIds, setExitingIds] = useState<Set<string>>(() => new Set());
+
+  const handleUnfollow = (marketId: MarketFilter) => {
+    setExitingIds((prev) => new Set(prev).add(marketId));
+    window.setTimeout(() => {
+      onUnfollow(marketId);
+      setExitingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(marketId);
+        return next;
+      });
+    }, 340);
+  };
+
   return (
     <section className={MARKETS_SECTION_SPACING}>
       <div className="px-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+        <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
           Following
         </h2>
-        <p className="mt-1 text-[12px] text-zinc-600">
+        <p className="mt-1 text-[13px] font-medium text-pocket-muted">
           {markets.length} market{markets.length === 1 ? "" : "s"} · tap to open feed
         </p>
       </div>
       <div className={MARKETS_SECTION_CARD}>
         <ul>
           {markets.map((market, i) => (
-            <MarketRow
+            <li
               key={market.id}
-              market={market}
-              isFollowing
-              onOpen={() => onOpen(market.id)}
-              onFollow={() => onUnfollow(market.id)}
-              showDivider={i < markets.length - 1}
-              accentFollowing
-            />
+              className={
+                exitingIds.has(market.id) ? "pf-market-row-exit overflow-hidden" : "pf-market-row-enter"
+              }
+            >
+              <MarketRow
+                market={market}
+                isFollowing
+                onOpen={() => onOpen(market.id)}
+                onFollow={() => handleUnfollow(market.id)}
+                showDivider={i < markets.length - 1 && !exitingIds.has(market.id)}
+                accentFollowing
+              />
+            </li>
           ))}
         </ul>
       </div>

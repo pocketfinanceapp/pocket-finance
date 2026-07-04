@@ -11,8 +11,7 @@ import {
   type WeeklyActivity,
 } from "@/lib/progression";
 
-const CARD =
-  "overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]";
+const CARD = "pf-card-surface overflow-hidden rounded-2xl";
 
 interface ProfileProgressionHubProps {
   progression: LevelState;
@@ -52,20 +51,20 @@ export function ProfileActivitySection({
 
   return (
     <section className={CARD} style={tabEnterStyle(animateIn, enterDelay)}>
-      <div className="border-b border-white/[0.06] px-4 py-3">
-        <h3 className="text-[14px] font-semibold text-white">Your activity</h3>
+      <div className="border-b border-[var(--pocket-border)] px-4 py-3.5">
+        <h3 className="text-[16px] font-bold text-pocket-text">Your activity</h3>
       </div>
-      <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
+      <div className="grid grid-cols-3 divide-x divide-[var(--pocket-border)]">
         <StatTile label="Articles read" value={String(articlesOpened)} />
         <StatTile label="Liked" value={String(likedCount)} />
         <StatTile label="Watchlist" value={String(watchlistCount)} />
       </div>
-      <div className="border-t border-white/[0.06] px-4 py-3">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-600">
+      <div className="border-t border-[var(--pocket-border)] px-4 py-3.5">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-pocket-muted">
           This week
         </p>
         {hasWeeklyActivity ? (
-          <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-400">
+          <p className="mt-1.5 text-[14px] font-medium leading-relaxed text-pocket-muted">
             {weekly.articlesRead} articles · {weekly.briefingsCompleted}{" "}
             briefings · {weekly.xpEarned} XP earned
           </p>
@@ -212,10 +211,10 @@ function TaskRow({ task }: { task: DailyGoalTask }) {
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col items-center px-2 py-4">
-      <p className="text-[22px] font-bold tabular-nums leading-none text-white">
+      <p className="text-[26px] font-black tabular-nums leading-none text-pocket-text">
         {value}
       </p>
-      <p className="mt-1.5 text-center text-[10px] leading-tight text-zinc-500">
+      <p className="mt-1.5 text-center text-[11px] font-semibold leading-tight text-pocket-muted">
         {label}
       </p>
     </div>
