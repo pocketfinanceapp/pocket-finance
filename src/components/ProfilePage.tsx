@@ -66,11 +66,7 @@ const _achievementToastsShownThisSession = new Set<string>();
 // Design tokens
 // ---------------------------------------------------------------------------
 
-const CARD_STYLE = {
-  backgroundColor: "rgba(10,11,16,0.97)" as const,
-  border: "1px solid rgba(255,255,255,0.07)" as const,
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,.04)" as const,
-};
+const CARD_STYLE = "pf-card-surface overflow-hidden rounded-2xl";
 
 // ---------------------------------------------------------------------------
 // Level-up description copy
@@ -283,7 +279,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
   if (showAllAchievements) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-black">
+      <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
         <ScreenHeader
           title="Achievements"
           onBack={() => setShowAllAchievements(false)}
@@ -303,7 +299,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
   if (showAllRecentlyRead) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-black">
+      <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
         <ScreenHeader
           title="Recently Read"
           onBack={() => setShowAllRecentlyRead(false)}
@@ -333,7 +329,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
   if (isGuest && !user) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-black">
+      <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
         <ProfileRootHeader onSettings={() => openSettings()} />
         <div className="relative flex flex-1 flex-col overflow-hidden px-5">
           <div className="pointer-events-none select-none blur-[2px] opacity-40">
@@ -455,7 +451,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
   /* ── Main profile dashboard ───────────────────────────────────────────── */
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col bg-black">
+    <div className="relative flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
       {/* Sticky root header */}
       <div style={tabEnterStyle(profileEntered, 0)}>
         <ProfileRootHeader onSettings={() => openSettings()} />
@@ -650,7 +646,7 @@ function TopicsSubPage({
   const showSuggestions = liveTopics.length === 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-black">
+    <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
       <header
         className="flex shrink-0 flex-col border-b border-white/[0.06] px-4"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
@@ -858,13 +854,7 @@ function AchievementToast({
       }}
     >
       <div
-        className="flex w-full max-w-sm items-center gap-3 rounded-2xl px-4 py-3"
-        style={{
-          background: "rgba(10,11,16,0.97)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
-          backdropFilter: "blur(12px)",
-        }}
+        className="pf-card-surface flex w-full max-w-sm items-center gap-3 rounded-2xl px-4 py-3 backdrop-blur-md"
       >
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
@@ -899,7 +889,7 @@ function ProfileRootHeader({
 }) {
   return (
     <header
-      className="flex shrink-0 items-center border-b border-white/[0.06] bg-black px-4 pb-3"
+      className="pf-header-bar flex shrink-0 items-center border-b border-[var(--pocket-border)] bg-pocket-bg px-4 pb-3"
       style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
     >
       <div className="min-w-0 flex-1">
@@ -937,8 +927,7 @@ function QuickActionRow({
       type="button"
       data-no-drag
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:bg-white/[0.05]"
-      style={CARD_STYLE}
+      className={`${CARD_STYLE} flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-[var(--pocket-surface-hover)]`}
     >
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
@@ -973,7 +962,7 @@ function LibraryGroup({
     title === "Saved" ? Bookmark : title === "Liked" ? Heart : Clock3;
 
   return (
-    <div className="overflow-hidden rounded-2xl" style={CARD_STYLE}>
+    <div className={CARD_STYLE}>
       <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
         <div className="flex items-center gap-2">
           <GroupIcon className="h-3.5 w-3.5 text-zinc-500" />
@@ -1028,8 +1017,7 @@ function ArticleGroupCard({
 }) {
   return (
     <div
-      className={`divide-y divide-white/[0.05] overflow-hidden rounded-2xl ${className}`}
-      style={CARD_STYLE}
+      className={`${CARD_STYLE} divide-y divide-[var(--pocket-border)] ${className}`}
     >
       {children}
     </div>

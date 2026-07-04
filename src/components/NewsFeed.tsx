@@ -582,7 +582,7 @@ export function NewsFeed({
 
   const feedContent = (
     <div
-      className="relative overflow-hidden bg-[#0a0a0a]"
+      className="relative overflow-hidden bg-pocket-feed-bg"
       style={{ height: trackHeight }}
     >
         <div
@@ -603,7 +603,7 @@ export function NewsFeed({
 
           <div
             data-feed-column
-            className="relative shrink-0 overflow-hidden bg-[#0a0a0a]"
+            className="relative shrink-0 overflow-hidden bg-pocket-feed-bg"
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,

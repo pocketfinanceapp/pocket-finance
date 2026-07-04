@@ -32,11 +32,7 @@ import { StockPanel } from "./StockPanel";
 
 /* ─── Visual constants ──────────────────────────────────────────────────── */
 
-const CARD_STYLE: React.CSSProperties = {
-  background: "rgba(10,11,16,0.97)",
-  border: "1px solid rgba(255,255,255,0.07)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-};
+const CARD_CLASS = "pf-card-surface overflow-hidden rounded-2xl";
 
 /* ─── Theme metadata ────────────────────────────────────────────────────── */
 
@@ -119,16 +115,7 @@ function SummaryCard({
     bestTicker !== null && worstTicker !== null && bestTicker !== worstTicker;
 
   return (
-    <div
-      className="mx-5 mt-4 rounded-2xl p-5"
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(10,11,16,0.97) 0%, rgba(0,15,25,0.97) 100%)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        boxShadow:
-          "0 0 32px rgba(0,198,198,0.06), inset 0 1px 0 rgba(255,255,255,0.04)",
-      }}
-    >
+    <div className="pf-card-surface mx-5 mt-4 rounded-2xl p-5">
       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
         Your Watchlist
       </p>
@@ -444,15 +431,14 @@ export function WatchlistPage() {
   /* ── Main view ── */
   return (
     <div
-      className="flex h-full min-h-0 flex-col"
-      style={{ background: "#030305" }}
+      className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text"
     >
       {/* Sticky header */}
       <header
         className="shrink-0 px-5 pb-3"
         style={{
           paddingTop: "max(12px, env(safe-area-inset-top))",
-          background: "#030305",
+          background: "var(--pocket-bg)",
           position: "sticky",
           top: 0,
           zIndex: 10,
@@ -514,7 +500,7 @@ export function WatchlistPage() {
             {assets.length > 0 && (
               <section style={tabEnterStyle(tabEntered, 240)}>
                 <SectionHeader>Tracked assets</SectionHeader>
-                <div className="mx-5 rounded-2xl" style={CARD_STYLE}>
+                <div className={`mx-5 ${CARD_CLASS}`}>
                   <div className="divide-y divide-white/[0.05]">
                     {assets.map((item) => (
                       <AssetRow
@@ -537,7 +523,7 @@ export function WatchlistPage() {
             {themes.length > 0 && (
               <section style={tabEnterStyle(tabEntered, 360)}>
                 <SectionHeader>Market themes</SectionHeader>
-                <div className="mx-5 rounded-2xl" style={CARD_STYLE}>
+                <div className={`mx-5 ${CARD_CLASS}`}>
                   <div className="divide-y divide-white/[0.05]">
                     {themes.map((item) => (
                       <ThemeRow
@@ -560,7 +546,7 @@ export function WatchlistPage() {
             {latestArticles.length > 0 && (
               <section style={tabEnterStyle(tabEntered, 480)}>
                 <SectionHeader>Latest from your watchlist</SectionHeader>
-                <div className="mx-5 rounded-2xl" style={CARD_STYLE}>
+                <div className={`mx-5 ${CARD_CLASS}`}>
                   <div className="divide-y divide-white/[0.05]">
                     {latestArticles.map((entry) => {
                       const ticker = resolveSavedTicker(entry);

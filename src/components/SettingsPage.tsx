@@ -109,7 +109,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
 
   if (screen !== "main") {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-black">
+      <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
         <ScreenHeader title={subTitle} onBack={handleSubBack} />
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
           {screen === "topics" ? (
@@ -165,7 +165,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-black">
+    <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
       <ScreenHeader title="Settings" onBack={onBack} />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
         <SettingsSection title="My Activity">
@@ -251,12 +251,7 @@ function SettingsSection({
         {title}
       </h3>
       <div
-        className="overflow-hidden rounded-2xl"
-        style={{
-          backgroundColor: "rgba(10,11,16,0.97)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,.04)",
-        }}
+        className="pf-card-surface overflow-hidden rounded-2xl"
       >
         {children}
       </div>
@@ -385,8 +380,8 @@ function ArticleList({
                 <div
                   className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
                   style={{
-                    backgroundColor: "rgba(18,22,50,0.90)",
-                    border: "1px solid rgba(255,255,255,0.07)",
+                    backgroundColor: "var(--pocket-surface)",
+                    border: "1px solid var(--pocket-border)",
                   }}
                 >
                   <Newspaper className="h-5 w-5 text-zinc-600" />

@@ -178,7 +178,7 @@ export function CommentSheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200]"
+      className="pf-theme-scope fixed inset-0 z-[200]"
       data-no-drag
       data-interactive
       role="presentation"
@@ -186,9 +186,10 @@ export function CommentSheet({
       <button
         type="button"
         aria-label="Close comments"
-        className={`absolute inset-0 bg-[#030305]/82 backdrop-blur-md transition-opacity duration-300 ${
+        className={`absolute inset-0 backdrop-blur-md transition-opacity duration-300 ${
           entered ? "opacity-100" : "opacity-0"
         }`}
+        style={{ background: "var(--pocket-backdrop)" }}
         onClick={onClose}
       />
 
@@ -196,7 +197,7 @@ export function CommentSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="comment-sheet-title"
-        className={`absolute inset-x-0 mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] border border-white/[0.08] shadow-[0_-24px_80px_rgba(0,0,0,0.65)] transition-transform duration-300 ease-out ${
+        className={`absolute inset-x-0 mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] border border-[var(--pocket-border)] shadow-[0_-24px_80px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-out ${
           entered ? "translate-y-0" : "translate-y-full"
         }`}
         style={{
@@ -205,8 +206,7 @@ export function CommentSheet({
             keyboardInset > 0
               ? "min(72dvh, calc(100dvh - 1rem))"
               : "min(88dvh, calc(100dvh - 0.5rem))",
-          background:
-            "linear-gradient(180deg, rgba(16,18,32,0.98) 0%, rgba(8,9,14,0.99) 100%)",
+          background: "var(--pocket-sheet)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -297,11 +297,10 @@ export function CommentSheet({
         </div>
 
         <div
-          className="shrink-0 border-t border-white/[0.08] px-4 pt-3"
+          className="shrink-0 border-t border-[var(--pocket-border)] px-4 pt-3"
           style={{
             paddingBottom: composerBottom,
-            background:
-              "linear-gradient(180deg, rgba(8,9,14,0.88) 0%, rgba(8,9,14,0.99) 100%)",
+            background: "var(--pocket-composer)",
             backdropFilter: "blur(14px)",
           }}
         >

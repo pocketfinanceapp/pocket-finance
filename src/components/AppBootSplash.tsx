@@ -7,7 +7,7 @@ export function AppBootSplash() {
   return (
     <div
       className="app-shell-height flex flex-col items-center justify-center bg-[#0a0a0a] px-6"
-      style={{ backgroundColor: "#0a0a0a" }}
+      style={{ backgroundColor: "var(--pocket-bg)" }}
     >
       <PocketBrand
         layout="vertical"

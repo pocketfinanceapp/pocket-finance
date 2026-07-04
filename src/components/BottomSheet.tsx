@@ -46,20 +46,21 @@ export function BottomSheet({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col justify-end"
+      className="pf-theme-scope fixed inset-0 z-[60] flex flex-col justify-end"
       data-no-drag
       data-interactive
     >
       <button
         type="button"
         aria-label="Close"
-        className={`absolute inset-0 bg-black/70 transition-opacity duration-300 ${
+        className={`absolute inset-0 transition-opacity duration-300 ${
           entered ? "opacity-100" : "opacity-0"
         }`}
+        style={{ background: "var(--pocket-overlay-scrim)" }}
         onClick={onClose}
       />
       <div
-        className={`relative mx-auto flex w-full max-w-mobile flex-col rounded-t-3xl border-t border-white/10 bg-[#111111] shadow-2xl transition-transform ${
+        className={`relative mx-auto flex w-full max-w-mobile flex-col rounded-t-3xl border-t border-[var(--pocket-border)] bg-pocket-elevated shadow-2xl transition-transform ${
           entered
             ? "translate-y-0 duration-300 ease-out"
             : "translate-y-full duration-200 ease-in"
@@ -70,7 +71,7 @@ export function BottomSheet({
         </div>
         {title && (
           <div className="flex shrink-0 items-center justify-between px-5 pb-3">
-            <h2 className="text-lg font-bold text-white">{title}</h2>
+            <h2 className="text-lg font-bold text-pocket-text">{title}</h2>
             <button
               type="button"
               data-no-drag
@@ -86,7 +87,7 @@ export function BottomSheet({
         </div>
         {footer ? (
           <div
-            className="shrink-0 border-t border-white/10 bg-[#111111] px-4 pt-3"
+            className="shrink-0 border-t border-[var(--pocket-border)] bg-pocket-elevated px-4 pt-3"
             style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))" }}
           >
             {footer}

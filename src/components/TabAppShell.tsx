@@ -51,7 +51,7 @@ function TabPanels({
 
   return (
     <MobilePageShell activeTab={navTab} hideBottomNav={hideBottomNav}>
-      <div className="app-themed relative h-full w-full">
+      <div className="app-themed pf-theme-scope relative h-full w-full">
         <TabPanel active={activeTab === "home"}>
           <FeedErrorBoundary>
             <NewsFeed

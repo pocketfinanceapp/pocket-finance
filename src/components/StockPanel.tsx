@@ -231,8 +231,8 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   );
 
   return (
-    <div className="relative flex h-full flex-col bg-black text-white">
-      <div className="relative z-20 shrink-0 bg-black">
+    <div className="pf-page relative flex h-full flex-col bg-pocket-bg text-pocket-text">
+      <div className="relative z-20 shrink-0 bg-pocket-bg">
         <header className="px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
           <div className="flex items-center justify-between">
             <button
@@ -289,7 +289,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         </header>
 
         {showTabs && (
-          <nav className="relative flex w-full border-b border-white/[0.08] bg-black px-4 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']">
+          <nav className="relative flex w-full border-b border-[var(--pocket-border)] bg-pocket-bg px-4 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[var(--pocket-bg)] after:to-transparent after:content-['']">
             {availableTabs.map(({ id: tab }) => (
               <button
                 key={tab}

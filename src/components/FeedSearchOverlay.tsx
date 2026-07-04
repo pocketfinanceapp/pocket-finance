@@ -52,12 +52,11 @@ export function FeedSearchOverlay({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col transition-opacity duration-300 ${
+      className={`pf-theme-scope fixed inset-0 z-50 flex flex-col transition-opacity duration-300 ${
         entered ? "opacity-100" : "opacity-0"
       }`}
       style={{
-        background:
-          "linear-gradient(180deg, rgba(4,5,8,0.97) 0%, rgba(8,10,16,0.98) 100%)",
+        background: "var(--pocket-search-overlay)",
         backdropFilter: "blur(14px)",
       }}
     >
@@ -89,8 +88,8 @@ export function FeedSearchOverlay({
             entered ? "feed-search-bar-active" : ""
           } ${focused ? "feed-search-bar-focused" : ""}`}
           style={{
-            background: "rgba(255,255,255,0.04)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+            background: "var(--pocket-search-bar)",
+            boxShadow: "inset 0 1px 0 var(--pocket-border)",
           }}
         >
           <div className="feed-search-bar-shimmer" aria-hidden />
@@ -112,7 +111,7 @@ export function FeedSearchOverlay({
               onBlur={() => setFocused(false)}
               placeholder="Search market headlines…"
               autoFocus
-              className="feed-search-input-caret min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-zinc-500 focus:outline-none"
+              className="feed-search-input-caret min-w-0 flex-1 bg-transparent text-[16px] text-pocket-text placeholder:text-pocket-muted focus:outline-none"
             />
             {query.length > 0 && (
               <button

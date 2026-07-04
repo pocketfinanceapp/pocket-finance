@@ -358,8 +358,7 @@ function RememberMeToggle({
 function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="app-shell-height fixed inset-0 z-[100] mx-auto flex w-full max-w-mobile flex-col bg-[#0a0a0a] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] text-white"
-      style={{ backgroundColor: "#0a0a0a" }}
+      className="pf-theme-scope app-shell-height fixed inset-0 z-[100] mx-auto flex w-full max-w-mobile flex-col bg-pocket-bg px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] text-pocket-text"
     >
       {children}
     </div>

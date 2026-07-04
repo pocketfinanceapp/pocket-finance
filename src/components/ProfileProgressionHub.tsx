@@ -118,7 +118,7 @@ export function ProfileDailyGoalSection({
           >
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold tabular-nums text-white"
-              style={{ background: "rgba(8,9,14,0.94)" }}
+              style={{ background: "var(--pocket-card-solid)" }}
             >
               {goalPct}%
             </div>

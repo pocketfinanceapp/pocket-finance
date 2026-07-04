@@ -23,7 +23,8 @@ const FEED_TABS: { id: FeedMode; label: string }[] = [
   { id: "trending", label: "Trending" },
 ];
 
-const TAB_SHADOW = "drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]";
+const TAB_SHADOW =
+  "drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)] [html[data-theme=dark]_&]:drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]";
 
 export function FeedHeader({
   feedMode,
@@ -120,9 +121,9 @@ export function FeedHeader({
   }, [feedMode, measureIndicator]);
 
   return (
-    <header className={`relative z-50 ${className}`}>
+    <header className={`relative z-50 pf-feed-chrome ${className}`}>
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/35 to-transparent"
+        className="feed-header-scrim pointer-events-none absolute inset-x-0 top-0"
         style={{
           height: "calc(max(0.625rem, env(safe-area-inset-top)) + 2.75rem)",
         }}

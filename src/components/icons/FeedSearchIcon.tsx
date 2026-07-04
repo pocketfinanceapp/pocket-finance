@@ -25,7 +25,7 @@ export function FeedSearchIcon({ active = false, className = "" }: FeedSearchIco
       <span
         aria-hidden
         className={`absolute inset-[3px] rounded-full transition-all duration-300 ${
-          active ? "bg-black/80" : "bg-white/[0.06]"
+          active ? "bg-[var(--pocket-bg)]/80" : "bg-[var(--pocket-surface-hover)]"
         }`}
       />
       <svg

@@ -100,10 +100,10 @@ export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProp
   return (
     <div
       data-markets-list={MARKETS_LIST_VERSION}
-      className="flex h-full min-h-0 flex-col bg-black text-white"
+      className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg text-pocket-text"
     >
       <div
-        className="relative z-20 shrink-0 border-b border-white/[0.08] bg-black after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:z-10 after:h-5 after:bg-gradient-to-b after:from-black after:to-transparent after:content-['']"
+        className="relative z-20 shrink-0 border-b border-[var(--pocket-border)] bg-pocket-bg after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:z-10 after:h-5 after:bg-gradient-to-b after:from-[var(--pocket-bg)] after:to-transparent after:content-['']"
         style={tabEnterStyle(tabEntered, 0)}
       >
         <header className="px-4 pb-2.5 pt-[max(12px,env(safe-area-inset-top))]">

@@ -73,7 +73,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
   };
 
   return (
-    <div className="relative flex h-full flex-col bg-black text-white">
+    <div className="pf-page relative flex h-full flex-col bg-pocket-bg text-pocket-text">
       <header className="flex shrink-0 items-center justify-between px-5 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <button
           type="button"

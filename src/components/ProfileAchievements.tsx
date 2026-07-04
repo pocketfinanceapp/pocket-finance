@@ -217,11 +217,11 @@ function AchievementCard({
         minHeight: 96,
         backgroundColor: a.unlocked
           ? "rgba(0,198,198,0.025)"
-          : "rgba(10,11,16,0.72)",
+          : "var(--pocket-card-solid)",
         border: a.unlocked
-          ? "1px solid rgba(255,255,255,0.08)"
-          : "1px solid rgba(255,255,255,0.05)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,.03)",
+          ? "1px solid var(--pocket-border-strong)"
+          : "1px solid var(--pocket-border)",
+        boxShadow: "var(--pocket-card-inset)",
       }}
     >
       {a.unlocked && (

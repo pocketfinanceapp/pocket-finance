@@ -28,8 +28,10 @@ import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { useApp } from "@/context/AppContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useNavigation } from "@/context/NavigationContext";
 import { appPath } from "@/lib/appPaths";
+import type { AppTheme } from "@/lib/theme";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 
 interface BrowsePageProps {
@@ -126,9 +128,37 @@ const CATEGORY_TOKENS: Record<BrowseCategory, CategoryToken> = {
 
 /* ── Layout constants ────────────────────────────────────────────────────── */
 
-const PAGE_BG = "#030305";
-const CARD_SURFACE = "#09090E";
+const PAGE_BG = "var(--pocket-bg)";
+const CARD_SURFACE = "var(--pocket-card-solid)";
 const BOTTOM_PADDING = "calc(9rem + env(safe-area-inset-bottom))";
+
+function categoryCardStyle(token: CategoryToken, theme: AppTheme): React.CSSProperties {
+  if (theme === "dark") {
+    return {
+      border: "1px solid rgba(255,255,255,0.07)",
+      background: token.cardGradient,
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,.06)",
+    };
+  }
+  return {
+    border: "1px solid var(--pocket-border)",
+    background: `linear-gradient(135deg, ${token.tileBg}, var(--pocket-card-solid))`,
+    boxShadow: "var(--pocket-shadow)",
+  };
+}
+
+function editorialPlaceholderStyle(theme: AppTheme, accent: string): React.CSSProperties {
+  if (theme === "dark") {
+    return {
+      background: "linear-gradient(135deg,#07090F 0%,#090C15 100%)",
+      boxShadow: `inset 0 0 40px ${accent}06`,
+    };
+  }
+  return {
+    background: `linear-gradient(135deg, ${accent}14, var(--pocket-card-solid))`,
+    boxShadow: "var(--pocket-shadow)",
+  };
+}
 
 const FEATURED_CATEGORIES: BrowseCategory[] = ["Markets", "Technology", "Economy"];
 const ALL_TOPICS: BrowseCategory[] = BROWSE_CATEGORIES.filter(
@@ -138,16 +168,16 @@ const ALL_TOPICS: BrowseCategory[] = BROWSE_CATEGORIES.filter(
 /** Very subtle grid for cards — texture only, not a visual element */
 const GRID_TEXTURE_SUBTLE: React.CSSProperties = {
   backgroundImage:
-    "linear-gradient(rgba(255,255,255,.010) 1px,transparent 1px)," +
-    "linear-gradient(90deg,rgba(255,255,255,.010) 1px,transparent 1px)",
+    "linear-gradient(var(--pocket-grid-line) 1px, transparent 1px)," +
+    "linear-gradient(90deg, var(--pocket-grid-line) 1px, transparent 1px)",
   backgroundSize: "24px 24px",
 };
 
 /** Standard grid for detail-page header/placeholder */
 const GRID_TEXTURE: React.CSSProperties = {
   backgroundImage:
-    "linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px)," +
-    "linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px)",
+    "linear-gradient(var(--pocket-grid-line) 1px, transparent 1px)," +
+    "linear-gradient(90deg, var(--pocket-grid-line) 1px, transparent 1px)",
   backgroundSize: "24px 24px",
 };
 
@@ -193,6 +223,7 @@ function TopStoryCard({
   count: number;
   onClick: () => void;
 }) {
+  const { theme } = useTheme();
   const token = CATEGORY_TOKENS[item];
   const { Icon, accent } = token;
   const uid = accent.replace("#", "");
@@ -203,11 +234,7 @@ function TopStoryCard({
       data-no-drag
       onClick={onClick}
       className="relative w-full overflow-hidden rounded-xl text-left active:opacity-80"
-      style={{
-        border: "1px solid rgba(255,255,255,0.07)",
-        background: token.cardGradient,
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,.06)",
-      }}
+      style={categoryCardStyle(token, theme)}
     >
       {/* Very subtle grid texture */}
       <div className="absolute inset-0" style={GRID_TEXTURE_SUBTLE} />
@@ -277,14 +304,12 @@ function TopStoryCard({
 /* ── Editorial placeholder for Top Story (detail page) ──────────────────── */
 
 function EditorialPlaceholder({ accent }: { accent: string }) {
+  const { theme } = useTheme();
   const uid = accent.replace("#", "");
   return (
     <div
       className="relative h-[80px] w-full overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg,#07090F 0%,#090C15 100%)",
-        boxShadow: `inset 0 0 40px ${accent}06`,
-      }}
+      style={editorialPlaceholderStyle(theme, accent)}
     >
       <div className="absolute inset-0" style={GRID_TEXTURE} />
       <svg
@@ -408,7 +433,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     const count = categoryArticles.length;
 
     return (
-      <div className="flex h-full min-h-0 flex-col text-white" style={{ background: PAGE_BG }}>
+      <div className="flex h-full min-h-0 flex-col pf-page text-pocket-text" style={{ background: PAGE_BG }}>
         {/* Pinned header */}
         <div
           className="relative z-20 shrink-0 border-b border-white/[0.06] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
@@ -570,7 +595,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
 
   /* ── Browse landing ──────────────────────────────────────────────────── */
   return (
-    <div className="flex h-full min-h-0 flex-col text-white" style={{ background: PAGE_BG }}>
+    <div className="flex h-full min-h-0 flex-col pf-page text-pocket-text" style={{ background: PAGE_BG }}>
       {/* Pinned header */}
       <div
         className="relative z-20 shrink-0 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
@@ -613,7 +638,8 @@ export function BrowsePage({ articles }: BrowsePageProps) {
           <div
             className="overflow-hidden rounded-xl border border-white/[0.06]"
             style={{
-              background: "rgba(9,9,14,0.60)",
+              background: "var(--pocket-card-solid)",
+              border: "1px solid var(--pocket-border)",
               boxShadow: "inset 0 1px 0 rgba(255,255,255,.03)",
             }}
           >
