@@ -51,7 +51,7 @@ export function FeedCardFallbackBackground({
   const uid = article.id.replace(/[^a-zA-Z0-9_-]/g, "");
 
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden bg-[#0a0a0a]">
+    <div className="absolute inset-0 z-0 overflow-hidden bg-pocket-feed-bg">
       <VariantArt variant={variant} uid={uid} />
       <div
         className="absolute inset-0"

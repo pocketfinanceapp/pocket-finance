@@ -32,13 +32,15 @@ const MARKETS_SCROLL_PADDING =
 
 /** Shared premium card shell for Markets sections */
 export const MARKETS_SECTION_CARD =
-  "mx-4 mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]";
+  "mx-4 mt-2 overflow-hidden rounded-2xl pf-card-surface";
 
 export const MARKETS_SECTION_ROW =
   "flex items-center gap-3 px-4 py-3";
 
 export const MARKETS_SECTION_HEADING =
-  "px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500";
+  "px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-pocket-muted";
+
+export const MARKETS_ROW_DIVIDER = "border-b border-[var(--pocket-border)]";
 
 export const MARKETS_SECTION_SPACING = "mt-5";
 
@@ -247,37 +249,37 @@ function MarketSummaryBar({
   session: { open: boolean; label: "Markets open" | "Markets closed" };
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+    <div className="mx-4 rounded-2xl pf-card-surface px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-[#34c759]" aria-hidden>
+            <span className="text-[11px] text-pocket-green" aria-hidden>
               ▲
             </span>
-            <span className="text-sm font-bold tabular-nums text-[#34c759]">
+            <span className="text-sm font-bold tabular-nums text-pocket-green">
               {movers.up}
             </span>
-            <span className="text-xs text-zinc-500">up</span>
+            <span className="text-xs text-pocket-muted">up</span>
           </div>
-          <div className="h-4 w-px bg-white/10" aria-hidden />
+          <div className="h-4 w-px bg-[var(--pocket-border)]" aria-hidden />
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-[#ff453a]" aria-hidden>
+            <span className="text-[11px] text-pocket-red" aria-hidden>
               ▼
             </span>
-            <span className="text-sm font-bold tabular-nums text-[#ff453a]">
+            <span className="text-sm font-bold tabular-nums text-pocket-red">
               {movers.down}
             </span>
-            <span className="text-xs text-zinc-500">down</span>
+            <span className="text-xs text-pocket-muted">down</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <span
             className={`h-1.5 w-1.5 rounded-full ${
-              session.open ? "bg-[#34c759]" : "bg-zinc-500"
+              session.open ? "bg-pocket-green" : "bg-pocket-muted"
             }`}
             aria-hidden
           />
-          <span className="text-xs font-medium text-zinc-400">
+          <span className="text-xs font-medium text-pocket-muted">
             {session.label}
           </span>
         </div>
@@ -305,7 +307,7 @@ function NewsThumb({ imageUrl }: { imageUrl: string }) {
   }
 
   return (
-    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
+    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[var(--pocket-surface-hover)]">
       <Image
         src={imageUrl}
         alt=""
@@ -335,15 +337,15 @@ function MarketNewsSection({
             <li
               key={article.id}
               className={`flex gap-3 px-4 py-3 ${
-                i < articles.length - 1 ? "border-b border-white/[0.06]" : ""
+                i < articles.length - 1 ? MARKETS_ROW_DIVIDER : ""
               }`}
             >
               <NewsThumb imageUrl={article.imageUrl} />
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-white">
+                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-pocket-text">
                   {cleanArticleTitle(article.headline)}
                 </p>
-                <p className="mt-1.5 text-[11px] text-zinc-500">
+                <p className="mt-1.5 text-[11px] text-pocket-muted">
                   {timeAgo(article.publishedAt)} · {article.sourceName}
                 </p>
               </div>
@@ -354,7 +356,7 @@ function MarketNewsSection({
           type="button"
           data-no-drag
           onClick={onViewAll}
-          className="flex w-full items-center justify-center gap-1 border-t border-white/[0.06] py-3 text-sm font-medium text-zinc-400 transition-colors active:text-white"
+          className="flex w-full items-center justify-center gap-1 border-t border-[var(--pocket-border)] py-3 text-sm font-medium text-pocket-muted transition-colors active:text-pocket-text"
         >
           View all news
           <ChevronRight className="h-4 w-4" />
@@ -385,8 +387,8 @@ function MarketRow({
   return (
     <li
       className={`relative flex items-center gap-2 px-4 py-3 ${
-        showDivider ? "border-b border-white/[0.06]" : ""
-      } ${accentFollowing ? "bg-white/[0.02]" : ""}`}
+        showDivider ? MARKETS_ROW_DIVIDER : ""
+      } ${accentFollowing ? "bg-[var(--pocket-surface-hover)]" : ""}`}
     >
       {accentFollowing && (
         <div
@@ -408,20 +410,20 @@ function MarketRow({
           {market.flag}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold text-white">
+          <p className="truncate text-[15px] font-semibold text-pocket-text">
             {market.name}
           </p>
-          <p className="mt-0.5 truncate text-[11px] text-zinc-500">
+          <p className="mt-0.5 truncate text-[11px] text-pocket-muted">
             {market.fullName}
           </p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-[14px] tabular-nums text-white">
+          <p className="text-[14px] tabular-nums text-pocket-text">
             {formatIndexValue(market.value)}
           </p>
           <p
             className={`mt-0.5 text-[12px] tabular-nums ${
-              up ? "text-[#34c759]" : "text-[#ff453a]"
+              up ? "text-pocket-green" : "text-pocket-red"
             }`}
           >
             {up ? "+" : ""}
@@ -490,7 +492,7 @@ function FollowMarketButton({
       className={`relative shrink-0 overflow-visible rounded-full px-3 text-[11px] font-semibold transition-colors duration-200 ${
         isFollowing
           ? "h-7 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white shadow-[0_2px_10px_rgba(59,110,245,0.25)]"
-          : "h-7 border border-white/25 bg-transparent text-zinc-400 hover:border-white/40 hover:text-white"
+          : "h-7 border border-[var(--pocket-border)] bg-transparent text-pocket-muted hover:border-[var(--pocket-border-strong)] hover:text-pocket-text"
       } ${followPop ? "pf-follow-pop" : ""} ${
         unfollowAnim ? "pf-follow-unfollow-subtle" : ""
       }`}

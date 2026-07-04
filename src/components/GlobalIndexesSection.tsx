@@ -15,7 +15,7 @@ export function GlobalIndexesSection() {
 
   return (
     <section className="mt-5">
-      <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+      <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-pocket-muted">
         Global Indexes
       </h2>
       <SectionTabs
@@ -23,29 +23,31 @@ export function GlobalIndexesSection() {
         active={region}
         onChange={setRegion}
       />
-      <div className="mx-4 mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+      <div className="mx-4 mt-2 overflow-hidden rounded-2xl pf-card-surface">
         <ul>
           {indexes.map((index, i) => {
             const up = index.changePercent >= 0;
-            const textColor = up ? "text-[#34c759]" : "text-[#ff453a]";
+            const textColor = up ? "text-pocket-green" : "text-pocket-red";
 
             return (
               <li
                 key={index.id}
                 className={`flex items-center gap-3 px-4 py-3 ${
-                  i < indexes.length - 1 ? "border-b border-white/[0.06]" : ""
+                  i < indexes.length - 1
+                    ? "border-b border-[var(--pocket-border)]"
+                    : ""
                 }`}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-semibold text-white">
+                  <p className="truncate text-[15px] font-semibold text-pocket-text">
                     {index.name}
                   </p>
-                  <p className="mt-0.5 truncate text-[11px] text-zinc-500">
+                  <p className="mt-0.5 truncate text-[11px] text-pocket-muted">
                     {index.fullName}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-[14px] tabular-nums text-white">
+                  <p className="text-[14px] tabular-nums text-pocket-text">
                     {formatIndexValue(index.value)}
                   </p>
                   <p

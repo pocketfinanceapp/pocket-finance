@@ -25,18 +25,15 @@ export class FeedErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div
-          className="app-shell-height flex flex-col items-center justify-center bg-[#0a0a0a] px-6 text-center text-white"
-          style={{ backgroundColor: "#0a0a0a" }}
-        >
-          <p className="text-lg font-semibold">Feed failed to load</p>
-          <p className="mt-2 text-sm text-zinc-400">
+        <div className="pf-page app-shell-height flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-lg font-semibold text-pocket-text">Feed failed to load</p>
+          <p className="mt-2 text-sm text-pocket-muted">
             Restart the dev server, then hard-refresh the page.
           </p>
           <button
             type="button"
             onClick={() => this.setState({ hasError: false })}
-            className="mt-6 rounded-xl border border-white/20 px-5 py-2.5 text-sm font-medium"
+            className="mt-6 rounded-xl border border-[var(--pocket-border)] px-5 py-2.5 text-sm font-medium text-pocket-text active:bg-[var(--pocket-surface-hover)]"
           >
             Try again
           </button>

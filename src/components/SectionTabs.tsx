@@ -17,7 +17,9 @@ export function SectionTabs<T extends string>({
   className = "",
 }: SectionTabsProps<T>) {
   return (
-    <div className={`flex gap-6 border-b border-white/10 px-4 ${className}`}>
+    <div
+      className={`flex gap-6 border-b border-[var(--pocket-border)] px-4 ${className}`}
+    >
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -25,7 +27,7 @@ export function SectionTabs<T extends string>({
           data-no-drag
           onClick={() => onChange(tab.id)}
           className={`relative shrink-0 pb-2.5 text-[13px] font-semibold transition-colors ${
-            active === tab.id ? "text-white" : "text-zinc-500"
+            active === tab.id ? "text-pocket-text" : "text-pocket-muted"
           }`}
         >
           {tab.label}

@@ -36,6 +36,8 @@ interface FeedCardProps {
   showTrendingLabel?: boolean;
   onOpenComments: () => void;
   commentRefreshKey?: number;
+  overlayVisible?: boolean;
+  overlayHomeReady?: boolean;
 }
 
 const DOUBLE_TAP_MS = 280;
@@ -76,6 +78,8 @@ export function FeedCard({
   isFirstCard = false,
   showTrendingLabel = false,
   onOpenComments,
+  overlayVisible = true,
+  overlayHomeReady = true,
 }: FeedCardProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const { user, isGuest, requestSignIn } = useAuth();
@@ -233,7 +237,7 @@ export function FeedCard({
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden bg-[#0a0a0a]"
+      className="pf-on-media relative h-full w-full overflow-hidden bg-pocket-feed-bg"
       data-feed-tap-area
       style={{ touchAction: "manipulation" }}
       onTouchEnd={(e) => {
@@ -379,7 +383,15 @@ export function FeedCard({
       )}
 
       {showBottomChrome && (
-      <div className="absolute inset-x-0 bottom-0 z-20">
+      <div
+        className={`absolute inset-x-0 bottom-0 z-20 ${
+          !overlayHomeReady
+            ? "pointer-events-none opacity-0"
+            : !overlayVisible
+              ? "pf-feed-overlay-exit pointer-events-none"
+              : "pf-feed-overlay-enter"
+        }`}
+      >
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[50%]"
           style={{

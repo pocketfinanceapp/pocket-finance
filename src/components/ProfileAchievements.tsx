@@ -96,8 +96,8 @@ export function ProfileAchievements({
       <section>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-[15px] font-bold text-white">Achievements</h3>
-            <p className="mt-0.5 text-[12px] text-zinc-500">
+            <h3 className="text-[15px] font-bold text-pocket-text">Achievements</h3>
+            <p className="mt-0.5 text-[12px] text-pocket-muted">
               {unlockedCount} of {allAchievements.length} unlocked
               {nextLocked && maxItems
                 ? ` · Next up: ${nextLocked.title}`
@@ -129,16 +129,11 @@ export function ProfileAchievements({
                     type="button"
                     data-no-drag
                     onClick={() => setActiveCategory(f.id)}
-                    className="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors active:opacity-70"
-                    style={{
-                      backgroundColor: active
-                        ? "rgba(0,198,198,0.15)"
-                        : "rgba(255,255,255,0.05)",
-                      color: active ? "#00C6C6" : "rgba(255,255,255,0.42)",
-                      border: active
-                        ? "1px solid rgba(0,198,198,0.25)"
-                        : "1px solid rgba(255,255,255,0.06)",
-                    }}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors active:opacity-70 ${
+                      active
+                        ? "border-pocket-teal/25 bg-pocket-teal/15 text-pocket-teal"
+                        : "border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] text-pocket-muted"
+                    }`}
                   >
                     {f.label}
                   </button>
@@ -159,7 +154,7 @@ export function ProfileAchievements({
                 CATEGORY_FILTERS.find((f) => f.id === cat)?.label ?? cat;
               return (
                 <div key={cat}>
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-600">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-pocket-muted">
                     {catLabel}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -256,7 +251,7 @@ function AchievementCard({
             type="button"
             data-no-drag
             onClick={onInfo}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.06] text-zinc-400 active:bg-white/[0.12] active:text-white"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--pocket-surface-hover)] text-pocket-muted active:bg-[var(--pocket-card-hover)] active:text-pocket-text"
             aria-label={`How to unlock ${a.title}`}
           >
             <Info className="h-3 w-3" strokeWidth={2.5} />
@@ -285,31 +280,27 @@ function AchievementCard({
       </div>
 
       <p
-        className="mt-2 text-[12px] font-semibold leading-snug"
-        style={{
-          color: a.unlocked
-            ? "rgba(255,255,255,0.92)"
-            : "rgba(255,255,255,0.52)",
-        }}
+        className={`mt-2 text-[12px] font-semibold leading-snug ${
+          a.unlocked ? "text-pocket-text" : "text-pocket-muted"
+        }`}
       >
         {a.title}
       </p>
 
       <p
-        className="mt-0.5 text-[10px] font-medium"
-        style={{
-          color: a.unlocked ? "rgba(0,198,198,0.75)" : "rgba(255,255,255,0.35)",
-        }}
+        className={`mt-0.5 text-[10px] font-medium ${
+          a.unlocked ? "text-pocket-teal/80" : "text-pocket-muted"
+        }`}
       >
         {a.unlocked ? `+${a.xpReward} XP earned` : `+${a.xpReward} XP`}
       </p>
 
       {a.unlocked ? (
-        <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
+        <p className="mt-0.5 text-[10px] leading-snug text-pocket-muted">
           {a.description}
         </p>
       ) : (
-        <p className="mt-0.5 text-[10px] leading-snug text-zinc-600">
+        <p className="mt-0.5 text-[10px] leading-snug text-pocket-muted">
           {a.progress}&thinsp;/&thinsp;{a.required}
         </p>
       )}
@@ -354,17 +345,16 @@ function AchievementInfoSheet({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center"
-      style={{ background: "rgba(3,3,5,0.72)", backdropFilter: "blur(6px)" }}
+      className="pf-theme-scope fixed inset-0 z-[80] flex items-end justify-center sm:items-center"
+      style={{ background: "var(--pocket-backdrop)", backdropFilter: "blur(6px)" }}
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-labelledby="achievement-info-title"
-        className="w-full max-w-sm animate-[feed-search-result-in_320ms_cubic-bezier(0.22,1,0.36,1)_both] rounded-t-3xl border border-white/[0.10] px-5 pb-8 pt-5 sm:rounded-3xl"
+        className="w-full max-w-sm animate-[feed-search-result-in_320ms_cubic-bezier(0.22,1,0.36,1)_both] rounded-t-3xl border border-[var(--pocket-border)] px-5 pb-8 pt-5 sm:rounded-3xl"
         style={{
-          background:
-            "linear-gradient(165deg, rgba(14,16,36,0.98) 0%, rgba(6,7,12,0.99) 100%)",
+          background: "var(--pocket-sheet)",
           paddingBottom: "max(2rem, env(safe-area-inset-bottom))",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -389,11 +379,11 @@ function AchievementInfoSheet({
             <div>
               <p
                 id="achievement-info-title"
-                className="text-[16px] font-bold text-white"
+                className="text-[16px] font-bold text-pocket-text"
               >
                 {achievement.title}
               </p>
-              <p className="mt-0.5 text-[11px] text-zinc-500">
+              <p className="mt-0.5 text-[11px] text-pocket-muted">
                 {achievement.unlocked ? "Unlocked" : `${pct}% complete`}
               </p>
             </div>
@@ -402,38 +392,38 @@ function AchievementInfoSheet({
             type="button"
             data-no-drag
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] text-zinc-400 active:bg-white/[0.10]"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--pocket-surface-hover)] text-pocket-muted active:bg-[var(--pocket-card-hover)]"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+        <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-4 py-3.5">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#00C6C6]">
             How to unlock
           </p>
-          <p className="mt-2 text-[14px] leading-relaxed text-zinc-300">
+          <p className="mt-2 text-[14px] leading-relaxed text-pocket-text">
             {achievement.howToUnlock}
           </p>
         </div>
 
-        <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">
-          <span className="text-[12px] text-zinc-500">XP reward</span>
+        <div className="mt-3 flex items-center justify-between rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3">
+          <span className="text-[12px] text-pocket-muted">XP reward</span>
           <span className="text-[13px] font-semibold tabular-nums text-[#00C6C6]">
             +{achievement.xpReward} XP
           </span>
         </div>
 
-        <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">
-          <span className="text-[12px] text-zinc-500">Progress</span>
-          <span className="text-[13px] font-semibold tabular-nums text-white">
+        <div className="mt-3 flex items-center justify-between rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3">
+          <span className="text-[12px] text-pocket-muted">Progress</span>
+          <span className="text-[13px] font-semibold tabular-nums text-pocket-text">
             {achievement.progress} / {achievement.required}
           </span>
         </div>
 
         {!achievement.unlocked && (
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--pocket-surface-hover)]">
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#7C6CF8] to-[#00C6C6] transition-all duration-500"
               style={{ width: `${pct}%` }}

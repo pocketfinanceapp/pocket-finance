@@ -49,11 +49,11 @@ export function TopMoversSection() {
 
   return (
     <section className="mt-5">
-      <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+      <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-pocket-muted">
         Top Movers
       </h2>
       <SectionTabs tabs={TOP_MOVER_TABS} active={tab} onChange={setTab} />
-      <div className="mx-4 mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+      <div className="mx-4 mt-2 overflow-hidden rounded-2xl pf-card-surface">
         <ul>
           {movers.map((mover, i) => {
             const quote = liveQuotes[mover.ticker];
@@ -93,15 +93,15 @@ function TopMoverRow({
   return (
     <li
       className={`flex items-center gap-3 px-4 py-3 ${
-        showDivider ? "border-b border-white/[0.06]" : ""
+        showDivider ? "border-b border-[var(--pocket-border)]" : ""
       }`}
     >
       <CompanyLogo ticker={mover.ticker} color={meta.logoColor} size={36} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[14px] font-bold text-white">
+        <p className="truncate text-[14px] font-bold text-pocket-text">
           {mover.ticker}
         </p>
-        <p className="mt-0.5 truncate text-[11px] text-zinc-500">
+        <p className="mt-0.5 truncate text-[11px] text-pocket-muted">
           {mover.name}
         </p>
       </div>
@@ -109,14 +109,14 @@ function TopMoverRow({
       <MarketSparkline points={sparkline} up={up} width={56} height={22} />
 
       <div className="shrink-0 text-right">
-        <p className="text-[13px] font-semibold tabular-nums text-white">
+        <p className="text-[13px] font-semibold tabular-nums text-pocket-text">
           {formatStockPrice(mover.price)}
         </p>
         <span
           className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
             up
-              ? "bg-[#34c759]/15 text-[#34c759]"
-              : "bg-[#ff453a]/15 text-[#ff453a]"
+              ? "bg-pocket-green/15 text-pocket-green"
+              : "bg-pocket-red/15 text-pocket-red"
           }`}
         >
           {up ? "+" : ""}

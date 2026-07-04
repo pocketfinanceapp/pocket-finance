@@ -70,7 +70,7 @@ export function FeedSearchOverlay({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white active:bg-white/10"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] text-pocket-text active:bg-[var(--pocket-card-hover)]"
             aria-label="Close search"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -79,7 +79,7 @@ export function FeedSearchOverlay({
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#00C6C6]">
               Pocket Search
             </p>
-            <p className="text-[13px] text-zinc-500">Find headlines across your feed</p>
+            <p className="text-[13px] text-pocket-muted">Find headlines across your feed</p>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ export function FeedSearchOverlay({
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold text-zinc-400 active:bg-white/10"
+                className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold text-pocket-muted active:bg-[var(--pocket-surface-hover)]"
               >
                 Clear
               </button>
@@ -139,20 +139,20 @@ export function FeedSearchOverlay({
               style={{
                 background:
                   "linear-gradient(135deg, rgba(59,110,245,0.18), rgba(0,198,198,0.12))",
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid var(--pocket-border)",
               }}
             >
               <Sparkles className="h-6 w-6 text-[#00C6C6]" strokeWidth={1.75} />
             </div>
-            <p className="text-[15px] font-semibold text-white">Search the feed</p>
-            <p className="mt-1 max-w-[240px] text-[13px] leading-relaxed text-zinc-500">
+            <p className="text-[15px] font-semibold text-pocket-text">Search the feed</p>
+            <p className="mt-1 max-w-[240px] text-[13px] leading-relaxed text-pocket-muted">
               Type a company, ticker, or topic to jump straight to a story.
             </p>
           </li>
         ) : results.length === 0 ? (
           <li className="px-4 py-10 text-center">
-            <p className="text-[15px] font-semibold text-white">No matches</p>
-            <p className="mt-1 text-[13px] text-zinc-500">
+            <p className="text-[15px] font-semibold text-pocket-text">No matches</p>
+            <p className="mt-1 text-[13px] text-pocket-muted">
               Nothing found for &ldquo;{query.trim()}&rdquo;
             </p>
           </li>
@@ -162,13 +162,13 @@ export function FeedSearchOverlay({
               <button
                 type="button"
                 onClick={() => onSelectArticle(article)}
-                className="feed-search-result mb-2 flex w-full flex-col gap-1.5 rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3.5 text-left active:bg-white/[0.06]"
+                className="feed-search-result mb-2 flex w-full flex-col gap-1.5 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3.5 text-left active:bg-[var(--pocket-surface-hover)]"
                 style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
               >
-                <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-white">
+                <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-pocket-text">
                   {cleanArticleTitle(article.headline)}
                 </p>
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-pocket-muted">
                   {article.sourceName} · {timeAgo(article.publishedAt)}
                 </p>
               </button>

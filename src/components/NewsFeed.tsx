@@ -20,6 +20,7 @@ import {
   type ProfileTopic,
 } from "@/lib/profileStorage";
 import { recordActivityEvent } from "@/lib/progression";
+import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import {
   getForYouTopArticleIds,
   rankTrendingArticles,
@@ -87,6 +88,7 @@ export function NewsFeed({
     clearFeedJump,
   } = useApp();
   const navigation = useNavigationOptional();
+  const homeEntered = useTabPageEntered("home");
   const [feedMode, setFeedMode] = useState<FeedMode>("forYou");
   const [displayedFeedMode, setDisplayedFeedMode] = useState<FeedMode>("forYou");
   const [tabContentVisible, setTabContentVisible] = useState(true);
@@ -603,14 +605,17 @@ export function NewsFeed({
 
           <div
             data-feed-column
-            className="relative shrink-0 overflow-hidden bg-pocket-feed-bg"
+            className="pf-home-feed relative shrink-0 overflow-hidden bg-pocket-feed-bg"
             style={{
               width: "33.333%",
               height: FEED_VIEWPORT_HEIGHT,
               touchAction: "none",
             }}
           >
-            <div className="pointer-events-auto absolute inset-x-0 top-0 z-50">
+            <div
+              className="pointer-events-auto absolute inset-x-0 top-0 z-50"
+              style={tabEnterStyle(homeEntered, 0)}
+            >
               <FeedHeader
                 feedMode={feedMode}
                 onFeedModeChange={setFeedMode}
@@ -622,13 +627,14 @@ export function NewsFeed({
             <div className="h-full">
             {verticalFeedArticles.length === 0 ? (
               <div
-                className={`flex h-full flex-col items-center justify-center px-8 text-center transition-opacity duration-200 ease-out ${
+                className={`pf-feed-empty flex h-full flex-col items-center justify-center px-8 text-center transition-opacity duration-200 ease-out ${
                   tabContentVisible ? "opacity-100" : "opacity-0"
                 }`}
+                style={tabEnterStyle(homeEntered, 120)}
               >
                 {displayedFeedMode === "following" && favouriteTopics.length === 0 ? (
                   <>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-lg font-bold text-pocket-text">
                       Personalise your feed — select topics in your Profile
                     </p>
                     <button
@@ -642,12 +648,12 @@ export function NewsFeed({
                   </>
                 ) : (
                   <>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-lg font-bold text-pocket-text">
                       {displayedFeedMode === "following"
                         ? "No stories match your topics"
                         : "No stories match"}
                     </p>
-                    <p className="mt-2 text-sm text-zinc-500">
+                    <p className="mt-2 text-sm font-medium text-pocket-muted">
                       {displayedFeedMode === "following"
                         ? "Try adding more topics in your Profile."
                         : "Adjust filters or search to see more news."}
@@ -660,7 +666,7 @@ export function NewsFeed({
                           ? openProfile()
                           : setFilterOpen(true)
                       }
-                      className="mt-6 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black"
+                      className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
                     >
                       {displayedFeedMode === "following" ? "Go to Profile" : "Open filters"}
                     </button>
@@ -668,11 +674,7 @@ export function NewsFeed({
                 )}
               </div>
             ) : (
-              <div
-                className={`feed-column-viewport z-0 transition-opacity duration-200 ease-out ${
-                  tabContentVisible ? "opacity-100" : "opacity-0"
-                }`}
-              >
+              <div className="feed-column-viewport z-0">
                 <div
                   className={`w-full touch-none ${trackTransition}`}
                   style={{
@@ -696,6 +698,8 @@ export function NewsFeed({
                         showTrendingLabel={displayedFeedMode === "trending"}
                         onOpenComments={() => setCommentsOpen(true)}
                         commentRefreshKey={commentRefreshKey}
+                        overlayVisible={tabContentVisible}
+                        overlayHomeReady={homeEntered}
                       />
                     </div>
                   ))}

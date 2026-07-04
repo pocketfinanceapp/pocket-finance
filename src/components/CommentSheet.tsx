@@ -243,10 +243,10 @@ export function CommentSheet({
         />
 
         <div className="flex shrink-0 flex-col items-center px-5 pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-white/20" />
+          <div className="h-1 w-10 rounded-full bg-[var(--pocket-border)]" />
         </div>
 
-        <header className="grid shrink-0 grid-cols-[1fr_auto] items-start gap-3 border-b border-white/[0.06] px-5 pb-4">
+        <header className="grid shrink-0 grid-cols-[1fr_auto] items-start gap-3 border-b border-[var(--pocket-border)] px-5 pb-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
               <div
@@ -260,10 +260,10 @@ export function CommentSheet({
                 <MessageCircle className="h-4 w-4 text-[#00C6C6]" strokeWidth={2.25} />
               </div>
               <div className="min-w-0">
-                <h2 id="comment-sheet-title" className="text-[17px] font-bold leading-tight text-white">
+                <h2 id="comment-sheet-title" className="text-[17px] font-bold leading-tight text-pocket-text">
                   Discussion
                 </h2>
-                <p className="mt-0.5 text-[12px] text-zinc-500">
+                <p className="mt-0.5 text-[12px] text-pocket-muted">
                   {totalCount} {totalCount === 1 ? "comment" : "comments"}
                 </p>
               </div>
@@ -274,7 +274,7 @@ export function CommentSheet({
                 <span className="inline-flex rounded-full bg-[#00C6C6]/12 px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-[#00C6C6]">
                   {article.ticker}
                 </span>
-                <p className="line-clamp-2 text-[13px] leading-snug text-zinc-400">
+                <p className="line-clamp-2 text-[13px] leading-snug text-pocket-muted">
                   {article.headline}
                 </p>
               </div>
@@ -285,7 +285,7 @@ export function CommentSheet({
             type="button"
             data-no-drag
             onClick={onClose}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-zinc-400 active:bg-white/[0.10] active:text-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--pocket-surface-hover)] text-pocket-muted active:bg-[var(--pocket-card-hover)] active:text-pocket-text"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -298,8 +298,8 @@ export function CommentSheet({
         >
           {loading && comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="h-8 w-8 animate-pulse rounded-full bg-white/[0.06]" />
-              <p className="mt-4 text-sm text-zinc-500">Loading discussion…</p>
+              <div className="h-8 w-8 animate-pulse rounded-full bg-[var(--pocket-surface-hover)]" />
+              <p className="mt-4 text-sm text-pocket-muted">Loading discussion…</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -339,10 +339,10 @@ export function CommentSheet({
           }}
         >
           {replyTo && (
-            <div className="mb-2.5 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2">
-              <p className="min-w-0 truncate text-[12px] text-zinc-400">
+            <div className="mb-2.5 flex items-center justify-between rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-3 py-2">
+              <p className="min-w-0 truncate text-[12px] text-pocket-muted">
                 Replying to{" "}
-                <span className="font-semibold text-white">{replyTo.username}</span>
+                <span className="font-semibold text-pocket-text">{replyTo.username}</span>
               </p>
               <button
                 type="button"
@@ -356,7 +356,7 @@ export function CommentSheet({
           )}
 
           {!user ? (
-            <p className="py-2.5 text-center text-[13px] text-zinc-500">
+            <p className="py-2.5 text-center text-[13px] text-pocket-muted">
               Sign in to join the discussion
             </p>
           ) : (
@@ -372,7 +372,7 @@ export function CommentSheet({
               </div>
 
               <div
-                className="min-w-0 flex-1 rounded-[20px] border border-white/[0.10] bg-white/[0.05] px-1 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-within:border-[#00C6C6]/35"
+                className="min-w-0 flex-1 rounded-[20px] border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-1 py-1 shadow-[inset_0_1px_0_var(--pocket-border)] focus-within:border-[#00C6C6]/35"
               >
                 <textarea
                   ref={inputRef}
@@ -384,7 +384,7 @@ export function CommentSheet({
                   rows={1}
                   data-no-drag
                   disabled={submitting}
-                  className="max-h-28 min-h-[44px] w-full resize-none bg-transparent px-3 py-2.5 text-[15px] leading-snug text-white placeholder:text-zinc-500 focus:outline-none disabled:opacity-50"
+                  className="max-h-28 min-h-[44px] w-full resize-none bg-transparent px-3 py-2.5 text-[15px] leading-snug text-pocket-text placeholder:text-pocket-muted focus:outline-none disabled:opacity-50"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -535,12 +535,12 @@ function CommentThread({
             } ${depth > 0 ? "rounded-tl-md" : "rounded-tl-lg"}`}
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <span className="text-[13px] font-semibold text-white">
+              <span className="text-[13px] font-semibold text-pocket-text">
                 {comment.username}
               </span>
-              <span className="text-[10px] text-zinc-500">{comment.timeAgo}</span>
+              <span className="text-[10px] text-pocket-muted">{comment.timeAgo}</span>
             </div>
-            <p className="mt-1 text-[14px] leading-relaxed text-zinc-300">
+            <p className="mt-1 text-[14px] leading-relaxed text-pocket-text">
               {comment.text}
             </p>
           </div>
@@ -553,7 +553,7 @@ function CommentThread({
               className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
                 comment.likedByMe
                   ? "text-[#00C6C6]"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  : "text-pocket-muted hover:text-pocket-text"
               }`}
             >
               <Heart
@@ -572,7 +572,7 @@ function CommentThread({
               className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
                 isReplyTarget
                   ? "text-[#00C6C6]"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  : "text-pocket-muted hover:text-pocket-text"
               }`}
             >
               Reply

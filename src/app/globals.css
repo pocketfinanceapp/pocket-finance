@@ -27,6 +27,7 @@
   --pocket-search-overlay: linear-gradient(180deg, rgba(4, 5, 8, 0.97) 0%, rgba(8, 10, 16, 0.98) 100%);
   --pocket-search-bar: rgba(255, 255, 255, 0.04);
   --pocket-header-scrim: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.35), transparent);
+  --pocket-feed-chrome-bg: rgba(0, 0, 0, 0.22);
   --pocket-grid-line: rgba(255, 255, 255, 0.012);
   --pocket-toggle-off: #3f3f46;
   --pocket-overlay-scrim: rgba(0, 0, 0, 0.7);
@@ -57,6 +58,7 @@
   --pocket-search-overlay: linear-gradient(180deg, rgba(242, 242, 247, 0.98) 0%, rgba(229, 229, 234, 0.99) 100%);
   --pocket-search-bar: rgba(255, 255, 255, 0.92);
   --pocket-header-scrim: linear-gradient(to bottom, rgba(242, 242, 247, 0.96), rgba(242, 242, 247, 0.62), transparent);
+  --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.82);
   --pocket-grid-line: rgba(0, 0, 0, 0.045);
   --pocket-toggle-off: #d1d5db;
   --pocket-overlay-scrim: rgba(17, 24, 39, 0.35);
@@ -87,6 +89,7 @@
   --pocket-search-overlay: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(238, 242, 246, 0.99) 100%);
   --pocket-search-bar: rgba(255, 255, 255, 0.94);
   --pocket-header-scrim: linear-gradient(to bottom, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.65), transparent);
+  --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.86);
   --pocket-grid-line: rgba(59, 110, 245, 0.06);
   --pocket-toggle-off: #cbd5e1;
   --pocket-overlay-scrim: rgba(15, 23, 42, 0.28);
@@ -326,6 +329,41 @@ html.app-route
   background: var(--pocket-header-scrim);
 }
 
+.pf-feed-tab-bar {
+  background: var(--pocket-feed-chrome-bg);
+  backdrop-filter: blur(12px);
+}
+
+.pf-feed-overlay-enter {
+  animation: pf-feed-overlay-enter 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pf-feed-overlay-exit {
+  animation: pf-feed-overlay-exit 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes pf-feed-overlay-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pf-feed-overlay-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 html.app-route[data-theme="light"] .pf-theme-scope .bg-black,
 html.app-route[data-theme="modern-light"] .pf-theme-scope .bg-black,
 html.app-route[data-theme="light"] .pf-feed-chrome .bg-black,
@@ -349,6 +387,29 @@ html.app-route[data-theme="modern-light"] .pf-theme-scope .text-white,
 html.app-route[data-theme="light"] .pf-feed-chrome .text-white,
 html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-white {
   color: var(--pocket-text) !important;
+}
+
+/* Feed cards sit on photos — keep light text on media overlays */
+html.app-route[data-theme="light"] .pf-on-media .text-white,
+html.app-route[data-theme="modern-light"] .pf-on-media .text-white,
+html.app-route[data-theme="light"] .pf-on-media [class*="text-white/"],
+html.app-route[data-theme="modern-light"] .pf-on-media [class*="text-white/"] {
+  color: #ffffff !important;
+}
+
+html.app-route[data-theme="light"] .pf-on-media [class*="text-white/68"],
+html.app-route[data-theme="modern-light"] .pf-on-media [class*="text-white/68"] {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+html.app-route[data-theme="light"] .pf-on-media [class*="text-white/78"],
+html.app-route[data-theme="modern-light"] .pf-on-media [class*="text-white/78"] {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+html.app-route[data-theme="light"] .pf-home-feed .pf-feed-empty,
+html.app-route[data-theme="modern-light"] .pf-home-feed .pf-feed-empty {
+  color: var(--pocket-text);
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope [class*="text-white/"],
@@ -419,6 +480,11 @@ html.app-route[data-theme="modern-light"] .pf-theme-scope [class*="bg-black/"]:n
 html.app-route[data-theme="light"] .pf-feed-chrome [class*="bg-black/"]:not(.pf-keep-overlay),
 html.app-route[data-theme="modern-light"] .pf-feed-chrome [class*="bg-black/"]:not(.pf-keep-overlay) {
   background-color: var(--pocket-surface-hover) !important;
+}
+
+html.app-route[data-theme="light"] .pf-on-media [class*="bg-black/"],
+html.app-route[data-theme="modern-light"] .pf-on-media [class*="bg-black/"] {
+  background-color: rgba(0, 0, 0, 0.45) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope .pf-nav-inactive,
