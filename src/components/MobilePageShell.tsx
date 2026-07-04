@@ -20,11 +20,11 @@ export function MobilePageShell({
 
   return (
     <div
-      className="relative mx-auto w-full max-w-mobile overflow-hidden bg-black"
+      className="relative mx-auto w-full max-w-mobile overflow-hidden bg-pocket-bg"
       style={{ height: APP_VIEWPORT_HEIGHT, maxHeight: APP_VIEWPORT_HEIGHT }}
     >
       <div
-        className="absolute inset-x-0 top-0 overflow-hidden bg-black"
+        className="absolute inset-x-0 top-0 overflow-hidden bg-pocket-bg"
         style={{ height: contentHeight }}
       >
         {children}

@@ -17,7 +17,7 @@ export default async function AppLayout({
   ]);
 
   return (
-    <main className="app-shell-height bg-black">
+    <main className="app-shell-height bg-pocket-bg">
       <AppBodyLock />
       <AppProviders>
         <AppGate>

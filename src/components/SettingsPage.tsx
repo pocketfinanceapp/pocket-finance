@@ -26,6 +26,7 @@ import { timeAgo } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ScreenHeader } from "./ScreenHeader";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 type SettingsScreen = "main" | "liked" | "saved" | "topics";
 
@@ -181,6 +182,10 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
         </SettingsSection>
 
         <SettingsSection title="Preferences">
+          <div className="border-b border-white/[0.06] px-4 py-4 last:border-b-0">
+            <p className="mb-3 text-[13px] font-medium text-white">Appearance</p>
+            <ThemeSwitcher variant="picker" />
+          </div>
           <SettingsRow
             icon={<Tag className="h-5 w-5 text-zinc-400" />}
             label="My Topics"

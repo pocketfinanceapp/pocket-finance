@@ -2,8 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme="dark"] {
   --pocket-bg: #0a0a0a;
+  --pocket-surface: #111111;
+  --pocket-elevated: #141414;
+  --pocket-border: rgba(255, 255, 255, 0.08);
+  --pocket-border-strong: rgba(255, 255, 255, 0.12);
+  --pocket-text: #ffffff;
+  --pocket-text-muted: #a1a1aa;
+  --pocket-text-subtle: #71717a;
+  --pocket-nav-bg: #000000;
+  --pocket-card: rgba(255, 255, 255, 0.03);
+  --pocket-card-hover: rgba(255, 255, 255, 0.06);
+  --pocket-surface-hover: rgba(255, 255, 255, 0.08);
+  --pocket-feed-bg: #0a0a0a;
+  --pocket-shadow: none;
+  --pocket-nav-inactive: rgba(255, 255, 255, 0.45);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --pocket-bg: #f2f2f7;
+  --pocket-surface: #ffffff;
+  --pocket-elevated: #ffffff;
+  --pocket-border: rgba(0, 0, 0, 0.08);
+  --pocket-border-strong: rgba(0, 0, 0, 0.12);
+  --pocket-text: #111827;
+  --pocket-text-muted: #6b7280;
+  --pocket-text-subtle: #9ca3af;
+  --pocket-nav-bg: #ffffff;
+  --pocket-card: #ffffff;
+  --pocket-card-hover: #f9fafb;
+  --pocket-surface-hover: rgba(0, 0, 0, 0.04);
+  --pocket-feed-bg: #e5e5ea;
+  --pocket-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --pocket-nav-inactive: rgba(0, 0, 0, 0.42);
+  color-scheme: light;
+}
+
+[data-theme="modern-light"] {
+  --pocket-bg: #f8fafc;
+  --pocket-surface: #ffffff;
+  --pocket-elevated: #ffffff;
+  --pocket-border: rgba(59, 110, 245, 0.12);
+  --pocket-border-strong: rgba(59, 110, 245, 0.18);
+  --pocket-text: #0f172a;
+  --pocket-text-muted: #64748b;
+  --pocket-text-subtle: #94a3b8;
+  --pocket-nav-bg: rgba(255, 255, 255, 0.88);
+  --pocket-card: rgba(255, 255, 255, 0.94);
+  --pocket-card-hover: #f1f5f9;
+  --pocket-surface-hover: rgba(59, 110, 245, 0.06);
+  --pocket-feed-bg: #eef2f6;
+  --pocket-shadow: 0 8px 32px rgba(59, 110, 245, 0.08);
+  --pocket-nav-inactive: rgba(15, 23, 42, 0.42);
+  color-scheme: light;
+}
+
+:root {
   --pocket-teal: #00C6C6;
   --pocket-blue: #3B6EF5;
   --app-vh: 100vh;
@@ -35,7 +92,7 @@ body {
   margin: 0;
   padding: 0;
   background: var(--pocket-bg);
-  color: #fff;
+  color: var(--pocket-text);
 }
 
 html:not(.app-route),
@@ -181,6 +238,68 @@ html.app-route
   opacity: 0;
   pointer-events: none;
   z-index: 0;
+}
+
+/* ── Light theme overrides for app shell ─────────────────────────────────── */
+
+[data-theme="light"] .app-themed .bg-black,
+[data-theme="modern-light"] .app-themed .bg-black {
+  background-color: var(--pocket-bg) !important;
+}
+
+[data-theme="light"] .app-themed .bg-\[\#0a0a0a\],
+[data-theme="modern-light"] .app-themed .bg-\[\#0a0a0a\] {
+  background-color: var(--pocket-feed-bg) !important;
+}
+
+[data-theme="light"] .app-themed .text-white,
+[data-theme="modern-light"] .app-themed .text-white {
+  color: var(--pocket-text) !important;
+}
+
+[data-theme="light"] .app-themed .text-zinc-400,
+[data-theme="modern-light"] .app-themed .text-zinc-400 {
+  color: var(--pocket-text-muted) !important;
+}
+
+[data-theme="light"] .app-themed .text-zinc-500,
+[data-theme="modern-light"] .app-themed .text-zinc-500 {
+  color: var(--pocket-text-muted) !important;
+}
+
+[data-theme="light"] .app-themed .text-zinc-600,
+[data-theme="modern-light"] .app-themed .text-zinc-600 {
+  color: var(--pocket-text-subtle) !important;
+}
+
+[data-theme="light"] .app-themed [class*="border-white/"],
+[data-theme="modern-light"] .app-themed [class*="border-white/"] {
+  border-color: var(--pocket-border) !important;
+}
+
+[data-theme="light"] .app-themed [class*="bg-white/"],
+[data-theme="modern-light"] .app-themed [class*="bg-white/"] {
+  background-color: var(--pocket-card) !important;
+}
+
+[data-theme="light"] .app-themed .pf-nav-inactive,
+[data-theme="modern-light"] .app-themed .pf-nav-inactive {
+  color: var(--pocket-nav-inactive) !important;
+}
+
+[data-theme="modern-light"] .app-themed .pf-card-shadow {
+  box-shadow: var(--pocket-shadow);
+}
+
+[data-theme="light"] .app-themed nav.fixed.bottom-0,
+[data-theme="modern-light"] .app-themed nav.fixed.bottom-0 {
+  background-color: var(--pocket-nav-bg) !important;
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="light"] html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide)),
+[data-theme="modern-light"] html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide)) {
+  scrollbar-color: rgba(59, 110, 245, 0.35) rgba(0, 0, 0, 0.04);
 }
 
 .h-screen-safe {

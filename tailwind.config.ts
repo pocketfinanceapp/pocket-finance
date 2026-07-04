@@ -10,9 +10,14 @@ const config: Config = {
     extend: {
       colors: {
         pocket: {
-          bg: "#0a0a0a",
-          surface: "#141414",
-          border: "#262626",
+          bg: "var(--pocket-bg)",
+          surface: "var(--pocket-surface)",
+          elevated: "var(--pocket-elevated)",
+          border: "var(--pocket-border)",
+          text: "var(--pocket-text)",
+          muted: "var(--pocket-text-muted)",
+          card: "var(--pocket-card)",
+          "feed-bg": "var(--pocket-feed-bg)",
           teal: "#00C6C6",
           blue: "#3B6EF5",
           green: "#22c55e",

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
+import { ThemeInitScript } from "@/components/ThemeInitScript";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,8 +34,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
+        <ThemeInitScript />
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/logo.png?v=2" type="image/png" />
         <link rel="apple-touch-icon" href="/logo.png?v=2" />
@@ -52,7 +54,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-pocket-bg antialiased">{children}</body>
+      <body className="min-h-screen bg-pocket-bg text-pocket-text antialiased">{children}</body>
     </html>
   );
 }

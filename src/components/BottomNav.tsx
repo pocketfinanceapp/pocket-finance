@@ -72,7 +72,7 @@ export function BottomNav({ active }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex flex-col justify-end border-t border-white/[0.06] bg-black"
+      className="fixed bottom-0 left-0 right-0 z-50 flex flex-col justify-end border-t border-[var(--pocket-border)] bg-pocket-bg"
       data-no-drag
       data-interactive
       style={{
@@ -90,7 +90,7 @@ export function BottomNav({ active }: BottomNavProps) {
           onClick={() => navigate("markets")}
         >
           <BarChart2
-            className={`h-[26px] w-[26px] ${marketsActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            className={`h-[26px] w-[26px] ${marketsActive ? "text-[#00C6C6]" : "pf-nav-inactive text-white/45"}`}
             strokeWidth={marketsActive ? 2.5 : 2}
           />
         </NavItem>
@@ -101,7 +101,7 @@ export function BottomNav({ active }: BottomNavProps) {
           onClick={() => navigate("watchlist")}
         >
           <Bookmark
-            className={`h-[26px] w-[26px] ${watchlistActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            className={`h-[26px] w-[26px] ${watchlistActive ? "text-[#00C6C6]" : "pf-nav-inactive text-white/45"}`}
             strokeWidth={watchlistActive ? 2.5 : 2}
           />
         </NavItem>
@@ -120,7 +120,7 @@ export function BottomNav({ active }: BottomNavProps) {
           onClick={() => navigate("browse")}
         >
           <Compass
-            className={`h-[26px] w-[26px] ${browseActive ? "text-[#00C6C6]" : "text-white/45"}`}
+            className={`h-[26px] w-[26px] ${browseActive ? "text-[#00C6C6]" : "pf-nav-inactive text-white/45"}`}
             strokeWidth={browseActive ? 2.5 : 2}
           />
         </NavItem>
@@ -139,7 +139,7 @@ export function BottomNav({ active }: BottomNavProps) {
 
 /** Simple inline house icon — no external icon libraries */
 function HomeIcon({ active }: { active: boolean }) {
-  const stroke = active ? "#00C6C6" : "rgba(255,255,255,0.45)";
+  const stroke = active ? "#00C6C6" : "var(--pocket-nav-inactive)";
   const fill = active ? "#3B6EF5" : "none";
 
   return (
@@ -185,7 +185,7 @@ function NavItem({
         className={`text-[10px] font-medium tracking-wide ${
           active
             ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-transparent"
-            : "text-white/45"
+            : "pf-nav-inactive text-white/45"
         }`}
       >
         {label}
