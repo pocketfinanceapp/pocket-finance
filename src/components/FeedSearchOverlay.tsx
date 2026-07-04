@@ -22,12 +22,14 @@ export function FeedSearchOverlay({
 }: FeedSearchOverlayProps) {
   const [query, setQuery] = useState("");
   const [entered, setEntered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) {
       setQuery("");
       setEntered(false);
+      setFocused(false);
       return;
     }
 
@@ -85,12 +87,13 @@ export function FeedSearchOverlay({
         <div
           className={`feed-search-bar relative overflow-hidden rounded-2xl transition-all duration-300 ${
             entered ? "feed-search-bar-active" : ""
-          }`}
+          } ${focused ? "feed-search-bar-focused" : ""}`}
           style={{
             background: "rgba(255,255,255,0.04)",
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
           }}
         >
+          <div className="feed-search-bar-shimmer" aria-hidden />
           <div
             className="pointer-events-none absolute inset-0 rounded-2xl opacity-80"
             style={{
@@ -105,9 +108,11 @@ export function FeedSearchOverlay({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
               placeholder="Search market headlines…"
               autoFocus
-              className="min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-zinc-500 focus:outline-none"
+              className="feed-search-input-caret min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-zinc-500 focus:outline-none"
             />
             {query.length > 0 && (
               <button
