@@ -138,15 +138,58 @@ const ACTIVITY_STORE_KEY = "pf_activity_v1";
 const BASELINE_KEY = "pf_baseline_v1";
 const STREAK_STORE_KEY = "pf_streak_v1";
 
-const LEVELS: LevelDef[] = [
-  { level: 1, title: "Market Starter", xpRequired: 0 },
-  { level: 2, title: "News Reader", xpRequired: 100 },
-  { level: 3, title: "Market Explorer", xpRequired: 250 },
-  { level: 4, title: "Informed Investor", xpRequired: 500 },
-  { level: 5, title: "Market Analyst", xpRequired: 1000 },
-  { level: 6, title: "Portfolio Thinker", xpRequired: 2000 },
-  { level: 7, title: "Market Strategist", xpRequired: 4000 },
-];
+export const MAX_LEVEL = 100;
+
+/** Named titles for early levels; higher levels use tier titles from getLevelTitle(). */
+const NAMED_LEVEL_TITLES: Record<number, string> = {
+  1: "Market Starter",
+  2: "News Reader",
+  3: "Market Explorer",
+  4: "Informed Investor",
+  5: "Market Analyst",
+  6: "Portfolio Thinker",
+  7: "Market Strategist",
+};
+
+/** XP threshold to reach a given level (level 1 = 0 XP). */
+export function xpRequiredForLevel(level: number): number {
+  const clamped = Math.max(1, Math.min(MAX_LEVEL, Math.floor(level)));
+  if (clamped <= 1) return 0;
+
+  const early: Record<number, number> = {
+    2: 100,
+    3: 250,
+    4: 500,
+    5: 1000,
+    6: 2000,
+    7: 4000,
+  };
+  if (clamped <= 7) return early[clamped] ?? 0;
+
+  const n = clamped - 7;
+  return Math.floor(4000 + n * 620 + n * n * 42);
+}
+
+export function getLevelTitle(level: number): string {
+  const clamped = Math.max(1, Math.min(MAX_LEVEL, Math.floor(level)));
+  if (NAMED_LEVEL_TITLES[clamped]) return NAMED_LEVEL_TITLES[clamped];
+  if (clamped < 15) return "Market Apprentice";
+  if (clamped < 25) return "Portfolio Builder";
+  if (clamped < 40) return "Finance Enthusiast";
+  if (clamped < 55) return "Market Insider";
+  if (clamped < 70) return "Wealth Strategist";
+  if (clamped < 85) return "Capital Master";
+  if (clamped < 100) return "Market Veteran";
+  return "Market Legend";
+}
+
+function buildLevelDef(level: number): LevelDef {
+  return {
+    level,
+    title: getLevelTitle(level),
+    xpRequired: xpRequiredForLevel(level),
+  };
+}
 
 const XP_CONFIG: Record<ActivityEventType, number> = {
   article_opened: 8,
@@ -341,18 +384,17 @@ function buildRewardKey(
 // ---------------------------------------------------------------------------
 
 export function calculateLevel(totalXP: number): LevelState {
-  const maxIndex = LEVELS.length - 1;
   let idx = 0;
-  for (let i = maxIndex; i >= 0; i--) {
-    if (totalXP >= LEVELS[i].xpRequired) {
+  for (let i = MAX_LEVEL - 1; i >= 0; i--) {
+    if (totalXP >= xpRequiredForLevel(i + 1)) {
       idx = i;
       break;
     }
   }
 
-  const currentLevel = LEVELS[idx];
-  const isMax = idx === maxIndex;
-  const nextLevel = isMax ? LEVELS[maxIndex] : LEVELS[idx + 1];
+  const currentLevel = buildLevelDef(idx + 1);
+  const isMax = idx === MAX_LEVEL - 1;
+  const nextLevel = isMax ? currentLevel : buildLevelDef(idx + 2);
 
   const currentLevelXP = currentLevel.xpRequired;
   const nextLevelXP = nextLevel.xpRequired;

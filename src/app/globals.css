@@ -31,6 +31,7 @@
   --pocket-grid-line: rgba(255, 255, 255, 0.012);
   --pocket-toggle-off: #3f3f46;
   --pocket-overlay-scrim: rgba(0, 0, 0, 0.7);
+  --pocket-thread: rgba(0, 198, 198, 0.38);
   color-scheme: dark;
 }
 
@@ -62,6 +63,7 @@
   --pocket-grid-line: rgba(0, 0, 0, 0.045);
   --pocket-toggle-off: #d1d5db;
   --pocket-overlay-scrim: rgba(17, 24, 39, 0.35);
+  --pocket-thread: rgba(0, 160, 170, 0.42);
   color-scheme: light;
 }
 
@@ -93,6 +95,7 @@
   --pocket-grid-line: rgba(59, 110, 245, 0.06);
   --pocket-toggle-off: #cbd5e1;
   --pocket-overlay-scrim: rgba(15, 23, 42, 0.28);
+  --pocket-thread: rgba(59, 110, 245, 0.38);
   color-scheme: light;
 }
 
@@ -786,6 +789,40 @@ html.app-route[data-theme="modern-light"] html.app-route :where(.pf-scroll, .ove
 
 .streak-today-pulse {
   animation: streak-today-pulse 2s ease-in-out infinite;
+}
+
+@keyframes level-gem-pulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.03) rotate(-1deg);
+    filter: brightness(1.06);
+  }
+}
+
+@keyframes level-gem-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scaleX(1.08);
+  }
+}
+
+.level-gem-animate {
+  animation: level-gem-pulse 3.2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.level-gem-glow-pulse {
+  animation: level-gem-glow 3.2s ease-in-out infinite;
+  transform-origin: center;
 }
 
 @keyframes badge-unlock-pulse {

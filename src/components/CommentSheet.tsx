@@ -421,10 +421,7 @@ export function CommentSheet({
   );
 }
 
-const THREAD_AVATAR = 36;
-const THREAD_GAP = 12;
-/** px from reply-row start to parent avatar column center */
-const THREAD_BRANCH_OFFSET = THREAD_AVATAR + THREAD_GAP - THREAD_AVATAR / 2;
+const THREAD_INDENT = "ml-[18px] border-l-2 border-[var(--pocket-thread)] pl-3";
 
 function CommentAvatar({
   comment,
@@ -452,7 +449,6 @@ function CommentThread({
   replyTargetId,
   expandedIds,
   onToggleExpanded,
-  isLast = true,
 }: {
   comment: ThreadComment;
   depth: number;
@@ -461,7 +457,6 @@ function CommentThread({
   replyTargetId: string | null;
   expandedIds: Set<string>;
   onToggleExpanded: (id: string, open: boolean) => void;
-  isLast?: boolean;
 }) {
   const [localExpanded, setLocalExpanded] = useState(depth === 0);
   const hasReplies = comment.replies.length > 0;
@@ -477,54 +472,10 @@ function CommentThread({
   return (
     <article
       id={`comment-${comment.id}`}
-      className={`relative ${depth === 0 ? "py-2.5" : "pt-3"}`}
+      className={depth === 0 ? "py-2.5" : "pt-3"}
     >
-      {depth > 0 && (
-        <>
-          <div
-            className="pf-thread-branch pointer-events-none absolute top-0 z-0 rounded-bl-[12px] border-b-2 border-l-2"
-            style={{
-              left: -THREAD_BRANCH_OFFSET,
-              width: THREAD_BRANCH_OFFSET + THREAD_AVATAR / 2,
-              height: THREAD_AVATAR / 2 + 2,
-            }}
-            aria-hidden
-          />
-          <span
-            className="pointer-events-none absolute z-[1] rounded-full bg-[#00C6C6] ring-2 ring-[var(--pocket-sheet,#08090e)]"
-            style={{
-              left: THREAD_AVATAR / 2 - 3,
-              top: THREAD_AVATAR / 2 - 3,
-              width: 6,
-              height: 6,
-            }}
-            aria-hidden
-          />
-          {!isLast && (
-            <div
-              className="pf-thread-trunk pointer-events-none absolute z-0 w-[2px]"
-              style={{
-                left: -THREAD_BRANCH_OFFSET + 1,
-                top: THREAD_AVATAR / 2 + 4,
-                bottom: 0,
-              }}
-              aria-hidden
-            />
-          )}
-        </>
-      )}
-
-      <div className="relative z-[1] flex gap-3">
-        <div className="flex w-9 shrink-0 flex-col items-center">
-          <CommentAvatar comment={comment} compact={depth > 0} />
-          {hasReplies && expanded && (
-            <div
-              className="pf-thread-trunk mt-2 w-[2px] flex-1 rounded-full"
-              style={{ minHeight: 10 }}
-              aria-hidden
-            />
-          )}
-        </div>
+      <div className="flex gap-3">
+        <CommentAvatar comment={comment} compact={depth > 0} />
 
         <div className="min-w-0 flex-1">
           <div
@@ -532,7 +483,7 @@ function CommentThread({
               isReplyTarget
                 ? "border-[#00C6C6]/45 bg-[#00C6C6]/[0.07] shadow-[0_0_0_1px_rgba(0,198,198,0.12)]"
                 : "border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)]"
-            } ${depth > 0 ? "rounded-tl-md" : "rounded-tl-lg"}`}
+            }`}
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <span className="text-[13px] font-semibold text-pocket-text">
@@ -603,17 +554,8 @@ function CommentThread({
           )}
 
           {expanded && hasReplies && (
-            <div className="relative mt-1">
-              <div
-                className="pf-thread-trunk pointer-events-none absolute z-0 w-[2px] rounded-full"
-                style={{
-                  left: -(THREAD_GAP + THREAD_AVATAR / 2) + 1,
-                  top: 0,
-                  bottom: 0,
-                }}
-                aria-hidden
-              />
-              {comment.replies.map((reply, index) => (
+            <div className={`mt-2 space-y-0 ${THREAD_INDENT}`}>
+              {comment.replies.map((reply) => (
                 <CommentThread
                   key={reply.id}
                   comment={reply}
@@ -623,7 +565,6 @@ function CommentThread({
                   replyTargetId={replyTargetId}
                   expandedIds={expandedIds}
                   onToggleExpanded={onToggleExpanded}
-                  isLast={index === comment.replies.length - 1}
                 />
               ))}
             </div>

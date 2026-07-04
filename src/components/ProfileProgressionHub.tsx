@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { tabEnterStyle } from "@/lib/tabEnterAnimation";
 import {
   DAILY_GOAL_XP_REWARD,
+  MAX_LEVEL,
   XP_REWARDS,
   type DailyGoalState,
   type DailyGoalTask,
@@ -45,7 +46,7 @@ export function ProfileActivitySection({
   animateIn?: boolean;
   enterDelay?: number;
 }) {
-  const isMaxLevel = progression.level === 7;
+  const isMaxLevel = progression.level >= MAX_LEVEL;
   const hasWeeklyActivity =
     weekly.articlesRead > 0 || weekly.briefingsCompleted > 0;
 

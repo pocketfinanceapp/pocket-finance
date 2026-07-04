@@ -2,9 +2,10 @@
 
 import { useEffect, useId, useState } from "react";
 import { StreakHeroIcon } from "@/components/icons/StreakHeroIcon";
+import { LevelHeroIcon } from "@/components/icons/LevelHeroIcon";
 import { getLoginStreakState } from "@/lib/profileStorage";
 import { tabEnterStyle } from "@/lib/tabEnterAnimation";
-import type { LevelState } from "@/lib/progression";
+import { MAX_LEVEL, type LevelState } from "@/lib/progression";
 
 interface ProfileProgressTabsProps {
   progression: LevelState;
@@ -29,7 +30,7 @@ export function ProfileProgressTabs({
     return () => window.removeEventListener("pf-progression-updated", sync);
   }, []);
 
-  const isMaxLevel = progression.level === 7;
+  const isMaxLevel = progression.level >= MAX_LEVEL;
   const xpToNext = progression.nextLevelXP - progression.currentLevelXP;
   const streakActive = loginStreak.currentStreak > 0;
 
@@ -89,26 +90,27 @@ export function ProfileProgressTabs({
         <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-pocket-muted">
           Level
         </p>
-        <div className="flex items-center gap-4">
-          <div className="pf-level-badge-enter relative flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-[#7C6CF8] via-[#5B8EF0] to-[#00C6C6] shadow-[0_6px_22px_rgba(91,142,240,0.28)]">
-            <span className="text-[26px] font-black tabular-nums text-white">
-              {progression.level}
-            </span>
+        <div className="flex items-start gap-4">
+          <div className="relative shrink-0 pf-level-badge-enter">
+            <LevelHeroIcon
+              uid={uid}
+              level={progression.level}
+              size={60}
+              className="drop-shadow-[0_6px_20px_rgba(91,142,240,0.22)]"
+            />
           </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-bold leading-tight text-pocket-text">
-              {progression.title}
+          <div className="min-w-0 flex-1 pt-1">
+            <p className="text-[34px] font-black leading-none tracking-tight text-pocket-text">
+              Level {progression.level}
             </p>
-            <p className="mt-1 text-[12px] font-medium text-pocket-muted">
-              {isMaxLevel
-                ? `${totalXP.toLocaleString()} lifetime XP · Max level`
-                : `Level ${progression.level} of 7`}
+            <p className="mt-1.5 text-[13px] font-semibold text-[#8BA8FF]">
+              {progression.title}
             </p>
           </div>
         </div>
 
-        {!isMaxLevel && (
+        {!isMaxLevel ? (
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-semibold">
               <span className="text-pocket-muted">
@@ -126,6 +128,10 @@ export function ProfileProgressTabs({
               />
             </div>
           </div>
+        ) : (
+          <p className="mt-4 text-[12px] font-semibold tabular-nums text-pocket-muted">
+            {totalXP.toLocaleString()} lifetime XP · Max level
+          </p>
         )}
       </div>
     </section>
