@@ -198,6 +198,18 @@ body {
   }
 }
 
+@keyframes pf-fire-flicker {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateY(-0.6px) scale(1.04);
+    opacity: 1;
+  }
+}
+
 html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide)),
 html.app-route :where(.overflow-y-auto.overscroll-contain:not(.scrollbar-hide)) {
   scrollbar-width: thin;

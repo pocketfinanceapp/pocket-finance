@@ -27,6 +27,7 @@ import {
 } from "@/lib/feedOnboarding";
 import { resolveFeedChip } from "@/lib/feedChip";
 import { resolveMarketForArticle } from "@/lib/tickerMap";
+import { FireSparkIcon } from "@/components/icons/FireSparkIcon";
 
 interface FeedCardProps {
   article: NewsArticle;
@@ -110,6 +111,7 @@ export function FeedCard({
   const useSoftOverlay = hasHeroImage && isDarkImage;
   const iconClass =
     "h-[26px] w-[26px] text-white opacity-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]";
+  const hotHeadline = showTrendingLabel || article.likes + article.comments >= 35;
 
   useEffect(() => {
     setImageFailed(false);
@@ -421,15 +423,19 @@ export function FeedCard({
               {categoryTag}
             </span>
             {showTrendingLabel && (
-              <span className="text-[10px] font-semibold text-orange-300/90">
-                🔥 Trending
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-orange-300/90">
+                <FireSparkIcon className="h-3.5 w-3.5" />
+                Trending
               </span>
             )}
           </div>
 
-          <h1 className="mt-2 line-clamp-3 text-[1.42rem] font-bold leading-[1.16] tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.95)] sm:text-[1.5rem]">
-            {cleanArticleTitle(article.headline)}
-          </h1>
+          <div className="mt-2 flex items-start gap-2">
+            {hotHeadline && <FireSparkIcon className="mt-1 h-4 w-4 shrink-0" />}
+            <h1 className="line-clamp-3 text-[1.42rem] font-bold leading-[1.16] tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.95)] sm:text-[1.5rem]">
+              {cleanArticleTitle(article.headline)}
+            </h1>
+          </div>
 
           {contextLine ? (
             <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/68">

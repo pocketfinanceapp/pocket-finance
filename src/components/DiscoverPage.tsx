@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import { useNavigation } from "@/context/NavigationContext";
 import type { NewsArticle } from "@/lib/types";
 import { appPath } from "@/lib/appPaths";
 import {
@@ -24,8 +26,9 @@ interface DiscoverPageProps {
 
 export function DiscoverPage({ articles }: DiscoverPageProps) {
   const router = useRouter();
+  const navigation = useNavigation();
   const tabEntered = useTabPageEntered("discover");
-  const { savedArticles } = useApp();
+  const { savedArticles, requestFeedJump } = useApp();
 
   const watchlistItems = useMemo(() => {
     const dismissed = getDismissedWatchlistTickers();
@@ -50,10 +53,19 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
     });
   }, [articles]);
 
+  const articleById = useMemo(() => {
+    return new Map(articles.map((a) => [a.id, a]));
+  }, [articles]);
+
   const openTopic = (topic: BrowseCategory) => {
     router.replace(appPath(`browse/${categoryToSlug(topic)}`), {
       scroll: false,
     });
+  };
+
+  const openSavedWatchlistItem = (articleId: string) => {
+    requestFeedJump(articleId);
+    navigation.navigate("home");
   };
 
   return (
@@ -103,9 +115,24 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
                   key={`${item.ticker}-${item.latestEntry.id}`}
                   type="button"
                   data-no-drag
-                  onClick={() => router.replace(appPath("watchlist"), { scroll: false })}
+                  onClick={() => openSavedWatchlistItem(item.latestEntry.articleId)}
                   className="flex w-full items-center justify-between rounded-xl border border-[var(--pocket-border)] px-3 py-2.5 text-left active:bg-white/[0.03]"
                 >
+                  <div className="mr-3 h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--pocket-surface-hover)]">
+                    {articleById.get(item.latestEntry.articleId)?.imageUrl ? (
+                      <Image
+                        src={articleById.get(item.latestEntry.articleId)!.imageUrl}
+                        alt={item.latestEntry.articleTitle}
+                        width={64}
+                        height={64}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold text-pocket-muted">
+                        {item.ticker}
+                      </div>
+                    )}
+                  </div>
                   <div className="min-w-0">
                     <p className="text-[14px] font-bold text-pocket-text">{item.ticker}</p>
                     <p className="mt-0.5 line-clamp-1 text-[12px] text-pocket-muted">

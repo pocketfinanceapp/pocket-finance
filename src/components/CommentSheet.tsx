@@ -48,6 +48,7 @@ export function CommentSheet({
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [replyTo, setReplyTo] = useState<ThreadComment | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const [sheetCycle, setSheetCycle] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +70,7 @@ export function CommentSheet({
 
   useEffect(() => {
     if (open && article) {
+      setSheetCycle((v) => v + 1);
       setInput("");
       setReplyTo(null);
       void loadComments();
@@ -90,7 +92,7 @@ export function CommentSheet({
     setReplyTo(null);
     setExpandedIds(new Set());
     document.body.style.overflow = "";
-    const t = window.setTimeout(() => setMounted(false), 280);
+    const t = window.setTimeout(() => setMounted(false), 200);
     return () => window.clearTimeout(t);
   }, [open]);
 
@@ -210,7 +212,7 @@ export function CommentSheet({
       <button
         type="button"
         aria-label="Close comments"
-        className={`absolute inset-0 backdrop-blur-md transition-opacity duration-300 ${
+        className={`absolute inset-0 backdrop-blur-md transition-opacity duration-200 ${
           entered ? "opacity-100" : "opacity-0"
         }`}
         style={{ background: "var(--pocket-backdrop)" }}
@@ -221,7 +223,7 @@ export function CommentSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="comment-sheet-title"
-        className={`absolute inset-x-0 mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] border border-[var(--pocket-border)] shadow-[0_-24px_80px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-out ${
+        className={`absolute inset-x-0 mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] border border-[var(--pocket-border)] shadow-[0_-24px_80px_rgba(0,0,0,0.25)] transition-transform duration-200 ease-out ${
           entered ? "translate-y-0" : "translate-y-full"
         }`}
         style={{
@@ -324,6 +326,7 @@ export function CommentSheet({
                       return next;
                     });
                   }}
+                  resetKey={sheetCycle}
                 />
               ))}
             </div>
@@ -423,8 +426,11 @@ export function CommentSheet({
 
 const REPLY_INDENT = "ml-8";
 
-function CommentBody({ text }: { text: string }) {
+function CommentBody({ text, resetKey }: { text: string; resetKey: number }) {
   const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    setExpanded(false);
+  }, [resetKey]);
   const isLong =
     text.length > 160 || text.split("\n").length > 3;
 
@@ -481,6 +487,7 @@ function CommentThread({
   replyTargetId,
   expandedIds,
   onToggleExpanded,
+  resetKey,
 }: {
   comment: ThreadComment;
   depth: number;
@@ -489,6 +496,7 @@ function CommentThread({
   replyTargetId: string | null;
   expandedIds: Set<string>;
   onToggleExpanded: (id: string, open: boolean) => void;
+  resetKey: number;
 }) {
   const [localExpanded, setLocalExpanded] = useState(depth === 0);
   const hasReplies = comment.replies.length > 0;
@@ -523,7 +531,7 @@ function CommentThread({
               </span>
               <span className="text-[10px] text-pocket-muted">{comment.timeAgo}</span>
             </div>
-            <CommentBody text={comment.text} />
+            <CommentBody text={comment.text} resetKey={resetKey} />
           </div>
 
           <div className="mt-1.5 flex items-center gap-1">
@@ -595,6 +603,7 @@ function CommentThread({
                   replyTargetId={replyTargetId}
                   expandedIds={expandedIds}
                   onToggleExpanded={onToggleExpanded}
+                  resetKey={resetKey}
                 />
               ))}
             </div>
