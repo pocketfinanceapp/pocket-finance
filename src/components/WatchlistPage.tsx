@@ -85,7 +85,7 @@ function articleFromEntry(entry: SavedArticleEntry, ticker: string): NewsArticle
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-5 pb-2 pt-5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+    <p className="px-5 pb-2 pt-5 text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
       {children}
     </p>
   );
@@ -116,10 +116,10 @@ function SummaryCard({
 
   return (
     <div className="pf-card-surface mx-5 mt-4 rounded-2xl p-5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-pocket-muted">
         Your Watchlist
       </p>
-      <p className="mt-1 text-[22px] font-bold tracking-tight text-white">
+      <p className="mt-1 text-[22px] font-bold tracking-tight text-pocket-text">
         {assetCount > 0 && themeCount > 0
           ? `${assetCount} asset${assetCount !== 1 ? "s" : ""} · ${themeCount} theme${themeCount !== 1 ? "s" : ""}`
           : assetCount > 0
@@ -133,7 +133,7 @@ function SummaryCard({
             bestPct !== null &&
             (showBoth || worstTicker === null) && (
               <div className="flex items-center justify-between">
-                <span className="text-[12px] text-zinc-500">Best</span>
+                <span className="text-[12px] text-pocket-muted">Best</span>
                 <span className="text-[12px] font-semibold tabular-nums text-emerald-400">
                   {bestTicker}&nbsp;+{bestPct.toFixed(2)}%
                 </span>
@@ -143,7 +143,7 @@ function SummaryCard({
             worstPct !== null &&
             (showBoth || bestTicker === null) && (
               <div className="flex items-center justify-between">
-                <span className="text-[12px] text-zinc-500">Worst</span>
+                <span className="text-[12px] text-pocket-muted">Worst</span>
                 <span className="text-[12px] font-semibold tabular-nums text-red-400">
                   {worstTicker}&nbsp;{worstPct.toFixed(2)}%
                 </span>
@@ -204,15 +204,15 @@ function AssetRow({ item, editMode, onTap, onRemove }: AssetRowProps) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-bold tracking-tight text-white">
+          <p className="text-[14px] font-bold tracking-tight text-pocket-text">
             {item.ticker}
           </p>
-          <p className="truncate text-[12px] text-zinc-500">{meta.companyName}</p>
+          <p className="truncate text-[12px] text-pocket-muted">{meta.companyName}</p>
         </div>
 
         {stock && showPrice && (
           <div className="shrink-0 text-right">
-            <p className="text-[14px] font-semibold tabular-nums text-white">
+            <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
               ${stock.price.toFixed(2)}
             </p>
             <p
@@ -227,7 +227,7 @@ function AssetRow({ item, editMode, onTap, onRemove }: AssetRowProps) {
 
         {!editMode && (
           <ChevronRight
-            className="h-4 w-4 shrink-0 text-zinc-700"
+            className="h-4 w-4 shrink-0 text-pocket-muted"
             strokeWidth={2}
           />
         )}
@@ -279,25 +279,25 @@ function ThemeRow({ item, editMode, onTap, onRemove }: ThemeRowProps) {
             border: "1px solid rgba(255,255,255,0.07)",
           }}
         >
-          <Icon className="h-5 w-5 text-zinc-400" strokeWidth={1.75} />
+          <Icon className="h-5 w-5 text-pocket-muted" strokeWidth={1.75} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-bold tracking-tight text-white">
+          <p className="text-[14px] font-bold tracking-tight text-pocket-text">
             {title}
           </p>
           {/* Slightly brighter than zinc-500 for readability while staying secondary */}
-          <p className="line-clamp-1 text-[12px] leading-snug text-zinc-400">
+          <p className="line-clamp-1 text-[12px] leading-snug text-pocket-muted">
             {item.latestEntry.articleTitle}
           </p>
-          <p className="mt-0.5 text-[11px] text-zinc-600">
+          <p className="mt-0.5 text-[11px] text-pocket-muted">
             Updated {timeAgo(item.latestEntry.savedAt)}
           </p>
         </div>
 
         {!editMode && (
           <ChevronRight
-            className="h-4 w-4 shrink-0 text-zinc-700"
+            className="h-4 w-4 shrink-0 text-pocket-muted"
             strokeWidth={2}
           />
         )}
@@ -318,10 +318,10 @@ function EmptyState() {
           border: "1px solid rgba(255,255,255,0.07)",
         }}
       >
-        <Compass className="h-7 w-7 text-zinc-600" strokeWidth={1.5} />
+        <Compass className="h-7 w-7 text-pocket-muted" strokeWidth={1.5} />
       </div>
-      <p className="text-[15px] font-semibold text-white">No assets tracked yet</p>
-      <p className="mt-1.5 max-w-[220px] text-[13px] leading-relaxed text-zinc-500">
+      <p className="text-[15px] font-semibold text-pocket-text">No assets tracked yet</p>
+      <p className="mt-1.5 max-w-[220px] text-[13px] leading-relaxed text-pocket-muted">
         Add stocks from the Markets tab or any article
       </p>
     </div>
@@ -457,7 +457,7 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
                 onClick={() => setEditMode((v) => !v)}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
                   editMode
-                    ? "bg-white/10 text-pocket-text"
+                    ? "bg-[var(--pocket-surface-hover)] text-pocket-text"
                     : "text-pocket-muted active:text-pocket-text"
                 }`}
               >
@@ -483,7 +483,7 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
             onClick={() => setEditMode((v) => !v)}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
               editMode
-                ? "bg-white/10 text-pocket-text"
+                ? "bg-[var(--pocket-surface-hover)] text-pocket-text"
                 : "text-pocket-muted active:text-pocket-text"
             }`}
           >
@@ -527,7 +527,7 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
               <section style={tabEnterStyle(tabEntered, 240)}>
                 <SectionHeader>Tracked assets</SectionHeader>
                 <div className={`mx-5 ${CARD_CLASS}`}>
-                  <div className="divide-y divide-white/[0.05]">
+                  <div className="divide-y divide-[var(--pocket-border)]">
                     {assets.map((item) => (
                       <AssetRow
                         key={item.ticker}
@@ -550,7 +550,7 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
               <section style={tabEnterStyle(tabEntered, 360)}>
                 <SectionHeader>Market themes</SectionHeader>
                 <div className={`mx-5 ${CARD_CLASS}`}>
-                  <div className="divide-y divide-white/[0.05]">
+                  <div className="divide-y divide-[var(--pocket-border)]">
                     {themes.map((item) => (
                       <ThemeRow
                         key={item.ticker}
@@ -573,7 +573,7 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
               <section style={tabEnterStyle(tabEntered, 480)}>
                 <SectionHeader>Latest from your watchlist</SectionHeader>
                 <div className={`mx-5 ${CARD_CLASS}`}>
-                  <div className="divide-y divide-white/[0.05]">
+                  <div className="divide-y divide-[var(--pocket-border)]">
                     {latestArticles.map((entry) => {
                       const ticker = resolveSavedTicker(entry);
                       return (
