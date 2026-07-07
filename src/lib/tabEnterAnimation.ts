@@ -59,6 +59,7 @@ export function useTabPageEntered(
 ): boolean {
   const navigation = useNavigationOptional();
   const isActive = enabled && navigation?.activeTab === tab;
+  const transitionKey = navigation?.transitionKey ?? 0;
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export function useTabPageEntered(
     }
 
     return runTabEnterFrame(() => setEntered(true));
-  }, [isActive, replayKey]);
+  }, [isActive, replayKey, transitionKey]);
 
   return entered;
 }

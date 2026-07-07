@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { NewsArticle } from "@/lib/types";
 import { appPath } from "@/lib/appPaths";
@@ -15,8 +15,6 @@ import {
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import { buildWatchlistItems } from "@/lib/watchlistUtils";
 import { getDismissedWatchlistTickers } from "@/lib/watchlistStore";
-import { getStockProfile } from "@/lib/stockData";
-import { shouldShowWatchlistPrice } from "@/lib/usStockTickers";
 import { timeAgo } from "@/lib/utils";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 
@@ -36,25 +34,8 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
     );
   }, [savedArticles]);
 
-  const assetItems = useMemo(
-    () => watchlistItems.filter((item) => item.type === "asset"),
-    [watchlistItems]
-  );
-
-  const topAssets = useMemo(() => {
-    return assetItems
-      .filter((item) => shouldShowWatchlistPrice(item.ticker))
-      .map((item) => ({ item, stock: getStockProfile(item.ticker) }))
-      .filter((row) => row.stock !== null)
-      .sort(
-        (a, b) =>
-          Math.abs(b.stock.changePercent) - Math.abs(a.stock.changePercent)
-      )
-      .slice(0, 3);
-  }, [assetItems]);
-
-  const topThemes = useMemo(
-    () => watchlistItems.filter((item) => item.type === "theme").slice(0, 3),
+  const savedWatchlistItems = useMemo(
+    () => watchlistItems.slice(0, 6),
     [watchlistItems]
   );
 
@@ -88,7 +69,7 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
           Discover
         </h1>
         <p className="mt-0.5 text-[13px] text-pocket-muted">
-          Watchlist momentum and fresh themes, all in one place
+          Saved watchlist items and fresh themes, all in one place
         </p>
       </header>
 
@@ -99,7 +80,7 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
         <section className="pf-card-surface mt-2 rounded-2xl p-4">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
-              Watchlist Pulse
+              Saved Watchlist
             </p>
             <button
               type="button"
@@ -117,60 +98,26 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
             </p>
           ) : (
             <div className="mt-3 space-y-2.5">
-              {topAssets.map(({ item, stock }) => {
-                const up = stock.changePercent >= 0;
-                return (
-                  <button
-                    key={item.ticker}
-                    type="button"
-                    data-no-drag
-                    onClick={() =>
-                      router.replace(appPath("watchlist"), { scroll: false })
-                    }
-                    className="flex w-full items-center justify-between rounded-xl border border-[var(--pocket-border)] px-3 py-2.5 text-left active:bg-white/[0.03]"
-                  >
-                    <div>
-                      <p className="text-[14px] font-bold text-pocket-text">
-                        {item.ticker}
-                      </p>
-                      <p className="text-[11px] text-pocket-muted">
-                        ${stock.price.toFixed(2)}
-                      </p>
-                    </div>
-                    <p
-                      className={`text-[13px] font-semibold tabular-nums ${
-                        up ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {up ? "+" : ""}
-                      {stock.changePercent.toFixed(2)}%
+              {savedWatchlistItems.map((item) => (
+                <button
+                  key={`${item.ticker}-${item.latestEntry.id}`}
+                  type="button"
+                  data-no-drag
+                  onClick={() => router.replace(appPath("watchlist"), { scroll: false })}
+                  className="flex w-full items-center justify-between rounded-xl border border-[var(--pocket-border)] px-3 py-2.5 text-left active:bg-white/[0.03]"
+                >
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-bold text-pocket-text">{item.ticker}</p>
+                    <p className="mt-0.5 line-clamp-1 text-[12px] text-pocket-muted">
+                      {cleanArticleTitle(item.latestEntry.articleTitle)}
                     </p>
-                  </button>
-                );
-              })}
-
-              {topAssets.length === 0 &&
-                topThemes.map((item) => (
-                  <button
-                    key={item.ticker}
-                    type="button"
-                    data-no-drag
-                    onClick={() =>
-                      router.replace(appPath("watchlist"), { scroll: false })
-                    }
-                    className="flex w-full items-center justify-between rounded-xl border border-[var(--pocket-border)] px-3 py-2.5 text-left active:bg-white/[0.03]"
-                  >
-                    <div>
-                      <p className="text-[14px] font-bold text-pocket-text">
-                        {item.ticker}
-                      </p>
-                      <p className="text-[11px] text-pocket-muted">
-                        Latest save {timeAgo(item.latestEntry.savedAt)}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-pocket-muted" />
-                  </button>
-                ))}
+                    <p className="mt-0.5 text-[11px] text-pocket-muted">
+                      Saved {timeAgo(item.latestEntry.savedAt)}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" />
+                </button>
+              ))}
             </div>
           )}
         </section>
@@ -209,72 +156,7 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
           </div>
         </section>
 
-        {topAssets.length > 0 && (
-          <section className="mt-4 grid grid-cols-2 gap-3">
-            <MiniStat
-              label="Top Riser"
-              value={topAssets
-                .filter((row) => row.stock.changePercent >= 0)
-                .sort((a, b) => b.stock.changePercent - a.stock.changePercent)[0]}
-              positive
-            />
-            <MiniStat
-              label="Top Dip"
-              value={topAssets
-                .filter((row) => row.stock.changePercent < 0)
-                .sort((a, b) => a.stock.changePercent - b.stock.changePercent)[0]}
-              positive={false}
-            />
-          </section>
-        )}
       </div>
-    </div>
-  );
-}
-
-function MiniStat({
-  label,
-  value,
-  positive,
-}: {
-  label: string;
-  value:
-    | {
-        item: ReturnType<typeof buildWatchlistItems>[number];
-        stock: NonNullable<ReturnType<typeof getStockProfile>>;
-      }
-    | undefined;
-  positive: boolean;
-}) {
-  return (
-    <div className="pf-card-surface rounded-2xl p-4">
-      <div className="flex items-center gap-1.5">
-        {positive ? (
-          <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
-        ) : (
-          <TrendingDown className="h-3.5 w-3.5 text-rose-400" />
-        )}
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-pocket-muted">
-          {label}
-        </p>
-      </div>
-      {value ? (
-        <>
-          <p className="mt-2 text-[15px] font-bold text-pocket-text">
-            {value.item.ticker}
-          </p>
-          <p
-            className={`text-[13px] font-semibold tabular-nums ${
-              value.stock.changePercent >= 0 ? "text-emerald-400" : "text-rose-400"
-            }`}
-          >
-            {value.stock.changePercent >= 0 ? "+" : ""}
-            {value.stock.changePercent.toFixed(2)}%
-          </p>
-        </>
-      ) : (
-        <p className="mt-2 text-[12px] text-pocket-muted">No data yet</p>
-      )}
     </div>
   );
 }

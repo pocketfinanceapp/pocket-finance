@@ -17,6 +17,7 @@ type ShellTab = NavTab;
 interface NavigationContextValue {
   activeTab: ShellTab;
   navTab: NavTab;
+  transitionKey: number;
   navigate: (tab: NavTab) => void;
 }
 
@@ -58,9 +59,11 @@ export function NavigationProvider({
   const [activeTab, setActiveTab] = useState<ShellTab>(() =>
     shellTabFromPath(pathname)
   );
+  const [transitionKey, setTransitionKey] = useState(0);
 
   useEffect(() => {
     setActiveTab(shellTabFromPath(pathname));
+    setTransitionKey((key) => key + 1);
   }, [pathname]);
 
   useEffect(() => {
@@ -86,9 +89,10 @@ export function NavigationProvider({
     () => ({
       activeTab,
       navTab,
+      transitionKey,
       navigate,
     }),
-    [activeTab, navTab, navigate]
+    [activeTab, navTab, transitionKey, navigate]
   );
 
   return (

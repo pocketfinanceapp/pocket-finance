@@ -3,48 +3,13 @@ interface ProfileNavIconProps {
   level?: number;
 }
 
-/** Custom profile tab icon — avatar silhouette with optional level ring. */
+/** Clean profile tab icon without decorative ring. */
 export function ProfileNavIcon({ active = false, level }: ProfileNavIconProps) {
-  const stroke = active ? "#00C6C6" : "rgba(255,255,255,0.45)";
-  const headFill = active ? "rgba(59,110,245,0.35)" : "none";
+  const stroke = active ? "#00C6C6" : "var(--pocket-nav-inactive)";
+  const headFill = active ? "rgba(59,110,245,0.22)" : "none";
 
   return (
     <span className="relative flex h-[26px] w-[26px] items-center justify-center">
-      {level != null && level > 0 && (
-        <svg
-          className="absolute inset-0 h-[26px] w-[26px] -rotate-90"
-          viewBox="0 0 26 26"
-          aria-hidden
-        >
-          <circle
-            cx="13"
-            cy="13"
-            r="11.5"
-            fill="none"
-            stroke={active ? "rgba(0,198,198,0.25)" : "rgba(255,255,255,0.08)"}
-            strokeWidth="1.5"
-          />
-          {active && (
-            <circle
-              cx="13"
-              cy="13"
-              r="11.5"
-              fill="none"
-              stroke="url(#pf-profile-ring)"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeDasharray="72"
-              strokeDashoffset="18"
-            />
-          )}
-          <defs>
-            <linearGradient id="pf-profile-ring" x1="0" y1="0" x2="26" y2="26">
-              <stop stopColor="#3B6EF5" />
-              <stop offset="1" stopColor="#00C6C6" />
-            </linearGradient>
-          </defs>
-        </svg>
-      )}
       <svg
         width="22"
         height="22"
@@ -60,7 +25,7 @@ export function ProfileNavIcon({ active = false, level }: ProfileNavIconProps) {
           strokeWidth="1.75"
           strokeLinecap="round"
         />
-        {active && (
+        {active && level != null && level > 0 && (
           <circle cx="18.5" cy="6" r="2.25" fill="#3B6EF5" stroke="#00C6C6" strokeWidth="0.75" />
         )}
       </svg>
