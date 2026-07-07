@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   ChevronDown,
+  Clock3,
+  Flame,
   MessageCircle,
   Plus,
+  Sparkles,
   Send,
 } from "lucide-react";
 import { FireSparkIcon } from "@/components/icons/FireSparkIcon";
@@ -209,13 +212,15 @@ export function ForumPage() {
     setCommentInput("");
   };
 
+  const sectionEnter = (delay: number) => tabEnterStyle(tabEntered, delay);
+
   if (selectedPost) {
     const postComments = commentsByPost[selectedPost.id] ?? [];
     return (
       <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
         <header
           className="shrink-0 border-b border-[var(--pocket-border)] px-4 pb-3"
-          style={{ paddingTop: "max(12px, env(safe-area-inset-top))", ...tabEnterStyle(tabEntered, 0) }}
+          style={{ paddingTop: "max(12px, env(safe-area-inset-top))", ...sectionEnter(0) }}
         >
           <button
             type="button"
@@ -227,8 +232,11 @@ export function ForumPage() {
             Back to forum
           </button>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(8.5rem+env(safe-area-inset-bottom))]">
-          <article className="pf-card-surface mt-3 rounded-2xl p-4">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(8.5rem+env(safe-area-inset-bottom))]"
+          style={sectionEnter(70)}
+        >
+          <article className="pf-card-surface mt-3 rounded-2xl p-4 shadow-[var(--pocket-shadow)]">
             <div className="flex items-center justify-between">
               <p className="text-[14px] font-semibold text-pocket-text">{selectedPost.author}</p>
               {popularIds.includes(selectedPost.id) && (
@@ -261,7 +269,7 @@ export function ForumPage() {
               </button>
             )}
           </article>
-          <section className="mt-4">
+          <section className="mt-4" style={sectionEnter(130)}>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
               Comments
             </p>
@@ -272,7 +280,10 @@ export function ForumPage() {
                 </div>
               ) : (
                 postComments.map((comment) => (
-                  <div key={comment.id} className="pf-card-surface rounded-xl p-3">
+                  <div
+                    key={comment.id}
+                    className="pf-card-surface rounded-xl p-3 transition-transform duration-200 hover:translate-y-[-1px]"
+                  >
                     <p className="text-[12px] font-semibold text-pocket-text">{comment.author}</p>
                     <p className="mt-1 text-[13px] text-pocket-muted">{comment.text}</p>
                   </div>
@@ -295,7 +306,7 @@ export function ForumPage() {
               data-no-drag
               onClick={addComment}
               disabled={!commentInput.trim()}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white disabled:opacity-40"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white transition-transform duration-150 active:scale-95 disabled:opacity-40"
             >
               <Send className="h-3.5 w-3.5" />
             </button>
@@ -305,7 +316,8 @@ export function ForumPage() {
           <button
             type="button"
             data-no-drag
-            className="absolute inset-0 z-30 bg-black/70 p-4"
+            className="absolute inset-0 z-30 p-4"
+            style={{ background: "var(--pocket-overlay-scrim)" }}
             onClick={() => setOpenPostId(null)}
           >
             <div className="mx-auto mt-12 max-w-mobile overflow-hidden rounded-2xl border border-white/20">
@@ -327,7 +339,7 @@ export function ForumPage() {
     <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
       <header
         className="shrink-0 px-5 pb-3"
-        style={{ paddingTop: "max(12px, env(safe-area-inset-top))", ...tabEnterStyle(tabEntered, 0) }}
+        style={{ paddingTop: "max(12px, env(safe-area-inset-top))", ...sectionEnter(0) }}
       >
         <div className="flex items-end justify-between gap-3">
           <div>
@@ -340,7 +352,7 @@ export function ForumPage() {
             type="button"
             data-no-drag
             onClick={() => setComposerOpen(true)}
-            className="whitespace-nowrap flex items-center gap-1.5 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] px-3.5 py-2 text-[12px] font-semibold text-pocket-text"
+            className="whitespace-nowrap flex items-center gap-1.5 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] px-3.5 py-2 text-[12px] font-semibold text-pocket-text transition-all duration-200 hover:-translate-y-0.5 hover:border-[#00C6C6]/40 active:translate-y-0"
           >
             <Plus className="h-3.5 w-3.5" />
             New Post
@@ -348,8 +360,11 @@ export function ForumPage() {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]">
-        <section className="pf-card-surface mt-2 rounded-2xl p-4">
+      <div
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]"
+        style={sectionEnter(70)}
+      >
+        <section className="pf-card-surface mt-2 rounded-2xl p-4 shadow-[var(--pocket-shadow)]">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-[#00C6C6]" />
@@ -362,7 +377,7 @@ export function ForumPage() {
                 type="button"
                 data-no-drag
                 onClick={() => setFilterOpen((v) => !v)}
-                className="inline-flex items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-1.5 text-[12px] font-medium capitalize text-pocket-text"
+                className="inline-flex items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-1.5 text-[12px] font-medium capitalize text-pocket-text transition-all duration-200 hover:border-[#00C6C6]/30"
               >
                 {filter}
                 <ChevronDown
@@ -372,7 +387,7 @@ export function ForumPage() {
                 />
               </button>
               <div
-                className={`absolute right-0 top-[calc(100%+8px)] z-10 w-32 origin-top-right overflow-hidden rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] transition-all duration-200 ${
+                className={`absolute right-0 top-[calc(100%+8px)] z-10 w-36 origin-top-right overflow-hidden rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] shadow-[var(--pocket-shadow)] transition-all duration-200 ${
                   filterOpen ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
                 }`}
               >
@@ -385,7 +400,7 @@ export function ForumPage() {
                       setFilter(opt);
                       setFilterOpen(false);
                     }}
-                    className={`block w-full px-3 py-2 text-left text-[12px] capitalize ${
+                    className={`block w-full px-3 py-2 text-left text-[12px] capitalize transition-colors ${
                       filter === opt
                         ? "bg-[#00C6C6]/10 text-[#00C6C6]"
                         : "text-pocket-muted hover:bg-[var(--pocket-surface-hover)] hover:text-pocket-text"
@@ -404,7 +419,7 @@ export function ForumPage() {
                 type="button"
                 data-no-drag
                 onClick={() => setActiveTag((prev) => (prev === tag ? null : tag))}
-                className={`rounded-full border px-3 py-1.5 text-[12px] font-medium ${
+                className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all duration-200 hover:-translate-y-0.5 ${
                   activeTag === tag
                     ? "border-[#00C6C6]/40 bg-[#00C6C6]/10 text-[#00C6C6]"
                     : "border-[var(--pocket-border)] bg-[var(--pocket-bg)] text-pocket-muted"
@@ -413,6 +428,23 @@ export function ForumPage() {
                 #{tag}
               </button>
             ))}
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2.5">
+            <ForumMiniStat
+              icon={<Flame className="h-3.5 w-3.5 text-orange-400" />}
+              label="Popular"
+              value={String(popularIds.length)}
+            />
+            <ForumMiniStat
+              icon={<Clock3 className="h-3.5 w-3.5 text-[#00C6C6]" />}
+              label="Live"
+              value={`${visiblePosts.length}`}
+            />
+            <ForumMiniStat
+              icon={<Sparkles className="h-3.5 w-3.5 text-[#3B6EF5]" />}
+              label="Topics"
+              value={String(trendingTags.length)}
+            />
           </div>
         </section>
 
@@ -423,7 +455,7 @@ export function ForumPage() {
               type="button"
               data-no-drag
               onClick={() => setSelectedPostId(post.id)}
-              className="pf-card-surface block w-full rounded-2xl p-4 text-left"
+              className="pf-card-surface block w-full rounded-2xl p-4 text-left shadow-[var(--pocket-shadow)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#00C6C6]/20"
               style={tabEnterStyle(tabEntered, 120 + i * 70)}
             >
               <div className="flex items-start justify-between gap-3">
@@ -464,8 +496,20 @@ export function ForumPage() {
       </div>
 
       {composerOpen && (
-        <div className="absolute inset-0 z-20 flex items-end bg-black/35 p-3 backdrop-blur-sm">
-          <div className="pf-card-surface w-full rounded-2xl border border-[var(--pocket-border)] p-4">
+        <div
+          className="absolute inset-0 z-20 flex items-end p-3 backdrop-blur-sm"
+          style={{ background: "var(--pocket-overlay-scrim)" }}
+        >
+          <button
+            type="button"
+            className="absolute inset-0"
+            onClick={() => setComposerOpen(false)}
+            aria-label="Close composer"
+          />
+          <div
+            className="pf-card-surface relative w-full rounded-2xl border border-[var(--pocket-border)] p-4 shadow-[var(--pocket-shadow)]"
+            style={tabEnterStyle(composerOpen, 0)}
+          >
             <p className="text-[16px] font-semibold text-pocket-text">Create post</p>
             <input
               value={title}
@@ -486,7 +530,7 @@ export function ForumPage() {
               placeholder="Tags (comma separated)"
               className="mt-2.5 w-full rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2.5 text-[13px] text-pocket-text outline-none"
             />
-            <label className="mt-2.5 flex cursor-pointer items-center justify-center rounded-xl border border-dashed border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2 text-[12px] font-medium text-pocket-muted">
+            <label className="mt-2.5 flex cursor-pointer items-center justify-center rounded-xl border border-dashed border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2 text-[12px] font-medium text-pocket-muted transition-colors hover:border-[#00C6C6]/35 hover:text-pocket-text">
               {imageDataUrl ? "Image attached" : "Attach image"}
               <input
                 type="file"
@@ -500,7 +544,7 @@ export function ForumPage() {
                 type="button"
                 data-no-drag
                 onClick={() => setComposerOpen(false)}
-                className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-pocket-muted"
+                className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-pocket-muted transition-colors hover:text-pocket-text"
               >
                 Cancel
               </button>
@@ -509,7 +553,7 @@ export function ForumPage() {
                 data-no-drag
                 onClick={publishPost}
                 disabled={!canPost}
-                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-4 py-2 text-[12px] font-semibold text-white disabled:opacity-45"
+                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-4 py-2 text-[12px] font-semibold text-white transition-transform duration-150 active:scale-95 disabled:opacity-45"
               >
                 <Send className="h-3.5 w-3.5" />
                 Publish
@@ -518,6 +562,28 @@ export function ForumPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ForumMiniStat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-2.5 py-2">
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-pocket-muted">
+          {label}
+        </p>
+      </div>
+      <p className="mt-1 text-[14px] font-bold text-pocket-text">{value}</p>
     </div>
   );
 }
