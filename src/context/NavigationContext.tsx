@@ -27,7 +27,6 @@ function shellTabFromPath(pathname: string): ShellTab {
   if (!pathname.startsWith(APP_BASE)) return "home";
   if (pathname.startsWith(appPath("browse"))) return "discover";
   if (pathname === appPath("watchlist")) return "discover";
-  if (pathname === appPath("forum")) return "forum";
   if (pathname === appPath("markets")) return "markets";
   if (pathname === appPath("profile")) return "profile";
   return "home";
@@ -37,8 +36,6 @@ function pathForTab(tab: NavTab): string {
   switch (tab) {
     case "discover":
       return appPath("browse");
-    case "forum":
-      return appPath("forum");
     case "markets":
       return appPath("markets");
     case "profile":
@@ -71,7 +68,6 @@ export function NavigationProvider({
     router.prefetch(appPath("markets"));
     router.prefetch(appPath("browse"));
     router.prefetch(appPath("watchlist"));
-    router.prefetch(appPath("forum"));
     router.prefetch(appPath("profile"));
   }, [router]);
 
