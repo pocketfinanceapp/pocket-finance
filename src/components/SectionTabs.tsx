@@ -33,7 +33,7 @@ export function SectionTabs<T extends string>({
           {tab.label}
           {active === tab.id && (
             <span
-              className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
+              className="pf-section-tab-indicator absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
               aria-hidden
             />
           )}

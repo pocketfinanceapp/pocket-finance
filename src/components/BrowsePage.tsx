@@ -270,29 +270,29 @@ function TopStoryCard({
           >
             {item}
           </span>
-          <span className="ml-auto text-[10px] tabular-nums text-zinc-600">
+          <span className="ml-auto text-[10px] tabular-nums text-pocket-muted">
             {count === 1 ? "1 story" : `${count} stories`}
           </span>
         </div>
 
         {article ? (
           <>
-            <p className="line-clamp-2 text-[14px] font-bold leading-snug text-white">
+            <p className="line-clamp-2 text-[14px] font-bold leading-snug text-pocket-text">
               {cleanArticleTitle(article.headline)}
             </p>
             {article.subheading && (
-              <p className="mt-1 line-clamp-1 text-[11px] leading-snug text-zinc-500">
+              <p className="mt-1 line-clamp-1 text-[11px] leading-snug text-pocket-muted">
                 {article.subheading}
               </p>
             )}
-            <p className="mt-1.5 text-[10px] text-zinc-700">
+            <p className="mt-1.5 text-[10px] text-pocket-muted">
               {article.sourceName}
               <span className="mx-1">·</span>
               {timeAgo(article.publishedAt)}
             </p>
           </>
         ) : (
-          <p className="text-[13px] leading-snug text-zinc-500">
+          <p className="text-[13px] leading-snug text-pocket-muted">
             {token.description}
           </p>
         )}
@@ -436,20 +436,20 @@ export function BrowsePage({ articles }: BrowsePageProps) {
       <div className="flex h-full min-h-0 flex-col pf-page text-pocket-text" style={{ background: PAGE_BG }}>
         {/* Pinned header */}
         <div
-          className="relative z-20 shrink-0 border-b border-white/[0.06] after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
-          style={{ background: PAGE_BG, ...tabEnterStyle(tabEntered, 0) }}
+          className="relative z-20 shrink-0 pf-header-shell"
+          style={{ ...tabEnterStyle(tabEntered, 0) }}
         >
           <header className="flex items-center gap-2 px-2 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
             <button
               type="button"
               data-no-drag
               onClick={() => router.replace(appPath("browse"), { scroll: false })}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/[0.08]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-[var(--pocket-surface-hover)]"
               aria-label="Back to categories"
             >
-              <ArrowLeft className="h-5 w-5 text-white" />
+              <ArrowLeft className="h-5 w-5 text-pocket-text" />
             </button>
-            <h1 className="text-[17px] font-semibold text-white">{category}</h1>
+            <h1 className="text-[17px] font-semibold text-pocket-text">{category}</h1>
           </header>
         </div>
 
@@ -459,7 +459,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
         >
           {/* Category summary card */}
           <div
-            className="relative mx-4 mt-4 overflow-hidden rounded-xl border border-white/[0.07]"
+            className="relative mx-4 mt-4 overflow-hidden rounded-xl border border-[var(--pocket-border)]"
             style={{
               background: CARD_SURFACE,
               boxShadow: `inset 0 0 40px ${accent}06`,
@@ -475,31 +475,31 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                 <Icon className="h-[18px] w-[18px]" style={{ color: accent }} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-bold text-white">{category}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-zinc-500">
+                <p className="text-[15px] font-bold text-pocket-text">{category}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-pocket-muted">
                   {token.description}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-[12px] font-medium text-zinc-400">
+                <p className="text-[12px] font-medium text-pocket-muted">
                   {count === 1 ? "1 story" : `${count} stories`}
                 </p>
                 {count > 0 && (
-                  <p className="mt-0.5 text-[11px] text-zinc-600">Updated today</p>
+                  <p className="mt-0.5 text-[11px] text-pocket-muted">Updated today</p>
                 )}
               </div>
             </div>
           </div>
 
           {count === 0 ? (
-            <p className="px-4 py-12 text-center text-sm text-zinc-600">
+            <p className="px-4 py-12 text-center text-sm text-pocket-muted">
               No articles in this category yet
             </p>
           ) : (
             <>
               {topStory && (
                 <section className="mt-5 px-4" style={tabEnterStyle(tabEntered, 220)}>
-                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
                     Top story
                   </p>
                   <button
@@ -529,15 +529,15 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                       <EditorialPlaceholder accent={accent} />
                     )}
                     <div className="px-4 pb-4 pt-3" style={{ background: CARD_SURFACE }}>
-                      <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white">
+                      <p className="line-clamp-2 text-[15px] font-bold leading-snug text-pocket-text">
                         {cleanArticleTitle(topStory.headline)}
                       </p>
                       {topStory.subheading && (
-                        <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-zinc-500">
+                        <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-pocket-muted">
                           {topStory.subheading}
                         </p>
                       )}
-                      <p className="mt-2 text-[11px] text-zinc-600">
+                      <p className="mt-2 text-[11px] text-pocket-muted">
                         {topStory.sourceName}
                         <span className="mx-1.5">·</span>
                         {timeAgo(topStory.publishedAt)}
@@ -549,11 +549,11 @@ export function BrowsePage({ articles }: BrowsePageProps) {
 
               {latestStories.length > 0 && (
                 <section className="mt-5 px-4" style={tabEnterStyle(tabEntered, 320)}>
-                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
+                  <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
                     Latest stories
                   </p>
                   <div
-                    className="overflow-hidden rounded-xl border border-white/[0.07]"
+                    className="overflow-hidden rounded-xl border border-[var(--pocket-border)]"
                     style={{ background: CARD_SURFACE }}
                   >
                     {latestStories.map((article, index) => (
@@ -564,22 +564,22 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                           onClick={() => openInFeed(article)}
                           className="flex w-full flex-col px-4 py-3 text-left active:bg-white/[0.03]"
                         >
-                          <p className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-white">
+                          <p className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-pocket-text">
                             {cleanArticleTitle(article.headline)}
                           </p>
                           {article.subheading && (
-                            <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
+                            <p className="mt-0.5 line-clamp-1 text-[11px] text-pocket-muted">
                               {article.subheading}
                             </p>
                           )}
-                          <p className="mt-1 text-[11px] text-zinc-600">
+                          <p className="mt-1 text-[11px] text-pocket-muted">
                             {article.sourceName}
                             <span className="mx-1.5">·</span>
                             {timeAgo(article.publishedAt)}
                           </p>
                         </button>
                         {index < latestStories.length - 1 && (
-                          <div className="mx-4 h-px bg-white/[0.05]" aria-hidden />
+                          <div className="mx-4 h-px bg-[var(--pocket-border)]" aria-hidden />
                         )}
                       </div>
                     ))}
@@ -598,12 +598,12 @@ export function BrowsePage({ articles }: BrowsePageProps) {
     <div className="flex h-full min-h-0 flex-col pf-page text-pocket-text" style={{ background: PAGE_BG }}>
       {/* Pinned header */}
       <div
-        className="relative z-20 shrink-0 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[#030305] after:to-transparent after:content-['']"
-        style={{ background: PAGE_BG, ...tabEnterStyle(tabEntered, 0) }}
+        className="relative z-20 shrink-0 pf-header-shell"
+        style={tabEnterStyle(tabEntered, 0)}
       >
         <header className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-          <h1 className="text-[28px] font-bold tracking-tight text-white">Explore</h1>
-          <p className="mt-0.5 text-[13px] text-zinc-500">
+          <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">Explore</h1>
+          <p className="mt-0.5 text-[13px] text-pocket-muted">
             Find the stories and themes moving markets
           </p>
         </header>
@@ -615,7 +615,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
       >
         {/* ── Top stories by topic ──────────────────────────────────────── */}
         <section className="px-4 pt-3" style={tabEnterStyle(tabEntered, 120)}>
-          <p className="mb-3 text-[13px] font-semibold text-white">
+          <p className="mb-3 text-[13px] font-semibold text-pocket-text">
             Top stories by topic
           </p>
           <div className="flex flex-col gap-2.5">
@@ -634,9 +634,9 @@ export function BrowsePage({ articles }: BrowsePageProps) {
 
         {/* ── All topics ───────────────────────────────────────────────── */}
         <section className="mt-5 px-4" style={tabEnterStyle(tabEntered, 420)}>
-          <p className="mb-3 text-[13px] font-semibold text-white">All topics</p>
+          <p className="mb-3 text-[13px] font-semibold text-pocket-text">All topics</p>
           <div
-            className="overflow-hidden rounded-xl border border-white/[0.06]"
+            className="overflow-hidden rounded-xl border border-[var(--pocket-border)]"
             style={{
               background: "var(--pocket-card-solid)",
               border: "1px solid var(--pocket-border)",
@@ -665,12 +665,12 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                         <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-semibold text-zinc-400">{item}</p>
-                        <p className="mt-0.5 line-clamp-1 text-[10.5px] text-zinc-600">
+                        <p className="text-[13px] font-semibold text-pocket-muted">{item}</p>
+                        <p className="mt-0.5 line-clamp-1 text-[10.5px] text-pocket-muted">
                           {token.description}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+                      <span className="shrink-0 rounded-md bg-[var(--pocket-surface-hover)] px-2 py-0.5 text-[10px] font-medium text-pocket-muted">
                         Soon
                       </span>
                     </div>
@@ -692,21 +692,21 @@ export function BrowsePage({ articles }: BrowsePageProps) {
                         <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-semibold text-white">{item}</p>
-                        <p className="mt-0.5 line-clamp-1 text-[10.5px] text-zinc-500">
+                        <p className="text-[13px] font-semibold text-pocket-text">{item}</p>
+                        <p className="mt-0.5 line-clamp-1 text-[10.5px] text-pocket-muted">
                           {topArticle
                             ? cleanArticleTitle(topArticle.headline)
                             : token.description}
                         </p>
                       </div>
-                      <span className="shrink-0 text-[10.5px] tabular-nums text-zinc-700">
+                      <span className="shrink-0 text-[10.5px] tabular-nums text-pocket-muted">
                         {count === 1 ? "1 story" : `${count} stories`}
                       </span>
-                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-700" />
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-pocket-muted" />
                     </button>
                   )}
                   {index < ALL_TOPICS.length - 1 && (
-                    <div className="mx-4 h-px bg-white/[0.05]" aria-hidden />
+                    <div className="mx-4 h-px bg-[var(--pocket-border)]" aria-hidden />
                   )}
                 </div>
               );

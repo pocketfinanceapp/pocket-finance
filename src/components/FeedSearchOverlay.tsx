@@ -94,7 +94,7 @@ export function FeedSearchOverlay({
         >
           <div className="feed-search-bar-shimmer" aria-hidden />
           <div
-            className="pointer-events-none absolute inset-0 rounded-2xl opacity-80"
+            className="pointer-events-none absolute inset-0 rounded-2xl opacity-80 pf-search-bar-tint"
             style={{
               background:
                 "linear-gradient(135deg, rgba(59,110,245,0.12), rgba(0,198,198,0.08))",

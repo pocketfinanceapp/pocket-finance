@@ -94,7 +94,6 @@ export function ProfileProgressTabs({
           <div className="relative shrink-0 pf-level-badge-enter">
             <LevelHeroIcon
               uid={uid}
-              level={progression.level}
               size={60}
               className="drop-shadow-[0_6px_20px_rgba(91,142,240,0.22)]"
             />

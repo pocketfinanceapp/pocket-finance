@@ -24,7 +24,7 @@ const FEED_TABS: { id: FeedMode; label: string }[] = [
 ];
 
 const TAB_SHADOW =
-  "drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)] [html[data-theme=dark]_&]:drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]";
+  "pf-feed-tab-btn drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)] [html[data-theme=dark]_&]:drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]";
 
 export function FeedHeader({
   feedMode,
@@ -162,7 +162,7 @@ export function FeedHeader({
           })}
           <span
             aria-hidden
-            className={`pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] transition-[left,width] duration-200 ease-out ${
+            className={`pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-pocket-teal transition-[left,width] duration-200 ease-out pf-feed-tab-indicator ${
               indicatorReady && indicator.width > 0 ? "opacity-100" : "opacity-0"
             }`}
             style={{
@@ -176,7 +176,7 @@ export function FeedHeader({
           data-no-drag
           onPointerDown={stop}
           onClick={onOpenSearch}
-          className={`relative flex h-10 w-10 items-center justify-center justify-self-end rounded-full active:scale-95 ${TAB_SHADOW}`}
+          className={`relative flex h-10 w-10 items-center justify-center justify-self-end rounded-full active:scale-95 pf-feed-search-btn ${TAB_SHADOW}`}
           aria-label="Search"
         >
           <FeedSearchIcon active={searchOpen} />

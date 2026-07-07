@@ -289,7 +289,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         </header>
 
         {showTabs && (
-          <nav className="relative flex w-full border-b border-[var(--pocket-border)] bg-pocket-bg px-4 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-gradient-to-b after:from-[var(--pocket-bg)] after:to-transparent after:content-['']">
+          <nav className="relative flex w-full border-b border-[var(--pocket-border)] bg-pocket-bg px-4">
             {availableTabs.map(({ id: tab }) => (
               <button
                 key={tab}

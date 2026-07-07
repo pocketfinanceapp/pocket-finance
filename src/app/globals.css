@@ -27,6 +27,7 @@
   --pocket-search-overlay: linear-gradient(180deg, rgba(4, 5, 8, 0.97) 0%, rgba(8, 10, 16, 0.98) 100%);
   --pocket-search-bar: rgba(255, 255, 255, 0.04);
   --pocket-header-scrim: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.35), transparent);
+  --pocket-header-fade: linear-gradient(to bottom, var(--pocket-bg) 0%, transparent 100%);
   --pocket-feed-chrome-bg: rgba(0, 0, 0, 0.22);
   --pocket-grid-line: rgba(255, 255, 255, 0.012);
   --pocket-toggle-off: #3f3f46;
@@ -58,7 +59,8 @@
   --pocket-composer: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, #ffffff 100%);
   --pocket-search-overlay: linear-gradient(180deg, rgba(242, 242, 247, 0.98) 0%, rgba(229, 229, 234, 0.99) 100%);
   --pocket-search-bar: rgba(255, 255, 255, 0.92);
-  --pocket-header-scrim: linear-gradient(to bottom, rgba(242, 242, 247, 0.96), rgba(242, 242, 247, 0.62), transparent);
+  --pocket-header-scrim: transparent;
+  --pocket-header-fade: transparent;
   --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.82);
   --pocket-grid-line: rgba(0, 0, 0, 0.045);
   --pocket-toggle-off: #d1d5db;
@@ -90,7 +92,8 @@
   --pocket-composer: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, #f8fafc 100%);
   --pocket-search-overlay: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(238, 242, 246, 0.99) 100%);
   --pocket-search-bar: rgba(255, 255, 255, 0.94);
-  --pocket-header-scrim: linear-gradient(to bottom, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.65), transparent);
+  --pocket-header-scrim: transparent;
+  --pocket-header-fade: transparent;
   --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.86);
   --pocket-grid-line: rgba(59, 110, 245, 0.06);
   --pocket-toggle-off: #cbd5e1;
@@ -330,6 +333,66 @@ html.app-route
 
 .feed-header-scrim {
   background: var(--pocket-header-scrim);
+}
+
+.pf-header-shell {
+  position: relative;
+  flex-shrink: 0;
+  background: var(--pocket-bg);
+  border-bottom: 1px solid var(--pocket-border);
+}
+
+.pf-header-shell::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  z-index: 10;
+  height: 1.25rem;
+  pointer-events: none;
+  background: var(--pocket-header-fade);
+}
+
+html.app-route[data-theme="light"] .pf-header-shell::after,
+html.app-route[data-theme="modern-light"] .pf-header-shell::after,
+html.app-route[data-theme="light"] .feed-header-scrim,
+html.app-route[data-theme="modern-light"] .feed-header-scrim {
+  display: none;
+}
+
+html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn,
+html.app-route[data-theme="modern-light"] .pf-feed-chrome .pf-feed-tab-btn {
+  filter: none !important;
+  text-shadow:
+    0 1px 8px rgba(255, 255, 255, 0.92),
+    0 0 2px rgba(255, 255, 255, 0.75);
+}
+
+html.app-route[data-theme="light"] .pf-section-tab-indicator,
+html.app-route[data-theme="modern-light"] .pf-section-tab-indicator {
+  background: var(--pocket-teal) !important;
+}
+
+html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-indicator,
+html.app-route[data-theme="modern-light"] .pf-feed-chrome .pf-feed-tab-indicator {
+  background: var(--pocket-teal) !important;
+}
+
+html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-search-btn,
+html.app-route[data-theme="modern-light"] .pf-feed-chrome .pf-feed-search-btn {
+  filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.85));
+}
+
+html.app-route[data-theme="light"] .feed-search-bar-shimmer,
+html.app-route[data-theme="modern-light"] .feed-search-bar-shimmer {
+  opacity: 0.35;
+}
+
+html.app-route[data-theme="light"] .feed-search-bar .pointer-events-none.absolute.inset-0,
+html.app-route[data-theme="modern-light"] .feed-search-bar .pointer-events-none.absolute.inset-0,
+html.app-route[data-theme="light"] .pf-search-bar-tint,
+html.app-route[data-theme="modern-light"] .pf-search-bar-tint {
+  opacity: 0.2 !important;
 }
 
 .pf-feed-tab-bar {
