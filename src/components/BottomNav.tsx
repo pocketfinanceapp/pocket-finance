@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart2, Bookmark, Compass } from "lucide-react";
+import { BarChart2, Compass, MessageSquare } from "lucide-react";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { APP_BASE, appPath } from "@/lib/appPaths";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 import { getProgressionState } from "@/lib/progression";
 import { ProfileNavIcon } from "@/components/icons/ProfileNavIcon";
 
-export type NavTab = "home" | "markets" | "browse" | "watchlist" | "profile";
+export type NavTab = "home" | "markets" | "discover" | "forum" | "profile";
 
 interface BottomNavProps {
   active: NavTab;
@@ -17,9 +17,10 @@ interface BottomNavProps {
 
 function tabFromPath(pathname: string): NavTab {
   if (!pathname.startsWith(APP_BASE)) return "home";
-  if (pathname.startsWith(appPath("browse"))) return "browse";
+  if (pathname.startsWith(appPath("browse"))) return "discover";
+  if (pathname === appPath("watchlist")) return "discover";
+  if (pathname === appPath("forum")) return "forum";
   if (pathname === appPath("markets")) return "markets";
-  if (pathname === appPath("watchlist")) return "watchlist";
   if (pathname === appPath("profile")) return "profile";
   return "home";
 }
@@ -41,8 +42,8 @@ export function BottomNav({ active }: BottomNavProps) {
 
   const homeActive = resolvedActive === "home";
   const marketsActive = resolvedActive === "markets";
-  const browseActive = resolvedActive === "browse";
-  const watchlistActive = resolvedActive === "watchlist";
+  const discoverActive = resolvedActive === "discover";
+  const forumActive = resolvedActive === "forum";
   const profileActive = resolvedActive === "profile";
 
   const navigate = (tab: NavTab) => {
@@ -58,11 +59,11 @@ export function BottomNav({ active }: BottomNavProps) {
       case "markets":
         router.replace(appPath("markets"), { scroll: false });
         break;
-      case "browse":
+      case "discover":
         router.replace(appPath("browse"), { scroll: false });
         break;
-      case "watchlist":
-        router.replace(appPath("watchlist"), { scroll: false });
+      case "forum":
+        router.replace(appPath("forum"), { scroll: false });
         break;
       case "profile":
         router.replace(appPath("profile"), { scroll: false });
@@ -91,10 +92,10 @@ export function BottomNav({ active }: BottomNavProps) {
           />
         </NavItem>
 
-        <NavItem label="Watchlist" active={watchlistActive} onClick={() => navigate("watchlist")}>
-          <Bookmark
-            className={`h-[26px] w-[26px] ${watchlistActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
-            strokeWidth={watchlistActive ? 2.5 : 2}
+        <NavItem label="Explore" active={discoverActive} onClick={() => navigate("discover")}>
+          <Compass
+            className={`h-[26px] w-[26px] ${discoverActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
+            strokeWidth={discoverActive ? 2.5 : 2}
           />
         </NavItem>
 
@@ -102,10 +103,10 @@ export function BottomNav({ active }: BottomNavProps) {
           <HomeIcon active={homeActive} />
         </NavItem>
 
-        <NavItem label="Explore" active={browseActive} onClick={() => navigate("browse")}>
-          <Compass
-            className={`h-[26px] w-[26px] ${browseActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
-            strokeWidth={browseActive ? 2.5 : 2}
+        <NavItem label="Forum" active={forumActive} onClick={() => navigate("forum")}>
+          <MessageSquare
+            className={`h-[26px] w-[26px] ${forumActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
+            strokeWidth={forumActive ? 2.5 : 2}
           />
         </NavItem>
 

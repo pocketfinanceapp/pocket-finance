@@ -11,6 +11,7 @@ export type MarketExchange =
   | "BSE"
   | "SSE"
   | "KRX"
+  | "TWSE"
   | "CRYPTO"
   | "COMMODITIES"
   | "US MARKETS"

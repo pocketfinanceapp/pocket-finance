@@ -37,9 +37,6 @@ export function ProfileProgressTabs({
   return (
     <section className={CARD} style={tabEnterStyle(animateIn, 80)}>
       <div className="px-5 py-5">
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-pocket-muted">
-          Streak
-        </p>
         <div className="flex items-start gap-4">
           <div className="relative shrink-0 pf-streak-hero-enter">
             <StreakHeroIcon
@@ -87,9 +84,6 @@ export function ProfileProgressTabs({
 
         <div className="my-5 border-t border-[var(--pocket-border)]" />
 
-        <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-pocket-muted">
-          Level
-        </p>
         <div className="flex items-start gap-4">
           <div className="relative shrink-0 pf-level-badge-enter">
             <LevelHeroIcon

@@ -24,21 +24,22 @@ const NavigationContext = createContext<NavigationContextValue | null>(null);
 
 function shellTabFromPath(pathname: string): ShellTab {
   if (!pathname.startsWith(APP_BASE)) return "home";
-  if (pathname.startsWith(appPath("browse"))) return "browse";
+  if (pathname.startsWith(appPath("browse"))) return "discover";
+  if (pathname === appPath("watchlist")) return "discover";
+  if (pathname === appPath("forum")) return "forum";
   if (pathname === appPath("markets")) return "markets";
-  if (pathname === appPath("watchlist")) return "watchlist";
   if (pathname === appPath("profile")) return "profile";
   return "home";
 }
 
 function pathForTab(tab: NavTab): string {
   switch (tab) {
-    case "browse":
+    case "discover":
       return appPath("browse");
+    case "forum":
+      return appPath("forum");
     case "markets":
       return appPath("markets");
-    case "watchlist":
-      return appPath("watchlist");
     case "profile":
       return appPath("profile");
     default:
@@ -65,9 +66,10 @@ export function NavigationProvider({
   useEffect(() => {
     router.prefetch(APP_BASE);
     router.prefetch(appPath("markets"));
-    router.prefetch(appPath("watchlist"));
-    router.prefetch(appPath("profile"));
     router.prefetch(appPath("browse"));
+    router.prefetch(appPath("watchlist"));
+    router.prefetch(appPath("forum"));
+    router.prefetch(appPath("profile"));
   }, [router]);
 
   const navigate = useCallback(

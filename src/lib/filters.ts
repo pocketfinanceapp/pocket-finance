@@ -11,6 +11,7 @@ export const MARKET_FILTERS = [
   "BSE",
   "SSE",
   "KRX",
+  "TWSE",
 ] as const;
 
 export type MarketFilter = (typeof MARKET_FILTERS)[number];
@@ -82,6 +83,8 @@ export function marketToFilter(market: string): MarketFilter | null {
     return "SSE";
   if (m.includes("KRX") || m.includes("KOSPI") || m.includes("KOREA"))
     return "KRX";
+  if (m.includes("TWSE") || m.includes("TAIWAN") || m.includes("TAIEX"))
+    return "TWSE";
 
   return "NASDAQ";
 }

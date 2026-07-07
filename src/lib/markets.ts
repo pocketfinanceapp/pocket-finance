@@ -34,7 +34,7 @@ export const MARKET_REGIONS: MarketRegionGroup[] = [
   {
     id: "apac",
     label: "Asia Pacific",
-    marketIds: ["ASX", "Nikkei", "HKEX", "SGX", "BSE", "SSE", "KRX"],
+    marketIds: ["ASX", "Nikkei", "HKEX", "TWSE", "SGX", "BSE", "SSE", "KRX"],
   },
 ];
 
@@ -104,6 +104,17 @@ export const GLOBAL_MARKETS: GlobalMarket[] = [
     flag: "🇭🇰",
     value: 17892.44,
     changePercent: -0.28,
+  },
+  {
+    id: "TWSE",
+    name: "TWSE",
+    fullName: "Taiwan Stock Exchange",
+    indexName: "TAIEX",
+    country: "Taiwan",
+    region: "apac",
+    flag: "🇹🇼",
+    value: 22456.78,
+    changePercent: 0.35,
   },
   {
     id: "TSX",
@@ -247,6 +258,7 @@ export function getGlobalMarketStatus(now = new Date()): {
     isSessionOpen(now, "Asia/Tokyo", 9, 0, 15, 0),
     isSessionOpen(now, "Australia/Sydney", 10, 0, 16, 0),
     isSessionOpen(now, "Asia/Hong_Kong", 9, 30, 16, 0),
+    isSessionOpen(now, "Asia/Taipei", 9, 0, 13, 30),
   ];
   const open = sessions.some(Boolean);
   return { open, label: open ? "Markets open" : "Markets closed" };

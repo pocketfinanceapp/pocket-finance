@@ -36,6 +36,7 @@ import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 
 interface BrowsePageProps {
   articles: NewsArticle[];
+  embedded?: boolean;
 }
 
 /* ── Category tokens ─────────────────────────────────────────────────────── */
@@ -344,7 +345,7 @@ function EditorialPlaceholder({ accent }: { accent: string }) {
 
 /* ── Main component ──────────────────────────────────────────────────────── */
 
-export function BrowsePage({ articles }: BrowsePageProps) {
+export function BrowsePage({ articles, embedded = false }: BrowsePageProps) {
   const pathname = usePathname();
   const router = useRouter();
   const navigation = useNavigation();
@@ -352,7 +353,7 @@ export function BrowsePage({ articles }: BrowsePageProps) {
 
   const categorySlug = pathname.match(/^\/app\/browse\/([^/]+)$/)?.[1] ?? null;
   const category = categorySlug ? categoryFromSlug(categorySlug) : null;
-  const tabEntered = useTabPageEntered("browse", true, categorySlug ?? "landing");
+  const tabEntered = useTabPageEntered("discover", true, categorySlug ?? "landing");
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -597,17 +598,19 @@ export function BrowsePage({ articles }: BrowsePageProps) {
   return (
     <div className="flex h-full min-h-0 flex-col pf-page text-pocket-text" style={{ background: PAGE_BG }}>
       {/* Pinned header */}
-      <div
-        className="relative z-20 shrink-0 pf-header-shell"
-        style={tabEnterStyle(tabEntered, 0)}
-      >
-        <header className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-          <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">Explore</h1>
-          <p className="mt-0.5 text-[13px] text-pocket-muted">
-            Find the stories and themes moving markets
-          </p>
-        </header>
-      </div>
+      {!embedded && (
+        <div
+          className="relative z-20 shrink-0 pf-header-shell"
+          style={tabEnterStyle(tabEntered, 0)}
+        >
+          <header className="px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
+            <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">Explore</h1>
+            <p className="mt-0.5 text-[13px] text-pocket-muted">
+              Find the stories and themes moving markets
+            </p>
+          </header>
+        </div>
+      )}
 
       <div
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"

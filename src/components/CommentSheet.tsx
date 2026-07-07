@@ -421,7 +421,39 @@ export function CommentSheet({
   );
 }
 
-const THREAD_INDENT = "ml-[18px] border-l-2 border-[var(--pocket-thread)] pl-3";
+const REPLY_INDENT = "ml-8";
+
+function CommentBody({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong =
+    text.length > 160 || text.split("\n").length > 3;
+
+  if (!isLong) {
+    return (
+      <p className="mt-1 text-[14px] leading-relaxed text-pocket-text">{text}</p>
+    );
+  }
+
+  return (
+    <div className="mt-1">
+      <p
+        className={`text-[14px] leading-relaxed text-pocket-text ${
+          expanded ? "" : "line-clamp-4"
+        }`}
+      >
+        {text}
+      </p>
+      <button
+        type="button"
+        data-no-drag
+        onClick={() => setExpanded((v) => !v)}
+        className="mt-1 text-[11px] font-semibold text-[#00C6C6] active:opacity-70"
+      >
+        {expanded ? "Show less" : "Read more"}
+      </button>
+    </div>
+  );
+}
 
 function CommentAvatar({
   comment,
@@ -491,9 +523,7 @@ function CommentThread({
               </span>
               <span className="text-[10px] text-pocket-muted">{comment.timeAgo}</span>
             </div>
-            <p className="mt-1 text-[14px] leading-relaxed text-pocket-text">
-              {comment.text}
-            </p>
+            <CommentBody text={comment.text} />
           </div>
 
           <div className="mt-1.5 flex items-center gap-1">
@@ -554,7 +584,7 @@ function CommentThread({
           )}
 
           {expanded && hasReplies && (
-            <div className={`mt-2 space-y-0 ${THREAD_INDENT}`}>
+            <div className={`mt-2 space-y-0 ${REPLY_INDENT}`}>
               {comment.replies.map((reply) => (
                 <CommentThread
                   key={reply.id}

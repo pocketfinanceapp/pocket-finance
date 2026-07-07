@@ -330,9 +330,9 @@ function EmptyState() {
 
 /* ─── Main component ────────────────────────────────────────────────────── */
 
-export function WatchlistPage() {
+export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
   const { savedArticles } = useApp();
-  const tabEntered = useTabPageEntered("watchlist");
+  const tabEntered = useTabPageEntered("discover");
   const [editMode, setEditMode] = useState(false);
   const [activeItem, setActiveItem] = useState<WatchlistItem | null>(null);
 
@@ -434,44 +434,70 @@ export function WatchlistPage() {
       className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text"
     >
       {/* Sticky header */}
-      <header
-        className="shrink-0 px-5 pb-3"
-        style={{
-          paddingTop: "max(12px, env(safe-area-inset-top))",
-          background: "var(--pocket-bg)",
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          ...tabEnterStyle(tabEntered, 0),
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <h1 className="text-[28px] font-bold tracking-tight text-white">
-            Watchlist
-          </h1>
-          {watchlistItems.length > 0 && (
-            <button
-              type="button"
-              data-no-drag
-              onClick={() => setEditMode((v) => !v)}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                editMode
-                  ? "bg-white/10 text-white"
-                  : "text-zinc-400 active:text-white"
-              }`}
-            >
-              {editMode ? (
-                "Done"
-              ) : (
-                <>
-                  <Pencil className="h-3 w-3" strokeWidth={2} />
-                  Edit
-                </>
-              )}
-            </button>
-          )}
+      {!embedded && (
+        <header
+          className="shrink-0 px-5 pb-3"
+          style={{
+            paddingTop: "max(12px, env(safe-area-inset-top))",
+            background: "var(--pocket-bg)",
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            ...tabEnterStyle(tabEntered, 0),
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">
+              Watchlist
+            </h1>
+            {watchlistItems.length > 0 && (
+              <button
+                type="button"
+                data-no-drag
+                onClick={() => setEditMode((v) => !v)}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                  editMode
+                    ? "bg-white/10 text-pocket-text"
+                    : "text-pocket-muted active:text-pocket-text"
+                }`}
+              >
+                {editMode ? (
+                  "Done"
+                ) : (
+                  <>
+                    <Pencil className="h-3 w-3" strokeWidth={2} />
+                    Edit
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </header>
+      )}
+
+      {embedded && watchlistItems.length > 0 && (
+        <div className="flex shrink-0 justify-end px-5 pb-2">
+          <button
+            type="button"
+            data-no-drag
+            onClick={() => setEditMode((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
+              editMode
+                ? "bg-white/10 text-pocket-text"
+                : "text-pocket-muted active:text-pocket-text"
+            }`}
+          >
+            {editMode ? (
+              "Done"
+            ) : (
+              <>
+                <Pencil className="h-3 w-3" strokeWidth={2} />
+                Edit
+              </>
+            )}
+          </button>
         </div>
-      </header>
+      )}
 
       {/* Scrollable content */}
       <div
