@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { ChevronDown, MessageCircle, Plus, Send } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  MessageCircle,
+  Plus,
+  Send,
+} from "lucide-react";
 import { FireSparkIcon } from "@/components/icons/FireSparkIcon";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 
@@ -20,6 +26,9 @@ type ForumPost = {
 };
 
 type ForumFilter = "recent" | "trending" | "rising" | "popular";
+type PostComment = { id: string; author: string; text: string; minutesAgo: number };
+
+const FILTERS: ForumFilter[] = ["recent", "trending", "rising", "popular"];
 
 const INITIAL_POSTS: ForumPost[] = [
   {
@@ -69,11 +78,21 @@ export function ForumPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [filter, setFilter] = useState<ForumFilter>("trending");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [openPostId, setOpenPostId] = useState<string | null>(null);
+  const [commentInput, setCommentInput] = useState("");
+  const [commentsByPost, setCommentsByPost] = useState<Record<string, PostComment[]>>({
+    "1": [
+      { id: "c1", author: "Lina", text: "I think margin expansion will be key.", minutesAgo: 14 },
+      { id: "c2", author: "Kris", text: "Watching supplier guidance closely.", minutesAgo: 9 },
+    ],
+    "3": [{ id: "c3", author: "Ben", text: "Would love your filters.", minutesAgo: 24 }],
+  });
 
   const trendingTags = useMemo(() => {
     const counter = new Map<string, number>();
@@ -94,12 +113,10 @@ export function ForumPage() {
           p.tags.some((t) => t.toLowerCase() === activeTag.toLowerCase())
         )
       : posts;
-
     const freshness = (minutesAgo: number) => Math.max(0, 140 - minutesAgo) / 140;
     const popularity = (post: ForumPost) => post.likes * 1.2 + post.replies * 1.5;
     const jitter = (id: string) =>
       ((id.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 17) - 8) / 10;
-
     return [...byTag].sort((a, b) => {
       const score = (post: ForumPost) => {
         if (filter === "recent") return -post.minutesAgo + jitter(post.id);
@@ -123,6 +140,11 @@ export function ForumPage() {
       .map((p) => p.id);
   }, [posts]);
 
+  const selectedPost = useMemo(
+    () => posts.find((p) => p.id === selectedPostId) ?? null,
+    [posts, selectedPostId]
+  );
+
   const canPost = title.trim().length >= 8 && body.trim().length >= 20;
 
   const publishPost = () => {
@@ -132,7 +154,6 @@ export function ForumPage() {
       .map((t) => t.trim())
       .filter(Boolean)
       .slice(0, 3);
-
     setPosts((prev) => [
       {
         id: String(Date.now()),
@@ -158,9 +179,8 @@ export function ForumPage() {
   const handleAttachImage = (file: File | null) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = () =>
       setImageDataUrl(typeof reader.result === "string" ? reader.result : null);
-    };
     reader.readAsDataURL(file);
   };
 
@@ -170,14 +190,144 @@ export function ForumPage() {
     );
   };
 
+  const addComment = () => {
+    if (!selectedPost || !commentInput.trim()) return;
+    const postId = selectedPost.id;
+    const newComment: PostComment = {
+      id: String(Date.now()),
+      author: "You",
+      text: commentInput.trim(),
+      minutesAgo: 0,
+    };
+    setCommentsByPost((prev) => ({
+      ...prev,
+      [postId]: [newComment, ...(prev[postId] ?? [])],
+    }));
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, replies: p.replies + 1 } : p))
+    );
+    setCommentInput("");
+  };
+
+  if (selectedPost) {
+    const postComments = commentsByPost[selectedPost.id] ?? [];
+    return (
+      <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
+        <header
+          className="shrink-0 border-b border-[var(--pocket-border)] px-4 pb-3"
+          style={{ paddingTop: "max(12px, env(safe-area-inset-top))", ...tabEnterStyle(tabEntered, 0) }}
+        >
+          <button
+            type="button"
+            data-no-drag
+            onClick={() => setSelectedPostId(null)}
+            className="flex items-center gap-1.5 text-[13px] font-semibold text-pocket-muted hover:text-pocket-text"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to forum
+          </button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(8.5rem+env(safe-area-inset-bottom))]">
+          <article className="pf-card-surface mt-3 rounded-2xl p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[14px] font-semibold text-pocket-text">{selectedPost.author}</p>
+              {popularIds.includes(selectedPost.id) && (
+                <div className="inline-flex items-center gap-1 rounded-full bg-orange-500/12 px-2 py-1">
+                  <FireSparkIcon className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-semibold text-orange-400">Popular</span>
+                </div>
+              )}
+            </div>
+            <h2 className="mt-3 text-[18px] font-bold leading-snug text-pocket-text">
+              {selectedPost.title}
+            </h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-pocket-muted">
+              {selectedPost.body}
+            </p>
+            {selectedPost.imageUrl && (
+              <button
+                type="button"
+                data-no-drag
+                onClick={() => setOpenPostId(selectedPost.id)}
+                className="mt-3 block h-44 w-full overflow-hidden rounded-xl border border-[var(--pocket-border)]"
+              >
+                <Image
+                  src={selectedPost.imageUrl}
+                  alt={selectedPost.title}
+                  width={900}
+                  height={500}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            )}
+          </article>
+          <section className="mt-4">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
+              Comments
+            </p>
+            <div className="mt-2 space-y-2">
+              {postComments.length === 0 ? (
+                <div className="pf-card-surface rounded-xl p-3 text-[13px] text-pocket-muted">
+                  Be the first to comment.
+                </div>
+              ) : (
+                postComments.map((comment) => (
+                  <div key={comment.id} className="pf-card-surface rounded-xl p-3">
+                    <p className="text-[12px] font-semibold text-pocket-text">{comment.author}</p>
+                    <p className="mt-1 text-[13px] text-pocket-muted">{comment.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+        <div className="shrink-0 border-t border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] px-4 py-2.5">
+          <div className="flex items-end gap-2">
+            <textarea
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              rows={1}
+              placeholder="Add a comment..."
+              className="min-h-[42px] max-h-24 flex-1 resize-none rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2 text-[13px] text-pocket-text outline-none focus:border-[#00C6C6]"
+            />
+            <button
+              type="button"
+              data-no-drag
+              onClick={addComment}
+              disabled={!commentInput.trim()}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white disabled:opacity-40"
+            >
+              <Send className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        {openPostId && (
+          <button
+            type="button"
+            data-no-drag
+            className="absolute inset-0 z-30 bg-black/70 p-4"
+            onClick={() => setOpenPostId(null)}
+          >
+            <div className="mx-auto mt-12 max-w-mobile overflow-hidden rounded-2xl border border-white/20">
+              <Image
+                src={posts.find((p) => p.id === openPostId)?.imageUrl ?? ""}
+                alt="Forum post image"
+                width={900}
+                height={900}
+                className="h-auto w-full object-cover"
+              />
+            </div>
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
       <header
         className="shrink-0 px-5 pb-3"
-        style={{
-          paddingTop: "max(12px, env(safe-area-inset-top))",
-          ...tabEnterStyle(tabEntered, 0),
-        }}
+        style={{ paddingTop: "max(12px, env(safe-area-inset-top))", ...tabEnterStyle(tabEntered, 0) }}
       >
         <div className="flex items-end justify-between gap-3">
           <div>
@@ -190,7 +340,7 @@ export function ForumPage() {
             type="button"
             data-no-drag
             onClick={() => setComposerOpen(true)}
-            className="whitespace-nowrap flex items-center gap-1.5 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] px-3.5 py-2 text-[12px] font-semibold text-pocket-text transition-all hover:translate-y-[-1px] active:translate-y-[0]"
+            className="whitespace-nowrap flex items-center gap-1.5 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] px-3.5 py-2 text-[12px] font-semibold text-pocket-text"
           >
             <Plus className="h-3.5 w-3.5" />
             New Post
@@ -198,10 +348,7 @@ export function ForumPage() {
         </div>
       </header>
 
-      <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]"
-        style={tabEnterStyle(tabEntered, 80)}
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]">
         <section className="pf-card-surface mt-2 rounded-2xl p-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -210,19 +357,45 @@ export function ForumPage() {
                 Trending Topics
               </p>
             </div>
-            <label className="relative">
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as ForumFilter)}
-                className="appearance-none rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-1.5 pr-7 text-[12px] font-medium text-pocket-text outline-none"
+            <div className="relative">
+              <button
+                type="button"
+                data-no-drag
+                onClick={() => setFilterOpen((v) => !v)}
+                className="inline-flex items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-1.5 text-[12px] font-medium capitalize text-pocket-text"
               >
-                <option value="recent">Recent</option>
-                <option value="trending">Trending</option>
-                <option value="rising">Rising</option>
-                <option value="popular">Popular</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pocket-muted" />
-            </label>
+                {filter}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                    filterOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              <div
+                className={`absolute right-0 top-[calc(100%+8px)] z-10 w-32 origin-top-right overflow-hidden rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-card-solid)] transition-all duration-200 ${
+                  filterOpen ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
+                }`}
+              >
+                {FILTERS.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    data-no-drag
+                    onClick={() => {
+                      setFilter(opt);
+                      setFilterOpen(false);
+                    }}
+                    className={`block w-full px-3 py-2 text-left text-[12px] capitalize ${
+                      filter === opt
+                        ? "bg-[#00C6C6]/10 text-[#00C6C6]"
+                        : "text-pocket-muted hover:bg-[var(--pocket-surface-hover)] hover:text-pocket-text"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {trendingTags.map((tag) => (
@@ -231,10 +404,10 @@ export function ForumPage() {
                 type="button"
                 data-no-drag
                 onClick={() => setActiveTag((prev) => (prev === tag ? null : tag))}
-                className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors active:opacity-80 ${
+                className={`rounded-full border px-3 py-1.5 text-[12px] font-medium ${
                   activeTag === tag
                     ? "border-[#00C6C6]/40 bg-[#00C6C6]/10 text-[#00C6C6]"
-                    : "border-[var(--pocket-border)] bg-[var(--pocket-bg)] text-pocket-muted hover:text-pocket-text"
+                    : "border-[var(--pocket-border)] bg-[var(--pocket-bg)] text-pocket-muted"
                 }`}
               >
                 #{tag}
@@ -245,9 +418,12 @@ export function ForumPage() {
 
         <section className="mt-4 space-y-3">
           {visiblePosts.map((post, i) => (
-            <article
+            <button
               key={post.id}
-              className="pf-card-surface rounded-2xl p-4"
+              type="button"
+              data-no-drag
+              onClick={() => setSelectedPostId(post.id)}
+              className="pf-card-surface block w-full rounded-2xl p-4 text-left"
               style={tabEnterStyle(tabEntered, 120 + i * 70)}
             >
               <div className="flex items-start justify-between gap-3">
@@ -255,34 +431,20 @@ export function ForumPage() {
                   <p className="text-[14px] font-semibold text-pocket-text">{post.author}</p>
                   <p className="text-[11px] text-pocket-muted">
                     {post.role} ·{" "}
-                    {post.minutesAgo < 60
-                      ? `${post.minutesAgo}m`
-                      : `${Math.floor(post.minutesAgo / 60)}h`}{" "}
-                    ago
+                    {post.minutesAgo < 60 ? `${post.minutesAgo}m` : `${Math.floor(post.minutesAgo / 60)}h`} ago
                   </p>
                 </div>
                 {popularIds.includes(post.id) && (
                   <div className="inline-flex items-center gap-1 rounded-full bg-orange-500/12 px-2 py-1">
                     <FireSparkIcon className="h-3.5 w-3.5" />
-                    <span className="text-[10px] font-semibold text-orange-400">
-                      Popular
-                    </span>
+                    <span className="text-[10px] font-semibold text-orange-400">Popular</span>
                   </div>
                 )}
               </div>
-
-              <h3 className="mt-3 text-[16px] font-semibold leading-snug text-pocket-text">
-                {post.title}
-              </h3>
+              <h3 className="mt-3 text-[16px] font-semibold leading-snug text-pocket-text">{post.title}</h3>
               <p className="mt-1.5 text-[13px] leading-relaxed text-pocket-muted">{post.body}</p>
-
               {post.imageUrl && (
-                <button
-                  type="button"
-                  data-no-drag
-                  onClick={() => setOpenPostId(post.id)}
-                  className="mt-3 block h-36 w-full overflow-hidden rounded-xl border border-[var(--pocket-border)]"
-                >
+                <div className="mt-3 h-36 overflow-hidden rounded-xl border border-[var(--pocket-border)]">
                   <Image
                     src={post.imageUrl}
                     alt={post.title}
@@ -290,81 +452,41 @@ export function ForumPage() {
                     height={360}
                     className="h-full w-full object-cover"
                   />
-                </button>
+                </div>
               )}
-
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {post.tags.map((tag) => (
-                  <span
-                    key={`${post.id}-${tag}`}
-                    className="rounded-full bg-[var(--pocket-bg)] px-2.5 py-1 text-[11px] text-pocket-muted"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-
               <div className="mt-3 flex items-center gap-4 text-[12px] text-pocket-muted">
-                <button
-                  type="button"
-                  data-no-drag
-                  onClick={() => bumpPostStat(post.id, "likes")}
-                  className="transition-colors hover:text-pocket-text"
-                >
-                  {post.likes} likes
-                </button>
-                <button
-                  type="button"
-                  data-no-drag
-                  onClick={() => bumpPostStat(post.id, "replies")}
-                  className="transition-colors hover:text-pocket-text"
-                >
-                  {post.replies} replies
-                </button>
-                <button
-                  type="button"
-                  data-no-drag
-                  onClick={() => {
-                    setComposerOpen(true);
-                    setTitle(`Reply: ${post.title}`.slice(0, 120));
-                  }}
-                  className="transition-colors hover:text-pocket-text"
-                >
-                  Join discussion
-                </button>
+                <span>{post.likes} likes</span>
+                <span>{post.replies} replies</span>
               </div>
-            </article>
+            </button>
           ))}
         </section>
       </div>
 
       {composerOpen && (
         <div className="absolute inset-0 z-20 flex items-end bg-black/35 p-3 backdrop-blur-sm">
-          <div
-            className="pf-card-surface w-full rounded-2xl border border-[var(--pocket-border)] p-4"
-            style={tabEnterStyle(composerOpen, 0)}
-          >
+          <div className="pf-card-surface w-full rounded-2xl border border-[var(--pocket-border)] p-4">
             <p className="text-[16px] font-semibold text-pocket-text">Create post</p>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Post title"
-              className="mt-3 w-full rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2.5 text-[13px] text-pocket-text outline-none focus:border-[#00C6C6]"
+              className="mt-3 w-full rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2.5 text-[13px] text-pocket-text outline-none"
             />
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="What do you want to discuss?"
               rows={4}
-              className="mt-2.5 w-full resize-none rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2.5 text-[13px] text-pocket-text outline-none focus:border-[#00C6C6]"
+              className="mt-2.5 w-full resize-none rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2.5 text-[13px] text-pocket-text outline-none"
             />
             <input
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               placeholder="Tags (comma separated)"
-              className="mt-2.5 w-full rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2.5 text-[13px] text-pocket-text outline-none focus:border-[#00C6C6]"
+              className="mt-2.5 w-full rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2.5 text-[13px] text-pocket-text outline-none"
             />
-            <label className="mt-2.5 flex cursor-pointer items-center justify-center rounded-xl border border-dashed border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2 text-[12px] font-medium text-pocket-muted hover:text-pocket-text">
+            <label className="mt-2.5 flex cursor-pointer items-center justify-center rounded-xl border border-dashed border-[var(--pocket-border)] bg-[var(--pocket-bg)] px-3 py-2 text-[12px] font-medium text-pocket-muted">
               {imageDataUrl ? "Image attached" : "Attach image"}
               <input
                 type="file"
@@ -373,24 +495,12 @@ export function ForumPage() {
                 onChange={(e) => handleAttachImage(e.target.files?.[0] ?? null)}
               />
             </label>
-            {imageDataUrl && (
-              <div className="mt-2 h-28 w-full overflow-hidden rounded-xl border border-[var(--pocket-border)]">
-                <Image
-                  src={imageDataUrl}
-                  alt="Attached preview"
-                  width={720}
-                  height={360}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            )}
-
             <div className="mt-3 flex items-center justify-between gap-2">
               <button
                 type="button"
                 data-no-drag
                 onClick={() => setComposerOpen(false)}
-                className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-pocket-muted transition-colors hover:text-pocket-text"
+                className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-pocket-muted"
               >
                 Cancel
               </button>
@@ -399,7 +509,7 @@ export function ForumPage() {
                 data-no-drag
                 onClick={publishPost}
                 disabled={!canPost}
-                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-4 py-2 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-4 py-2 text-[12px] font-semibold text-white disabled:opacity-45"
               >
                 <Send className="h-3.5 w-3.5" />
                 Publish
@@ -407,25 +517,6 @@ export function ForumPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {openPostId && (
-        <button
-          type="button"
-          data-no-drag
-          className="absolute inset-0 z-30 bg-black/70 p-4"
-          onClick={() => setOpenPostId(null)}
-        >
-          <div className="mx-auto mt-12 max-w-mobile overflow-hidden rounded-2xl border border-white/20">
-            <Image
-              src={posts.find((p) => p.id === openPostId)?.imageUrl ?? ""}
-              alt="Forum post image"
-              width={900}
-              height={900}
-              className="h-auto w-full object-cover"
-            />
-          </div>
-        </button>
       )}
     </div>
   );

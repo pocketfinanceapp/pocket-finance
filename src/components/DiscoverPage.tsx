@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
 import type { NewsArticle } from "@/lib/types";
@@ -29,6 +29,9 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
   const navigation = useNavigation();
   const tabEntered = useTabPageEntered("discover");
   const { savedArticles, requestFeedJump } = useApp();
+  const [expandedTopics, setExpandedTopics] = useState<Set<BrowseCategory>>(
+    new Set()
+  );
 
   const watchlistItems = useMemo(() => {
     const dismissed = getDismissedWatchlistTickers();
@@ -49,6 +52,7 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
         topic,
         count: topicArticles.length,
         latest: topicArticles[0] ?? null,
+        articles: topicArticles.slice(0, 6),
       };
     });
   }, [articles]);
@@ -58,12 +62,20 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
   }, [articles]);
 
   const openTopic = (topic: BrowseCategory) => {
-    router.replace(appPath(`browse/${categoryToSlug(topic)}`), {
-      scroll: false,
+    setExpandedTopics((prev) => {
+      const next = new Set(prev);
+      if (next.has(topic)) next.delete(topic);
+      else next.add(topic);
+      return next;
     });
   };
 
   const openSavedWatchlistItem = (articleId: string) => {
+    requestFeedJump(articleId);
+    navigation.navigate("home");
+  };
+
+  const openTopicArticle = (articleId: string) => {
     requestFeedJump(articleId);
     navigation.navigate("home");
   };
@@ -154,32 +166,83 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
             Explore Topics
           </p>
           <div className="mt-3 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-xl border border-[var(--pocket-border)]">
-            {topicRows.map(({ topic, latest, count }) => (
-              <button
-                key={topic}
-                type="button"
-                data-no-drag
-                onClick={() => openTopic(topic)}
-                className="w-full px-3 py-3 text-left active:bg-white/[0.03]"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-semibold text-pocket-text">
-                      {topic}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-pocket-muted">
-                      {count} matching stor{count === 1 ? "y" : "ies"}
-                    </p>
-                    {latest && (
-                      <p className="mt-1 line-clamp-1 text-[12px] text-pocket-muted">
-                        {cleanArticleTitle(latest.headline)}
-                      </p>
-                    )}
+            {topicRows.map(({ topic, latest, count, articles: topicArticles }) => {
+              const isOpen = expandedTopics.has(topic);
+              return (
+                <div key={topic} className="w-full">
+                  <button
+                    type="button"
+                    data-no-drag
+                    onClick={() => openTopic(topic)}
+                    className="w-full px-3 py-3 text-left active:bg-white/[0.03]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-semibold text-pocket-text">
+                          {topic}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-pocket-muted">
+                          {count} matching stor{count === 1 ? "y" : "ies"}
+                        </p>
+                        {latest && (
+                          <p className="mt-1 line-clamp-1 text-[12px] text-pocket-muted">
+                            {cleanArticleTitle(latest.headline)}
+                          </p>
+                        )}
+                      </div>
+                      {isOpen ? (
+                        <ChevronUp className="h-4 w-4 shrink-0 text-pocket-muted" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 shrink-0 text-pocket-muted" />
+                      )}
+                    </div>
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      isOpen ? "max-h-[420px] opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="px-3 pb-3">
+                      <div className="rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-bg)]">
+                        {topicArticles.length === 0 ? (
+                          <p className="px-3 py-2.5 text-[12px] text-pocket-muted">
+                            No articles yet for this topic.
+                          </p>
+                        ) : (
+                          topicArticles.map((article, index) => (
+                            <button
+                              key={article.id}
+                              type="button"
+                              data-no-drag
+                              onClick={() => openTopicArticle(article.id)}
+                              className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left active:bg-white/[0.03] ${
+                                index < topicArticles.length - 1
+                                  ? "border-b border-[var(--pocket-border)]"
+                                  : ""
+                              }`}
+                            >
+                              <p className="line-clamp-2 text-[12px] text-pocket-text">
+                                {cleanArticleTitle(article.headline)}
+                              </p>
+                              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-pocket-muted" />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        data-no-drag
+                        onClick={() => router.replace(appPath(`browse/${categoryToSlug(topic)}`), { scroll: false })}
+                        className="mt-2 text-[11px] font-semibold text-[#00C6C6]"
+                      >
+                        Open full {topic} topic
+                      </button>
+                    </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" />
                 </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         </section>
 
