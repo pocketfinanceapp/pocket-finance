@@ -84,6 +84,10 @@ export function BottomNav({ active }: BottomNavProps) {
       }}
     >
       <div className="grid h-full w-full grid-cols-5 items-end pb-1">
+        <NavItem label="Home" active={homeActive} onClick={() => navigate("home")}>
+          <HomeIcon active={homeActive} />
+        </NavItem>
+
         <NavItem label="Markets" active={marketsActive} onClick={() => navigate("markets")}>
           <BarChart2
             className={`h-[26px] w-[26px] ${marketsActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
@@ -91,21 +95,17 @@ export function BottomNav({ active }: BottomNavProps) {
           />
         </NavItem>
 
-        <NavItem label="Explore" active={discoverActive} onClick={() => navigate("discover")}>
-          <Compass
-            className={`h-[26px] w-[26px] ${discoverActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
-            strokeWidth={discoverActive ? 2.5 : 2}
-          />
-        </NavItem>
-
-        <NavItem label="Home" active={homeActive} onClick={() => navigate("home")}>
-          <HomeIcon active={homeActive} />
-        </NavItem>
-
         <NavItem label="Watchlist" active={watchlistActive} onClick={() => navigate("watchlist")}>
           <Bookmark
             className={`h-[26px] w-[26px] ${watchlistActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
             strokeWidth={watchlistActive ? 2.5 : 2}
+          />
+        </NavItem>
+
+        <NavItem label="Explore" active={discoverActive} onClick={() => navigate("discover")}>
+          <Compass
+            className={`h-[26px] w-[26px] ${discoverActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
+            strokeWidth={discoverActive ? 2.5 : 2}
           />
         </NavItem>
 
