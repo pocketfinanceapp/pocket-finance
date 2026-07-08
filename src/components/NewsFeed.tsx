@@ -97,8 +97,6 @@ export function NewsFeed({
   );
   const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
-  const wasFollowingRef = useRef(false);
-  const prevNavTabRef = useRef(navigation?.navTab);
 
   const refreshTopics = useCallback(() => {
     const topics = loadFavouriteTopics();
@@ -127,28 +125,6 @@ export function NewsFeed({
       window.removeEventListener(PF_TOPICS_CHANGED_EVENT, onTopicsChanged);
     };
   }, [refreshTopics]);
-
-  useEffect(() => {
-    const isFollowing = feedMode === "following";
-    if (isFollowing && !wasFollowingRef.current) {
-      console.log("[pf-topics] NewsFeed Following tab became active");
-      refreshTopics();
-    }
-    wasFollowingRef.current = isFollowing;
-  }, [feedMode, refreshTopics]);
-
-  useEffect(() => {
-    const navTab = navigation?.navTab;
-    if (
-      navTab === "home" &&
-      prevNavTabRef.current === "profile" &&
-      feedMode === "following"
-    ) {
-      console.log("[pf-topics] NewsFeed refreshed after leaving Profile");
-      refreshTopics();
-    }
-    prevNavTabRef.current = navTab;
-  }, [navigation?.navTab, feedMode, refreshTopics]);
 
   useEffect(() => {
     if (feedMode === displayedFeedMode) {
@@ -306,11 +282,6 @@ export function NewsFeed({
     },
     [goToPanel]
   );
-
-  const openProfile = useCallback(() => {
-    navigation?.navigate("profile") ??
-      router.replace(appPath("profile"), { scroll: false });
-  }, [navigation, router]);
 
   const jumpToForYouArticle = useCallback(
     (selected: NewsArticle) => {
@@ -632,46 +603,20 @@ export function NewsFeed({
                 }`}
                 style={tabEnterStyle(homeEntered, 120)}
               >
-                {displayedFeedMode === "following" && favouriteTopics.length === 0 ? (
-                  <>
-                    <p className="text-lg font-bold text-pocket-text">
-                      Personalise your feed — select topics in your Profile
-                    </p>
-                    <button
-                      type="button"
-                      data-no-drag
-                      onClick={openProfile}
-                      className="mt-6 rounded-full bg-[#00C6C6] px-6 py-2.5 text-sm font-bold text-black"
-                    >
-                      Go to Profile
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-lg font-bold text-pocket-text">
-                      {displayedFeedMode === "following"
-                        ? "No stories match your topics"
-                        : "No stories match"}
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-pocket-muted">
-                      {displayedFeedMode === "following"
-                        ? "Try adding more topics in your Profile."
-                        : "Adjust filters or search to see more news."}
-                    </p>
-                    <button
-                      type="button"
-                      data-no-drag
-                      onClick={() =>
-                        displayedFeedMode === "following"
-                          ? openProfile()
-                          : setFilterOpen(true)
-                      }
-                      className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
-                    >
-                      {displayedFeedMode === "following" ? "Go to Profile" : "Open filters"}
-                    </button>
-                  </>
-                )}
+                <p className="text-lg font-bold text-pocket-text">
+                  No stories match
+                </p>
+                <p className="mt-2 text-sm font-medium text-pocket-muted">
+                  Adjust filters or search to see more news.
+                </p>
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={() => setFilterOpen(true)}
+                  className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
+                >
+                  Open filters
+                </button>
               </div>
             ) : (
               <div className="feed-column-viewport z-0">

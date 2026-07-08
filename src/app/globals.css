@@ -26,9 +26,9 @@
   --pocket-composer: linear-gradient(180deg, rgba(8, 9, 14, 0.88) 0%, rgba(8, 9, 14, 0.99) 100%);
   --pocket-search-overlay: linear-gradient(180deg, rgba(4, 5, 8, 0.97) 0%, rgba(8, 10, 16, 0.98) 100%);
   --pocket-search-bar: rgba(255, 255, 255, 0.04);
-  --pocket-header-scrim: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.35), transparent);
+  --pocket-header-scrim: transparent;
   --pocket-header-fade: linear-gradient(to bottom, var(--pocket-bg) 0%, transparent 100%);
-  --pocket-feed-chrome-bg: rgba(0, 0, 0, 0.22);
+  --pocket-feed-chrome-bg: transparent;
   --pocket-grid-line: rgba(255, 255, 255, 0.012);
   --pocket-toggle-off: #3f3f46;
   --pocket-overlay-scrim: rgba(0, 0, 0, 0.7);
@@ -408,8 +408,8 @@ html.app-route[data-theme="modern-light"] .pf-search-bar-tint {
 }
 
 .pf-feed-tab-bar {
-  background: var(--pocket-feed-chrome-bg);
-  backdrop-filter: blur(12px);
+  background: transparent;
+  backdrop-filter: none;
 }
 
 html.app-route[data-theme="light"] .pf-feed-tab-bar,

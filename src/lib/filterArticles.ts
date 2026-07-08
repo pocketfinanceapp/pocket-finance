@@ -5,7 +5,7 @@ import type { ProfileTopic } from "./profileStorage";
 import { TOPIC_KEYWORDS } from "./profileStorage";
 import type { NewsArticle } from "./types";
 
-export type FeedMode = "forYou" | "following" | "trending";
+export type FeedMode = "forYou" | "trending";
 
 export function filterArticles(
   articles: NewsArticle[],
@@ -114,16 +114,6 @@ export function buildFeedArticles(
   favouriteTopics: ProfileTopic[] = []
 ): NewsArticle[] {
   if (mode === "trending") return [];
-
-  if (mode === "following") {
-    if (favouriteTopics.length === 0) return [];
-    const topicMatches = articles.filter((a) =>
-      articleMatchesTopics(a, favouriteTopics)
-    );
-    return rankByFinanceRelevance(
-      filterArticles(topicMatches, [], sectorFilters, searchQuery)
-    );
-  }
 
   // Explicit market drill-down from Markets tab
   if (marketFilters.length > 0) {

@@ -19,7 +19,6 @@ interface FeedHeaderProps {
 
 const FEED_TABS: { id: FeedMode; label: string }[] = [
   { id: "forYou", label: "For You" },
-  { id: "following", label: "Following" },
   { id: "trending", label: "Trending" },
 ];
 
@@ -136,7 +135,7 @@ export function FeedHeader({
         <div className="h-10 w-10 shrink-0" aria-hidden />
         <nav
           ref={navRef}
-          className="pf-feed-tab-bar relative flex w-full max-w-[280px] items-end justify-between px-0 pb-0.5 pt-1"
+          className="pf-feed-tab-bar relative flex w-full max-w-[200px] items-end justify-between px-0 pb-0.5 pt-1"
         >
           {FEED_TABS.map((tab) => {
             const active = feedMode === tab.id;
