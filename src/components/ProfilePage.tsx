@@ -456,14 +456,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         className="min-h-0 flex-1 overflow-y-auto px-5 pf-scroll"
         style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
       >
-        {user && !isGuest && (
-          <ReferralSection
-            userId={user.id}
-            animateIn={profileEntered}
-            enterDelay={40}
-          />
-        )}
-
         {/* ── Identity (avatar + name) ──────────────────────────────────── */}
         {user && (
           <ProfileIdentitySection
@@ -473,6 +465,14 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             email={user.email}
             joined={joined}
             animateIn={profileEntered}
+          />
+        )}
+
+        {user && !isGuest && (
+          <ReferralSection
+            userId={user.id}
+            animateIn={profileEntered}
+            enterDelay={60}
           />
         )}
 
