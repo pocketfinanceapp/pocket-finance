@@ -5,7 +5,7 @@ import { WatchlistPage } from "./WatchlistPage";
 
 export function WatchlistScreen() {
   return (
-    <MobilePageShell activeTab="discover">
+    <MobilePageShell activeTab="watchlist">
       <WatchlistPage />
     </MobilePageShell>
   );

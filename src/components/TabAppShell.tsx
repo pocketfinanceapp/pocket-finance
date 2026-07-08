@@ -11,6 +11,7 @@ import { MarketsPage } from "./MarketsPage";
 import { MobilePageShell } from "./MobilePageShell";
 import { NewsFeed } from "./NewsFeed";
 import { DiscoverPage } from "./DiscoverPage";
+import { WatchlistPage } from "./WatchlistPage";
 import { ProfilePage } from "./ProfilePage";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
@@ -72,6 +73,10 @@ function TabPanels({
 
         <TabPanel active={activeTab === "discover"}>
           <DiscoverPage articles={initialArticles} />
+        </TabPanel>
+
+        <TabPanel active={activeTab === "watchlist"}>
+          <WatchlistPage />
         </TabPanel>
 
         <TabPanel active={activeTab === "profile"}>

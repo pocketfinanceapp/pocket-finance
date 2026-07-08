@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart2, Compass } from "lucide-react";
+import { BarChart2, Bookmark, Compass } from "lucide-react";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { APP_BASE, appPath } from "@/lib/appPaths";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
 import { getProgressionState } from "@/lib/progression";
 import { ProfileNavIcon } from "@/components/icons/ProfileNavIcon";
 
-export type NavTab = "home" | "markets" | "discover" | "profile";
+export type NavTab = "home" | "markets" | "discover" | "watchlist" | "profile";
 
 interface BottomNavProps {
   active: NavTab;
@@ -18,7 +18,7 @@ interface BottomNavProps {
 function tabFromPath(pathname: string): NavTab {
   if (!pathname.startsWith(APP_BASE)) return "home";
   if (pathname.startsWith(appPath("browse"))) return "discover";
-  if (pathname === appPath("watchlist")) return "discover";
+  if (pathname === appPath("watchlist")) return "watchlist";
   if (pathname === appPath("markets")) return "markets";
   if (pathname === appPath("profile")) return "profile";
   return "home";
@@ -42,6 +42,7 @@ export function BottomNav({ active }: BottomNavProps) {
   const homeActive = resolvedActive === "home";
   const marketsActive = resolvedActive === "markets";
   const discoverActive = resolvedActive === "discover";
+  const watchlistActive = resolvedActive === "watchlist";
   const profileActive = resolvedActive === "profile";
 
   const navigate = (tab: NavTab) => {
@@ -59,6 +60,9 @@ export function BottomNav({ active }: BottomNavProps) {
         break;
       case "discover":
         router.replace(appPath("browse"), { scroll: false });
+        break;
+      case "watchlist":
+        router.replace(appPath("watchlist"), { scroll: false });
         break;
       case "profile":
         router.replace(appPath("profile"), { scroll: false });
@@ -79,7 +83,7 @@ export function BottomNav({ active }: BottomNavProps) {
         height: BOTTOM_NAV_HEIGHT,
       }}
     >
-      <div className="grid h-full w-full grid-cols-4 items-end pb-1">
+      <div className="grid h-full w-full grid-cols-5 items-end pb-1">
         <NavItem label="Markets" active={marketsActive} onClick={() => navigate("markets")}>
           <BarChart2
             className={`h-[26px] w-[26px] ${marketsActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
@@ -96,6 +100,13 @@ export function BottomNav({ active }: BottomNavProps) {
 
         <NavItem label="Home" active={homeActive} onClick={() => navigate("home")}>
           <HomeIcon active={homeActive} />
+        </NavItem>
+
+        <NavItem label="Watchlist" active={watchlistActive} onClick={() => navigate("watchlist")}>
+          <Bookmark
+            className={`h-[26px] w-[26px] ${watchlistActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
+            strokeWidth={watchlistActive ? 2.5 : 2}
+          />
         </NavItem>
 
         <NavItem label="Profile" active={profileActive} onClick={() => navigate("profile")}>

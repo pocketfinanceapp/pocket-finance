@@ -332,7 +332,7 @@ function EmptyState() {
 
 export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
   const { savedArticles } = useApp();
-  const tabEntered = useTabPageEntered("discover");
+  const tabEntered = useTabPageEntered("watchlist");
   const [editMode, setEditMode] = useState(false);
   const [activeItem, setActiveItem] = useState<WatchlistItem | null>(null);
 
