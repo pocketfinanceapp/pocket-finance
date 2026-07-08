@@ -9,6 +9,7 @@ import {
   buildFeedArticles,
   type FeedMode,
 } from "@/lib/filterArticles";
+import { buildFeedPersonalizationInput } from "@/lib/feedPersonalization";
 import { appPath } from "@/lib/appPaths";
 import { isInteractiveTarget } from "@/lib/gesture";
 import { APP_VIEWPORT_HEIGHT, FEED_VIEWPORT_HEIGHT } from "@/lib/layout";
@@ -21,10 +22,7 @@ import {
 } from "@/lib/profileStorage";
 import { recordActivityEvent } from "@/lib/progression";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
-import {
-  getForYouTopArticleIds,
-  rankTrendingArticles,
-} from "@/lib/trendingArticles";
+import { rankTrendingArticles } from "@/lib/trendingArticles";
 import type { NewsArticle } from "@/lib/types";
 import { CommentSheet } from "./CommentSheet";
 import { FeedCard } from "./FeedCard";
@@ -80,6 +78,7 @@ export function NewsFeed({
     sectorFilters,
     sectorInterests,
     searchQuery,
+    savedArticles,
     feedIndex,
     setFeedIndex,
     resetFeedIndex,
@@ -97,19 +96,52 @@ export function NewsFeed({
   );
   const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [personalizationTick, setPersonalizationTick] = useState(0);
 
   const refreshTopics = useCallback(() => {
     const topics = loadFavouriteTopics();
-    console.log("[pf-topics] NewsFeed Following filter topics:", topics);
     setFavouriteTopics(topics);
   }, []);
+
+  useEffect(() => {
+    const onPersonalizationChange = () => setPersonalizationTick((t) => t + 1);
+    window.addEventListener("pf-progression-updated", onPersonalizationChange);
+    window.addEventListener(PF_TOPICS_CHANGED_EVENT, onPersonalizationChange);
+    return () => {
+      window.removeEventListener("pf-progression-updated", onPersonalizationChange);
+      window.removeEventListener(PF_TOPICS_CHANGED_EVENT, onPersonalizationChange);
+    };
+  }, []);
+
+  const articlesById = useMemo(
+    () => new Map(allArticles.map((article) => [article.id, article])),
+    [allArticles]
+  );
+
+  const personalizationInput = useMemo(() => {
+    void personalizationTick;
+    return buildFeedPersonalizationInput({
+      followedMarkets,
+      sectorInterests,
+      favouriteTopics,
+      savedArticles,
+      articlesById,
+    });
+  }, [
+      followedMarkets,
+      sectorInterests,
+      favouriteTopics,
+      savedArticles,
+      articlesById,
+      personalizationTick,
+    ]
+  );
 
   useEffect(() => {
     refreshTopics();
 
     const onStorage = (e: StorageEvent) => {
       if (e.key !== PF_TOPICS_STORAGE_KEY) return;
-      console.log("[pf-topics] NewsFeed storage event:", e.newValue);
       refreshTopics();
     };
 
@@ -156,7 +188,8 @@ export function NewsFeed({
         sectorFilters,
         sectorInterests,
         searchQuery,
-        favouriteTopics
+        favouriteTopics,
+        personalizationInput
       ),
     [
       allArticles,
@@ -167,6 +200,7 @@ export function NewsFeed({
       sectorInterests,
       searchQuery,
       favouriteTopics,
+      personalizationInput,
     ]
   );
 
@@ -201,20 +235,9 @@ export function NewsFeed({
   feedIndexRef.current = feedIndex;
   feedModeRef.current = feedMode;
 
-  const forYouTopIds = useMemo(
-    () =>
-      getForYouTopArticleIds(
-        allArticles,
-        followedMarkets,
-        sectorInterests,
-        favouriteTopics
-      ),
-    [allArticles, followedMarkets, sectorInterests, favouriteTopics]
-  );
-
   const trendingArticles = useMemo(
-    () => rankTrendingArticles(trendingPool, forYouTopIds).slice(0, 15),
-    [trendingPool, forYouTopIds]
+    () => rankTrendingArticles(trendingPool).slice(0, 20),
+    [trendingPool]
   );
 
   const verticalFeedArticles =
@@ -293,7 +316,8 @@ export function NewsFeed({
         [],
         sectorInterests,
         "",
-        favouriteTopics
+        favouriteTopics,
+        personalizationInput
       );
       const idx = forYouList.findIndex((a) => a.id === selected.id);
       if (idx >= 0) {
@@ -308,6 +332,7 @@ export function NewsFeed({
       followedMarkets,
       sectorInterests,
       favouriteTopics,
+      personalizationInput,
       setFeedIndex,
       goToPanel,
     ]

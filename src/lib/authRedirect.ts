@@ -16,3 +16,8 @@ export function getSiteUrl(): string {
 export function getEmailConfirmRedirectUrl(): string {
   return `${getSiteUrl()}/app?email_confirmed=1`;
 }
+
+/** Where Supabase sends users to set a new password after reset email */
+export function getPasswordResetRedirectUrl(): string {
+  return `${getSiteUrl()}/app?password_reset=1`;
+}

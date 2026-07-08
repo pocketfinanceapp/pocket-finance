@@ -3,18 +3,25 @@
 import { useEffect, useState } from "react";
 import { AppBootSplash } from "@/components/AppBootSplash";
 import { AuthScreen } from "@/components/AuthScreen";
+import { ResetPasswordScreen } from "@/components/ResetPasswordScreen";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { isOnboardingComplete } from "@/lib/onboarding";
+import { captureReferralFromUrl } from "@/lib/referral";
 
 const SPLASH_MAX_MS = 2500;
 
 /** Auth + onboarding gate — app shell stays mounted; overlays block interaction */
 export function AppGate({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading, isGuest } = useAuth();
+  const { user, loading: authLoading, isGuest, passwordRecoveryPending } =
+    useAuth();
   const { ready, onboardingComplete, syncAppUser } = useApp();
   const [splashElapsed, setSplashElapsed] = useState(false);
+
+  useEffect(() => {
+    captureReferralFromUrl();
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSplashElapsed(true), SPLASH_MAX_MS);
@@ -31,8 +38,9 @@ export function AppGate({ children }: { children: React.ReactNode }) {
   const showAuth = !showSplash && !user && !isGuest;
   const onboardingDone =
     onboardingComplete || (user ? isOnboardingComplete(user.id) : false);
-  const showOnboarding = !showSplash && Boolean(user) && !onboardingDone;
-  const appInteractive = !showSplash && !showAuth && !showOnboarding;
+  const showOnboarding = !showSplash && Boolean(user) && !onboardingDone && !passwordRecoveryPending;
+  const appInteractive =
+    !showSplash && !showAuth && !showOnboarding && !passwordRecoveryPending;
 
   useEffect(() => {
     if (!appInteractive) return;
@@ -56,6 +64,7 @@ export function AppGate({ children }: { children: React.ReactNode }) {
       )}
 
       {showAuth && <AuthScreen />}
+      {passwordRecoveryPending && <ResetPasswordScreen />}
       {showOnboarding && <OnboardingFlow />}
     </>
   );

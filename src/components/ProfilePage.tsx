@@ -43,6 +43,7 @@ import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ProfileAchievements } from "./ProfileAchievements";
 import { ProfileArticlePreview } from "./ProfileArticlePreview";
 import { ProfileIdentitySection } from "./ProfileIdentitySection";
+import { ReferralSection } from "./ReferralSection";
 import {
   ProfileActivitySection,
   ProfileProgressionHub,
@@ -455,6 +456,14 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         className="min-h-0 flex-1 overflow-y-auto px-5 pf-scroll"
         style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
       >
+        {user && !isGuest && (
+          <ReferralSection
+            userId={user.id}
+            animateIn={profileEntered}
+            enterDelay={40}
+          />
+        )}
+
         {/* ── Identity (avatar + name) ──────────────────────────────────── */}
         {user && (
           <ProfileIdentitySection
@@ -497,7 +506,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             title="My topics"
             subtitle={
               selectedTopics.length === 0
-                ? "Choose topics for your Following feed"
+                ? "Choose topics to personalise your For You feed"
                 : `${selectedTopics.length} topic${selectedTopics.length === 1 ? "" : "s"} selected`
             }
             onClick={() => setShowTopics(true)}

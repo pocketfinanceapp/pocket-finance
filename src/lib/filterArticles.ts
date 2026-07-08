@@ -1,6 +1,10 @@
 import type { MarketFilter, SectorFilter } from "./filters";
 import { articleMatchesMarket } from "./filters";
 import { rankByFinanceRelevance } from "./feedRelevance";
+import {
+  rankForYouFeed,
+  type FeedPersonalizationInput,
+} from "./feedPersonalization";
 import type { ProfileTopic } from "./profileStorage";
 import { TOPIC_KEYWORDS } from "./profileStorage";
 import type { NewsArticle } from "./types";
@@ -111,7 +115,8 @@ export function buildFeedArticles(
   sectorFilters: SectorFilter[],
   sectorInterests: SectorFilter[],
   searchQuery: string,
-  favouriteTopics: ProfileTopic[] = []
+  favouriteTopics: ProfileTopic[] = [],
+  personalization?: FeedPersonalizationInput
 ): NewsArticle[] {
   if (mode === "trending") return [];
 
@@ -136,13 +141,26 @@ export function buildFeedArticles(
     return rankByFinanceRelevance(result);
   }
 
-  // For You: full pool; onboarding interests only affect ranking
-  let result = filterArticles(articles, [], [], searchQuery);
+  // For You: personalized ranking from onboarding + behaviour
+  const base = filterArticles(articles, [], [], searchQuery);
+
+  if (personalization) {
+    return rankForYouFeed(base, personalization);
+  }
+
+  let result = base;
   if (followedMarkets.length > 0) {
     result = prioritizeByFollowed(result, followedMarkets);
   }
   if (sectorInterests.length > 0) {
     result = prioritizeBySectors(result, sectorInterests);
+  }
+  if (favouriteTopics.length > 0) {
+    const topicMatches = result.filter((a) =>
+      articleMatchesTopics(a, favouriteTopics)
+    );
+    const rest = result.filter((a) => !articleMatchesTopics(a, favouriteTopics));
+    result = [...topicMatches, ...rest];
   }
   return rankByFinanceRelevance(result);
 }

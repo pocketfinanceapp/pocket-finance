@@ -170,6 +170,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setReady(true);
     ensureMarketsLoaded();
+    if (isOnboardingComplete()) {
+      setFollowedMarketsState(loadFollowedMarkets());
+      setSectorInterestsState(loadSectorInterests());
+      setOnboardingComplete(true);
+    }
   }, [ensureMarketsLoaded]);
 
   const syncAppUser = useCallback(

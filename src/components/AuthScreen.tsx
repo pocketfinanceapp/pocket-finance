@@ -4,9 +4,13 @@ import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { useAuth } from "@/context/AuthContext";
+import {
+  getPendingReferralCode,
+  storePendingReferralCode,
+} from "@/lib/referral";
 
 type AuthMode = "signIn" | "signUp";
-type AuthView = "form" | "checkInbox";
+type AuthView = "form" | "checkInbox" | "forgotPassword" | "resetSent";
 
 const REMEMBERED_EMAIL_KEY = "pf_remembered_email";
 
@@ -19,12 +23,14 @@ export function AuthScreen() {
     authBanner,
     clearAuthBanner,
     continueAsGuest,
+    resetPassword,
   } = useAuth();
   const [view, setView] = useState<AuthView>("form");
   const [mode, setMode] = useState<AuthMode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [confirmedEmail, setConfirmedEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +53,11 @@ export function AuthScreen() {
         setEmail(savedEmail);
         setRememberMe(true);
       }
+      const pendingRef = getPendingReferralCode();
+      if (pendingRef) {
+        setReferralCode(pendingRef);
+        setMode("signUp");
+      }
     } catch {
       /* ignore storage errors */
     }
@@ -60,6 +71,9 @@ export function AuthScreen() {
 
     try {
       if (isSignUp) {
+        if (referralCode.trim()) {
+          storePendingReferralCode(referralCode.trim());
+        }
         const result = await signUp(email.trim(), password, displayName);
         if (result.error) {
           setError(result.error);
@@ -113,6 +127,111 @@ export function AuthScreen() {
     setError(null);
     clearAuthBanner();
   };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    clearAuthBanner();
+    setSubmitting(true);
+    try {
+      const result = await resetPassword(email.trim());
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setView("resetSent");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (view === "resetSent") {
+    return (
+      <AuthShell>
+        <div className="flex flex-1 flex-col justify-center">
+          <div className="mb-8 flex justify-center">
+            <PocketBrand layout="vertical" iconSize={64} glow="none" />
+          </div>
+
+          <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl border border-[#3B6EF5]/30 bg-gradient-to-br from-[#3B6EF5]/20 to-[#00C6C6]/15">
+            <Mail className="h-12 w-12 text-[#00C6C6]" strokeWidth={1.5} />
+          </div>
+
+          <h1 className="text-center text-2xl font-bold tracking-tight">
+            Check your inbox
+          </h1>
+          <p className="mt-4 text-center text-sm leading-relaxed text-zinc-400">
+            We&apos;ve sent a password reset link to{" "}
+            <span className="font-medium text-white">{email.trim()}</span>.
+            Open the link to choose a new password.
+          </p>
+
+          <button
+            type="button"
+            onClick={backToLogin}
+            className="mt-10 w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-opacity active:scale-[0.99]"
+          >
+            Back to Log In
+          </button>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  if (view === "forgotPassword") {
+    return (
+      <AuthShell>
+        <div className="flex flex-1 flex-col justify-start pt-1">
+          <div className="mb-3 flex justify-center">
+            <PocketBrand layout="icon" iconSize={60} glow="none" />
+          </div>
+
+          <h1 className="text-center text-2xl font-bold tracking-tight">
+            Reset password
+          </h1>
+          <p className="mt-2 text-center text-sm text-zinc-500">
+            Enter your email and we&apos;ll send you a reset link.
+          </p>
+
+          <form onSubmit={handleForgotSubmit} className="mt-8 space-y-3">
+            <AuthField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
+
+            {error && (
+              <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-opacity active:scale-[0.99] disabled:opacity-50"
+            >
+              {submitting ? "Sending…" : "Send reset link"}
+            </button>
+
+            <button
+              type="button"
+              onClick={backToLogin}
+              className="w-full py-2 text-sm font-medium text-zinc-400 active:text-white"
+            >
+              Back to Log In
+            </button>
+          </form>
+        </div>
+      </AuthShell>
+    );
+  }
 
   if (view === "checkInbox") {
     return (
@@ -284,6 +403,33 @@ export function AuthScreen() {
             required
             minLength={6}
           />
+
+          {isSignUp && (
+            <AuthField
+              label="Referral code (optional)"
+              type="text"
+              value={referralCode}
+              onChange={setReferralCode}
+              placeholder="Friend's invite code"
+              autoComplete="off"
+            />
+          )}
+
+          {!isSignUp && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setView("forgotPassword");
+                  setError(null);
+                  clearAuthBanner();
+                }}
+                className="text-[12px] font-medium text-[#00C6C6] active:opacity-70"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           {!isSignUp && (
             <RememberMeToggle

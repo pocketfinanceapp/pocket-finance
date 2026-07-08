@@ -2,15 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { useApp } from "@/context/AppContext";
 import {
   filterExploreCompanies,
   getExploreCompanies,
   type ExploreCompany,
 } from "@/lib/exploreCompanies";
+import {
+  buildFeedPersonalizationInput,
+  rankExploreCompanies,
+} from "@/lib/feedPersonalization";
 import { getStockProfile } from "@/lib/stockData";
 import { fetchStockQuote } from "@/lib/stockQuoteClient";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import type { NewsArticle } from "@/lib/types";
+import {
+  loadFavouriteTopics,
+  PF_TOPICS_CHANGED_EVENT,
+} from "@/lib/profileStorage";
 import {
   panelEnterStyle,
   tabEnterFadeStyle,
@@ -147,8 +156,13 @@ function CompanyCard({
   );
 }
 
-export function DiscoverPage({ articles: _articles }: DiscoverPageProps) {
+export function DiscoverPage({ articles }: DiscoverPageProps) {
   const tabEntered = useTabPageEntered("discover");
+  const { followedMarkets, sectorInterests, savedArticles } = useApp();
+  const [favouriteTopics, setFavouriteTopics] = useState(() =>
+    loadFavouriteTopics()
+  );
+  const [personalizationTick, setPersonalizationTick] = useState(0);
   const companies = useMemo(() => getExploreCompanies(), []);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -157,11 +171,53 @@ export function DiscoverPage({ articles: _articles }: DiscoverPageProps) {
   const [listVisible, setListVisible] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    const refresh = () => {
+      setFavouriteTopics(loadFavouriteTopics());
+      setPersonalizationTick((t) => t + 1);
+    };
+    window.addEventListener("pf-progression-updated", refresh);
+    window.addEventListener(PF_TOPICS_CHANGED_EVENT, refresh);
+    return () => {
+      window.removeEventListener("pf-progression-updated", refresh);
+      window.removeEventListener(PF_TOPICS_CHANGED_EVENT, refresh);
+    };
+  }, []);
+
+  const articlesById = useMemo(
+    () => new Map(articles.map((article) => [article.id, article])),
+    [articles]
+  );
+
+  const personalizationInput = useMemo(() => {
+    void personalizationTick;
+    return buildFeedPersonalizationInput({
+      followedMarkets,
+      sectorInterests,
+      favouriteTopics,
+      savedArticles,
+      articlesById,
+    });
+  }, [
+      followedMarkets,
+      sectorInterests,
+      favouriteTopics,
+      savedArticles,
+      articlesById,
+      personalizationTick,
+    ]
+  );
+
+  const rankedCompanies = useMemo(
+    () => rankExploreCompanies(companies, personalizationInput),
+    [companies, personalizationInput]
+  );
+
   const displayCompanies = useMemo(() => {
     const q = searchQuery.trim();
-    if (!q) return companies;
-    return filterExploreCompanies(companies, q);
-  }, [companies, searchQuery]);
+    if (!q) return rankedCompanies;
+    return filterExploreCompanies(rankedCompanies, q);
+  }, [rankedCompanies, searchQuery]);
 
   const openCompany = useCallback((ticker: string) => {
     setListVisible(false);

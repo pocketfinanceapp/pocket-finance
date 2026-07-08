@@ -10,7 +10,11 @@ import {
   useState,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { getEmailConfirmRedirectUrl } from "@/lib/authRedirect";
+import { getEmailConfirmRedirectUrl, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
+import {
+  clearPendingReferralCode,
+  recordReferralIfPending,
+} from "@/lib/referral";
 import {
   clearGuestMode,
   enableGuestMode,
@@ -41,6 +45,10 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<AuthResult>;
   signInWithApple: () => Promise<AuthResult>;
   updateDisplayName: (displayName: string) => Promise<AuthResult>;
+  resetPassword: (email: string) => Promise<AuthResult>;
+  updatePassword: (password: string) => Promise<AuthResult>;
+  passwordRecoveryPending: boolean;
+  clearPasswordRecovery: () => void;
   isGuest: boolean;
   continueAsGuest: () => void;
   requestSignIn: () => void;
@@ -59,6 +67,23 @@ function isEmailConfirmationUrl(): boolean {
   return type === "signup" || type === "email" || type === "email_change";
 }
 
+function isPasswordRecoveryUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("password_reset") === "1") return true;
+  const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+  return hash.get("type") === "recovery";
+}
+
+function cleanPasswordRecoveryParams(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("password_reset");
+  url.hash = "";
+  const search = url.searchParams.toString();
+  const next = url.pathname + (search ? `?${search}` : "");
+  window.history.replaceState({}, "", next);
+}
+
 function cleanConfirmationParams(): void {
   const url = new URL(window.location.href);
   url.searchParams.delete("email_confirmed");
@@ -74,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authBanner, setAuthBanner] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [passwordRecoveryPending, setPasswordRecoveryPending] = useState(false);
   const handlingConfirmation = useRef(false);
 
   useEffect(() => {
@@ -92,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const init = async () => {
       const confirmationRedirect = isEmailConfirmationUrl();
+      const recoveryRedirect = isPasswordRecoveryUrl();
       if (confirmationRedirect) {
         handlingConfirmation.current = true;
       }
@@ -114,6 +141,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             cleanConfirmationParams();
           }
           handlingConfirmation.current = false;
+        } else if (recoveryRedirect && initial) {
+          setSession(initial);
+          setUser(initial.user);
+          setPasswordRecoveryPending(true);
+          clearGuestMode();
+          setIsGuest(false);
         } else {
           setSession(initial);
           setUser(initial?.user ?? null);
@@ -132,13 +165,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (handlingConfirmation.current) return;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       if (nextSession?.user) {
         clearGuestMode();
         setIsGuest(false);
+        if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+          void recordReferralIfPending(nextSession.user.id);
+        }
+      }
+      if (event === "PASSWORD_RECOVERY") {
+        setPasswordRecoveryPending(true);
       }
       setLoading(false);
     });
@@ -173,6 +212,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const needsConfirmation = Boolean(data.user && !data.session);
+      if (data.user && data.session) {
+        void recordReferralIfPending(data.user.id);
+      }
       return { error: null, needsConfirmation };
     },
     []
@@ -251,6 +293,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const resetPassword = useCallback(async (email: string): Promise<AuthResult> => {
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: getPasswordResetRedirectUrl(),
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const updatePassword = useCallback(
+    async (password: string): Promise<AuthResult> => {
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) return { error: error.message };
+      cleanPasswordRecoveryParams();
+      setPasswordRecoveryPending(false);
+      return { error: null };
+    },
+    []
+  );
+
+  const clearPasswordRecovery = useCallback(() => {
+    cleanPasswordRecoveryParams();
+    setPasswordRecoveryPending(false);
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -264,6 +331,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signInWithApple,
       updateDisplayName,
+      resetPassword,
+      updatePassword,
+      passwordRecoveryPending,
+      clearPasswordRecovery,
       isGuest,
       continueAsGuest,
       requestSignIn,
@@ -280,6 +351,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signInWithApple,
       updateDisplayName,
+      resetPassword,
+      updatePassword,
+      passwordRecoveryPending,
+      clearPasswordRecovery,
       isGuest,
       continueAsGuest,
       requestSignIn,

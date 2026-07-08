@@ -24,7 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_liked_articles_user_id
 ALTER TABLE public.liked_articles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Authenticated users can read all likes"
-  ON public.liked_articles
+  ON public.liked_articles 
   FOR SELECT
   TO authenticated
   USING (true);
