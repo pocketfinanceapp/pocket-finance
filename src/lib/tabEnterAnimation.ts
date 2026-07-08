@@ -3,20 +3,46 @@ import type { CSSProperties } from "react";
 import type { NavTab } from "@/components/BottomNav";
 import { useNavigationOptional } from "@/context/NavigationContext";
 
-export const TAB_ENTER_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+export const TAB_ENTER_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+export const TAB_EXIT_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 export function tabEnterStyle(entered: boolean, delayMs = 0): CSSProperties {
   return {
     opacity: entered ? 1 : 0,
-    transform: entered ? "translateY(0)" : "translateY(12px)",
-    transition: `opacity 520ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 640ms ${TAB_ENTER_EASE} ${delayMs}ms`,
+    transform: entered ? "translateY(0) scale(1)" : "translateY(14px) scale(0.98)",
+    transition: `opacity 600ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 720ms ${TAB_ENTER_EASE} ${delayMs}ms`,
+    willChange: entered ? "auto" : "opacity, transform",
   };
 }
 
 export function tabEnterFadeStyle(entered: boolean, delayMs = 0): CSSProperties {
   return {
     opacity: entered ? 1 : 0,
-    transition: `opacity 520ms ${TAB_ENTER_EASE} ${delayMs}ms`,
+    transform: entered ? "translateY(0)" : "translateY(6px)",
+    transition: `opacity 560ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 640ms ${TAB_ENTER_EASE} ${delayMs}ms`,
+  };
+}
+
+/** Staggered card entrance for grids and lists. */
+export function tabStaggerStyle(
+  entered: boolean,
+  index: number,
+  baseDelayMs = 0
+): CSSProperties {
+  const delayMs = baseDelayMs + Math.min(index, 24) * 42;
+  return {
+    opacity: entered ? 1 : 0,
+    transform: entered ? "translateY(0) scale(1)" : "translateY(18px) scale(0.96)",
+    transition: `opacity 580ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 700ms ${TAB_ENTER_EASE} ${delayMs}ms`,
+  };
+}
+
+/** Slide + fade for full-screen panel transitions. */
+export function panelEnterStyle(visible: boolean): CSSProperties {
+  return {
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateX(0)" : "translateX(28px)",
+    transition: `opacity 420ms ${TAB_ENTER_EASE}, transform 520ms ${TAB_ENTER_EASE}`,
   };
 }
 
