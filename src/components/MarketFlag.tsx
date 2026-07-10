@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { getMarketFlagUrl } from "@/lib/marketFlags";
+import { getMarketFlagSrcWidth, getMarketFlagUrl } from "@/lib/marketFlags";
 
 interface MarketFlagProps {
   countryCode: string;
@@ -13,12 +13,13 @@ interface MarketFlagProps {
 
 export function MarketFlag({
   countryCode,
-  size = 44,
+  size = 40,
   className = "",
   rounded = "xl",
 }: MarketFlagProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const code = countryCode.toLowerCase();
+  const flagSize = Math.round(size * 0.62);
 
   useEffect(() => {
     setImageFailed(false);
@@ -41,15 +42,16 @@ export function MarketFlag({
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] ${radius} ${className}`}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] ${radius} ${className}`}
       style={{ width: size, height: size }}
     >
       <Image
-        src={getMarketFlagUrl(code, size >= 48 ? 80 : 40)}
+        src={getMarketFlagUrl(code, getMarketFlagSrcWidth(flagSize))}
         alt=""
-        width={size}
-        height={size}
-        className="h-full w-full object-cover"
+        width={flagSize}
+        height={flagSize}
+        className="object-contain"
+        style={{ width: flagSize, height: flagSize }}
         unoptimized
         onError={() => setImageFailed(true)}
       />

@@ -119,7 +119,7 @@ function MarketListCard({
       className="pf-card-surface flex w-full items-center gap-3 rounded-2xl border border-[var(--pocket-border)] px-4 py-3.5 text-left transition-transform duration-300 active:scale-[0.98]"
       style={tabStaggerStyle(entered, index, 50)}
     >
-      <MarketFlag countryCode={market.countryCode} size={44} />
+      <MarketFlag countryCode={market.countryCode} size={40} />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-bold tracking-tight text-pocket-text">

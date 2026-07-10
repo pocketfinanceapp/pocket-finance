@@ -421,7 +421,7 @@ function SelectTile({
 
       <div className="shrink-0">
         {flagCode ? (
-          <MarketFlag countryCode={flagCode} size={28} rounded="lg" />
+          <MarketFlag countryCode={flagCode} size={24} rounded="lg" />
         ) : Icon ? (
           <Icon
             className={`h-6 w-6 ${active ? "text-[#00C6C6]" : "text-pocket-muted"}`}

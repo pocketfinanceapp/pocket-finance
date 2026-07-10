@@ -121,7 +121,7 @@ function MarketPanelContent({
             <ArrowLeft className="h-5 w-5 text-pocket-text" />
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <MarketFlag countryCode={detail.countryCode} size={48} />
+            <MarketFlag countryCode={detail.countryCode} size={42} />
             <div className="min-w-0">
               <h1 className="truncate text-[20px] font-bold tracking-tight">
                 {detail.name}
