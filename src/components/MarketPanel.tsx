@@ -17,6 +17,7 @@ import { getStockProfile } from "@/lib/stockData";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import type { ChartRange } from "@/lib/types";
 import { CompanyLogo } from "./CompanyLogo";
+import { MarketFlag } from "./MarketFlag";
 import { MarketSparkline } from "./MarketSparkline";
 import { PriceChart } from "./PriceChart";
 
@@ -120,9 +121,7 @@ function MarketPanelContent({
             <ArrowLeft className="h-5 w-5 text-pocket-text" />
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--pocket-surface-hover)] text-3xl leading-none">
-              {detail.flag}
-            </span>
+            <MarketFlag countryCode={detail.countryCode} size={48} />
             <div className="min-w-0">
               <h1 className="truncate text-[20px] font-bold tracking-tight">
                 {detail.name}

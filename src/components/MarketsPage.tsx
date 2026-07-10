@@ -25,6 +25,7 @@ import {
 } from "@/lib/tabEnterAnimation";
 import { GlobalIndexesSection } from "./GlobalIndexesSection";
 import { MarketPanel } from "./MarketPanel";
+import { MarketFlag } from "./MarketFlag";
 import { MarketSparkline } from "./MarketSparkline";
 import { TopMoversSection } from "./TopMoversSection";
 
@@ -118,9 +119,7 @@ function MarketListCard({
       className="pf-card-surface flex w-full items-center gap-3 rounded-2xl border border-[var(--pocket-border)] px-4 py-3.5 text-left transition-transform duration-300 active:scale-[0.98]"
       style={tabStaggerStyle(entered, index, 50)}
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--pocket-surface-hover)] text-2xl leading-none">
-        {market.flag}
-      </span>
+      <MarketFlag countryCode={market.countryCode} size={44} />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-bold tracking-tight text-pocket-text">

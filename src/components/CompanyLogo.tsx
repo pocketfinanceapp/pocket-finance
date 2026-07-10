@@ -33,7 +33,7 @@ export function CompanyLogo({
     setImageFailed(false);
   }, [upper]);
 
-  const radius = shape === "circle" ? "rounded-full" : "rounded-md";
+  const radius = shape === "circle" ? "rounded-full" : "rounded-xl";
   const showImage = logoUrl && !imageFailed && !showGlobe;
 
   return (
@@ -42,7 +42,7 @@ export function CompanyLogo({
       style={{
         width: size,
         height: size,
-        backgroundColor: showImage ? "var(--pocket-surface-hover)" : color,
+        backgroundColor: showImage ? "#ffffff" : color,
         fontSize: size * 0.32,
       }}
     >
@@ -58,7 +58,8 @@ export function CompanyLogo({
           alt={`${upper} logo`}
           width={size}
           height={size}
-          className="h-full w-full object-contain p-1"
+          className="h-full w-full object-cover"
+          style={{ transform: "scale(1.14)" }}
           unoptimized
           onError={() => setImageFailed(true)}
         />

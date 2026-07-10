@@ -14,6 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { PocketMarkIcon } from "@/components/PocketLogo";
+import { MarketFlag } from "@/components/MarketFlag";
 import { useApp } from "@/context/AppContext";
 import {
   ONBOARDING_MARKETS,
@@ -255,7 +256,7 @@ function MarketsStep({
               onClick={() => onToggle(id)}
               label={m.name}
               sub={m.country}
-              emoji={m.flag}
+              flagCode={m.countryCode}
             />
           );
         })}
@@ -384,14 +385,14 @@ function SelectTile({
   onClick,
   label,
   sub,
-  emoji,
+  flagCode,
   icon: Icon,
 }: {
   active: boolean;
   onClick: () => void;
   label: string;
   sub?: string;
-  emoji?: string;
+  flagCode?: string;
   icon?: LucideIcon;
 }) {
   return (
@@ -419,8 +420,8 @@ function SelectTile({
       )}
 
       <div className="shrink-0">
-        {emoji ? (
-          <span className="text-[26px] leading-none">{emoji}</span>
+        {flagCode ? (
+          <MarketFlag countryCode={flagCode} size={28} rounded="lg" />
         ) : Icon ? (
           <Icon
             className={`h-6 w-6 ${active ? "text-[#00C6C6]" : "text-pocket-muted"}`}
