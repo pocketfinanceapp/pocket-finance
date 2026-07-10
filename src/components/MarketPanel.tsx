@@ -25,6 +25,7 @@ interface MarketPanelProps {
   marketId: MarketFilter;
   onBack: () => void;
   onOpenFeed: (market: MarketFilter) => void;
+  onOpenCompany?: (ticker: string) => void;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -52,7 +53,12 @@ function ChangePill({ value }: { value: number }) {
   );
 }
 
-export function MarketPanel({ marketId, onBack, onOpenFeed }: MarketPanelProps) {
+export function MarketPanel({
+  marketId,
+  onBack,
+  onOpenFeed,
+  onOpenCompany,
+}: MarketPanelProps) {
   const detail = useMemo(() => getMarketDetail(marketId), [marketId]);
   const [chartRange, setChartRange] = useState<ChartRange>("1M");
 
@@ -71,6 +77,7 @@ export function MarketPanel({ marketId, onBack, onOpenFeed }: MarketPanelProps) 
       onChartRangeChange={setChartRange}
       onBack={onBack}
       onOpenFeed={onOpenFeed}
+      onOpenCompany={onOpenCompany}
     />
   );
 }
@@ -81,12 +88,14 @@ function MarketPanelContent({
   onChartRangeChange,
   onBack,
   onOpenFeed,
+  onOpenCompany,
 }: {
   detail: MarketDetail;
   chartRange: ChartRange;
   onChartRangeChange: (range: ChartRange) => void;
   onBack: () => void;
   onOpenFeed: (market: MarketFilter) => void;
+  onOpenCompany?: (ticker: string) => void;
 }) {
   const { profile } = detail;
   const isUp = detail.changePercent >= 0;
@@ -233,15 +242,8 @@ function MarketPanelContent({
                 const meta = getTickerMetaBySymbol(ticker);
                 const stock = getStockProfile(ticker);
                 const up = stock.changePercent >= 0;
-                return (
-                  <li
-                    key={ticker}
-                    className={`flex items-center gap-3 px-4 py-3 ${
-                      index < profile.constituents.length - 1
-                        ? "border-b border-[var(--pocket-border)]"
-                        : ""
-                    }`}
-                  >
+                const row = (
+                  <>
                     <CompanyLogo
                       ticker={ticker}
                       color={meta.logoColor}
@@ -266,6 +268,30 @@ function MarketPanelContent({
                         {stock.changePercent.toFixed(2)}%
                       </p>
                     </div>
+                  </>
+                );
+
+                return (
+                  <li
+                    key={ticker}
+                    className={
+                      index < profile.constituents.length - 1
+                        ? "border-b border-[var(--pocket-border)]"
+                        : ""
+                    }
+                  >
+                    {onOpenCompany ? (
+                      <button
+                        type="button"
+                        data-no-drag
+                        onClick={() => onOpenCompany(ticker)}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-opacity active:opacity-70"
+                      >
+                        {row}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3">{row}</div>
+                    )}
                   </li>
                 );
               })}

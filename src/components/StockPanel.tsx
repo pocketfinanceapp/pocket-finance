@@ -105,7 +105,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const stock = privateCompany || marketTheme ? null : getStockProfile(ticker);
   const meta = getTickerMetaBySymbol(ticker);
   const themeConfig = marketTheme ? getMarketThemeConfig(ticker) : null;
-  const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
+  const { saveArticle, unsaveArticle, isArticleSaved, requestCompanyPanel } = useApp();
   const saved = isArticleSaved(article.id);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
@@ -400,7 +400,11 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             </div>
 
             {competitors.length > 0 && (
-              <AssetList title={relatedTitle} assets={competitors} />
+              <AssetList
+                title={relatedTitle}
+                assets={competitors}
+                onOpenTicker={(ticker) => requestCompanyPanel(ticker)}
+              />
             )}
               </>
             ) : (
@@ -472,40 +476,67 @@ function MarketThemePanelView({
   );
 }
 
-function AssetList({ title, assets }: { title: string; assets: Competitor[] }) {
+function AssetList({
+  title,
+  assets,
+  onOpenTicker,
+}: {
+  title: string;
+  assets: Competitor[];
+  onOpenTicker?: (ticker: string) => void;
+}) {
   return (
     <div className="mt-8">
       <h2 className="font-semibold">{title}</h2>
-      <ul className="mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]">
-        {assets.map((asset, index) => (
-          <li
-            key={asset.ticker}
-            className={`flex items-center justify-between px-4 py-3.5 ${
-              index < assets.length - 1 ? "border-b border-white/[0.06]" : ""
-            }`}
-          >
-            <div className="flex items-center gap-3">
+      <ul className="mt-3 overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
+        {assets.map((asset, index) => {
+          const row = (
+            <>
               <CompanyLogo ticker={asset.ticker} color={asset.color} size={36} />
               <div>
                 <p className="font-semibold">{asset.ticker}</p>
-                <p className="text-xs text-zinc-500">{asset.name}</p>
+                <p className="text-xs text-pocket-muted">{asset.name}</p>
               </div>
-            </div>
-            <div className="text-right">
-              <p className="font-semibold">{asset.price.toFixed(2)}</p>
-              <p
-                className={`text-xs font-medium ${
-                  asset.changePercent >= 0
-                    ? "text-pocket-green"
-                    : "text-pocket-red"
-                }`}
-              >
-                {asset.changePercent >= 0 ? "▲" : "▼"}{" "}
-                {Math.abs(asset.changePercent).toFixed(2)}%
-              </p>
-            </div>
-          </li>
-        ))}
+              <div className="ml-auto text-right">
+                <p className="font-semibold">{asset.price.toFixed(2)}</p>
+                <p
+                  className={`text-xs font-medium ${
+                    asset.changePercent >= 0
+                      ? "text-pocket-green"
+                      : "text-pocket-red"
+                  }`}
+                >
+                  {asset.changePercent >= 0 ? "▲" : "▼"}{" "}
+                  {Math.abs(asset.changePercent).toFixed(2)}%
+                </p>
+              </div>
+            </>
+          );
+
+          return (
+            <li
+              key={asset.ticker}
+              className={
+                index < assets.length - 1
+                  ? "border-b border-[var(--pocket-border)]"
+                  : ""
+              }
+            >
+              {onOpenTicker ? (
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={() => onOpenTicker(asset.ticker)}
+                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-opacity active:opacity-70"
+                >
+                  {row}
+                </button>
+              ) : (
+                <div className="flex items-center gap-3 px-4 py-3.5">{row}</div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -654,39 +685,21 @@ function CompanyStatsGrid({
   columns: [CompanyStatRow[], CompanyStatRow[], CompanyStatRow[]];
   onInfoClick: (key: keyof typeof STOCK_METRIC_EXPLANATIONS) => void;
 }) {
+  const rows = columns.flat();
+
   return (
-    <div className="grid grid-cols-3 gap-x-3">
-      {columns.map((column, columnIndex) => (
-        <div
-          key={columnIndex}
-          className="divide-y divide-[var(--pocket-border)]"
-        >
-          {column.map((row) => (
-            <div
-              key={row.label}
-              className="flex items-start justify-between gap-1 py-2.5"
-            >
-              <span className="text-[10px] leading-tight text-pocket-muted">
-                {row.label}
-              </span>
-              <span className="text-right text-[10px] font-semibold leading-tight text-pocket-text">
-                {row.explanationKey ? (
-                  <button
-                    type="button"
-                    data-no-drag
-                    data-interactive
-                    onClick={() => onInfoClick(row.explanationKey!)}
-                    className="text-right underline decoration-dotted decoration-pocket-muted/60 underline-offset-2"
-                  >
-                    {row.value}
-                  </button>
-                ) : (
-                  row.value
-                )}
-              </span>
-            </div>
-          ))}
-        </div>
+    <div className="grid grid-cols-2 gap-3">
+      {rows.map((row) => (
+        <Stat
+          key={row.label}
+          label={row.label}
+          value={row.value}
+          onInfoClick={
+            row.explanationKey
+              ? () => onInfoClick(row.explanationKey!)
+              : undefined
+          }
+        />
       ))}
     </div>
   );
@@ -702,9 +715,9 @@ function Stat({
   onInfoClick?: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3">
+    <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3.5">
       <div className="flex items-center gap-1">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-pocket-muted">
           {label}
         </p>
         {onInfoClick && (
@@ -718,7 +731,7 @@ function Stat({
               e.stopPropagation();
               onInfoClick();
             }}
-            className="flex h-4 w-4 items-center justify-center text-xs leading-none text-[#9ca3af]"
+            className="flex h-4 w-4 items-center justify-center text-xs leading-none text-pocket-muted"
             aria-label={`What is ${label}?`}
             style={{ touchAction: "manipulation" }}
           >
@@ -726,7 +739,9 @@ function Stat({
           </button>
         )}
       </div>
-      <p className="mt-1.5 text-lg font-semibold text-white">{value}</p>
+      <p className="mt-2 text-[1.125rem] font-bold leading-tight text-pocket-text">
+        {value}
+      </p>
     </div>
   );
 }

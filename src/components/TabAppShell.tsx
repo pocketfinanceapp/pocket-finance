@@ -15,6 +15,7 @@ import { NewsFeed } from "./NewsFeed";
 import { DiscoverPage } from "./DiscoverPage";
 import { WatchlistPage } from "./WatchlistPage";
 import { ProfilePage } from "./ProfilePage";
+import { GlobalCompanyPanel } from "./GlobalCompanyPanel";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
 import { appPath } from "@/lib/appPaths";
@@ -30,7 +31,7 @@ function TabPanels({
 }: TabAppShellProps) {
   const { activeTab, navTab, navigate } = useNavigation();
   const { user, isGuest, passwordRecoveryPending } = useAuth();
-  const { setMarketFilters, ensureWatchlistLoaded, onboardingComplete } =
+  const { setMarketFilters, ensureWatchlistLoaded, onboardingComplete, companyPanelTicker, requestCompanyPanel } =
     useApp();
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [profileSubPageOpen, setProfileSubPageOpen] = useState(false);
@@ -56,10 +57,18 @@ function TabPanels({
 
   const hideBottomNav =
     sidePanelOpen ||
+    Boolean(companyPanelTicker) ||
     (activeTab === "profile" && profileSubPageOpen) ||
     showAuth ||
     passwordRecoveryPending ||
     showOnboarding;
+
+  const openCompanyFromTab = useCallback(
+    (ticker: string) => {
+      requestCompanyPanel(ticker, activeTab);
+    },
+    [requestCompanyPanel, activeTab]
+  );
 
   return (
     <MobilePageShell activeTab={navTab} hideBottomNav={hideBottomNav}>
@@ -77,11 +86,17 @@ function TabPanels({
         </TabPanel>
 
         <TabPanel active={activeTab === "markets"}>
-          <MarketsPage onOpenMarketFeed={openMarketFeed} />
+          <MarketsPage
+            onOpenMarketFeed={openMarketFeed}
+            onOpenCompany={openCompanyFromTab}
+          />
         </TabPanel>
 
         <TabPanel active={activeTab === "discover"}>
-          <DiscoverPage articles={initialArticles} />
+          <DiscoverPage
+            articles={initialArticles}
+            onOpenCompany={openCompanyFromTab}
+          />
         </TabPanel>
 
         <TabPanel active={activeTab === "watchlist"}>
@@ -94,6 +109,8 @@ function TabPanels({
             onSubPageChange={setProfileSubPageOpen}
           />
         </TabPanel>
+
+        <GlobalCompanyPanel />
       </div>
     </MobilePageShell>
   );

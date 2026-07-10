@@ -33,6 +33,7 @@ import { TopMoversSection } from "./TopMoversSection";
 
 interface MarketsPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
+  onOpenCompany: (ticker: string) => void;
 }
 
 const SECTION_HEADING =
@@ -156,7 +157,7 @@ function MarketListCard({
   );
 }
 
-export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
+export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProps) {
   const { ensureMarketsLoaded } = useApp();
   const tabEntered = useTabPageEntered("markets");
   const [searchQuery, setSearchQuery] = useState("");
@@ -213,6 +214,7 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
           marketId={panelMarket}
           onBack={closePanel}
           onOpenFeed={onOpenMarketFeed}
+          onOpenCompany={onOpenCompany}
         />
       </div>
     );
@@ -281,7 +283,7 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
               <GlobalIndexesSection />
             </div>
             <div style={tabEnterStyle(tabEntered, 240)}>
-              <TopMoversSection />
+              <TopMoversSection onOpenCompany={onOpenCompany} />
             </div>
           </>
         )}

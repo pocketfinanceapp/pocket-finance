@@ -16,7 +16,11 @@ import { CompanyLogo } from "./CompanyLogo";
 import { MarketSparkline } from "./MarketSparkline";
 import { SectionTabs } from "./SectionTabs";
 
-export function TopMoversSection() {
+export function TopMoversSection({
+  onOpenCompany,
+}: {
+  onOpenCompany?: (ticker: string) => void;
+}) {
   const [tab, setTab] = useState<TopMoverTab>("active");
   const movers = useMemo(() => getTopMovers(tab), [tab]);
   const [liveQuotes, setLiveQuotes] = useState<
@@ -70,6 +74,11 @@ export function TopMoversSection() {
               key={`${tab}-${mover.ticker}`}
               mover={displayMover}
               showDivider={i < movers.length - 1}
+              onOpen={
+                onOpenCompany
+                  ? () => onOpenCompany(mover.ticker)
+                  : undefined
+              }
             />
             );
           })}
@@ -82,20 +91,18 @@ export function TopMoversSection() {
 function TopMoverRow({
   mover,
   showDivider,
+  onOpen,
 }: {
   mover: TopMover;
   showDivider: boolean;
+  onOpen?: () => void;
 }) {
   const up = mover.changePercent >= 0;
   const sparkline = useMemo(() => getMoverSparkline(mover), [mover]);
   const meta = getTickerMetaBySymbol(mover.ticker);
 
-  return (
-    <li
-      className={`flex items-center gap-3 px-4 py-3 ${
-        showDivider ? "border-b border-[var(--pocket-border)]" : ""
-      }`}
-    >
+  const content = (
+    <>
       <CompanyLogo ticker={mover.ticker} color={meta.logoColor} size={36} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-bold text-pocket-text">
@@ -123,6 +130,35 @@ function TopMoverRow({
           {mover.changePercent.toFixed(2)}%
         </span>
       </div>
+    </>
+  );
+
+  if (onOpen) {
+    return (
+      <li
+        className={
+          showDivider ? "border-b border-[var(--pocket-border)]" : ""
+        }
+      >
+        <button
+          type="button"
+          data-no-drag
+          onClick={onOpen}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-opacity active:opacity-70"
+        >
+          {content}
+        </button>
+      </li>
+    );
+  }
+
+  return (
+    <li
+      className={`flex items-center gap-3 px-4 py-3 ${
+        showDivider ? "border-b border-[var(--pocket-border)]" : ""
+      }`}
+    >
+      {content}
     </li>
   );
 }

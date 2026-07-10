@@ -46,7 +46,6 @@ import {
 } from "@/lib/watchlistStore";
 import { isMarketThemeTicker } from "@/lib/marketThemes";
 import { recordActivityEvent } from "@/lib/progression";
-import { useNavigation } from "@/context/NavigationContext";
 import { CompanyLogo } from "./CompanyLogo";
 import { ArticlePanel } from "./ArticlePanel";
 import { tickerLogoColor } from "./ProfileArticlePreview";
@@ -490,7 +489,6 @@ export function WatchlistPage({
     requestCompanyPanel,
     ensureWatchlistLoaded,
   } = useApp();
-  const { navigate } = useNavigation();
   const tabEntered = useTabPageEntered("watchlist");
   const {
     panelItem,
@@ -608,9 +606,8 @@ export function WatchlistPage({
   const openTrackedAsset = useCallback(
     (ticker: string) => {
       requestCompanyPanel(ticker, "watchlist");
-      navigate("discover");
     },
-    [requestCompanyPanel, navigate]
+    [requestCompanyPanel]
   );
 
   if (panelItem?.kind === "article") {

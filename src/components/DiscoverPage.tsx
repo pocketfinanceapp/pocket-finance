@@ -23,44 +23,17 @@ import {
 } from "@/lib/profileStorage";
 import {
   listLayerStyle,
-  panelEnterStyle,
   tabEnterFadeStyle,
   tabEnterStyle,
   tabStaggerStyle,
   TAB_ENTER_EASE,
-  usePanelTransition,
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
-import { StockPanel } from "./StockPanel";
-import { useNavigation } from "@/context/NavigationContext";
 
 interface DiscoverPageProps {
   articles: NewsArticle[];
-}
-
-function articleFromTicker(ticker: string): NewsArticle {
-  const meta = getTickerMetaBySymbol(ticker);
-  const now = new Date().toISOString();
-  return {
-    id: `explore-${ticker}`,
-    headline: meta.companyName,
-    subheading: "",
-    body: "",
-    imageUrl: "",
-    market: meta.market,
-    sector: meta.sector,
-    ticker,
-    companyName: meta.companyName,
-    tags: meta.tags,
-    publishedAt: now,
-    sourceName: "",
-    sourceId: null,
-    sourceUrl: "",
-    likes: 0,
-    comments: 0,
-    shares: 0,
-  };
+  onOpenCompany: (ticker: string) => void;
 }
 
 function formatPrice(price: number): string {
@@ -160,17 +133,12 @@ function CompanyCard({
   );
 }
 
-export function DiscoverPage({ articles }: DiscoverPageProps) {
+export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
   const tabEntered = useTabPageEntered("discover");
-  const { activeTab, navigate } = useNavigation();
   const {
     followedMarkets,
     sectorInterests,
     savedArticles,
-    companyPanelTicker,
-    companyPanelReturnTab,
-    clearCompanyPanelRequest,
-    clearCompanyPanelReturnTab,
   } = useApp();
   const [favouriteTopics, setFavouriteTopics] = useState(() =>
     loadFavouriteTopics()
@@ -184,13 +152,6 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const {
-    panelItem: panelTicker,
-    panelVisible,
-    listVisible,
-    openPanel: openCompany,
-    closePanel,
-  } = usePanelTransition<string>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -239,50 +200,6 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
     if (!q) return rankedCompanies;
     return filterExploreCompanies(rankedCompanies, q);
   }, [rankedCompanies, searchQuery]);
-
-  const handleCloseCompanyPanel = useCallback(() => {
-    const returnTab = companyPanelReturnTab;
-    clearCompanyPanelReturnTab();
-    closePanel();
-    if (returnTab) {
-      navigate(returnTab);
-    }
-  }, [
-    companyPanelReturnTab,
-    clearCompanyPanelReturnTab,
-    closePanel,
-    navigate,
-  ]);
-
-  const handleOpenCompany = useCallback(
-    (ticker: string) => {
-      clearCompanyPanelReturnTab();
-      openCompany(ticker);
-    },
-    [clearCompanyPanelReturnTab, openCompany]
-  );
-
-  useEffect(() => {
-    if (activeTab !== "discover" || !companyPanelTicker) return;
-    openCompany(companyPanelTicker);
-    clearCompanyPanelRequest();
-  }, [
-    activeTab,
-    companyPanelTicker,
-    openCompany,
-    clearCompanyPanelRequest,
-  ]);
-
-  if (panelTicker) {
-    return (
-      <div className="pf-page h-full bg-pocket-bg" style={panelEnterStyle(panelVisible)}>
-        <StockPanel
-          article={articleFromTicker(panelTicker)}
-          onBack={handleCloseCompanyPanel}
-        />
-      </div>
-    );
-  }
 
   const searchActive = Boolean(searchQuery.trim());
 
@@ -338,7 +255,7 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
 
       <div
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]"
-        style={listLayerStyle(listVisible)}
+        style={listLayerStyle(true)}
       >
         {searchActive && displayCompanies.length === 0 ? (
           <p
@@ -354,8 +271,8 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
                 key={company.ticker}
                 company={company}
                 index={index}
-                entered={tabEntered && listVisible}
-                onOpen={() => handleOpenCompany(company.ticker)}
+                entered={tabEntered}
+                onOpen={() => onOpenCompany(company.ticker)}
               />
             ))}
           </div>

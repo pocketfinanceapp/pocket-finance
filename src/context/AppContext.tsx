@@ -393,7 +393,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const upper = ticker.trim().toUpperCase();
       if (!upper) return;
       setCompanyPanelTicker(upper);
-      setCompanyPanelReturnTab(returnTab ?? null);
+      if (returnTab !== undefined) {
+        setCompanyPanelReturnTab(returnTab);
+      }
     },
     []
   );
