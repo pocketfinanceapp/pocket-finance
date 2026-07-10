@@ -71,7 +71,7 @@ function TabPanels({
         </TabPanel>
 
         <TabPanel active={activeTab === "watchlist"}>
-          <WatchlistPage />
+          <WatchlistPage articles={initialArticles} />
         </TabPanel>
 
         <TabPanel active={activeTab === "profile"}>

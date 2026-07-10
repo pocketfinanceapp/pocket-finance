@@ -66,6 +66,7 @@ interface AppContextValue {
   isFollowingMarket: (m: MarketFilter) => boolean;
   setFollowedMarkets: (markets: MarketFilter[]) => void;
   sectorInterests: SectorFilter[];
+  toggleSectorInterest: (s: SectorFilter) => void;
   marketFilters: MarketFilter[];
   setMarketFilters: (filters: MarketFilter[]) => void;
   toggleMarketFilter: (m: MarketFilter) => void;
@@ -329,6 +330,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const toggleSectorInterest = useCallback((s: SectorFilter) => {
+    setSectorInterestsState((prev) => {
+      const next = prev.includes(s)
+        ? prev.filter((x) => x !== s)
+        : [...prev, s];
+      saveSectorInterests(next);
+      return next;
+    });
+  }, []);
+
   const clearFilters = useCallback(() => {
     setMarketFilters([]);
     setSectorFiltersState([]);
@@ -391,6 +402,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isFollowingMarket,
       setFollowedMarkets,
       sectorInterests,
+      toggleSectorInterest,
       marketFilters,
       setMarketFilters,
       toggleMarketFilter,
@@ -429,6 +441,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isFollowingMarket,
       setFollowedMarkets,
       sectorInterests,
+      toggleSectorInterest,
       marketFilters,
       toggleMarketFilter,
       sectorFilters,

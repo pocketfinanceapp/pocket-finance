@@ -1,5 +1,5 @@
-import type { SavedArticleEntry } from "./types";
-import { resolveSavedTicker } from "./tickerMap";
+import type { NewsArticle, SavedArticleEntry } from "./types";
+import { getTickerMetaBySymbol, resolveSavedTicker } from "./tickerMap";
 import { isMarketThemeTicker } from "./marketThemes";
 
 export interface WatchlistItem {
@@ -42,4 +42,37 @@ export function buildWatchlistItems(
       new Date(b.latestEntry.savedAt).getTime() -
       new Date(a.latestEntry.savedAt).getTime()
   );
+}
+
+/** Minimal in-app article when the feed cache does not have this id */
+export function articleFromSavedEntry(entry: SavedArticleEntry): NewsArticle {
+  const ticker = resolveSavedTicker(entry);
+  const meta = getTickerMetaBySymbol(ticker);
+  return {
+    id: entry.articleId,
+    headline: entry.articleTitle,
+    subheading: "",
+    body: "",
+    imageUrl: "",
+    market: meta.market,
+    sector: meta.sector,
+    ticker,
+    companyName: meta.companyName,
+    tags: meta.tags,
+    publishedAt: entry.savedAt,
+    sourceName: "",
+    sourceId: null,
+    sourceUrl: entry.articleUrl,
+    likes: 0,
+    comments: 0,
+    shares: 0,
+  };
+}
+
+/** Prefer full feed article; fall back to saved-entry stub for in-app reading */
+export function resolveSavedArticle(
+  entry: SavedArticleEntry,
+  articlesById: Map<string, NewsArticle>
+): NewsArticle {
+  return articlesById.get(entry.articleId) ?? articleFromSavedEntry(entry);
 }

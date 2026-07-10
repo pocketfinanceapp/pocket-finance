@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Landmark,
   Newspaper,
-  Pencil,
   Sparkles,
   TrendingUp,
   X,
@@ -14,10 +13,11 @@ import {
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { getMarketById } from "@/lib/markets";
-import type { MarketFilter } from "@/lib/filters";
+import type { MarketFilter, SectorFilter } from "@/lib/filters";
 import {
   loadFavouriteTopics,
   PF_TOPICS_CHANGED_EVENT,
+  toggleFavouriteTopic,
   type ProfileTopic,
 } from "@/lib/profileStorage";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
@@ -27,7 +27,9 @@ import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { shouldShowWatchlistPrice } from "@/lib/usStockTickers";
 import {
+  articleFromSavedEntry,
   buildWatchlistItems,
+  resolveSavedArticle,
   type WatchlistItem,
 } from "@/lib/watchlistUtils";
 import {
@@ -37,6 +39,7 @@ import {
 import { isMarketThemeTicker } from "@/lib/marketThemes";
 import { recordActivityEvent } from "@/lib/progression";
 import { CompanyLogo } from "./CompanyLogo";
+import { ArticlePanel } from "./ArticlePanel";
 import { tickerLogoColor } from "./ProfileArticlePreview";
 import { StockPanel } from "./StockPanel";
 
@@ -59,29 +62,6 @@ const THEME_META: Record<string, { title: string; Icon: LucideIcon }> = {
 
 function getThemeMeta(ticker: string): { title: string; Icon: LucideIcon } {
   return THEME_META[ticker.toUpperCase()] ?? { title: ticker, Icon: TrendingUp };
-}
-
-function articleFromEntry(entry: SavedArticleEntry, ticker: string): NewsArticle {
-  const meta = getTickerMetaBySymbol(ticker);
-  return {
-    id: entry.articleId,
-    headline: entry.articleTitle,
-    subheading: "",
-    body: "",
-    imageUrl: "",
-    market: meta.market,
-    sector: meta.sector,
-    ticker,
-    companyName: meta.companyName,
-    tags: [ticker],
-    publishedAt: entry.savedAt,
-    sourceName: "",
-    sourceId: null,
-    sourceUrl: entry.articleUrl,
-    likes: 0,
-    comments: 0,
-    shares: 0,
-  };
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
@@ -159,7 +139,15 @@ function SummaryCard({
   );
 }
 
-function InterestPills({ label, items }: { label: string; items: string[] }) {
+function InterestPills({
+  label,
+  items,
+  onRemove,
+}: {
+  label: string;
+  items: Array<{ id: string; label: string }>;
+  onRemove: (id: string) => void;
+}) {
   if (items.length === 0) return null;
   return (
     <div>
@@ -169,10 +157,19 @@ function InterestPills({ label, items }: { label: string; items: string[] }) {
       <div className="flex flex-wrap gap-2">
         {items.map((item) => (
           <span
-            key={item}
-            className="rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-3 py-1 text-[12px] font-medium text-pocket-text"
+            key={item.id}
+            className="inline-flex items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] py-1 pl-3 pr-1.5 text-[12px] font-medium text-pocket-text"
           >
-            {item}
+            {item.label}
+            <button
+              type="button"
+              data-no-drag
+              onClick={() => onRemove(item.id)}
+              className="flex h-6 w-6 items-center justify-center rounded-full text-pocket-muted active:bg-red-500/15 active:text-red-400"
+              aria-label={`Remove ${item.label}`}
+            >
+              <X className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </button>
           </span>
         ))}
       </div>
@@ -184,19 +181,36 @@ function InterestsSummary({
   followedMarkets,
   sectorInterests,
   favouriteTopics,
+  onRemoveMarket,
+  onRemoveSector,
+  onRemoveTopic,
 }: {
-  followedMarkets: string[];
-  sectorInterests: string[];
+  followedMarkets: MarketFilter[];
+  sectorInterests: SectorFilter[];
   favouriteTopics: ProfileTopic[];
+  onRemoveMarket: (market: MarketFilter) => void;
+  onRemoveSector: (sector: SectorFilter) => void;
+  onRemoveTopic: (topic: ProfileTopic) => void;
 }) {
   const hasAny =
     followedMarkets.length > 0 ||
     sectorInterests.length > 0 ||
     favouriteTopics.length > 0;
 
-  const marketLabels = followedMarkets.map(
-    (id) => getMarketById(id as MarketFilter)?.name ?? id
-  );
+  const marketItems = followedMarkets.map((id) => ({
+    id,
+    label: getMarketById(id)?.name ?? id,
+  }));
+
+  const sectorItems = sectorInterests.map((sector) => ({
+    id: sector,
+    label: sector,
+  }));
+
+  const topicItems = favouriteTopics.map((topic) => ({
+    id: topic,
+    label: topic,
+  }));
 
   return (
     <section className="pb-2">
@@ -216,9 +230,21 @@ function InterestsSummary({
           </p>
         ) : (
           <div className="space-y-4">
-            <InterestPills label="Markets" items={marketLabels} />
-            <InterestPills label="Sectors" items={sectorInterests} />
-            <InterestPills label="Topics" items={favouriteTopics} />
+            <InterestPills
+              label="Markets"
+              items={marketItems}
+              onRemove={(id) => onRemoveMarket(id as MarketFilter)}
+            />
+            <InterestPills
+              label="Sectors"
+              items={sectorItems}
+              onRemove={(id) => onRemoveSector(id as SectorFilter)}
+            />
+            <InterestPills
+              label="Topics"
+              items={topicItems}
+              onRemove={(id) => onRemoveTopic(id as ProfileTopic)}
+            />
           </div>
         )}
       </div>
@@ -226,28 +252,29 @@ function InterestsSummary({
   );
 }
 
-function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+function RowRemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
       type="button"
       data-no-drag
-      onClick={onClick}
-      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/90 active:bg-red-400"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-pocket-muted active:bg-red-500/15 active:text-red-400"
       aria-label={label}
     >
-      <X className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+      <X className="h-4 w-4" strokeWidth={2.25} />
     </button>
   );
 }
 
 function AssetRow({
   item,
-  editMode,
   onTap,
   onRemove,
 }: {
   item: WatchlistItem;
-  editMode: boolean;
   onTap: () => void;
   onRemove: () => void;
 }) {
@@ -258,19 +285,14 @@ function AssetRow({
 
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.03]"
+      className="flex items-center gap-2 px-4 py-3 active:bg-white/[0.03]"
       style={{ minHeight: 72 }}
     >
-      {editMode && (
-        <RemoveButton label={`Remove ${item.ticker}`} onClick={onRemove} />
-      )}
-
       <button
         type="button"
         data-no-drag
-        onClick={editMode ? undefined : onTap}
-        className="flex flex-1 items-center gap-3 text-left"
-        disabled={editMode}
+        onClick={onTap}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
         <div className="shrink-0 overflow-hidden rounded-xl">
           <CompanyLogo
@@ -309,22 +331,19 @@ function AssetRow({
           </div>
         )}
 
-        {!editMode && (
-          <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" strokeWidth={2} />
-        )}
+        <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" strokeWidth={2} />
       </button>
+      <RowRemoveButton label={`Remove ${item.ticker}`} onClick={onRemove} />
     </div>
   );
 }
 
 function ThemeRow({
   item,
-  editMode,
   onTap,
   onRemove,
 }: {
   item: WatchlistItem;
-  editMode: boolean;
   onTap: () => void;
   onRemove: () => void;
 }) {
@@ -332,17 +351,14 @@ function ThemeRow({
 
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.03]"
+      className="flex items-center gap-2 px-4 py-3 active:bg-white/[0.03]"
       style={{ minHeight: 72 }}
     >
-      {editMode && <RemoveButton label={`Remove ${title}`} onClick={onRemove} />}
-
       <button
         type="button"
         data-no-drag
-        onClick={editMode ? undefined : onTap}
-        className="flex flex-1 items-center gap-3 text-left"
-        disabled={editMode}
+        onClick={onTap}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--pocket-border)]"
@@ -363,22 +379,19 @@ function ThemeRow({
           </p>
         </div>
 
-        {!editMode && (
-          <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" strokeWidth={2} />
-        )}
+        <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" strokeWidth={2} />
       </button>
+      <RowRemoveButton label={`Remove ${title}`} onClick={onRemove} />
     </div>
   );
 }
 
 function SavedArticleRow({
   entry,
-  editMode,
   onOpen,
   onRemove,
 }: {
   entry: SavedArticleEntry;
-  editMode: boolean;
   onOpen: () => void;
   onRemove: () => void;
 }) {
@@ -387,17 +400,12 @@ function SavedArticleRow({
   const showCompanyLogo = !isMarketThemeTicker(ticker);
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.03]">
-      {editMode && (
-        <RemoveButton label={`Remove ${entry.articleTitle}`} onClick={onRemove} />
-      )}
-
+    <div className="flex items-center gap-2 px-4 py-3 active:bg-white/[0.03]">
       <button
         type="button"
         data-no-drag
-        onClick={editMode ? undefined : onOpen}
+        onClick={onOpen}
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
-        disabled={editMode}
       >
         {showCompanyLogo ? (
           <div className="shrink-0 overflow-hidden rounded-xl">
@@ -426,10 +434,12 @@ function SavedArticleRow({
           </p>
         </div>
 
-        {!editMode && (
-          <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" strokeWidth={2} />
-        )}
+        <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" strokeWidth={2} />
       </button>
+      <RowRemoveButton
+        label={`Remove ${entry.articleTitle}`}
+        onClick={onRemove}
+      />
     </div>
   );
 }
@@ -451,20 +461,33 @@ function EmptySavedState() {
   );
 }
 
-export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
+export function WatchlistPage({
+  embedded = false,
+  articles = [],
+}: {
+  embedded?: boolean;
+  articles?: NewsArticle[];
+}) {
   const {
     savedArticles,
     unsaveArticle,
     followedMarkets,
     sectorInterests,
+    toggleFollowMarket,
+    toggleSectorInterest,
     ensureWatchlistLoaded,
   } = useApp();
   const tabEntered = useTabPageEntered("watchlist");
-  const [editMode, setEditMode] = useState(false);
   const [activeItem, setActiveItem] = useState<WatchlistItem | null>(null);
+  const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null);
   const [dismissedTick, setDismissedTick] = useState(0);
   const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>(() =>
     loadFavouriteTopics()
+  );
+
+  const articlesById = useMemo(
+    () => new Map(articles.map((article) => [article.id, article])),
+    [articles]
   );
 
   useEffect(() => {
@@ -558,34 +581,24 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
     [unsaveArticle]
   );
 
-  const hasEditableContent = savedArticles.length > 0;
+  const handleRemoveTopic = useCallback((topic: ProfileTopic) => {
+    toggleFavouriteTopic(topic);
+    setFavouriteTopics(loadFavouriteTopics());
+  }, []);
 
-  const editToggle = hasEditableContent ? (
-    <button
-      type="button"
-      data-no-drag
-      onClick={() => setEditMode((v) => !v)}
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
-        editMode
-          ? "bg-[var(--pocket-surface-hover)] text-pocket-text"
-          : "text-pocket-muted active:text-pocket-text"
-      }`}
-    >
-      {editMode ? (
-        "Done"
-      ) : (
-        <>
-          <Pencil className="h-3 w-3" strokeWidth={2} />
-          Edit
-        </>
-      )}
-    </button>
-  ) : null;
+  if (activeArticle) {
+    return (
+      <ArticlePanel
+        article={activeArticle}
+        onBack={() => setActiveArticle(null)}
+      />
+    );
+  }
 
   if (activeItem) {
     return (
       <StockPanel
-        article={articleFromEntry(activeItem.latestEntry, activeItem.ticker)}
+        article={articleFromSavedEntry(activeItem.latestEntry)}
         onBack={() => setActiveItem(null)}
       />
     );
@@ -609,13 +622,8 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
             <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">
               Watchlist
             </h1>
-            {editToggle}
           </div>
         </header>
-      )}
-
-      {embedded && editToggle && (
-        <div className="flex shrink-0 justify-end px-5 pb-2">{editToggle}</div>
       )}
 
       <div
@@ -649,11 +657,7 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
                       <AssetRow
                         key={item.ticker}
                         item={item}
-                        editMode={editMode}
-                        onTap={() => {
-                          setEditMode(false);
-                          setActiveItem(item);
-                        }}
+                        onTap={() => setActiveItem(item)}
                         onRemove={() => void removeTrackedItem(item)}
                       />
                     ))}
@@ -671,11 +675,7 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
                       <ThemeRow
                         key={item.ticker}
                         item={item}
-                        editMode={editMode}
-                        onTap={() => {
-                          setEditMode(false);
-                          setActiveItem(item);
-                        }}
+                        onTap={() => setActiveItem(item)}
                         onRemove={() => void removeTrackedItem(item)}
                       />
                     ))}
@@ -694,17 +694,13 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
                     <SavedArticleRow
                       key={entry.id}
                       entry={entry}
-                      editMode={editMode}
                       onOpen={() => {
+                        const article = resolveSavedArticle(entry, articlesById);
                         recordActivityEvent("article_opened", entry.articleId, {
                           articleId: entry.articleId,
                           category: resolveSavedTicker(entry),
                         });
-                        window.open(
-                          entry.articleUrl,
-                          "_blank",
-                          "noopener,noreferrer"
-                        );
+                        setActiveArticle(article);
                       }}
                       onRemove={() => void removeSavedArticle(entry)}
                     />
@@ -720,6 +716,9 @@ export function WatchlistPage({ embedded = false }: { embedded?: boolean }) {
             followedMarkets={followedMarkets}
             sectorInterests={sectorInterests}
             favouriteTopics={favouriteTopics}
+            onRemoveMarket={toggleFollowMarket}
+            onRemoveSector={toggleSectorInterest}
+            onRemoveTopic={handleRemoveTopic}
           />
         </div>
       </div>
