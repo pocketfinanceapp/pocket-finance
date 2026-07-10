@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import { ChevronRight, Search, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import {
   filterExploreCompanies,
@@ -34,6 +34,9 @@ import { StockPanel } from "./StockPanel";
 interface DiscoverPageProps {
   articles: NewsArticle[];
 }
+
+const SECTION_HEADING =
+  "px-0 pb-2 text-xs font-semibold uppercase tracking-widest text-pocket-muted";
 
 function articleFromTicker(ticker: string): NewsArticle {
   const meta = getTickerMetaBySymbol(ticker);
@@ -99,7 +102,7 @@ function useLiveQuote(ticker: string) {
   };
 }
 
-function CompanyCard({
+function CompanyListRow({
   company,
   index,
   entered,
@@ -118,18 +121,36 @@ function CompanyCard({
       type="button"
       data-no-drag
       onClick={onOpen}
-      className="pf-card-surface group flex min-h-[128px] w-full flex-col rounded-2xl border border-[var(--pocket-border)] p-3.5 text-left transition-transform duration-300 active:scale-[0.97]"
-      style={tabStaggerStyle(entered, index, 60)}
+      className="pf-card-surface flex w-full items-center gap-3 rounded-2xl border border-[var(--pocket-border)] px-4 py-3.5 text-left transition-transform duration-300 active:scale-[0.98]"
+      style={tabStaggerStyle(entered, index, 50)}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="shrink-0 overflow-hidden rounded-xl">
         <CompanyLogo
           ticker={company.ticker}
           color={quote.logoColor}
-          size={40}
+          size={44}
           shape="square"
         />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-bold tracking-tight text-pocket-text">
+          {company.ticker}
+        </p>
+        <p className="mt-0.5 truncate text-[12px] text-pocket-muted">
+          {company.meta.companyName}
+        </p>
+        <p className="mt-1 truncate text-[11px] text-pocket-muted">
+          {company.meta.sector} · {company.meta.market}
+        </p>
+      </div>
+
+      <div className="shrink-0 text-right">
+        <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
+          ${formatPrice(quote.price)}
+        </p>
         <span
-          className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+          className={`mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
             positive
               ? "bg-[#00C6C6]/15 text-[#00C6C6]"
               : "bg-red-400/15 text-red-400"
@@ -140,18 +161,7 @@ function CompanyCard({
         </span>
       </div>
 
-      <div className="mt-3 min-w-0 flex-1">
-        <p className="truncate text-[15px] font-bold tracking-tight text-pocket-text">
-          {company.ticker}
-        </p>
-        <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-pocket-muted">
-          {company.meta.companyName}
-        </p>
-      </div>
-
-      <p className="mt-2 text-[13px] font-semibold text-pocket-text">
-        ${formatPrice(quote.price)}
-      </p>
+      <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" aria-hidden />
     </button>
   );
 }
@@ -199,14 +209,13 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
       articlesById,
     });
   }, [
-      followedMarkets,
-      sectorInterests,
-      favouriteTopics,
-      savedArticles,
-      articlesById,
-      personalizationTick,
-    ]
-  );
+    followedMarkets,
+    sectorInterests,
+    favouriteTopics,
+    savedArticles,
+    articlesById,
+    personalizationTick,
+  ]);
 
   const rankedCompanies = useMemo(
     () => rankExploreCompanies(companies, personalizationInput),
@@ -245,6 +254,8 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
     );
   }
 
+  const searching = Boolean(searchQuery.trim());
+
   return (
     <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
       <header
@@ -255,19 +266,16 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
         }}
       >
         <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">
-          Explore
+          Companies
         </h1>
         <p
           className="mt-0.5 text-[13px] text-pocket-muted"
           style={tabEnterFadeStyle(tabEntered, 40)}
         >
-          Browse companies and tap to view live stats
+          Browse listed companies ranked for you
         </p>
 
-        <div
-          className="relative mt-4"
-          style={tabEnterStyle(tabEntered, 80)}
-        >
+        <div className="relative mt-4" style={tabEnterStyle(tabEntered, 80)}>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-pocket-muted" />
           <input
             ref={inputRef}
@@ -305,7 +313,7 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
           transitionTimingFunction: TAB_ENTER_EASE,
         }}
       >
-        {searchQuery.trim() && displayCompanies.length === 0 ? (
+        {searching && displayCompanies.length === 0 ? (
           <p
             className="px-1 pt-8 text-center text-[14px] text-pocket-muted"
             style={tabEnterFadeStyle(tabEntered, 120)}
@@ -313,9 +321,14 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
             No companies match &ldquo;{searchQuery.trim()}&rdquo;
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="space-y-2 pt-1">
+            {!searching && (
+              <p className={SECTION_HEADING} style={tabEnterFadeStyle(tabEntered, 100)}>
+                {displayCompanies.length} companies · ranked for you
+              </p>
+            )}
             {displayCompanies.map((company, index) => (
-              <CompanyCard
+              <CompanyListRow
                 key={company.ticker}
                 company={company}
                 index={index}

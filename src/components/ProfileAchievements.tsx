@@ -15,7 +15,7 @@ const CATEGORY_FILTERS: { id: AchievementCategory | "all"; label: string }[] =
     { id: "reading", label: "Reading" },
     { id: "markets", label: "Markets" },
     { id: "consistency", label: "Consistency" },
-    { id: "discovery", label: "Explore" },
+    { id: "discovery", label: "Companies" },
     { id: "engagement", label: "Engagement" },
   ];
 

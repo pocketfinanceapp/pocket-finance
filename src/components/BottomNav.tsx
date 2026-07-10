@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart2, Bookmark, Compass } from "lucide-react";
+import { BarChart2, Bookmark, Building2 } from "lucide-react";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import { APP_BASE, appPath } from "@/lib/appPaths";
 import { BOTTOM_NAV_HEIGHT } from "@/lib/layout";
@@ -102,8 +102,8 @@ export function BottomNav({ active }: BottomNavProps) {
           />
         </NavItem>
 
-        <NavItem label="Explore" active={discoverActive} onClick={() => navigate("discover")}>
-          <Compass
+        <NavItem label="Companies" active={discoverActive} onClick={() => navigate("discover")}>
+          <Building2
             className={`h-[26px] w-[26px] ${discoverActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
             strokeWidth={discoverActive ? 2.5 : 2}
           />
