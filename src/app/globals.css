@@ -125,7 +125,7 @@
   --pocket-search-bar: rgba(255, 255, 255, 0.96);
   --pocket-header-scrim: transparent;
   --pocket-header-fade: transparent;
-  --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.88);
+  --pocket-feed-chrome-bg: transparent;
   --pocket-grid-line: rgba(0, 0, 0, 0.05);
   --pocket-toggle-off: #d1d5db;
   --pocket-overlay-scrim: rgba(17, 24, 39, 0.32);
@@ -155,9 +155,9 @@
   );
   --pocket-feed-fallback-scrim: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.05) 30%,
-    rgba(255, 255, 255, 0.36) 55%,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.28) 62%,
     rgba(255, 255, 255, 0.72) 100%
   );
   --pocket-feed-rail-color: #111827;
@@ -416,6 +416,10 @@ html.app-route
   background: var(--pocket-header-scrim);
 }
 
+.pf-feed-chrome {
+  background: var(--pocket-feed-chrome-bg);
+}
+
 .pf-feed-overlay-top {
   background: var(--pocket-feed-scrim-top);
 }
@@ -562,7 +566,7 @@ html.app-route
 
 html.app-route[data-theme="light"] .pf-feed-overlay-bottom,
 html.app-route[data-theme="light"] .pf-feed-overlay-bottom--soft {
-  height: 52%;
+  height: 48%;
 }
 
 .pf-header-bar {
@@ -593,17 +597,16 @@ content: "";
 }
 
 html.app-route[data-theme="light"] .pf-header-shell::after,
-html.app-route[data-theme="light"] .feed-header-scrim {
-
-  display: none;
+html.app-route[data-theme="light"] .feed-header-scrim,
+html.app-route[data-theme="light"] .pf-feed-chrome {
+  background: transparent !important;
 }
 
 html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn {
-
   filter: none !important;
   text-shadow:
-    0 1px 8px rgba(255, 255, 255, 0.92),
-    0 0 2px rgba(255, 255, 255, 0.75);
+    0 1px 3px rgba(255, 255, 255, 0.65),
+    0 1px 2px rgba(0, 0, 0, 0.14);
 }
 
 html.app-route[data-theme="light"] .pf-section-tab-indicator {
@@ -617,8 +620,8 @@ html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-indicator {
 }
 
 html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-search-btn {
-
-  filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.85));
+  filter: drop-shadow(0 1px 3px rgba(255, 255, 255, 0.55))
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 html.app-route[data-theme="light"] .feed-search-bar-shimmer {
