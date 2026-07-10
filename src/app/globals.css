@@ -466,6 +466,65 @@ html.app-route
   background: var(--pocket-feed-fallback-scrim);
 }
 
+.pf-feed-fallback-base {
+  position: absolute;
+  inset: 0;
+}
+
+.pf-feed-fallback-base--crypto {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 198, 198, 0.16) 0%,
+    rgba(59, 110, 245, 0.08) 32%,
+    var(--pocket-feed-bg) 68%
+  );
+}
+
+.pf-feed-fallback-base--mining {
+  background: linear-gradient(
+    180deg,
+    rgba(180, 120, 60, 0.14) 0%,
+    rgba(120, 80, 40, 0.07) 32%,
+    var(--pocket-feed-bg) 68%
+  );
+}
+
+.pf-feed-fallback-base--energy {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 140, 40, 0.14) 0%,
+    rgba(180, 80, 20, 0.07) 32%,
+    var(--pocket-feed-bg) 68%
+  );
+}
+
+.pf-feed-fallback-base--finance {
+  background: linear-gradient(
+    180deg,
+    rgba(59, 110, 245, 0.14) 0%,
+    rgba(0, 198, 198, 0.08) 32%,
+    var(--pocket-feed-bg) 68%
+  );
+}
+
+.pf-feed-fallback-base--tech {
+  background: linear-gradient(
+    180deg,
+    rgba(120, 80, 255, 0.14) 0%,
+    rgba(59, 110, 245, 0.08) 32%,
+    var(--pocket-feed-bg) 68%
+  );
+}
+
+.pf-feed-fallback-base--markets {
+  background: linear-gradient(
+    180deg,
+    rgba(59, 110, 245, 0.14) 0%,
+    rgba(0, 198, 198, 0.07) 32%,
+    var(--pocket-feed-bg) 68%
+  );
+}
+
 .pf-feed-rail-icon {
   color: var(--pocket-feed-rail-color);
   filter: drop-shadow(var(--pocket-feed-rail-shadow));
@@ -507,20 +566,11 @@ html.app-route
 }
 
 [data-theme="light"] .pf-feed-fallback-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 95% 75% at 50% 30%,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.18) 62%,
-    rgba(255, 255, 255, 0.52) 100%
-  );
+  display: none;
 }
 
 [data-theme="light"] .pf-feed-overlay-tint {
-  opacity: 0.35;
+  display: none;
 }
 
 .pf-header-bar {
