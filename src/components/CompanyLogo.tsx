@@ -84,9 +84,8 @@ export function CompanyLogo({
       style={{
         width: size,
         height: size,
-        backgroundColor: showImage && imageReady ? "#ffffff" : color,
+        backgroundColor: color,
         fontSize: size * 0.32,
-        transition: "background-color 180ms ease",
       }}
     >
       {showGlobe ? (
@@ -108,10 +107,7 @@ export function CompanyLogo({
               height={size}
               decoding="async"
               className="absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ease-out"
-              style={{
-                opacity: imageReady ? 1 : 0,
-                transform: "scale(1.14)",
-              }}
+              style={{ opacity: imageReady ? 1 : 0 }}
               onLoad={() => setImageReady(true)}
               onError={() => {
                 setImageReady(false);

@@ -19,7 +19,7 @@ export function MarketFlag({
 }: MarketFlagProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const code = countryCode.toLowerCase();
-  const flagSize = Math.round(size * 0.62);
+  const flagSize = Math.round(size * 0.88);
 
   useEffect(() => {
     setImageFailed(false);
@@ -42,7 +42,7 @@ export function MarketFlag({
 
   return (
     <div
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] ${radius} ${className}`}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden bg-[var(--pocket-surface-hover)] ${radius} ${className}`}
       style={{ width: size, height: size }}
     >
       <Image
@@ -50,8 +50,7 @@ export function MarketFlag({
         alt=""
         width={flagSize}
         height={flagSize}
-        className="object-contain"
-        style={{ width: flagSize, height: flagSize }}
+        className="h-full w-full object-cover"
         unoptimized
         onError={() => setImageFailed(true)}
       />

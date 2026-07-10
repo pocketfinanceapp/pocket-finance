@@ -16,11 +16,13 @@ import {
   type GlobalMarket,
 } from "@/lib/markets";
 import {
+  listLayerStyle,
   panelEnterStyle,
   tabEnterFadeStyle,
   tabEnterStyle,
   tabStaggerStyle,
   TAB_ENTER_EASE,
+  usePanelTransition,
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { GlobalIndexesSection } from "./GlobalIndexesSection";
@@ -159,9 +161,13 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
   const tabEntered = useTabPageEntered("markets");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [panelMarket, setPanelMarket] = useState<MarketFilter | null>(null);
-  const [panelVisible, setPanelVisible] = useState(false);
-  const [listVisible, setListVisible] = useState(true);
+  const {
+    panelItem: panelMarket,
+    panelVisible,
+    listVisible,
+    openPanel: openMarket,
+    closePanel,
+  } = usePanelTransition<MarketFilter>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -199,24 +205,6 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
     () => filterMarkets(flatMarkets, searchQuery),
     [flatMarkets, searchQuery]
   );
-
-  const openMarket = (marketId: MarketFilter) => {
-    setListVisible(false);
-    window.setTimeout(() => {
-      setPanelMarket(marketId);
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => setPanelVisible(true));
-      });
-    }, 220);
-  };
-
-  const closePanel = () => {
-    setPanelVisible(false);
-    window.setTimeout(() => {
-      setPanelMarket(null);
-      window.requestAnimationFrame(() => setListVisible(true));
-    }, 380);
-  };
 
   if (panelMarket) {
     return (
@@ -281,11 +269,8 @@ export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
       </header>
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] transition-opacity duration-500"
-        style={{
-          opacity: listVisible ? 1 : 0,
-          transitionTimingFunction: TAB_ENTER_EASE,
-        }}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]"
+        style={listLayerStyle(listVisible)}
       >
         {!isSearching && (
           <>

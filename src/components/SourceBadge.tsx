@@ -35,7 +35,7 @@ export function SourceBadge({
     return (
       <div className="flex min-w-0 items-center gap-1.5">
         <div
-          className="relative shrink-0 overflow-hidden rounded border border-white/10"
+          className="relative shrink-0 overflow-hidden rounded"
           style={{ width: avatarSize, height: avatarSize }}
         >
           <div

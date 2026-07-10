@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import {
@@ -22,11 +22,13 @@ import {
   PF_TOPICS_CHANGED_EVENT,
 } from "@/lib/profileStorage";
 import {
+  listLayerStyle,
   panelEnterStyle,
   tabEnterFadeStyle,
   tabEnterStyle,
   tabStaggerStyle,
   TAB_ENTER_EASE,
+  usePanelTransition,
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
@@ -180,9 +182,13 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [panelTicker, setPanelTicker] = useState<string | null>(null);
-  const [panelVisible, setPanelVisible] = useState(false);
-  const [listVisible, setListVisible] = useState(true);
+  const {
+    panelItem: panelTicker,
+    panelVisible,
+    listVisible,
+    openPanel: openCompany,
+    closePanel,
+  } = usePanelTransition<string>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -231,24 +237,6 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
     if (!q) return rankedCompanies;
     return filterExploreCompanies(rankedCompanies, q);
   }, [rankedCompanies, searchQuery]);
-
-  const openCompany = useCallback((ticker: string) => {
-    setListVisible(false);
-    window.setTimeout(() => {
-      setPanelTicker(ticker);
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => setPanelVisible(true));
-      });
-    }, 220);
-  }, []);
-
-  const closePanel = useCallback(() => {
-    setPanelVisible(false);
-    window.setTimeout(() => {
-      setPanelTicker(null);
-      window.requestAnimationFrame(() => setListVisible(true));
-    }, 380);
-  }, []);
 
   useEffect(() => {
     if (activeTab !== "discover" || !companyPanelTicker) return;
@@ -322,11 +310,8 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
       </header>
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] transition-opacity duration-500"
-        style={{
-          opacity: listVisible ? 1 : 0,
-          transitionTimingFunction: TAB_ENTER_EASE,
-        }}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]"
+        style={listLayerStyle(listVisible)}
       >
         {searchActive && displayCompanies.length === 0 ? (
           <p

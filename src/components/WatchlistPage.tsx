@@ -20,7 +20,15 @@ import {
   toggleFavouriteTopic,
   type ProfileTopic,
 } from "@/lib/profileStorage";
-import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
+import {
+  listLayerStyle,
+  panelEnterStyle,
+  tabEnterFadeStyle,
+  tabEnterStyle,
+  tabStaggerStyle,
+  usePanelTransition,
+  useTabPageEntered,
+} from "@/lib/tabEnterAnimation";
 import { getStockProfile } from "@/lib/stockData";
 import { getTickerMetaBySymbol, resolveSavedTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
@@ -45,6 +53,10 @@ import { tickerLogoColor } from "./ProfileArticlePreview";
 import { StockPanel } from "./StockPanel";
 
 const CARD_CLASS = "pf-card-surface overflow-hidden rounded-2xl";
+
+type WatchlistPanel =
+  | { kind: "article"; article: NewsArticle }
+  | { kind: "theme"; item: WatchlistItem };
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -362,8 +374,7 @@ function ThemeRow({
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--pocket-border)]"
-          style={{ background: "var(--pocket-surface-hover)" }}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--pocket-surface-hover)]"
         >
           <Icon className="h-5 w-5 text-pocket-muted" strokeWidth={1.75} />
         </div>
@@ -481,8 +492,13 @@ export function WatchlistPage({
   } = useApp();
   const { navigate } = useNavigation();
   const tabEntered = useTabPageEntered("watchlist");
-  const [activeItem, setActiveItem] = useState<WatchlistItem | null>(null);
-  const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null);
+  const {
+    panelItem,
+    panelVisible,
+    listVisible,
+    openPanel,
+    closePanel,
+  } = usePanelTransition<WatchlistPanel>();
   const [dismissedTick, setDismissedTick] = useState(0);
   const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>(() =>
     loadFavouriteTopics()
@@ -597,23 +613,29 @@ export function WatchlistPage({
     [requestCompanyPanel, navigate]
   );
 
-  if (activeArticle) {
+  if (panelItem?.kind === "article") {
     return (
-      <ArticlePanel
-        article={activeArticle}
-        onBack={() => setActiveArticle(null)}
-      />
+      <div className="pf-page h-full bg-pocket-bg" style={panelEnterStyle(panelVisible)}>
+        <ArticlePanel
+          article={panelItem.article}
+          onBack={closePanel}
+        />
+      </div>
     );
   }
 
-  if (activeItem?.type === "theme") {
+  if (panelItem?.kind === "theme") {
     return (
-      <StockPanel
-        article={articleFromSavedEntry(activeItem.latestEntry)}
-        onBack={() => setActiveItem(null)}
-      />
+      <div className="pf-page h-full bg-pocket-bg" style={panelEnterStyle(panelVisible)}>
+        <StockPanel
+          article={articleFromSavedEntry(panelItem.item.latestEntry)}
+          onBack={closePanel}
+        />
+      </div>
     );
   }
+
+  const listEntered = tabEntered && listVisible;
 
   return (
     <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
@@ -639,15 +661,18 @@ export function WatchlistPage({
 
       <div
         className="min-h-0 flex-1 overflow-y-auto"
-        style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+        style={{
+          paddingBottom: "calc(5rem + env(safe-area-inset-bottom))",
+          ...listLayerStyle(listVisible),
+        }}
       >
         {savedArticles.length === 0 ? (
-          <div style={tabEnterStyle(tabEntered, 120)}>
+          <div style={tabEnterStyle(listEntered, 120)}>
             <EmptySavedState />
           </div>
         ) : (
           <>
-            <div style={tabEnterStyle(tabEntered, 120)}>
+            <div style={tabEnterStyle(listEntered, 120)}>
               <SummaryCard
                 assetCount={assets.length}
                 themeCount={themes.length}
@@ -660,17 +685,21 @@ export function WatchlistPage({
             </div>
 
             {assets.length > 0 && (
-              <section style={tabEnterStyle(tabEntered, 200)}>
+              <section style={tabEnterFadeStyle(listEntered, 180)}>
                 <SectionHeader>Tracked assets</SectionHeader>
                 <div className={`mx-5 ${CARD_CLASS}`}>
                   <div className="divide-y divide-[var(--pocket-border)]">
-                    {assets.map((item) => (
-                      <AssetRow
+                    {assets.map((item, index) => (
+                      <div
                         key={item.ticker}
-                        item={item}
-                        onTap={() => openTrackedAsset(item.ticker)}
-                        onRemove={() => void removeTrackedItem(item)}
-                      />
+                        style={tabStaggerStyle(listEntered, index, 200)}
+                      >
+                        <AssetRow
+                          item={item}
+                          onTap={() => openTrackedAsset(item.ticker)}
+                          onRemove={() => void removeTrackedItem(item)}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -678,43 +707,51 @@ export function WatchlistPage({
             )}
 
             {themes.length > 0 && (
-              <section style={tabEnterStyle(tabEntered, 280)}>
+              <section style={tabEnterFadeStyle(listEntered, 260)}>
                 <SectionHeader>Market themes</SectionHeader>
                 <div className={`mx-5 ${CARD_CLASS}`}>
                   <div className="divide-y divide-[var(--pocket-border)]">
-                    {themes.map((item) => (
-                      <ThemeRow
+                    {themes.map((item, index) => (
+                      <div
                         key={item.ticker}
-                        item={item}
-                        onTap={() => setActiveItem(item)}
-                        onRemove={() => void removeTrackedItem(item)}
-                      />
+                        style={tabStaggerStyle(listEntered, index, 280)}
+                      >
+                        <ThemeRow
+                          item={item}
+                          onTap={() => openPanel({ kind: "theme", item })}
+                          onRemove={() => void removeTrackedItem(item)}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>
               </section>
             )}
 
-            <section style={tabEnterStyle(tabEntered, 360)}>
+            <section style={tabEnterFadeStyle(listEntered, 340)}>
               <SectionHeader>
                 Saved articles ({sortedArticles.length})
               </SectionHeader>
               <div className={`mx-5 ${CARD_CLASS}`}>
                 <div className="divide-y divide-[var(--pocket-border)]">
-                  {sortedArticles.map((entry) => (
-                    <SavedArticleRow
+                  {sortedArticles.map((entry, index) => (
+                    <div
                       key={entry.id}
-                      entry={entry}
-                      onOpen={() => {
-                        const article = resolveSavedArticle(entry, articlesById);
-                        recordActivityEvent("article_opened", entry.articleId, {
-                          articleId: entry.articleId,
-                          category: resolveSavedTicker(entry),
-                        });
-                        setActiveArticle(article);
-                      }}
-                      onRemove={() => void removeSavedArticle(entry)}
-                    />
+                      style={tabStaggerStyle(listEntered, index, 360)}
+                    >
+                      <SavedArticleRow
+                        entry={entry}
+                        onOpen={() => {
+                          const article = resolveSavedArticle(entry, articlesById);
+                          recordActivityEvent("article_opened", entry.articleId, {
+                            articleId: entry.articleId,
+                            category: resolveSavedTicker(entry),
+                          });
+                          openPanel({ kind: "article", article });
+                        }}
+                        onRemove={() => void removeSavedArticle(entry)}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -722,7 +759,7 @@ export function WatchlistPage({
           </>
         )}
 
-        <div style={tabEnterStyle(tabEntered, 480)}>
+        <div style={tabEnterStyle(listEntered, 480)}>
           <InterestsSummary
             followedMarkets={followedMarkets}
             sectorInterests={sectorInterests}
