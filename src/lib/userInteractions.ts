@@ -282,7 +282,7 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("comments")
-    .select("id, display_name, comment_text, created_at")
+    .select("id, display_name, comment_text, created_at, parent_id")
     .eq("article_id", articleId)
     .order("created_at", { ascending: false });
 
@@ -298,6 +298,7 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
     avatarColor: avatarColor(row.display_name),
     text: row.comment_text,
     timeAgo: timeAgo(row.created_at),
+    parentId: row.parent_id ?? null,
   }));
 }
 
@@ -324,18 +325,22 @@ export async function postComment(
   userId: string,
   articleId: string,
   commentText: string,
-  displayName: string
+  displayName: string,
+  parentId?: string | null
 ): Promise<Comment | null> {
   const supabase = getSupabase();
+  const payload: Record<string, string | null> = {
+    user_id: userId,
+    article_id: articleId,
+    comment_text: commentText.trim(),
+    display_name: displayName.trim(),
+  };
+  if (parentId) payload.parent_id = parentId;
+
   const { data, error } = await supabase
     .from("comments")
-    .insert({
-      user_id: userId,
-      article_id: articleId,
-      comment_text: commentText.trim(),
-      display_name: displayName.trim(),
-    })
-    .select("id, display_name, comment_text, created_at")
+    .insert(payload)
+    .select("id, display_name, comment_text, created_at, parent_id")
     .single();
 
   if (error || !data) {
@@ -350,5 +355,106 @@ export async function postComment(
     avatarColor: avatarColor(data.display_name),
     text: data.comment_text,
     timeAgo: "Just now",
+    parentId: data.parent_id ?? null,
+  };
+}
+
+export async function fetchCommentLikeCounts(
+  commentIds: string[]
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (commentIds.length === 0) return counts;
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("comment_likes")
+    .select("comment_id")
+    .in("comment_id", commentIds);
+
+  if (error) {
+    console.error("fetchCommentLikeCounts:", error.message);
+    return counts;
+  }
+
+  for (const row of data ?? []) {
+    counts.set(row.comment_id, (counts.get(row.comment_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export async function fetchUserCommentLikes(
+  userId: string,
+  commentIds: string[]
+): Promise<Set<string>> {
+  if (commentIds.length === 0) return new Set();
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("comment_likes")
+    .select("comment_id")
+    .eq("user_id", userId)
+    .in("comment_id", commentIds);
+
+  if (error) {
+    console.error("fetchUserCommentLikes:", error.message);
+    return new Set();
+  }
+
+  return new Set((data ?? []).map((row) => row.comment_id));
+}
+
+export async function toggleCommentLike(
+  userId: string,
+  commentId: string
+): Promise<{ liked: boolean; count: number } | null> {
+  const supabase = getSupabase();
+  const { data: existing, error: readError } = await supabase
+    .from("comment_likes")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("comment_id", commentId)
+    .maybeSingle();
+
+  if (readError) {
+    console.error("toggleCommentLike:", readError.message);
+    return null;
+  }
+
+  if (existing) {
+    const { error } = await supabase
+      .from("comment_likes")
+      .delete()
+      .eq("user_id", userId)
+      .eq("comment_id", commentId);
+
+    if (error) {
+      console.error("toggleCommentLike:", error.message);
+      return null;
+    }
+  } else {
+    const { error } = await supabase.from("comment_likes").insert({
+      user_id: userId,
+      comment_id: commentId,
+    });
+
+    if (error) {
+      console.error("toggleCommentLike:", error.message);
+      return null;
+    }
+  }
+
+  const { count, error: countError } = await supabase
+    .from("comment_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("comment_id", commentId);
+
+  if (countError) {
+    console.error("toggleCommentLike:", countError.message);
+    return null;
+  }
+
+  return {
+    liked: !existing,
+    count: count ?? 0,
   };
 }

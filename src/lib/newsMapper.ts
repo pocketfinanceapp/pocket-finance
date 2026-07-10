@@ -23,7 +23,7 @@ function assignSector(metaSector: Sector, _index: number): Sector {
   return metaSector;
 }
 
-export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArticle {
+export function mapNewsApiArticle(raw: NewsApiArticle): NewsArticle {
   const rawTitle = raw.title ?? "Market Update";
   const fromTitle = extractSourceFromTitle(rawTitle);
   const sourceName =
@@ -35,7 +35,7 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
     title,
     description || raw.description || ""
   );
-  const id = hashId((raw.url ?? title) + index);
+  const id = hashId(raw.url ?? title);
   const body =
     raw.content?.replace(/\[\+\d+ chars\]$/, "").trim() ||
     `${description || "Latest developments shaping global markets."}\n\nInvestors are watching closely as ${meta.companyName} and peers react to shifting macro conditions. Analysts note that sentiment remains mixed amid rate expectations and earnings season positioning.\n\nTrading volumes have picked up across major indices, with technology and financials leading sector moves. Market participants continue to balance growth exposure against defensive positioning.`;
@@ -51,7 +51,7 @@ export function mapNewsApiArticle(raw: NewsApiArticle, index: number): NewsArtic
       sourceName,
       sourceId,
     }),
-    sector: assignSector(meta.sector, index),
+    sector: assignSector(meta.sector, 0),
     ticker: meta.ticker,
     companyName: meta.companyName,
     tags: meta.tags,

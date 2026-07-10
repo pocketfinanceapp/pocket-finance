@@ -2,11 +2,21 @@ import { isUsListedStockTicker } from "./usStockTickers";
 
 const MASSIVE_BASE = "https://api.massive.com";
 
+export interface MassiveDayStats {
+  open: number;
+  high: number;
+  low: number;
+  volume: number;
+}
+
 export interface MassiveStockQuote {
   price: number;
   changePercent: number;
   change: number;
   source: "massive" | "override";
+  day?: MassiveDayStats;
+  week52High?: number;
+  week52Low?: number;
 }
 
 interface LastTradeResponse {
@@ -20,6 +30,10 @@ interface SnapshotResponse {
     todaysChange?: number;
     todaysChangePerc?: number;
     lastTrade?: { p?: number };
+    day?: { o?: number; h?: number; l?: number; v?: number };
+    prevDay?: { o?: number; h?: number; l?: number; v?: number };
+    min?: { c?: number };
+    max?: { c?: number };
   };
 }
 
@@ -59,6 +73,9 @@ export async function fetchStockPrice(
     let price: number | null = null;
     let changePercent: number | null = null;
     let change: number | null = null;
+    let day: MassiveDayStats | undefined;
+    let week52High: number | undefined;
+    let week52Low: number | undefined;
 
     if (tradeRes.ok) {
       const tradeData = (await tradeRes.json()) as LastTradeResponse;
@@ -79,6 +96,22 @@ export async function fetchStockPrice(
       if (price === null && typeof snap?.lastTrade?.p === "number") {
         price = snap.lastTrade.p;
       }
+      const dayBar = snap?.day;
+      if (
+        typeof dayBar?.o === "number" &&
+        typeof dayBar?.h === "number" &&
+        typeof dayBar?.l === "number" &&
+        typeof dayBar?.v === "number"
+      ) {
+        day = {
+          open: dayBar.o,
+          high: dayBar.h,
+          low: dayBar.l,
+          volume: dayBar.v,
+        };
+      }
+      if (typeof snap?.max?.c === "number") week52High = snap.max.c;
+      if (typeof snap?.min?.c === "number") week52Low = snap.min.c;
     }
 
     if (price === null || changePercent === null) return null;
@@ -88,6 +121,9 @@ export async function fetchStockPrice(
       changePercent,
       change: change ?? (price * changePercent) / 100,
       source: "massive",
+      day,
+      week52High,
+      week52Low,
     };
   } catch {
     return null;

@@ -236,7 +236,7 @@ export function NewsFeed({
   feedModeRef.current = feedMode;
 
   const trendingArticles = useMemo(
-    () => rankTrendingArticles(trendingPool).slice(0, 20),
+    () => rankTrendingArticles(trendingPool).slice(0, 40),
     [trendingPool]
   );
 
@@ -490,7 +490,9 @@ export function NewsFeed({
         ) {
           resetFeedIndex();
         } else if (velocity < -SWIPE_VELOCITY || dy < -SWIPE_THRESHOLD_PX) {
-          next = Math.min(maxIdx, next + 1);
+          if (maxIdx > 0) {
+            next = next >= maxIdx ? 0 : next + 1;
+          }
           setFeedIndex(next);
         } else if (velocity > SWIPE_VELOCITY || dy > SWIPE_THRESHOLD_PX) {
           next = Math.max(0, next - 1);

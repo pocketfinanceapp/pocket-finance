@@ -21,6 +21,7 @@ import { SourceBadge } from "./SourceBadge";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { useArticleLikes } from "@/hooks/useArticleLikes";
+import { useArticleCommentCount } from "@/hooks/useArticleCommentCount";
 import {
   hasSeenSwipeHintThisSession,
   markSwipeHintSeen,
@@ -79,12 +80,14 @@ export function FeedCard({
   isFirstCard = false,
   showTrendingLabel = false,
   onOpenComments,
+  commentRefreshKey = 0,
   overlayVisible = true,
   overlayHomeReady = true,
 }: FeedCardProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const { user, isGuest, requestSignIn } = useAuth();
   const { liked, likeCount, toggleLike, likeOnly } = useArticleLikes(article);
+  const commentCount = useArticleCommentCount(article.id, commentRefreshKey);
 
   const [imageFailed, setImageFailed] = useState(false);
   const saved = isArticleSaved(article.id);
@@ -111,7 +114,8 @@ export function FeedCard({
   const useSoftOverlay = hasHeroImage && isDarkImage;
   const iconClass =
     "h-[26px] w-[26px] text-white opacity-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]";
-  const hotHeadline = showTrendingLabel || article.likes + article.comments >= 35;
+  const hotHeadline =
+    showTrendingLabel || likeCount + commentCount >= 35;
 
   useEffect(() => {
     setImageFailed(false);
@@ -320,7 +324,15 @@ export function FeedCard({
           </PopReaction>
         </RailActionSlot>
 
-        <RailActionSlot>
+        <RailActionSlot
+          meta={
+            commentCount > 0 ? (
+              <span className="text-[11px] font-bold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
+                {formatLikeCount(commentCount)}
+              </span>
+            ) : null
+          }
+        >
           <RailAction
             label="Comment"
             onClick={() =>

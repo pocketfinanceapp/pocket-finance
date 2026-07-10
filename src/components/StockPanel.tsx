@@ -34,6 +34,7 @@ import {
 } from "@/lib/stockMetricExplanations";
 import { markFirstStockViewed } from "@/lib/achievements";
 import { recordActivityEvent } from "@/lib/progression";
+import { buildCompanyStatColumns, type CompanyStatRow } from "@/lib/companyStats";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { FinancialTermPopup } from "./FinancialTermPopup";
@@ -174,6 +175,11 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
         : [],
     [stock, showMarketData, chartBasePrice, ticker, chartRange]
   );
+  const statColumns = useMemo(() => {
+    if (!stock || isCryptoTicker(ticker)) return null;
+    return buildCompanyStatColumns(ticker, stock, liveQuote, displayPrice);
+  }, [stock, ticker, liveQuote, displayPrice]);
+
   const metrics = stock ? buildMetrics(ticker, stock) : [];
   const relatedTitle =
     isCryptoTicker(ticker) || marketTheme ? "Related assets" : "Competitors";
@@ -364,22 +370,33 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
               />
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              {metrics.map((metric) => (
-                <Stat
-                  key={metric.label}
-                  label={metric.label}
-                  value={metric.value}
-                  onInfoClick={
-                    metric.explanationKey
-                      ? () =>
-                          setActiveMetric(
-                            STOCK_METRIC_EXPLANATIONS[metric.explanationKey!]
-                          )
-                      : undefined
+            <div className="mt-6">
+              {statColumns ? (
+                <CompanyStatsGrid
+                  columns={statColumns}
+                  onInfoClick={(key) =>
+                    setActiveMetric(STOCK_METRIC_EXPLANATIONS[key])
                   }
                 />
-              ))}
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {metrics.map((metric) => (
+                    <Stat
+                      key={metric.label}
+                      label={metric.label}
+                      value={metric.value}
+                      onInfoClick={
+                        metric.explanationKey
+                          ? () =>
+                              setActiveMetric(
+                                STOCK_METRIC_EXPLANATIONS[metric.explanationKey!]
+                              )
+                          : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {competitors.length > 0 && (
@@ -627,6 +644,51 @@ function PrivateCompanyNews({ article }: { article: NewsArticle }) {
         </a>
       </article>
     </section>
+  );
+}
+
+function CompanyStatsGrid({
+  columns,
+  onInfoClick,
+}: {
+  columns: [CompanyStatRow[], CompanyStatRow[], CompanyStatRow[]];
+  onInfoClick: (key: keyof typeof STOCK_METRIC_EXPLANATIONS) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-x-3">
+      {columns.map((column, columnIndex) => (
+        <div
+          key={columnIndex}
+          className="divide-y divide-[var(--pocket-border)]"
+        >
+          {column.map((row) => (
+            <div
+              key={row.label}
+              className="flex items-start justify-between gap-1 py-2.5"
+            >
+              <span className="text-[10px] leading-tight text-pocket-muted">
+                {row.label}
+              </span>
+              <span className="text-right text-[10px] font-semibold leading-tight text-pocket-text">
+                {row.explanationKey ? (
+                  <button
+                    type="button"
+                    data-no-drag
+                    data-interactive
+                    onClick={() => onInfoClick(row.explanationKey!)}
+                    className="text-right underline decoration-dotted decoration-pocket-muted/60 underline-offset-2"
+                  >
+                    {row.value}
+                  </button>
+                ) : (
+                  row.value
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
 

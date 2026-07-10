@@ -57,6 +57,7 @@ export interface Comment {
   avatarColor: string;
   text: string;
   timeAgo: string;
+  parentId?: string | null;
 }
 
 /** @deprecated Use SavedArticleEntry — kept for stock panel helpers */

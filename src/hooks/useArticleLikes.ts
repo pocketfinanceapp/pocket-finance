@@ -4,6 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import {
+  PF_ARTICLE_LIKE_UPDATED,
+  emitArticleLikeUpdated,
+  type ArticleLikeUpdatedDetail,
+} from "@/lib/articleInteractionEvents";
+import {
   fetchLikeCount,
   fetchUserLikedArticleIds,
   likeArticle,
@@ -34,6 +39,19 @@ export function useArticleLikes(article: NewsArticle) {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    const onLikeUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<ArticleLikeUpdatedDetail>).detail;
+      if (detail.articleId !== article.id) return;
+      setLikeCount(detail.likeCount);
+      if (detail.liked !== undefined) setLiked(detail.liked);
+    };
+
+    window.addEventListener(PF_ARTICLE_LIKE_UPDATED, onLikeUpdated);
+    return () =>
+      window.removeEventListener(PF_ARTICLE_LIKE_UPDATED, onLikeUpdated);
+  }, [article.id]);
+
   const toggleLike = useCallback(async () => {
     if (!user || toggling) return;
     setToggling(true);
@@ -52,6 +70,13 @@ export function useArticleLikes(article: NewsArticle) {
     } else {
       if (!wasLiked) markArticleLiked(article.id);
       void reloadProfileStats();
+      const count = await fetchLikeCount(article.id);
+      setLikeCount(count);
+      emitArticleLikeUpdated({
+        articleId: article.id,
+        likeCount: count,
+        liked: !wasLiked,
+      });
     }
 
     setToggling(false);
@@ -70,6 +95,13 @@ export function useArticleLikes(article: NewsArticle) {
     } else {
       markArticleLiked(article.id);
       void reloadProfileStats();
+      const count = await fetchLikeCount(article.id);
+      setLikeCount(count);
+      emitArticleLikeUpdated({
+        articleId: article.id,
+        likeCount: count,
+        liked: true,
+      });
     }
 
     setToggling(false);

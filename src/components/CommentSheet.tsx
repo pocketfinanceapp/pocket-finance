@@ -13,17 +13,26 @@ import {
 import { PopReaction } from "@/components/PopReaction";
 import { useAuth } from "@/context/AuthContext";
 import {
-  addCommentReply,
   appendReplyToTree,
   buildDiscussionThread,
+  collectCommentIds,
   countThreadComments,
   getAncestorIds,
-  toggleCommentLike,
   updateCommentLikeInTree,
   type ThreadComment,
 } from "@/lib/commentThread";
 import type { NewsArticle } from "@/lib/types";
-import { fetchComments, postComment } from "@/lib/userInteractions";
+import {
+  emitArticleCommentUpdated,
+} from "@/lib/articleInteractionEvents";
+import {
+  fetchCommentLikeCounts,
+  fetchComments,
+  fetchCommentCount,
+  fetchUserCommentLikes,
+  postComment,
+  toggleCommentLike,
+} from "@/lib/userInteractions";
 
 interface CommentSheetProps {
   open: boolean;
@@ -64,9 +73,16 @@ export function CommentSheet({
     if (!article) return;
     setLoading(true);
     const rows = await fetchComments(article.id);
-    setComments(buildDiscussionThread(article.id, rows));
+    const commentIds = collectCommentIds(rows);
+    const [likeCounts, likedByUser] = await Promise.all([
+      fetchCommentLikeCounts(commentIds),
+      user ? fetchUserCommentLikes(user.id, commentIds) : Promise.resolve(new Set<string>()),
+    ]);
+    setComments(buildDiscussionThread(rows, likeCounts, likedByUser));
+    const count = await fetchCommentCount(article.id);
+    emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
     setLoading(false);
-  }, [article]);
+  }, [article, user]);
 
   useEffect(() => {
     if (open && article) {
@@ -138,9 +154,13 @@ export function CommentSheet({
     [comments]
   );
 
-  const handleLike = (commentId: string) => {
-    const liked = toggleCommentLike(commentId);
-    setComments((prev) => updateCommentLikeInTree(prev, commentId, liked));
+  const handleLike = async (commentId: string) => {
+    if (!user) return;
+    const result = await toggleCommentLike(user.id, commentId);
+    if (!result) return;
+    setComments((prev) =>
+      updateCommentLikeInTree(prev, commentId, result.liked, result.count)
+    );
   };
 
   const submit = async () => {
@@ -150,30 +170,37 @@ export function CommentSheet({
     setSubmitting(true);
 
     if (replyTo) {
-      const stored = addCommentReply(article.id, replyTo.id, text, displayName);
-      const reply: ThreadComment = {
-        id: stored.id,
-        username: displayName,
-        avatar: userInitial.length >= 2 ? userInitial : displayName.slice(0, 2).toUpperCase(),
-        avatarColor: "#3B6EF5",
+      const created = await postComment(
+        user.id,
+        article.id,
         text,
-        timeAgo: "Just now",
-        likes: 0,
-        likedByMe: false,
-        replies: [],
-        parentId: replyTo.id,
-      };
-      setComments((prev) => appendReplyToTree(prev, replyTo.id, reply));
-      ensureThreadExpanded(replyTo.id);
-      setInput("");
-      setReplyTo(null);
+        displayName,
+        replyTo.id
+      );
       setSubmitting(false);
-      requestAnimationFrame(() => {
-        document.getElementById(`comment-${stored.id}`)?.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
+
+      if (created) {
+        const reply: ThreadComment = {
+          ...created,
+          likes: 0,
+          likedByMe: false,
+          replies: [],
+          isPlaceholder: false,
+        };
+        setComments((prev) => appendReplyToTree(prev, replyTo.id, reply));
+        ensureThreadExpanded(replyTo.id);
+        setInput("");
+        setReplyTo(null);
+        onCommentPosted?.();
+        const count = await fetchCommentCount(article.id);
+        emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
+        requestAnimationFrame(() => {
+          document.getElementById(`comment-${created.id}`)?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
         });
-      });
+      }
       return;
     }
 
@@ -193,6 +220,8 @@ export function CommentSheet({
       ]);
       setInput("");
       onCommentPosted?.();
+      const count = await fetchCommentCount(article.id);
+      emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
       listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }
   };

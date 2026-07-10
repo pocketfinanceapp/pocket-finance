@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { NavigationProvider } from "@/context/NavigationContext";
 import type { MarketFilter } from "@/lib/filters";
+import { isOnboardingComplete } from "@/lib/onboarding";
 import type { NewsArticle } from "@/lib/types";
 import { FeedErrorBoundary } from "./FeedErrorBoundary";
 import { MarketsPage } from "./MarketsPage";
@@ -27,7 +29,9 @@ function TabPanels({
   initialTrendingArticles,
 }: TabAppShellProps) {
   const { activeTab, navTab, navigate } = useNavigation();
-  const { setMarketFilters, ensureWatchlistLoaded } = useApp();
+  const { user, isGuest, passwordRecoveryPending } = useAuth();
+  const { setMarketFilters, ensureWatchlistLoaded, onboardingComplete } =
+    useApp();
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [profileSubPageOpen, setProfileSubPageOpen] = useState(false);
 
@@ -44,8 +48,18 @@ function TabPanels({
     [setMarketFilters, navigate]
   );
 
+  const showAuth = !user && !isGuest;
+  const onboardingDone =
+    onboardingComplete || (user ? isOnboardingComplete(user.id) : false);
+  const showOnboarding =
+    Boolean(user) && !onboardingDone && !passwordRecoveryPending;
+
   const hideBottomNav =
-    sidePanelOpen || (activeTab === "profile" && profileSubPageOpen);
+    sidePanelOpen ||
+    (activeTab === "profile" && profileSubPageOpen) ||
+    showAuth ||
+    passwordRecoveryPending ||
+    showOnboarding;
 
   return (
     <MobilePageShell activeTab={navTab} hideBottomNav={hideBottomNav}>

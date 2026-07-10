@@ -13,6 +13,11 @@ const TRENDING_QUERY =
 const EXCLUDED_QUERY =
   `accident OR accidents OR crime OR sports OR entertainment OR weather OR NFL OR NBA OR MLB OR NHL OR FIFA OR soccer OR football OR basketball OR baseball OR hockey OR tennis OR golf OR Olympics OR quarterback OR touchdown OR MVP OR playoff OR championship OR military OR troops OR war OR missile OR earthquake OR hurricane OR shooting OR gov.uk OR researchbuzz OR buzzfeed OR gizmodo OR mashable OR mlive OR huffpost OR dailymail OR tmz OR eonline OR usmagazine OR entertainment.yahoo OR "Yahoo Entertainment" OR ${NEWS_API_BLOCKED_TERMS}`;
 
+const MAIN_FEED_CAP = 60;
+const TRENDING_CAP = 40;
+const NEWS_PAGE_SIZE = 100;
+const MAX_NEWS_PAGES = 2;
+
 interface NewsApiArticle {
   title?: string;
   description?: string | null;
@@ -35,13 +40,14 @@ function isFinanceArticle(article: NewsApiArticle): boolean {
 async function fetchFromNewsApi(
   apiKey: string,
   query: string,
-  idOffset: number
+  page = 1
 ): Promise<NewsArticle[]> {
   const url = new URL("https://newsapi.org/v2/everything");
   url.searchParams.set("q", `${query} NOT (${EXCLUDED_QUERY})`);
   url.searchParams.set("language", "en");
   url.searchParams.set("sortBy", "publishedAt");
-  url.searchParams.set("pageSize", "30");
+  url.searchParams.set("pageSize", String(NEWS_PAGE_SIZE));
+  url.searchParams.set("page", String(page));
   url.searchParams.set("apiKey", apiKey);
   url.searchParams.set("_cb", String(Date.now()));
 
@@ -58,9 +64,28 @@ async function fetchFromNewsApi(
       (a: NewsApiArticle) =>
         a.title && a.title !== "[Removed]" && isFinanceArticle(a)
     )
-    .map((a: Parameters<typeof mapNewsApiArticle>[0], i: number) =>
-      mapNewsApiArticle(a, idOffset + i)
-    );
+    .map((a: Parameters<typeof mapNewsApiArticle>[0]) => mapNewsApiArticle(a));
+}
+
+async function fetchPagedNews(
+  apiKey: string,
+  query: string,
+  maxPages = MAX_NEWS_PAGES
+): Promise<NewsArticle[]> {
+  const seen = new Set<string>();
+  const merged: NewsArticle[] = [];
+
+  for (let page = 1; page <= maxPages; page++) {
+    const batch = await fetchFromNewsApi(apiKey, query, page);
+    for (const article of batch) {
+      if (seen.has(article.id)) continue;
+      seen.add(article.id);
+      merged.push(article);
+    }
+    if (batch.length < NEWS_PAGE_SIZE) break;
+  }
+
+  return merged;
 }
 
 export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
@@ -70,9 +95,9 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
   }
 
   try {
-    const articles = await fetchFromNewsApi(apiKey, TRENDING_QUERY, 10_000);
+    const articles = await fetchPagedNews(apiKey, TRENDING_QUERY, 1);
     if (articles.length === 0) return [];
-    return articles.slice(0, 20);
+    return articles.slice(0, TRENDING_CAP);
   } catch {
     return [];
   }
@@ -86,13 +111,13 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
   }
 
   try {
-    let articles = await fetchFromNewsApi(apiKey, FINANCE_QUERY, 0);
+    let articles = await fetchPagedNews(apiKey, FINANCE_QUERY);
 
     if (articles.length === 0) {
       const backup = new URL("https://newsapi.org/v2/top-headlines");
       backup.searchParams.set("category", "business");
       backup.searchParams.set("country", "us");
-      backup.searchParams.set("pageSize", "30");
+      backup.searchParams.set("pageSize", String(NEWS_PAGE_SIZE));
       backup.searchParams.set("apiKey", apiKey);
       backup.searchParams.set("_cb", String(Date.now()));
       const res = await fetch(backup.toString(), {
@@ -107,8 +132,8 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
             (a: NewsApiArticle) =>
               a.title && a.title !== "[Removed]" && isFinanceArticle(a)
           )
-          .map((a: Parameters<typeof mapNewsApiArticle>[0], i: number) =>
-            mapNewsApiArticle(a, i)
+          .map((a: Parameters<typeof mapNewsApiArticle>[0]) =>
+            mapNewsApiArticle(a)
           );
       }
     }
@@ -126,7 +151,7 @@ function mergeWithDemo(articles: NewsArticle[]): NewsArticle[] {
     if (seen.has(a.id)) continue;
     seen.add(a.id);
     merged.push(a);
-    if (merged.length >= 20) break;
+    if (merged.length >= MAIN_FEED_CAP) break;
   }
   return merged;
 }
