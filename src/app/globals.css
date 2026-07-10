@@ -135,44 +135,22 @@
   --pocket-chart-tick: #6b7280;
   --pocket-chart-tooltip-bg: #ffffff;
   --pocket-chart-tooltip-border: rgba(0, 0, 0, 0.1);
-  --pocket-feed-scrim-top: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.52) 0%,
-    transparent 100%
-  );
-  --pocket-feed-scrim-top-soft: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.38) 0%,
-    transparent 100%
-  );
-  --pocket-feed-scrim-body: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.34) 0%,
-    rgba(255, 255, 255, 0.1) 18%,
-    rgba(255, 255, 255, 0.14) 45%,
-    rgba(255, 255, 255, 0.38) 68%,
-    rgba(255, 255, 255, 0.58) 100%
-  );
-  --pocket-feed-scrim-body-soft: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.24) 0%,
-    rgba(255, 255, 255, 0.06) 18%,
-    rgba(255, 255, 255, 0.1) 45%,
-    rgba(255, 255, 255, 0.3) 68%,
-    rgba(255, 255, 255, 0.48) 100%
-  );
+  --pocket-feed-scrim-top: transparent;
+  --pocket-feed-scrim-top-soft: transparent;
+  --pocket-feed-scrim-body: none;
+  --pocket-feed-scrim-body-soft: none;
   --pocket-feed-scrim-bottom: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.78) 0%,
-    rgba(255, 255, 255, 0.5) 30%,
-    rgba(255, 255, 255, 0.18) 58%,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(255, 255, 255, 0.82) 24%,
+    rgba(255, 255, 255, 0.48) 48%,
     transparent 100%
   );
   --pocket-feed-scrim-bottom-soft: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.66) 0%,
-    rgba(255, 255, 255, 0.42) 30%,
-    rgba(255, 255, 255, 0.14) 58%,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.76) 24%,
+    rgba(255, 255, 255, 0.42) 48%,
     transparent 100%
   );
   --pocket-feed-fallback-scrim: linear-gradient(
@@ -569,8 +547,22 @@ html.app-route
   display: none;
 }
 
-[data-theme="light"] .pf-feed-overlay-tint {
+[data-theme="light"] .pf-feed-overlay-tint,
+[data-theme="light"] .pf-feed-overlay-top,
+[data-theme="light"] .pf-feed-overlay-top--soft,
+[data-theme="light"] .pf-feed-overlay-body,
+[data-theme="light"] .pf-feed-overlay-body--soft {
   display: none;
+}
+
+[data-theme="light"] .pf-feed-hero-image,
+[data-theme="light"] .pf-feed-hero-image--soft {
+  filter: none;
+}
+
+html.app-route[data-theme="light"] .pf-feed-overlay-bottom,
+html.app-route[data-theme="light"] .pf-feed-overlay-bottom--soft {
+  height: 52%;
 }
 
 .pf-header-bar {
