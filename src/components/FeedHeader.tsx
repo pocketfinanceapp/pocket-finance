@@ -120,7 +120,7 @@ export function FeedHeader({
   }, [feedMode, measureIndicator]);
 
   return (
-    <header className={`relative z-50 pf-feed-chrome ${className}`}>
+    <header className={`relative z-50 pf-feed-chrome bg-[var(--pocket-feed-chrome-bg)] ${className}`}>
       <div
         className="feed-header-scrim pointer-events-none absolute inset-x-0 top-0"
         style={{

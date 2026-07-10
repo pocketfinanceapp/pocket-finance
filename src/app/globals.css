@@ -125,7 +125,7 @@
   --pocket-search-bar: rgba(255, 255, 255, 0.96);
   --pocket-header-scrim: transparent;
   --pocket-header-fade: transparent;
-  --pocket-feed-chrome-bg: transparent;
+  --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.88);
   --pocket-grid-line: rgba(0, 0, 0, 0.05);
   --pocket-toggle-off: #d1d5db;
   --pocket-overlay-scrim: rgba(17, 24, 39, 0.32);
@@ -137,55 +137,55 @@
   --pocket-chart-tooltip-border: rgba(0, 0, 0, 0.1);
   --pocket-feed-scrim-top: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.52) 0%,
     transparent 100%
   );
   --pocket-feed-scrim-top-soft: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.38) 0%,
     transparent 100%
   );
   --pocket-feed-scrim-body: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    transparent 24%,
-    rgba(255, 255, 255, 0.04) 50%,
-    rgba(255, 255, 255, 0.16) 74%,
-    rgba(255, 255, 255, 0.34) 100%
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.1) 18%,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.38) 68%,
+    rgba(255, 255, 255, 0.58) 100%
   );
   --pocket-feed-scrim-body-soft: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    transparent 24%,
-    rgba(255, 255, 255, 0.03) 50%,
-    rgba(255, 255, 255, 0.12) 74%,
-    rgba(255, 255, 255, 0.26) 100%
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.06) 18%,
+    rgba(255, 255, 255, 0.1) 45%,
+    rgba(255, 255, 255, 0.3) 68%,
+    rgba(255, 255, 255, 0.48) 100%
   );
   --pocket-feed-scrim-bottom: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.52) 0%,
-    rgba(255, 255, 255, 0.28) 28%,
-    rgba(255, 255, 255, 0.08) 56%,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 255, 255, 0.5) 30%,
+    rgba(255, 255, 255, 0.18) 58%,
     transparent 100%
   );
   --pocket-feed-scrim-bottom-soft: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.42) 0%,
-    rgba(255, 255, 255, 0.22) 28%,
-    rgba(255, 255, 255, 0.06) 56%,
+    rgba(255, 255, 255, 0.66) 0%,
+    rgba(255, 255, 255, 0.42) 30%,
+    rgba(255, 255, 255, 0.14) 58%,
     transparent 100%
   );
   --pocket-feed-fallback-scrim: linear-gradient(
     180deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.04) 35%,
-    rgba(255, 255, 255, 0.18) 62%,
-    rgba(255, 255, 255, 0.48) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.36) 55%,
+    rgba(255, 255, 255, 0.72) 100%
   );
   --pocket-feed-rail-color: #111827;
-  --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.35);
+  --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.55);
   --pocket-feed-headline-color: #111827;
-  --pocket-feed-headline-shadow: 0 1px 4px rgba(255, 255, 255, 0.35);
+  --pocket-feed-headline-shadow: 0 1px 6px rgba(255, 255, 255, 0.5);
   --pocket-feed-subline-color: rgba(17, 24, 39, 0.72);
   --pocket-feed-chip-topic-bg: rgba(255, 255, 255, 0.72);
   --pocket-feed-chip-topic-text: rgba(17, 24, 39, 0.78);
@@ -438,10 +438,6 @@ html.app-route
   background: var(--pocket-header-scrim);
 }
 
-.pf-feed-chrome {
-  background: var(--pocket-feed-chrome-bg);
-}
-
 .pf-feed-overlay-top {
   background: var(--pocket-feed-scrim-top);
 }
@@ -511,23 +507,20 @@ html.app-route
 }
 
 [data-theme="light"] .pf-feed-fallback-art::after {
-  display: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 95% 75% at 50% 30%,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.18) 62%,
+    rgba(255, 255, 255, 0.52) 100%
+  );
 }
 
 [data-theme="light"] .pf-feed-overlay-tint {
-  display: none;
-}
-
-html.app-route[data-theme="light"] .pf-feed-chrome {
-  background: transparent !important;
-}
-
-html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn {
-
-  filter: none !important;
-  text-shadow:
-    0 1px 3px rgba(255, 255, 255, 0.55),
-    0 1px 2px rgba(0, 0, 0, 0.1);
+  opacity: 0.35;
 }
 
 .pf-header-bar {
@@ -563,6 +556,14 @@ html.app-route[data-theme="light"] .feed-header-scrim {
   display: none;
 }
 
+html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn {
+
+  filter: none !important;
+  text-shadow:
+    0 1px 8px rgba(255, 255, 255, 0.92),
+    0 0 2px rgba(255, 255, 255, 0.75);
+}
+
 html.app-route[data-theme="light"] .pf-section-tab-indicator {
 
   background: var(--pocket-teal) !important;
@@ -575,8 +576,7 @@ html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-indicator {
 
 html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-search-btn {
 
-  filter: drop-shadow(0 1px 3px rgba(255, 255, 255, 0.45))
-    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
+  filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.85));
 }
 
 html.app-route[data-theme="light"] .feed-search-bar-shimmer {
