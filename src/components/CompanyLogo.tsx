@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Globe } from "lucide-react";
-import { getCompanyLogoUrl } from "@/lib/companyLogos";
+import { getCompanyLogoUrls } from "@/lib/companyLogos";
 
 function logoLabel(ticker: string): string {
   const upper = ticker.toUpperCase();
@@ -26,15 +26,26 @@ export function CompanyLogo({
   const upper = ticker.toUpperCase();
   const showGlobe = upper === "MARKET";
   const label = logoLabel(upper);
-  const logoUrl = getCompanyLogoUrl(upper);
-  const [imageFailed, setImageFailed] = useState(false);
+  const logoUrls = useMemo(() => getCompanyLogoUrls(upper), [upper]);
+  const [urlIndex, setUrlIndex] = useState(0);
+  const [exhausted, setExhausted] = useState(false);
 
   useEffect(() => {
-    setImageFailed(false);
+    setUrlIndex(0);
+    setExhausted(false);
   }, [upper]);
 
+  const logoUrl = logoUrls[urlIndex] ?? null;
   const radius = shape === "circle" ? "rounded-full" : "rounded-xl";
-  const showImage = logoUrl && !imageFailed && !showGlobe;
+  const showImage = logoUrl && !exhausted && !showGlobe;
+
+  const handleImageError = () => {
+    if (urlIndex < logoUrls.length - 1) {
+      setUrlIndex((index) => index + 1);
+      return;
+    }
+    setExhausted(true);
+  };
 
   return (
     <div
@@ -54,6 +65,7 @@ export function CompanyLogo({
         />
       ) : showImage ? (
         <Image
+          key={logoUrl}
           src={logoUrl}
           alt={`${upper} logo`}
           width={size}
@@ -61,7 +73,7 @@ export function CompanyLogo({
           className="h-full w-full object-cover"
           style={{ transform: "scale(1.14)" }}
           unoptimized
-          onError={() => setImageFailed(true)}
+          onError={handleImageError}
         />
       ) : (
         label
