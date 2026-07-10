@@ -80,16 +80,16 @@ function VariantArt({
   }
 }
 
-function FallbackBase({ variant }: { variant: FeedFallbackVariant }) {
-  return (
-    <div className={`pf-feed-fallback-base pf-feed-fallback-base--${variant}`} />
-  );
-}
-
 function CryptoArt({ uid }: { uid: string }) {
   return (
     <>
-      <FallbackBase variant="crypto" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 85% 65% at 50% 32%, rgba(0,198,198,0.32) 0%, rgba(59,110,245,0.18) 42%, rgba(10,10,10,0.98) 78%)",
+        }}
+      />
       <svg
         viewBox="0 0 400 600"
         className="absolute inset-0 h-full w-full opacity-75"
@@ -149,7 +149,13 @@ function CryptoArt({ uid }: { uid: string }) {
 function MiningArt({ uid }: { uid: string }) {
   return (
     <>
-      <FallbackBase variant="mining" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 90% 70% at 50% 38%, rgba(180,120,60,0.28) 0%, rgba(120,80,40,0.16) 45%, rgba(10,10,10,0.98) 80%)",
+        }}
+      />
       <svg
         viewBox="0 0 400 600"
         className="absolute inset-0 h-full w-full opacity-70"
@@ -195,13 +201,26 @@ function MiningArt({ uid }: { uid: string }) {
 function EnergyArt({ uid }: { uid: string }) {
   return (
     <>
-      <FallbackBase variant="energy" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(255,140,40,0.28) 0%, rgba(180,80,20,0.14) 48%, rgba(10,10,10,0.98) 82%)",
+        }}
+      />
       <svg
         viewBox="0 0 400 600"
         className="absolute inset-0 h-full w-full opacity-72"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
       >
+        <defs>
+          <radialGradient id={`ff-energy-${uid}`} cx="50%" cy="35%" r="55%">
+            <stop offset="0%" stopColor="#FF8C28" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#FF8C28" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <rect width="400" height="600" fill={`url(#ff-energy-${uid})`} />
         {[0, 1, 2, 3].map((i) => (
           <path
             key={i}
@@ -227,7 +246,13 @@ function EnergyArt({ uid }: { uid: string }) {
 function FinanceArt({ uid }: { uid: string }) {
   return (
     <>
-      <FallbackBase variant="finance" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 85% 65% at 50% 34%, rgba(59,110,245,0.26) 0%, rgba(0,198,198,0.16) 46%, rgba(10,10,10,0.98) 80%)",
+        }}
+      />
       <svg
         viewBox="0 0 400 600"
         className="absolute inset-0 h-full w-full opacity-72"
@@ -269,6 +294,8 @@ function FinanceArt({ uid }: { uid: string }) {
           strokeWidth="3"
           strokeLinecap="round"
         />
+        <circle cx="220" cy="220" r="48" fill="rgba(0,198,198,0.06)" stroke="rgba(0,198,198,0.22)" strokeWidth="1.5" />
+        <text x="220" y="228" textAnchor="middle" fill="rgba(0,198,198,0.35)" fontSize="28" fontWeight="700">$</text>
       </svg>
     </>
   );
@@ -277,7 +304,13 @@ function FinanceArt({ uid }: { uid: string }) {
 function TechArt({ uid }: { uid: string }) {
   return (
     <>
-      <FallbackBase variant="tech" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 85% 68% at 50% 32%, rgba(120,80,255,0.28) 0%, rgba(59,110,245,0.16) 44%, rgba(10,10,10,0.98) 80%)",
+        }}
+      />
       <svg
         viewBox="0 0 400 600"
         className="absolute inset-0 h-full w-full opacity-74"
@@ -320,7 +353,13 @@ function TechArt({ uid }: { uid: string }) {
 function MarketsArt({ uid }: { uid: string }) {
   return (
     <>
-      <FallbackBase variant="markets" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 90% 70% at 50% 35%, rgba(59,110,245,0.28) 0%, rgba(0,198,198,0.12) 45%, rgba(10,10,10,0.98) 80%)",
+        }}
+      />
       <svg
         viewBox="0 0 400 600"
         className="absolute inset-0 h-full w-full opacity-70"

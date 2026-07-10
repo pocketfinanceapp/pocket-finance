@@ -147,42 +147,40 @@
   );
   --pocket-feed-scrim-body: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    transparent 30%,
-    transparent 55%,
-    rgba(255, 255, 255, 0.08) 78%,
-    rgba(255, 255, 255, 0.14) 100%
+    rgba(255, 255, 255, 0.14) 0%,
+    transparent 24%,
+    rgba(255, 255, 255, 0.04) 50%,
+    rgba(255, 255, 255, 0.16) 74%,
+    rgba(255, 255, 255, 0.34) 100%
   );
   --pocket-feed-scrim-body-soft: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    transparent 30%,
-    transparent 55%,
-    rgba(255, 255, 255, 0.06) 78%,
-    rgba(255, 255, 255, 0.1) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 24%,
+    rgba(255, 255, 255, 0.03) 50%,
+    rgba(255, 255, 255, 0.12) 74%,
+    rgba(255, 255, 255, 0.26) 100%
   );
   --pocket-feed-scrim-bottom: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.97) 0%,
-    rgba(255, 255, 255, 0.84) 20%,
-    rgba(255, 255, 255, 0.58) 42%,
-    rgba(255, 255, 255, 0.22) 62%,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0.28) 28%,
+    rgba(255, 255, 255, 0.08) 56%,
     transparent 100%
   );
   --pocket-feed-scrim-bottom-soft: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(255, 255, 255, 0.74) 20%,
-    rgba(255, 255, 255, 0.48) 42%,
-    rgba(255, 255, 255, 0.16) 62%,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.22) 28%,
+    rgba(255, 255, 255, 0.06) 56%,
     transparent 100%
   );
   --pocket-feed-fallback-scrim: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.06) 38%,
-    rgba(255, 255, 255, 0.52) 68%,
-    rgba(255, 255, 255, 0.94) 100%
+    rgba(255, 255, 255, 0.04) 35%,
+    rgba(255, 255, 255, 0.18) 62%,
+    rgba(255, 255, 255, 0.48) 100%
   );
   --pocket-feed-rail-color: #111827;
   --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.35);
@@ -462,80 +460,14 @@ html.app-route
 
 .pf-feed-overlay-bottom {
   background: var(--pocket-feed-scrim-bottom);
-  height: 50%;
 }
 
 .pf-feed-overlay-bottom--soft {
   background: var(--pocket-feed-scrim-bottom-soft);
-  height: 50%;
-}
-
-html.app-route[data-theme="light"] .pf-feed-overlay-bottom,
-html.app-route[data-theme="light"] .pf-feed-overlay-bottom--soft {
-  height: 58%;
 }
 
 .pf-feed-fallback-scrim {
   background: var(--pocket-feed-fallback-scrim);
-}
-
-.pf-feed-fallback-base {
-  position: absolute;
-  inset: 0;
-}
-
-.pf-feed-fallback-base--crypto {
-  background: linear-gradient(
-    180deg,
-    rgba(0, 198, 198, 0.16) 0%,
-    rgba(59, 110, 245, 0.08) 32%,
-    var(--pocket-feed-bg) 68%
-  );
-}
-
-.pf-feed-fallback-base--mining {
-  background: linear-gradient(
-    180deg,
-    rgba(180, 120, 60, 0.14) 0%,
-    rgba(120, 80, 40, 0.07) 32%,
-    var(--pocket-feed-bg) 68%
-  );
-}
-
-.pf-feed-fallback-base--energy {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 140, 40, 0.14) 0%,
-    rgba(180, 80, 20, 0.07) 32%,
-    var(--pocket-feed-bg) 68%
-  );
-}
-
-.pf-feed-fallback-base--finance {
-  background: linear-gradient(
-    180deg,
-    rgba(59, 110, 245, 0.14) 0%,
-    rgba(0, 198, 198, 0.08) 32%,
-    var(--pocket-feed-bg) 68%
-  );
-}
-
-.pf-feed-fallback-base--tech {
-  background: linear-gradient(
-    180deg,
-    rgba(120, 80, 255, 0.14) 0%,
-    rgba(59, 110, 245, 0.08) 32%,
-    var(--pocket-feed-bg) 68%
-  );
-}
-
-.pf-feed-fallback-base--markets {
-  background: linear-gradient(
-    180deg,
-    rgba(59, 110, 245, 0.14) 0%,
-    rgba(0, 198, 198, 0.07) 32%,
-    var(--pocket-feed-bg) 68%
-  );
 }
 
 .pf-feed-rail-icon {
