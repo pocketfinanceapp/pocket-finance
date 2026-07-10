@@ -12,6 +12,7 @@ import {
   buildFeedPersonalizationInput,
   rankExploreCompanies,
 } from "@/lib/feedPersonalization";
+import { prefetchCompanyLogos } from "@/lib/logoCache";
 import { getStockProfile } from "@/lib/stockData";
 import { fetchStockQuote } from "@/lib/stockQuoteClient";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
@@ -164,6 +165,11 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
   );
   const [personalizationTick, setPersonalizationTick] = useState(0);
   const companies = useMemo(() => getExploreCompanies(), []);
+
+  useEffect(() => {
+    prefetchCompanyLogos(companies.map((company) => company.ticker));
+  }, [companies]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [panelTicker, setPanelTicker] = useState<string | null>(null);

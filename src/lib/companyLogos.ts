@@ -60,10 +60,10 @@ export function getCompanyLogoUrls(ticker: string): string[] {
 
   for (const symbol of symbols) {
     if (!isStockSymbol(symbol)) continue;
+    urls.push(PARQET_LOGO(symbol));
     if (/^[A-Z]{1,5}$/.test(symbol)) {
       urls.push(FINNHUB_LOGO(symbol));
     }
-    urls.push(PARQET_LOGO(symbol));
   }
 
   return uniqueUrls(urls);
