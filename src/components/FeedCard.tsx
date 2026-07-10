@@ -54,7 +54,7 @@ function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
         }`}
       />
       <div
-        className="pointer-events-none absolute inset-0 z-[1] mix-blend-soft-light"
+        className="pf-feed-overlay-tint pointer-events-none absolute inset-0 z-[1] mix-blend-soft-light"
         style={{
           background: soft
             ? "linear-gradient(135deg, rgba(59,110,245,0.12) 0%, transparent 42%, rgba(0,198,198,0.08) 100%)"

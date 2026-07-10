@@ -137,63 +137,63 @@
   --pocket-chart-tooltip-border: rgba(0, 0, 0, 0.1);
   --pocket-feed-scrim-top: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.52) 0%,
     transparent 100%
   );
   --pocket-feed-scrim-top-soft: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.82) 0%,
+    rgba(255, 255, 255, 0.38) 0%,
     transparent 100%
   );
   --pocket-feed-scrim-body: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.72) 0%,
-    rgba(255, 255, 255, 0.28) 18%,
-    rgba(255, 255, 255, 0.42) 45%,
-    rgba(255, 255, 255, 0.86) 68%,
-    rgba(255, 255, 255, 0.96) 100%
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.1) 18%,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.38) 68%,
+    rgba(255, 255, 255, 0.58) 100%
   );
   --pocket-feed-scrim-body-soft: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.58) 0%,
-    rgba(255, 255, 255, 0.2) 18%,
-    rgba(255, 255, 255, 0.34) 45%,
-    rgba(255, 255, 255, 0.78) 68%,
-    rgba(255, 255, 255, 0.92) 100%
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.06) 18%,
+    rgba(255, 255, 255, 0.1) 45%,
+    rgba(255, 255, 255, 0.3) 68%,
+    rgba(255, 255, 255, 0.48) 100%
   );
   --pocket-feed-scrim-bottom: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(255, 255, 255, 0.88) 30%,
-    rgba(255, 255, 255, 0.42) 58%,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 255, 255, 0.5) 30%,
+    rgba(255, 255, 255, 0.18) 58%,
     transparent 100%
   );
   --pocket-feed-scrim-bottom-soft: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.96) 0%,
-    rgba(255, 255, 255, 0.82) 30%,
-    rgba(255, 255, 255, 0.36) 58%,
+    rgba(255, 255, 255, 0.66) 0%,
+    rgba(255, 255, 255, 0.42) 30%,
+    rgba(255, 255, 255, 0.14) 58%,
     transparent 100%
   );
   --pocket-feed-fallback-scrim: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.2) 0%,
-    rgba(255, 255, 255, 0.1) 30%,
-    rgba(255, 255, 255, 0.72) 55%,
-    rgba(255, 255, 255, 0.98) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.36) 55%,
+    rgba(255, 255, 255, 0.72) 100%
   );
   --pocket-feed-rail-color: #111827;
-  --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.85);
+  --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.55);
   --pocket-feed-headline-color: #111827;
-  --pocket-feed-headline-shadow: 0 1px 8px rgba(255, 255, 255, 0.92);
-  --pocket-feed-subline-color: rgba(17, 24, 39, 0.68);
-  --pocket-feed-chip-topic-bg: rgba(255, 255, 255, 0.82);
+  --pocket-feed-headline-shadow: 0 1px 6px rgba(255, 255, 255, 0.5);
+  --pocket-feed-subline-color: rgba(17, 24, 39, 0.72);
+  --pocket-feed-chip-topic-bg: rgba(255, 255, 255, 0.72);
   --pocket-feed-chip-topic-text: rgba(17, 24, 39, 0.78);
   --pocket-feed-chip-topic-border: rgba(0, 0, 0, 0.08);
   --pocket-feed-toast-bg: rgba(255, 255, 255, 0.94);
   --pocket-feed-toast-text: #111827;
-  --pocket-feed-hero-brightness: 0.94;
-  --pocket-feed-hero-brightness-soft: 0.98;
+  --pocket-feed-hero-brightness: 1;
+  --pocket-feed-hero-brightness-soft: 1;
   color-scheme: light;
 }
 
@@ -513,10 +513,14 @@ html.app-route
   pointer-events: none;
   background: radial-gradient(
     ellipse 95% 75% at 50% 30%,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.42) 62%,
-    rgba(255, 255, 255, 0.9) 100%
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.18) 62%,
+    rgba(255, 255, 255, 0.52) 100%
   );
+}
+
+[data-theme="light"] .pf-feed-overlay-tint {
+  opacity: 0.35;
 }
 
 .pf-header-bar {
