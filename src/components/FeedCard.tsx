@@ -415,7 +415,7 @@ export function FeedCard({
         }`}
       >
         <div
-          className={`pointer-events-none absolute inset-x-0 bottom-0 h-[50%] ${
+          className={`pointer-events-none absolute inset-x-0 bottom-0 ${
             useSoftOverlay
               ? "pf-feed-overlay-bottom--soft"
               : "pf-feed-overlay-bottom"
@@ -423,7 +423,7 @@ export function FeedCard({
         />
 
         <div
-          className="relative px-5 pb-5 pt-10"
+          className="pf-feed-bottom-text relative px-5 pb-5 pt-10"
           style={{ paddingRight: "5.25rem" }}
         >
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -451,7 +451,7 @@ export function FeedCard({
             </p>
           ) : null}
 
-          <div className="mt-3">
+          <div className="pf-feed-source mt-3">
             <SourceBadge
               sourceName={article.sourceName}
               sourceId={article.sourceId}
