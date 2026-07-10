@@ -431,8 +431,8 @@ export function FeedCard({
               {categoryTag}
             </span>
             {showTrendingLabel && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-orange-300/90">
-                <FireSparkIcon className="h-3.5 w-3.5" />
+              <span className="pf-feed-trending-badge inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.08em]">
+                <FireSparkIcon className="h-4 w-4 shrink-0" />
                 Trending
               </span>
             )}

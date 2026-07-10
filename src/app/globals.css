@@ -187,7 +187,7 @@
   --app-vh: 100vh;
   --app-feed-vh: calc(100vh - 65px);
   /* Header + safe-area band — matches FeedHeader scrim height */
-  --feed-header-zone: calc(max(0.625rem, env(safe-area-inset-top)) + 3rem);
+  --feed-header-zone: calc(max(0.625rem, env(safe-area-inset-top)) + 2.75rem);
 }
 
 @supports (height: 100svh) {
@@ -487,6 +487,21 @@ html.app-route[data-theme="light"] .pf-feed-bottom-text .pf-feed-source .font-me
   color: var(--pocket-feed-headline-color) !important;
 }
 
+.pf-feed-trending-badge {
+  color: #fdba74;
+  background: rgba(251, 146, 60, 0.14);
+  border-color: rgba(251, 146, 60, 0.28);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+html.app-route[data-theme="light"] .pf-feed-trending-badge {
+  color: #c2410c;
+  background: rgba(255, 237, 213, 0.88);
+  border-color: rgba(234, 88, 12, 0.22);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(255, 255, 255, 0.55);
+}
+
 .pf-feed-fallback-scrim {
   background: var(--pocket-feed-fallback-scrim);
 }
@@ -652,16 +667,8 @@ html.app-route[data-theme="light"] .pf-feed-chrome {
 html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn {
   filter: none !important;
   text-shadow:
-    0 1px 5px rgba(255, 255, 255, 0.92),
-    0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn[data-active="false"] {
-  color: rgba(17, 24, 39, 0.68) !important;
-}
-
-html.app-route[data-theme="dark"] .pf-feed-chrome .pf-feed-tab-btn[data-active="false"] {
-  color: rgba(255, 255, 255, 0.58) !important;
+    0 1px 3px rgba(255, 255, 255, 0.65),
+    0 1px 2px rgba(0, 0, 0, 0.14);
 }
 
 html.app-route[data-theme="light"] .pf-section-tab-indicator {
