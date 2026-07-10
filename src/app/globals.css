@@ -97,6 +97,33 @@
   --pocket-feed-toast-text: #ffffff;
   --pocket-feed-hero-brightness: 0.72;
   --pocket-feed-hero-brightness-soft: 0.84;
+  --pocket-feed-bottom-chrome-scrim: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.94) 0%,
+    rgba(0, 0, 0, 0.84) 52%,
+    rgba(0, 0, 0, 0.52) 80%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-scrim-soft: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.78) 48%,
+    rgba(0, 0, 0, 0.42) 78%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-bleed: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.22) 55%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-bleed-soft: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.16) 55%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-bleed-height: 4.5rem;
   color-scheme: dark;
 }
 
@@ -180,22 +207,52 @@
   --pocket-feed-fallback-scrim: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.06) 38%,
-    rgba(255, 255, 255, 0.52) 68%,
-    rgba(255, 255, 255, 0.94) 100%
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 255, 255, 0.42) 62%,
+    rgba(255, 255, 255, 0.98) 100%
   );
   --pocket-feed-rail-color: #111827;
-  --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.35);
+  --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.45);
   --pocket-feed-headline-color: #111827;
-  --pocket-feed-headline-shadow: 0 1px 4px rgba(255, 255, 255, 0.35);
-  --pocket-feed-subline-color: rgba(17, 24, 39, 0.72);
-  --pocket-feed-chip-topic-bg: rgba(255, 255, 255, 0.72);
-  --pocket-feed-chip-topic-text: rgba(17, 24, 39, 0.78);
+  --pocket-feed-headline-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.95), 0 0 14px rgba(255, 255, 255, 0.4);
+  --pocket-feed-subline-color: rgba(17, 24, 39, 0.82);
+  --pocket-feed-chip-topic-bg: rgba(255, 255, 255, 0.82);
+  --pocket-feed-chip-topic-text: rgba(17, 24, 39, 0.82);
   --pocket-feed-chip-topic-border: rgba(0, 0, 0, 0.08);
   --pocket-feed-toast-bg: rgba(255, 255, 255, 0.94);
   --pocket-feed-toast-text: #111827;
   --pocket-feed-hero-brightness: 1;
   --pocket-feed-hero-brightness-soft: 1;
+  --pocket-feed-bottom-chrome-scrim: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 38%,
+    rgba(255, 255, 255, 0.96) 62%,
+    rgba(255, 255, 255, 0.82) 82%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-scrim-soft: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.96) 36%,
+    rgba(255, 255, 255, 0.9) 60%,
+    rgba(255, 255, 255, 0.74) 80%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-bleed: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 255, 255, 0.48) 48%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-bleed-soft: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 255, 255, 0.38) 48%,
+    transparent 100%
+  );
+  --pocket-feed-bottom-chrome-bleed-height: 7rem;
   color-scheme: light;
 }
 
@@ -470,9 +527,43 @@ html.app-route
   height: 50%;
 }
 
-html.app-route[data-theme="light"] .pf-feed-overlay-bottom,
-html.app-route[data-theme="light"] .pf-feed-overlay-bottom--soft {
-  height: 58%;
+.pf-feed-bottom-chrome {
+  position: relative;
+  isolation: isolate;
+}
+
+.pf-feed-bottom-chrome::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--pocket-feed-bottom-chrome-scrim);
+}
+
+.pf-feed-bottom-chrome--soft::before {
+  background: var(--pocket-feed-bottom-chrome-scrim-soft);
+}
+
+.pf-feed-bottom-chrome::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  z-index: 0;
+  height: var(--pocket-feed-bottom-chrome-bleed-height);
+  pointer-events: none;
+  background: var(--pocket-feed-bottom-chrome-bleed);
+}
+
+.pf-feed-bottom-chrome--soft::after {
+  background: var(--pocket-feed-bottom-chrome-bleed-soft);
+}
+
+.pf-feed-bottom-content {
+  position: relative;
+  z-index: 1;
 }
 
 .pf-feed-fallback-scrim {
@@ -724,6 +815,14 @@ html.app-route[data-theme="light"] .pf-on-media .pf-feed-subline {
 
 html.app-route[data-theme="light"] .pf-on-media .pf-feed-subline {
   color: var(--pocket-feed-subline-color);
+}
+
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-source [class*="text-white"] {
+  color: var(--pocket-feed-subline-color) !important;
+}
+
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-source .font-medium {
+  color: var(--pocket-feed-headline-color) !important;
 }
 
 html.app-route[data-theme="light"] .pf-on-media .pf-feed-rail-icon,

@@ -406,7 +406,9 @@ export function FeedCard({
 
       {showBottomChrome && (
       <div
-        className={`absolute inset-x-0 bottom-0 z-20 ${
+        className={`pf-feed-bottom-chrome absolute inset-x-0 bottom-0 z-20 ${
+          useSoftOverlay ? "pf-feed-bottom-chrome--soft" : ""
+        } ${
           !overlayHomeReady
             ? "pointer-events-none opacity-0"
             : !overlayVisible
@@ -415,15 +417,7 @@ export function FeedCard({
         }`}
       >
         <div
-          className={`pointer-events-none absolute inset-x-0 bottom-0 ${
-            useSoftOverlay
-              ? "pf-feed-overlay-bottom--soft"
-              : "pf-feed-overlay-bottom"
-          }`}
-        />
-
-        <div
-          className="relative px-5 pb-5 pt-10"
+          className="pf-feed-bottom-content px-5 pb-5 pt-8"
           style={{ paddingRight: "5.25rem" }}
         >
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -451,7 +445,7 @@ export function FeedCard({
             </p>
           ) : null}
 
-          <div className="mt-3">
+          <div className="pf-feed-source mt-3">
             <SourceBadge
               sourceName={article.sourceName}
               sourceId={article.sourceId}
