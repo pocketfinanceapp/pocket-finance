@@ -125,9 +125,10 @@
   --pocket-search-bar: rgba(255, 255, 255, 0.96);
   --pocket-header-scrim: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.58) 0%,
-    rgba(255, 255, 255, 0.28) 50%,
-    rgba(255, 255, 255, 0.06) 82%,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.38) 40%,
+    rgba(255, 255, 255, 0.16) 68%,
+    rgba(255, 255, 255, 0.04) 88%,
     transparent 100%
   );
   --pocket-header-fade: transparent;
@@ -143,16 +144,18 @@
   --pocket-chart-tooltip-border: rgba(0, 0, 0, 0.1);
   --pocket-feed-scrim-top: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.52) 0%,
-    rgba(255, 255, 255, 0.24) 48%,
-    rgba(255, 255, 255, 0.06) 78%,
+    rgba(255, 255, 255, 0.58) 0%,
+    rgba(255, 255, 255, 0.36) 38%,
+    rgba(255, 255, 255, 0.18) 64%,
+    rgba(255, 255, 255, 0.06) 86%,
     transparent 100%
   );
   --pocket-feed-scrim-top-soft: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.46) 0%,
-    rgba(255, 255, 255, 0.2) 48%,
-    rgba(255, 255, 255, 0.05) 78%,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0.3) 38%,
+    rgba(255, 255, 255, 0.14) 64%,
+    rgba(255, 255, 255, 0.05) 86%,
     transparent 100%
   );
   --pocket-feed-scrim-body: none;
@@ -198,6 +201,7 @@
   --pocket-feed-toast-text: #111827;
   --pocket-feed-hero-brightness: 1;
   --pocket-feed-hero-brightness-soft: 1;
+  --feed-top-scrim-extend: 2rem;
   color-scheme: light;
 }
 
@@ -640,7 +644,11 @@ html.app-route[data-theme="light"] .pf-feed-trending-badge {
 html.app-route[data-theme="light"] .pf-feed-overlay-top,
 html.app-route[data-theme="light"] .pf-feed-overlay-top--soft {
   display: block;
-  height: calc(var(--feed-header-zone) + 0.75rem) !important;
+  height: calc(var(--feed-header-zone) + var(--feed-top-scrim-extend, 0px)) !important;
+}
+
+html.app-route[data-theme="light"] .feed-header-scrim {
+  height: calc(var(--feed-header-zone) + var(--feed-top-scrim-extend, 0px)) !important;
 }
 
 [data-theme="light"] .pf-feed-hero-image,
@@ -692,6 +700,7 @@ html.app-route[data-theme="light"] .pf-feed-chrome {
 html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn {
   filter: none !important;
   text-shadow: none;
+  color: #000000 !important;
 }
 
 html.app-route[data-theme="light"] .pf-section-tab-indicator {
