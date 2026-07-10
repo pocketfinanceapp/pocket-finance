@@ -124,7 +124,7 @@ export function FeedHeader({
       <div
         className="feed-header-scrim pointer-events-none absolute inset-x-0 top-0"
         style={{
-          height: "calc(max(0.625rem, env(safe-area-inset-top)) + 2.75rem)",
+          height: "calc(max(0.625rem, env(safe-area-inset-top)) + 3rem)",
         }}
         aria-hidden
       />
@@ -135,7 +135,7 @@ export function FeedHeader({
         <div className="h-10 w-10 shrink-0" aria-hidden />
         <nav
           ref={navRef}
-          className="pf-feed-tab-bar relative flex items-end justify-center gap-10 px-2 pb-0.5 pt-1"
+          className="pf-feed-tab-bar relative flex items-end justify-center gap-8 px-1 pb-0.5 pt-1.5"
         >
           {FEED_TABS.map((tab) => {
             const active = feedMode === tab.id;
@@ -147,12 +147,13 @@ export function FeedHeader({
                 }}
                 type="button"
                 data-no-drag
+                data-active={active ? "true" : "false"}
                 onPointerDown={stop}
                 onClick={() => onFeedModeChange(tab.id)}
-                className={`relative whitespace-nowrap px-2 pb-1 text-center text-[13px] leading-none transition-all duration-200 ${TAB_SHADOW} ${
+                className={`relative whitespace-nowrap px-2.5 pb-1.5 text-center leading-none transition-all duration-200 ${TAB_SHADOW} ${
                   active
-                    ? "font-bold text-pocket-text"
-                    : "font-semibold text-pocket-muted"
+                    ? "text-[16px] font-bold tracking-[-0.02em] text-pocket-text"
+                    : "text-[15px] font-semibold tracking-[-0.01em] text-pocket-text/60"
                 }`}
               >
                 {tab.label}
@@ -161,7 +162,7 @@ export function FeedHeader({
           })}
           <span
             aria-hidden
-            className={`pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-pocket-teal transition-[left,width] duration-200 ease-out pf-feed-tab-indicator ${
+            className={`pointer-events-none absolute bottom-0 h-[2.5px] rounded-full bg-pocket-teal transition-[left,width] duration-200 ease-out pf-feed-tab-indicator ${
               indicatorReady && indicator.width > 0 ? "opacity-100" : "opacity-0"
             }`}
             style={{
