@@ -592,7 +592,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
       {levelUpData && (
         <LevelUpModal
           level={levelUpData.level}
-          title={levelUpData.title}
           onDismiss={() => setLevelUpData(null)}
         />
       )}
@@ -728,11 +727,9 @@ function TopicsSubPage({
 
 function LevelUpModal({
   level,
-  title,
   onDismiss,
 }: {
   level: number;
-  title: string;
   onDismiss: () => void;
 }) {
   const [entered, setEntered] = useState(false);
@@ -783,7 +780,7 @@ function LevelUpModal({
         <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
           Level Up
         </p>
-        <p className="mt-1.5 text-[22px] font-bold text-white">{title}</p>
+        <p className="mt-1.5 text-[22px] font-bold text-white">Level {level}</p>
         <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">{desc}</p>
 
         <button

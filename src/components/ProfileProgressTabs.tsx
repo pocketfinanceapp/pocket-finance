@@ -97,9 +97,6 @@ export function ProfileProgressTabs({
             <p className="text-[34px] font-black leading-none tracking-tight text-pocket-text">
               Level {progression.level}
             </p>
-            <p className="mt-1.5 text-[13px] font-semibold text-[#8BA8FF]">
-              {progression.title}
-            </p>
           </div>
         </div>
 

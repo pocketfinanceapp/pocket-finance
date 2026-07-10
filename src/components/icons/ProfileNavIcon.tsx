@@ -11,8 +11,8 @@ export function ProfileNavIcon({ active = false, level }: ProfileNavIconProps) {
   return (
     <span className="relative flex h-[26px] w-[26px] items-center justify-center">
       <svg
-        width="22"
-        height="22"
+        width="26"
+        height="26"
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden
@@ -26,7 +26,7 @@ export function ProfileNavIcon({ active = false, level }: ProfileNavIconProps) {
           strokeLinecap="round"
         />
         {active && level != null && level > 0 && (
-          <circle cx="18.5" cy="6" r="2.25" fill="#3B6EF5" stroke="#00C6C6" strokeWidth="0.75" />
+          <circle cx="18.5" cy="6" r="2.35" fill="#3B6EF5" stroke="#00C6C6" strokeWidth="0.75" />
         )}
       </svg>
     </span>

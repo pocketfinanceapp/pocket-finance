@@ -37,9 +37,6 @@ function resolveVariantFromCategory(
   return resolveFeedFallbackVariant(article);
 }
 
-const BOTTOM_SCRIM =
-  "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.92) 100%)";
-
 /** Premium category-specific fallback when an article has no usable image */
 export function FeedCardFallbackBackground({
   article,
@@ -52,11 +49,10 @@ export function FeedCardFallbackBackground({
 
   return (
     <div className="absolute inset-0 z-0 overflow-hidden bg-pocket-feed-bg">
-      <VariantArt variant={variant} uid={uid} />
-      <div
-        className="absolute inset-0"
-        style={{ background: BOTTOM_SCRIM }}
-      />
+      <div className="pf-feed-fallback-art relative h-full w-full">
+        <VariantArt variant={variant} uid={uid} />
+      </div>
+      <div className="pf-feed-fallback-scrim absolute inset-0" />
     </div>
   );
 }

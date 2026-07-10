@@ -49,8 +49,8 @@ function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
   return (
     <>
       <div
-        className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-16 bg-gradient-to-b ${
-          soft ? "from-black/35 to-transparent" : "from-black/45 to-transparent"
+        className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-16 ${
+          soft ? "pf-feed-overlay-top--soft" : "pf-feed-overlay-top"
         }`}
       />
       <div
@@ -62,12 +62,9 @@ function FeedCardOverlays({ soft = false }: { soft?: boolean }) {
         }}
       />
       <div
-        className="pointer-events-none absolute inset-0 z-[1]"
-        style={{
-          background: soft
-            ? "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.03) 18%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.52) 68%, rgba(0,0,0,0.82) 100%)"
-            : "linear-gradient(180deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.06) 18%, rgba(0,0,0,0.14) 45%, rgba(0,0,0,0.58) 68%, rgba(0,0,0,0.86) 100%)",
-        }}
+        className={`pointer-events-none absolute inset-0 z-[1] ${
+          soft ? "pf-feed-overlay-body--soft" : "pf-feed-overlay-body"
+        }`}
       />
     </>
   );
@@ -113,7 +110,7 @@ export function FeedCard({
   const hasHeroImage = !showFallback;
   const useSoftOverlay = hasHeroImage && isDarkImage;
   const iconClass =
-    "h-[26px] w-[26px] text-white opacity-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]";
+    "pf-feed-rail-icon h-[26px] w-[26px] opacity-100";
   const hotHeadline =
     showTrendingLabel || likeCount + commentCount >= 35;
 
@@ -262,8 +259,8 @@ export function FeedCard({
             src={article.imageUrl}
             alt=""
             fill
-            className={`absolute inset-0 h-full w-full object-cover object-top contrast-[1.02] saturate-[0.92] ${
-              useSoftOverlay ? "brightness-[0.84]" : "brightness-[0.72]"
+            className={`absolute inset-0 h-full w-full object-cover object-top ${
+              useSoftOverlay ? "pf-feed-hero-image--soft" : "pf-feed-hero-image"
             }`}
             sizes="100vw"
             unoptimized
@@ -301,7 +298,7 @@ export function FeedCard({
         <RailActionSlot
           meta={
             likeCount > 0 ? (
-              <span className="text-[11px] font-bold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
+              <span className="pf-feed-rail-meta text-[11px] font-bold tabular-nums leading-none">
                 {formatLikeCount(likeCount)}
               </span>
             ) : null
@@ -327,7 +324,7 @@ export function FeedCard({
         <RailActionSlot
           meta={
             commentCount > 0 ? (
-              <span className="text-[11px] font-bold tabular-nums leading-none text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
+              <span className="pf-feed-rail-meta text-[11px] font-bold tabular-nums leading-none">
                 {formatLikeCount(commentCount)}
               </span>
             ) : null
@@ -401,7 +398,7 @@ export function FeedCard({
           style={{ opacity: swipeHintOpacity }}
           data-no-drag
         >
-          <span className="whitespace-nowrap rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] text-white/75 backdrop-blur-sm">
+          <span className="pf-feed-toast whitespace-nowrap rounded-full border border-[var(--pocket-border)] px-3 py-1 text-[10px] backdrop-blur-sm">
             Swipe left for article · Swipe right for stock
           </span>
         </div>
@@ -418,12 +415,11 @@ export function FeedCard({
         }`}
       >
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[50%]"
-          style={{
-            background: useSoftOverlay
-              ? "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.62) 30%, rgba(0,0,0,0.24) 58%, transparent 100%)"
-              : "linear-gradient(to top, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.68) 30%, rgba(0,0,0,0.28) 58%, transparent 100%)",
-          }}
+          className={`pointer-events-none absolute inset-x-0 bottom-0 h-[50%] ${
+            useSoftOverlay
+              ? "pf-feed-overlay-bottom--soft"
+              : "pf-feed-overlay-bottom"
+          }`}
         />
 
         <div
@@ -444,13 +440,13 @@ export function FeedCard({
 
           <div className="mt-2 flex items-start gap-2">
             {hotHeadline && <FireSparkIcon className="mt-1 h-4 w-4 shrink-0" />}
-            <h1 className="line-clamp-3 text-[1.42rem] font-bold leading-[1.16] tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.95)] sm:text-[1.5rem]">
+            <h1 className="pf-feed-headline line-clamp-3 text-[1.42rem] font-bold leading-[1.16] tracking-tight sm:text-[1.5rem]">
               {cleanArticleTitle(article.headline)}
             </h1>
           </div>
 
           {contextLine ? (
-            <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-white/68">
+            <p className="pf-feed-subline mt-2 line-clamp-2 text-[13px] leading-snug">
               {contextLine}
             </p>
           ) : null}
@@ -473,7 +469,7 @@ export function FeedCard({
 
       {toast && (
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/75 px-4 py-2 text-sm font-medium text-white backdrop-blur-md"
+          className="pf-feed-toast pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2 rounded-full px-4 py-2 text-sm font-medium backdrop-blur-md"
           data-no-drag
         >
           {toast}
@@ -482,7 +478,7 @@ export function FeedCard({
 
       {guestPrompt && (
         <div
-          className="absolute bottom-28 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/75 px-4 py-2 text-xs text-white backdrop-blur-md"
+          className="pf-feed-toast absolute bottom-28 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-xs backdrop-blur-md"
           data-no-drag
           data-interactive
         >
@@ -533,7 +529,7 @@ function FeedChip({
   }
 
   return (
-    <div className="mt-2.5 inline-flex max-w-full items-center rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/78">
+    <div className="pf-feed-topic-chip mt-2.5 inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide">
       <span className="truncate">{label}</span>
     </div>
   );

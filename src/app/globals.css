@@ -38,6 +38,65 @@
   --pocket-chart-tick: #71717a;
   --pocket-chart-tooltip-bg: #141414;
   --pocket-chart-tooltip-border: #262626;
+  --pocket-feed-scrim-top: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.45) 0%,
+    transparent 100%
+  );
+  --pocket-feed-scrim-top-soft: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0%,
+    transparent 100%
+  );
+  --pocket-feed-scrim-body: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.22) 0%,
+    rgba(0, 0, 0, 0.06) 18%,
+    rgba(0, 0, 0, 0.14) 45%,
+    rgba(0, 0, 0, 0.58) 68%,
+    rgba(0, 0, 0, 0.86) 100%
+  );
+  --pocket-feed-scrim-body-soft: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.16) 0%,
+    rgba(0, 0, 0, 0.03) 18%,
+    rgba(0, 0, 0, 0.12) 45%,
+    rgba(0, 0, 0, 0.52) 68%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+  --pocket-feed-scrim-bottom: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.84) 0%,
+    rgba(0, 0, 0, 0.68) 30%,
+    rgba(0, 0, 0, 0.28) 58%,
+    transparent 100%
+  );
+  --pocket-feed-scrim-bottom-soft: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.62) 30%,
+    rgba(0, 0, 0, 0.24) 58%,
+    transparent 100%
+  );
+  --pocket-feed-fallback-scrim: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.05) 30%,
+    rgba(0, 0, 0, 0.55) 55%,
+    rgba(0, 0, 0, 0.92) 100%
+  );
+  --pocket-feed-rail-color: #ffffff;
+  --pocket-feed-rail-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --pocket-feed-headline-color: #ffffff;
+  --pocket-feed-headline-shadow: 0 2px 18px rgba(0, 0, 0, 0.95);
+  --pocket-feed-subline-color: rgba(255, 255, 255, 0.68);
+  --pocket-feed-chip-topic-bg: rgba(0, 0, 0, 0.45);
+  --pocket-feed-chip-topic-text: rgba(255, 255, 255, 0.78);
+  --pocket-feed-chip-topic-border: rgba(255, 255, 255, 0.15);
+  --pocket-feed-toast-bg: rgba(0, 0, 0, 0.75);
+  --pocket-feed-toast-text: #ffffff;
+  --pocket-feed-hero-brightness: 0.72;
+  --pocket-feed-hero-brightness-soft: 0.84;
   color-scheme: dark;
 }
 
@@ -76,6 +135,65 @@
   --pocket-chart-tick: #6b7280;
   --pocket-chart-tooltip-bg: #ffffff;
   --pocket-chart-tooltip-border: rgba(0, 0, 0, 0.1);
+  --pocket-feed-scrim-top: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.92) 0%,
+    transparent 100%
+  );
+  --pocket-feed-scrim-top-soft: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.82) 0%,
+    transparent 100%
+  );
+  --pocket-feed-scrim-body: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(255, 255, 255, 0.28) 18%,
+    rgba(255, 255, 255, 0.42) 45%,
+    rgba(255, 255, 255, 0.86) 68%,
+    rgba(255, 255, 255, 0.96) 100%
+  );
+  --pocket-feed-scrim-body-soft: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.58) 0%,
+    rgba(255, 255, 255, 0.2) 18%,
+    rgba(255, 255, 255, 0.34) 45%,
+    rgba(255, 255, 255, 0.78) 68%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+  --pocket-feed-scrim-bottom: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.88) 30%,
+    rgba(255, 255, 255, 0.42) 58%,
+    transparent 100%
+  );
+  --pocket-feed-scrim-bottom-soft: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(255, 255, 255, 0.82) 30%,
+    rgba(255, 255, 255, 0.36) 58%,
+    transparent 100%
+  );
+  --pocket-feed-fallback-scrim: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.1) 30%,
+    rgba(255, 255, 255, 0.72) 55%,
+    rgba(255, 255, 255, 0.98) 100%
+  );
+  --pocket-feed-rail-color: #111827;
+  --pocket-feed-rail-shadow: 0 1px 3px rgba(255, 255, 255, 0.85);
+  --pocket-feed-headline-color: #111827;
+  --pocket-feed-headline-shadow: 0 1px 8px rgba(255, 255, 255, 0.92);
+  --pocket-feed-subline-color: rgba(17, 24, 39, 0.68);
+  --pocket-feed-chip-topic-bg: rgba(255, 255, 255, 0.82);
+  --pocket-feed-chip-topic-text: rgba(17, 24, 39, 0.78);
+  --pocket-feed-chip-topic-border: rgba(0, 0, 0, 0.08);
+  --pocket-feed-toast-bg: rgba(255, 255, 255, 0.94);
+  --pocket-feed-toast-text: #111827;
+  --pocket-feed-hero-brightness: 0.94;
+  --pocket-feed-hero-brightness-soft: 0.98;
   color-scheme: light;
 }
 
@@ -316,6 +434,91 @@ html.app-route
   color: var(--pocket-text);
 }
 
+.feed-header-scrim {
+  background: var(--pocket-header-scrim);
+}
+
+.pf-feed-overlay-top {
+  background: var(--pocket-feed-scrim-top);
+}
+
+.pf-feed-overlay-top--soft {
+  background: var(--pocket-feed-scrim-top-soft);
+}
+
+.pf-feed-overlay-body {
+  background: var(--pocket-feed-scrim-body);
+}
+
+.pf-feed-overlay-body--soft {
+  background: var(--pocket-feed-scrim-body-soft);
+}
+
+.pf-feed-overlay-bottom {
+  background: var(--pocket-feed-scrim-bottom);
+}
+
+.pf-feed-overlay-bottom--soft {
+  background: var(--pocket-feed-scrim-bottom-soft);
+}
+
+.pf-feed-fallback-scrim {
+  background: var(--pocket-feed-fallback-scrim);
+}
+
+.pf-feed-rail-icon {
+  color: var(--pocket-feed-rail-color);
+  filter: drop-shadow(var(--pocket-feed-rail-shadow));
+}
+
+.pf-feed-rail-meta {
+  color: var(--pocket-feed-rail-color);
+  text-shadow: var(--pocket-feed-rail-shadow);
+}
+
+.pf-feed-headline {
+  color: var(--pocket-feed-headline-color);
+  text-shadow: var(--pocket-feed-headline-shadow);
+}
+
+.pf-feed-subline {
+  color: var(--pocket-feed-subline-color);
+}
+
+.pf-feed-topic-chip {
+  border-color: var(--pocket-feed-chip-topic-border);
+  background-color: var(--pocket-feed-chip-topic-bg);
+  color: var(--pocket-feed-chip-topic-text);
+}
+
+.pf-feed-toast {
+  background-color: var(--pocket-feed-toast-bg);
+  color: var(--pocket-feed-toast-text);
+}
+
+.pf-feed-hero-image {
+  filter: brightness(var(--pocket-feed-hero-brightness)) contrast(1.02)
+    saturate(0.92);
+}
+
+.pf-feed-hero-image--soft {
+  filter: brightness(var(--pocket-feed-hero-brightness-soft)) contrast(1.02)
+    saturate(0.92);
+}
+
+[data-theme="light"] .pf-feed-fallback-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 95% 75% at 50% 30%,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.42) 62%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+}
+
 .pf-header-bar {
   background: var(--pocket-bg);
   border-color: var(--pocket-border);
@@ -439,27 +642,34 @@ html.app-route[data-theme="light"] .pf-theme-scope [class*="bg-[#030305]"] {
   background-color: var(--pocket-bg) !important;
 }
 
+/* Feed cards — theme tokens control scrim + copy colors */
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-rail-icon,
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-rail-meta,
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-headline,
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-subline {
+  color: var(--pocket-feed-headline-color);
+}
+
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-subline {
+  color: var(--pocket-feed-subline-color);
+}
+
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-rail-icon,
+html.app-route[data-theme="light"] .pf-on-media .pf-feed-rail-meta {
+  color: var(--pocket-feed-rail-color);
+}
+
+/* Legacy overrides for hardcoded utility classes outside feed tokens */
 html.app-route[data-theme="light"] .pf-theme-scope .text-white,
 html.app-route[data-theme="light"] .pf-feed-chrome .text-white {
 
   color: var(--pocket-text) !important;
 }
 
-/* Feed cards sit on photos — keep light text on media overlays */
-html.app-route[data-theme="light"] .pf-on-media .text-white,
-html.app-route[data-theme="light"] .pf-on-media [class*="text-white/"] {
+html.app-route[data-theme="light"] .pf-on-media .text-white:not(.pf-feed-headline):not(.pf-feed-rail-icon):not(.pf-feed-rail-meta),
+html.app-route[data-theme="light"] .pf-on-media [class*="text-white/"]:not(.pf-feed-subline) {
 
-  color: #ffffff !important;
-}
-
-html.app-route[data-theme="light"] .pf-on-media [class*="text-white/68"] {
-
-  color: rgba(255, 255, 255, 0.68) !important;
-}
-
-html.app-route[data-theme="light"] .pf-on-media [class*="text-white/78"] {
-
-  color: rgba(255, 255, 255, 0.78) !important;
+  color: var(--pocket-text-muted) !important;
 }
 
 html.app-route[data-theme="light"] .pf-home-feed .pf-feed-empty {
@@ -534,7 +744,7 @@ html.app-route[data-theme="light"] .pf-feed-chrome [class*="bg-black/"]:not(.pf-
 
 html.app-route[data-theme="light"] .pf-on-media [class*="bg-black/"] {
 
-  background-color: rgba(0, 0, 0, 0.45) !important;
+  background-color: var(--pocket-feed-chip-topic-bg) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope .pf-nav-inactive {
