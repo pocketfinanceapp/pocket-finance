@@ -83,6 +83,9 @@ interface AppContextValue {
   feedJumpArticleId: string | null;
   requestFeedJump: (articleId: string) => void;
   clearFeedJump: () => void;
+  companyPanelTicker: string | null;
+  requestCompanyPanel: (ticker: string) => void;
+  clearCompanyPanelRequest: () => void;
   incrementStoriesRead: () => void;
   reloadProfileStats: () => Promise<void>;
   onboardingComplete: boolean;
@@ -111,6 +114,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [likedArticlesCount, setLikedArticlesCount] = useState(0);
   const [feedIndex, setFeedIndexState] = useState(0);
   const [feedJumpArticleId, setFeedJumpArticleId] = useState<string | null>(
+    null
+  );
+  const [companyPanelTicker, setCompanyPanelTicker] = useState<string | null>(
     null
   );
   const [onboardingComplete, setOnboardingComplete] = useState(() => {
@@ -377,6 +383,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFeedJumpArticleId(null);
   }, []);
 
+  const requestCompanyPanel = useCallback((ticker: string) => {
+    const upper = ticker.trim().toUpperCase();
+    if (!upper) return;
+    setCompanyPanelTicker(upper);
+  }, []);
+
+  const clearCompanyPanelRequest = useCallback(() => {
+    setCompanyPanelTicker(null);
+  }, []);
+
   const incrementStoriesRead = useCallback(() => {
     setStoriesRead((n) => n + 1);
     if (!appUserId) return;
@@ -419,6 +435,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       feedJumpArticleId,
       requestFeedJump,
       clearFeedJump,
+      companyPanelTicker,
+      requestCompanyPanel,
+      clearCompanyPanelRequest,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,
@@ -456,6 +475,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       feedJumpArticleId,
       requestFeedJump,
       clearFeedJump,
+      companyPanelTicker,
+      requestCompanyPanel,
+      clearCompanyPanelRequest,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,

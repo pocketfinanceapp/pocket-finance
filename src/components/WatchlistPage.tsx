@@ -38,6 +38,7 @@ import {
 } from "@/lib/watchlistStore";
 import { isMarketThemeTicker } from "@/lib/marketThemes";
 import { recordActivityEvent } from "@/lib/progression";
+import { useNavigation } from "@/context/NavigationContext";
 import { CompanyLogo } from "./CompanyLogo";
 import { ArticlePanel } from "./ArticlePanel";
 import { tickerLogoColor } from "./ProfileArticlePreview";
@@ -475,8 +476,10 @@ export function WatchlistPage({
     sectorInterests,
     toggleFollowMarket,
     toggleSectorInterest,
+    requestCompanyPanel,
     ensureWatchlistLoaded,
   } = useApp();
+  const { navigate } = useNavigation();
   const tabEntered = useTabPageEntered("watchlist");
   const [activeItem, setActiveItem] = useState<WatchlistItem | null>(null);
   const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null);
@@ -586,6 +589,14 @@ export function WatchlistPage({
     setFavouriteTopics(loadFavouriteTopics());
   }, []);
 
+  const openTrackedAsset = useCallback(
+    (ticker: string) => {
+      requestCompanyPanel(ticker);
+      navigate("discover");
+    },
+    [requestCompanyPanel, navigate]
+  );
+
   if (activeArticle) {
     return (
       <ArticlePanel
@@ -595,7 +606,7 @@ export function WatchlistPage({
     );
   }
 
-  if (activeItem) {
+  if (activeItem?.type === "theme") {
     return (
       <StockPanel
         article={articleFromSavedEntry(activeItem.latestEntry)}
@@ -657,7 +668,7 @@ export function WatchlistPage({
                       <AssetRow
                         key={item.ticker}
                         item={item}
-                        onTap={() => setActiveItem(item)}
+                        onTap={() => openTrackedAsset(item.ticker)}
                         onRemove={() => void removeTrackedItem(item)}
                       />
                     ))}

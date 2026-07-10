@@ -31,6 +31,7 @@ import {
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
 import { StockPanel } from "./StockPanel";
+import { useNavigation } from "@/context/NavigationContext";
 
 interface DiscoverPageProps {
   articles: NewsArticle[];
@@ -159,7 +160,14 @@ function CompanyCard({
 
 export function DiscoverPage({ articles }: DiscoverPageProps) {
   const tabEntered = useTabPageEntered("discover");
-  const { followedMarkets, sectorInterests, savedArticles } = useApp();
+  const { activeTab } = useNavigation();
+  const {
+    followedMarkets,
+    sectorInterests,
+    savedArticles,
+    companyPanelTicker,
+    clearCompanyPanelRequest,
+  } = useApp();
   const [favouriteTopics, setFavouriteTopics] = useState(() =>
     loadFavouriteTopics()
   );
@@ -241,6 +249,17 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
       window.requestAnimationFrame(() => setListVisible(true));
     }, 380);
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "discover" || !companyPanelTicker) return;
+    openCompany(companyPanelTicker);
+    clearCompanyPanelRequest();
+  }, [
+    activeTab,
+    companyPanelTicker,
+    openCompany,
+    clearCompanyPanelRequest,
+  ]);
 
   if (panelTicker) {
     return (
