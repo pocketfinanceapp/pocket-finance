@@ -607,7 +607,7 @@ export function WatchlistPage({
 
   const openTrackedAsset = useCallback(
     (ticker: string) => {
-      requestCompanyPanel(ticker);
+      requestCompanyPanel(ticker, "watchlist");
       navigate("discover");
     },
     [requestCompanyPanel, navigate]

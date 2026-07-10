@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import type { NavTab } from "@/components/BottomNav";
 import type { MarketFilter, SectorFilter } from "@/lib/filters";
 import { isOnboardingComplete, markOnboardingComplete } from "@/lib/onboarding";
 import {
@@ -84,8 +85,10 @@ interface AppContextValue {
   requestFeedJump: (articleId: string) => void;
   clearFeedJump: () => void;
   companyPanelTicker: string | null;
-  requestCompanyPanel: (ticker: string) => void;
+  companyPanelReturnTab: NavTab | null;
+  requestCompanyPanel: (ticker: string, returnTab?: NavTab) => void;
   clearCompanyPanelRequest: () => void;
+  clearCompanyPanelReturnTab: () => void;
   incrementStoriesRead: () => void;
   reloadProfileStats: () => Promise<void>;
   onboardingComplete: boolean;
@@ -119,6 +122,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [companyPanelTicker, setCompanyPanelTicker] = useState<string | null>(
     null
   );
+  const [companyPanelReturnTab, setCompanyPanelReturnTab] =
+    useState<NavTab | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(() => {
     if (typeof window === "undefined") return false;
     return isOnboardingComplete();
@@ -383,14 +388,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFeedJumpArticleId(null);
   }, []);
 
-  const requestCompanyPanel = useCallback((ticker: string) => {
-    const upper = ticker.trim().toUpperCase();
-    if (!upper) return;
-    setCompanyPanelTicker(upper);
-  }, []);
+  const requestCompanyPanel = useCallback(
+    (ticker: string, returnTab?: NavTab) => {
+      const upper = ticker.trim().toUpperCase();
+      if (!upper) return;
+      setCompanyPanelTicker(upper);
+      setCompanyPanelReturnTab(returnTab ?? null);
+    },
+    []
+  );
 
   const clearCompanyPanelRequest = useCallback(() => {
     setCompanyPanelTicker(null);
+  }, []);
+
+  const clearCompanyPanelReturnTab = useCallback(() => {
+    setCompanyPanelReturnTab(null);
   }, []);
 
   const incrementStoriesRead = useCallback(() => {
@@ -436,8 +449,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       requestFeedJump,
       clearFeedJump,
       companyPanelTicker,
+      companyPanelReturnTab,
       requestCompanyPanel,
       clearCompanyPanelRequest,
+      clearCompanyPanelReturnTab,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,
@@ -476,8 +491,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       requestFeedJump,
       clearFeedJump,
       companyPanelTicker,
+      companyPanelReturnTab,
       requestCompanyPanel,
       clearCompanyPanelRequest,
+      clearCompanyPanelReturnTab,
       incrementStoriesRead,
       reloadProfileStats,
       onboardingComplete,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Search, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import {
@@ -162,13 +162,15 @@ function CompanyCard({
 
 export function DiscoverPage({ articles }: DiscoverPageProps) {
   const tabEntered = useTabPageEntered("discover");
-  const { activeTab } = useNavigation();
+  const { activeTab, navigate } = useNavigation();
   const {
     followedMarkets,
     sectorInterests,
     savedArticles,
     companyPanelTicker,
+    companyPanelReturnTab,
     clearCompanyPanelRequest,
+    clearCompanyPanelReturnTab,
   } = useApp();
   const [favouriteTopics, setFavouriteTopics] = useState(() =>
     loadFavouriteTopics()
@@ -238,6 +240,28 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
     return filterExploreCompanies(rankedCompanies, q);
   }, [rankedCompanies, searchQuery]);
 
+  const handleCloseCompanyPanel = useCallback(() => {
+    const returnTab = companyPanelReturnTab;
+    clearCompanyPanelReturnTab();
+    closePanel();
+    if (returnTab) {
+      navigate(returnTab);
+    }
+  }, [
+    companyPanelReturnTab,
+    clearCompanyPanelReturnTab,
+    closePanel,
+    navigate,
+  ]);
+
+  const handleOpenCompany = useCallback(
+    (ticker: string) => {
+      clearCompanyPanelReturnTab();
+      openCompany(ticker);
+    },
+    [clearCompanyPanelReturnTab, openCompany]
+  );
+
   useEffect(() => {
     if (activeTab !== "discover" || !companyPanelTicker) return;
     openCompany(companyPanelTicker);
@@ -252,7 +276,10 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
   if (panelTicker) {
     return (
       <div className="pf-page h-full bg-pocket-bg" style={panelEnterStyle(panelVisible)}>
-        <StockPanel article={articleFromTicker(panelTicker)} onBack={closePanel} />
+        <StockPanel
+          article={articleFromTicker(panelTicker)}
+          onBack={handleCloseCompanyPanel}
+        />
       </div>
     );
   }
@@ -328,7 +355,7 @@ export function DiscoverPage({ articles }: DiscoverPageProps) {
                 company={company}
                 index={index}
                 entered={tabEntered && listVisible}
-                onOpen={() => openCompany(company.ticker)}
+                onOpen={() => handleOpenCompany(company.ticker)}
               />
             ))}
           </div>
