@@ -1,4 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Globe } from "lucide-react";
+import { getCompanyLogoUrl } from "@/lib/companyLogos";
 
 function logoLabel(ticker: string): string {
   const upper = ticker.toUpperCase();
@@ -21,16 +26,23 @@ export function CompanyLogo({
   const upper = ticker.toUpperCase();
   const showGlobe = upper === "MARKET";
   const label = logoLabel(upper);
+  const logoUrl = getCompanyLogoUrl(upper);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [upper]);
+
+  const radius = shape === "circle" ? "rounded-full" : "rounded-md";
+  const showImage = logoUrl && !imageFailed && !showGlobe;
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center text-xs font-bold text-white ${
-        shape === "circle" ? "rounded-full" : "rounded-md"
-      }`}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden text-xs font-bold text-white ${radius}`}
       style={{
         width: size,
         height: size,
-        backgroundColor: color,
+        backgroundColor: showImage ? "var(--pocket-surface-hover)" : color,
         fontSize: size * 0.32,
       }}
     >
@@ -39,6 +51,16 @@ export function CompanyLogo({
           className="text-white"
           style={{ width: size * 0.5, height: size * 0.5 }}
           strokeWidth={2.25}
+        />
+      ) : showImage ? (
+        <Image
+          src={logoUrl}
+          alt={`${upper} logo`}
+          width={size}
+          height={size}
+          className="h-full w-full object-contain p-1"
+          unoptimized
+          onError={() => setImageFailed(true)}
         />
       ) : (
         label

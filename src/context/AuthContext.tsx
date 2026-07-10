@@ -12,10 +12,6 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { getEmailConfirmRedirectUrl, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 import {
-  clearPendingReferralCode,
-  recordReferralIfPending,
-} from "@/lib/referral";
-import {
   clearGuestMode,
   enableGuestMode,
   isGuestMode,
@@ -172,9 +168,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (nextSession?.user) {
         clearGuestMode();
         setIsGuest(false);
-        if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-          void recordReferralIfPending(nextSession.user.id);
-        }
       }
       if (event === "PASSWORD_RECOVERY") {
         setPasswordRecoveryPending(true);
@@ -212,9 +205,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const needsConfirmation = Boolean(data.user && !data.session);
-      if (data.user && data.session) {
-        void recordReferralIfPending(data.user.id);
-      }
       return { error: null, needsConfirmation };
     },
     []

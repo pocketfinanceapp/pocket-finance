@@ -1,24 +1,19 @@
 "use client";
 
-import { Moon, Sparkles, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import {
-  THEME_ORDER,
-  THEMES,
-  type AppTheme,
-} from "@/lib/theme";
+import { THEME_ORDER, THEMES, type AppTheme } from "@/lib/theme";
 
 const THEME_ICONS: Record<AppTheme, typeof Moon> = {
   dark: Moon,
   light: Sun,
-  "modern-light": Sparkles,
 };
 
 interface ThemeSwitcherProps {
   variant?: "icon" | "picker";
 }
 
-/** Compact icon button (Profile header) or full 3-option picker (Settings). */
+/** Compact icon button or Dark / Light picker (Settings). */
 export function ThemeSwitcher({ variant = "icon" }: ThemeSwitcherProps) {
   const { theme, setTheme, cycleTheme } = useTheme();
   const Icon = THEME_ICONS[theme];
@@ -26,7 +21,7 @@ export function ThemeSwitcher({ variant = "icon" }: ThemeSwitcherProps) {
 
   if (variant === "picker") {
     return (
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {THEME_ORDER.map((id) => {
           const def = THEMES[id];
           const active = theme === id;

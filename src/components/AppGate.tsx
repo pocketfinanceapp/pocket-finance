@@ -8,7 +8,6 @@ import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { isOnboardingComplete } from "@/lib/onboarding";
-import { captureReferralFromUrl } from "@/lib/referral";
 
 const SPLASH_MAX_MS = 2500;
 
@@ -18,10 +17,6 @@ export function AppGate({ children }: { children: React.ReactNode }) {
     useAuth();
   const { ready, onboardingComplete, syncAppUser } = useApp();
   const [splashElapsed, setSplashElapsed] = useState(false);
-
-  useEffect(() => {
-    captureReferralFromUrl();
-  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSplashElapsed(true), SPLASH_MAX_MS);

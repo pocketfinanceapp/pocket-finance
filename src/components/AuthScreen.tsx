@@ -4,10 +4,6 @@ import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { useAuth } from "@/context/AuthContext";
-import {
-  getPendingReferralCode,
-  storePendingReferralCode,
-} from "@/lib/referral";
 
 type AuthMode = "signIn" | "signUp";
 type AuthView = "form" | "checkInbox" | "forgotPassword" | "resetSent";
@@ -30,7 +26,6 @@ export function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [referralCode, setReferralCode] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [confirmedEmail, setConfirmedEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -53,11 +48,6 @@ export function AuthScreen() {
         setEmail(savedEmail);
         setRememberMe(true);
       }
-      const pendingRef = getPendingReferralCode();
-      if (pendingRef) {
-        setReferralCode(pendingRef);
-        setMode("signUp");
-      }
     } catch {
       /* ignore storage errors */
     }
@@ -71,9 +61,6 @@ export function AuthScreen() {
 
     try {
       if (isSignUp) {
-        if (referralCode.trim()) {
-          storePendingReferralCode(referralCode.trim());
-        }
         const result = await signUp(email.trim(), password, displayName);
         if (result.error) {
           setError(result.error);
@@ -404,16 +391,6 @@ export function AuthScreen() {
             minLength={6}
           />
 
-          {isSignUp && (
-            <AuthField
-              label="Referral code (optional)"
-              type="text"
-              value={referralCode}
-              onChange={setReferralCode}
-              placeholder="Friend's invite code"
-              autoComplete="off"
-            />
-          )}
 
           {!isSignUp && (
             <div className="flex justify-end">
@@ -532,7 +509,7 @@ function AuthField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium text-zinc-400">
+      <span className="mb-1 block text-xs font-medium text-pocket-muted">
         {label}
       </span>
       <input
@@ -543,7 +520,7 @@ function AuthField({
         autoComplete={autoComplete}
         required={required}
         minLength={minLength}
-        className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:border-[#3B6EF5]/50 focus:outline-none"
+        className="w-full rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-4 py-2.5 text-sm text-pocket-text placeholder:text-pocket-muted focus:border-[#3B6EF5]/50 focus:outline-none"
       />
     </label>
   );
@@ -565,7 +542,7 @@ function OAuthButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/[0.04] py-3.5 text-sm font-semibold text-white transition-colors active:bg-white/[0.08] disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] py-3.5 text-sm font-semibold text-pocket-text transition-colors active:bg-[var(--pocket-surface-hover)] disabled:opacity-50"
     >
       {icon}
       {label}

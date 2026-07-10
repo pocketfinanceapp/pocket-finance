@@ -43,7 +43,6 @@ import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ProfileAchievements } from "./ProfileAchievements";
 import { ProfileArticlePreview } from "./ProfileArticlePreview";
 import { ProfileIdentitySection } from "./ProfileIdentitySection";
-import { ReferralSection } from "./ReferralSection";
 import {
   ProfileActivitySection,
   ProfileProgressionHub,
@@ -465,14 +464,6 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             email={user.email}
             joined={joined}
             animateIn={profileEntered}
-          />
-        )}
-
-        {user && !isGuest && (
-          <ReferralSection
-            userId={user.id}
-            animateIn={profileEntered}
-            enterDelay={60}
           />
         )}
 

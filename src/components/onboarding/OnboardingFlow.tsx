@@ -78,7 +78,7 @@ export function OnboardingFlow() {
   };
 
   return (
-    <div className="app-shell-height fixed inset-0 z-[100] mx-auto flex w-full max-w-mobile flex-col bg-black text-white">
+    <div className="app-shell-height fixed inset-0 z-[100] mx-auto flex w-full max-w-mobile flex-col pf-theme-scope bg-pocket-bg text-pocket-text">
       <div className="flex justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
         <StepDots total={4} current={step} />
       </div>
@@ -122,7 +122,7 @@ function StepDots({ total, current }: { total: number; current: number }) {
         <div
           key={i}
           className={`h-1 rounded-full transition-all duration-300 ${
-            i === current ? "w-6 bg-[#00C6C6]" : "w-1.5 bg-white/20"
+            i === current ? "w-6 bg-[#00C6C6]" : "w-1.5 bg-[var(--pocket-surface-hover)]"
           }`}
         />
       ))}
@@ -187,7 +187,7 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
             className="onboarding-enter onboarding-enter-d1 mx-auto mb-10"
           />
 
-          <h1 className="onboarding-enter onboarding-enter-d2 text-[34px] font-extrabold leading-tight tracking-tight text-white antialiased">
+          <h1 className="onboarding-enter onboarding-enter-d2 text-[34px] font-extrabold leading-tight tracking-tight text-pocket-text antialiased">
             Pocket Finance
           </h1>
 
@@ -195,7 +195,7 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
             Bold news. Smarter moves.
           </p>
 
-          <p className="onboarding-enter onboarding-enter-d4 mt-5 max-w-[280px] text-[15px] leading-relaxed text-zinc-500">
+          <p className="onboarding-enter onboarding-enter-d4 mt-5 max-w-[280px] text-[15px] leading-relaxed text-pocket-muted">
             The world&apos;s markets in your pocket
           </p>
         </div>
@@ -240,7 +240,7 @@ function MarketsStep({
       <h1 className="text-2xl font-bold tracking-tight">
         Which markets do you follow?
       </h1>
-      <p className="mt-2 text-sm text-zinc-500">
+      <p className="mt-2 text-sm text-pocket-muted">
         Select at least one to personalise your feed.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3">
@@ -282,7 +282,7 @@ function SectorsStep({
       <h1 className="text-2xl font-bold tracking-tight">
         What sectors interest you?
       </h1>
-      <p className="mt-2 text-sm text-zinc-500">
+      <p className="mt-2 text-sm text-pocket-muted">
         We&apos;ll surface stories that match your interests.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3">
@@ -335,12 +335,12 @@ function ReadyStep({
           </svg>
         </div>
         <h1 className="text-2xl font-bold">Your feed is ready</h1>
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-pocket-muted">
           Tailored to the markets and sectors you chose.
         </p>
       </div>
 
-      <div className="mb-8 space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+      <div className="mb-8 space-y-4 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-4">
         <SummaryBlock
           title="Markets"
           items={markets.map((id) => getMarketById(id)?.name ?? id)}
@@ -362,7 +362,7 @@ function SummaryBlock({
 }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-pocket-muted">
         {title}
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -402,10 +402,10 @@ function SelectTile({
       style={{
         background: active
           ? "linear-gradient(165deg, rgba(59,110,245,0.05) 0%, rgba(0,198,198,0.10) 100%)"
-          : "#0B0B0D",
+          : "var(--pocket-card)",
         border: active
           ? "1.5px solid #00C6C6"
-          : "1px solid rgba(255,255,255,0.10)",
+          : "1px solid var(--pocket-border)",
         boxShadow: active ? "0 0 20px rgba(0,198,198,0.25)" : undefined,
       }}
     >
@@ -423,18 +423,18 @@ function SelectTile({
           <span className="text-[26px] leading-none">{emoji}</span>
         ) : Icon ? (
           <Icon
-            className={`h-6 w-6 ${active ? "text-[#00C6C6]" : "text-white/[0.38]"}`}
+            className={`h-6 w-6 ${active ? "text-[#00C6C6]" : "text-pocket-muted"}`}
             strokeWidth={1.5}
           />
         ) : null}
       </div>
 
       <div className="mt-auto pt-3">
-        <span className="block text-[15px] font-semibold leading-tight text-white">
+        <span className="block text-[15px] font-semibold leading-tight text-pocket-text">
           {label}
         </span>
         {sub && (
-          <span className="mt-0.5 block text-xs leading-snug text-zinc-500">
+          <span className="mt-0.5 block text-xs leading-snug text-pocket-muted">
             {sub}
           </span>
         )}
@@ -459,7 +459,7 @@ function GradientButton({
       disabled={disabled}
       className={`w-full rounded-2xl py-4 text-base font-bold transition-all duration-200 active:scale-[0.98] ${
         disabled
-          ? "cursor-not-allowed bg-[#1C1C1E] text-zinc-500 shadow-none"
+          ? "cursor-not-allowed bg-[var(--pocket-surface-hover)] text-pocket-muted shadow-none"
           : "onboarding-cta-glow bg-gradient-to-r from-[#3B6EF5] via-[#4A7EF6] to-[#00C6C6] text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)]"
       }`}
     >

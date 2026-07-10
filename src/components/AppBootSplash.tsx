@@ -6,8 +6,7 @@ import { PocketBrand } from "@/components/PocketLogo";
 export function AppBootSplash() {
   return (
     <div
-      className="app-shell-height flex flex-col items-center justify-center bg-[#0a0a0a] px-6"
-      style={{ backgroundColor: "var(--pocket-bg)" }}
+      className="app-shell-height flex flex-col items-center justify-center bg-pocket-bg px-6"
     >
       <PocketBrand
         layout="vertical"
@@ -15,7 +14,7 @@ export function AppBootSplash() {
         glow="strong"
         showTagline
       />
-      <div className="mt-10 h-1 w-24 overflow-hidden rounded-full bg-white/10">
+      <div className="mt-10 h-1 w-24 overflow-hidden rounded-full bg-[var(--pocket-surface-hover)]">
         <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]" />
       </div>
     </div>

@@ -33,6 +33,11 @@
   --pocket-toggle-off: #3f3f46;
   --pocket-overlay-scrim: rgba(0, 0, 0, 0.7);
   --pocket-thread: rgba(0, 198, 198, 0.38);
+  --pocket-chart-surface: rgba(255, 255, 255, 0.03);
+  --pocket-chart-grid: #1f1f1f;
+  --pocket-chart-tick: #71717a;
+  --pocket-chart-tooltip-bg: #141414;
+  --pocket-chart-tooltip-border: #262626;
   color-scheme: dark;
 }
 
@@ -41,66 +46,39 @@
   --pocket-surface: #ffffff;
   --pocket-elevated: #ffffff;
   --pocket-border: rgba(0, 0, 0, 0.08);
-  --pocket-border-strong: rgba(0, 0, 0, 0.12);
+  --pocket-border-strong: rgba(0, 0, 0, 0.11);
   --pocket-text: #111827;
   --pocket-text-muted: #6b7280;
   --pocket-text-subtle: #9ca3af;
-  --pocket-nav-bg: #ffffff;
+  --pocket-nav-bg: rgba(255, 255, 255, 0.94);
   --pocket-card: #ffffff;
-  --pocket-card-hover: #f9fafb;
-  --pocket-surface-hover: rgba(0, 0, 0, 0.04);
-  --pocket-feed-bg: #e5e5ea;
-  --pocket-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --pocket-nav-inactive: rgba(0, 0, 0, 0.42);
+  --pocket-card-hover: #f8f9fb;
+  --pocket-surface-hover: rgba(0, 0, 0, 0.045);
+  --pocket-feed-bg: #e8e8ed;
+  --pocket-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 20px rgba(0, 0, 0, 0.05);
+  --pocket-nav-inactive: rgba(0, 0, 0, 0.4);
   --pocket-card-solid: #ffffff;
-  --pocket-card-inset: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --pocket-backdrop: rgba(242, 242, 247, 0.78);
+  --pocket-card-inset: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --pocket-backdrop: rgba(242, 242, 247, 0.86);
   --pocket-sheet: linear-gradient(180deg, #ffffff 0%, #f2f2f7 100%);
-  --pocket-composer: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, #ffffff 100%);
-  --pocket-search-overlay: linear-gradient(180deg, rgba(242, 242, 247, 0.98) 0%, rgba(229, 229, 234, 0.99) 100%);
-  --pocket-search-bar: rgba(255, 255, 255, 0.92);
+  --pocket-composer: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, #ffffff 100%);
+  --pocket-search-overlay: linear-gradient(180deg, rgba(248, 248, 252, 0.98) 0%, rgba(232, 232, 237, 0.99) 100%);
+  --pocket-search-bar: rgba(255, 255, 255, 0.96);
   --pocket-header-scrim: transparent;
   --pocket-header-fade: transparent;
-  --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.82);
-  --pocket-grid-line: rgba(0, 0, 0, 0.045);
+  --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.88);
+  --pocket-grid-line: rgba(0, 0, 0, 0.05);
   --pocket-toggle-off: #d1d5db;
-  --pocket-overlay-scrim: rgba(17, 24, 39, 0.35);
+  --pocket-overlay-scrim: rgba(17, 24, 39, 0.32);
   --pocket-thread: rgba(0, 160, 170, 0.42);
+  --pocket-chart-surface: #ffffff;
+  --pocket-chart-grid: #e5e7eb;
+  --pocket-chart-tick: #6b7280;
+  --pocket-chart-tooltip-bg: #ffffff;
+  --pocket-chart-tooltip-border: rgba(0, 0, 0, 0.1);
   color-scheme: light;
 }
 
-[data-theme="modern-light"] {
-  --pocket-bg: #f8fafc;
-  --pocket-surface: #ffffff;
-  --pocket-elevated: #ffffff;
-  --pocket-border: rgba(59, 110, 245, 0.12);
-  --pocket-border-strong: rgba(59, 110, 245, 0.18);
-  --pocket-text: #0f172a;
-  --pocket-text-muted: #64748b;
-  --pocket-text-subtle: #94a3b8;
-  --pocket-nav-bg: rgba(255, 255, 255, 0.88);
-  --pocket-card: rgba(255, 255, 255, 0.94);
-  --pocket-card-hover: #f1f5f9;
-  --pocket-surface-hover: rgba(59, 110, 245, 0.06);
-  --pocket-feed-bg: #eef2f6;
-  --pocket-shadow: 0 8px 32px rgba(59, 110, 245, 0.08);
-  --pocket-nav-inactive: rgba(15, 23, 42, 0.42);
-  --pocket-card-solid: rgba(255, 255, 255, 0.96);
-  --pocket-card-inset: inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --pocket-backdrop: rgba(248, 250, 252, 0.82);
-  --pocket-sheet: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
-  --pocket-composer: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, #f8fafc 100%);
-  --pocket-search-overlay: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(238, 242, 246, 0.99) 100%);
-  --pocket-search-bar: rgba(255, 255, 255, 0.94);
-  --pocket-header-scrim: transparent;
-  --pocket-header-fade: transparent;
-  --pocket-feed-chrome-bg: rgba(255, 255, 255, 0.86);
-  --pocket-grid-line: rgba(59, 110, 245, 0.06);
-  --pocket-toggle-off: #cbd5e1;
-  --pocket-overlay-scrim: rgba(15, 23, 42, 0.28);
-  --pocket-thread: rgba(59, 110, 245, 0.38);
-  color-scheme: light;
-}
 
 :root {
   --pocket-teal: #00C6C6;
@@ -319,8 +297,8 @@ html.app-route
   border-color: rgba(0, 198, 198, 0.62);
 }
 
-[data-theme="light"] .pf-thread-trunk,
-[data-theme="modern-light"] .pf-thread-trunk {
+[data-theme="light"] .pf-thread-trunk {
+
   background: linear-gradient(
     180deg,
     rgba(0, 198, 198, 0.72) 0%,
@@ -328,8 +306,8 @@ html.app-route
   );
 }
 
-[data-theme="light"] .pf-thread-branch,
-[data-theme="modern-light"] .pf-thread-branch {
+[data-theme="light"] .pf-thread-branch {
+
   border-color: rgba(0, 160, 170, 0.75);
 }
 
@@ -355,7 +333,7 @@ html.app-route
 }
 
 .pf-header-shell::after {
-  content: "";
+content: "";
   position: absolute;
   inset-inline: 0;
   top: 100%;
@@ -366,54 +344,52 @@ html.app-route
 }
 
 html.app-route[data-theme="light"] .pf-header-shell::after,
-html.app-route[data-theme="modern-light"] .pf-header-shell::after,
-html.app-route[data-theme="light"] .feed-header-scrim,
-html.app-route[data-theme="modern-light"] .feed-header-scrim {
+html.app-route[data-theme="light"] .feed-header-scrim {
+
   display: none;
 }
 
-html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .pf-feed-tab-btn {
+html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-btn {
+
   filter: none !important;
   text-shadow:
     0 1px 8px rgba(255, 255, 255, 0.92),
     0 0 2px rgba(255, 255, 255, 0.75);
 }
 
-html.app-route[data-theme="light"] .pf-section-tab-indicator,
-html.app-route[data-theme="modern-light"] .pf-section-tab-indicator {
+html.app-route[data-theme="light"] .pf-section-tab-indicator {
+
   background: var(--pocket-teal) !important;
 }
 
-html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-indicator,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .pf-feed-tab-indicator {
+html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-tab-indicator {
+
   background: var(--pocket-teal) !important;
 }
 
-html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-search-btn,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .pf-feed-search-btn {
+html.app-route[data-theme="light"] .pf-feed-chrome .pf-feed-search-btn {
+
   filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.85));
 }
 
-html.app-route[data-theme="light"] .feed-search-bar-shimmer,
-html.app-route[data-theme="modern-light"] .feed-search-bar-shimmer {
+html.app-route[data-theme="light"] .feed-search-bar-shimmer {
+
   opacity: 0.35;
 }
 
 html.app-route[data-theme="light"] .feed-search-bar .pointer-events-none.absolute.inset-0,
-html.app-route[data-theme="modern-light"] .feed-search-bar .pointer-events-none.absolute.inset-0,
-html.app-route[data-theme="light"] .pf-search-bar-tint,
-html.app-route[data-theme="modern-light"] .pf-search-bar-tint {
+html.app-route[data-theme="light"] .pf-search-bar-tint {
+
   opacity: 0.2 !important;
 }
 
 .pf-feed-tab-bar {
-  background: transparent;
+background: transparent;
   backdrop-filter: none;
 }
 
-html.app-route[data-theme="light"] .pf-feed-tab-bar,
-html.app-route[data-theme="modern-light"] .pf-feed-tab-bar {
+html.app-route[data-theme="light"] .pf-feed-tab-bar {
+
   background: transparent;
   backdrop-filter: none;
   box-shadow: none;
@@ -444,159 +420,148 @@ html.app-route[data-theme="modern-light"] .pf-feed-tab-bar {
     transform: translateY(0);
   }
   to {
-    opacity: 0;
+opacity: 0;
     transform: translateY(10px);
   }
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope .bg-black,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .bg-black,
-html.app-route[data-theme="light"] .pf-feed-chrome .bg-black,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .bg-black {
+html.app-route[data-theme="light"] .pf-feed-chrome .bg-black {
+
   background-color: var(--pocket-bg) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope .bg-\[\#0a0a0a\],
-html.app-route[data-theme="modern-light"] .pf-theme-scope .bg-\[\#0a0a0a\],
 html.app-route[data-theme="light"] .pf-theme-scope .bg-\[\#111111\],
-html.app-route[data-theme="modern-light"] .pf-theme-scope .bg-\[\#111111\],
 html.app-route[data-theme="light"] .pf-theme-scope .bg-\[\#030305\],
-html.app-route[data-theme="modern-light"] .pf-theme-scope .bg-\[\#030305\],
-html.app-route[data-theme="light"] .pf-theme-scope [class*="bg-[#030305]"],
-html.app-route[data-theme="modern-light"] .pf-theme-scope [class*="bg-[#030305]"] {
+html.app-route[data-theme="light"] .pf-theme-scope [class*="bg-[#030305]"] {
+
   background-color: var(--pocket-bg) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope .text-white,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .text-white,
-html.app-route[data-theme="light"] .pf-feed-chrome .text-white,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-white {
+html.app-route[data-theme="light"] .pf-feed-chrome .text-white {
+
   color: var(--pocket-text) !important;
 }
 
 /* Feed cards sit on photos — keep light text on media overlays */
 html.app-route[data-theme="light"] .pf-on-media .text-white,
-html.app-route[data-theme="modern-light"] .pf-on-media .text-white,
-html.app-route[data-theme="light"] .pf-on-media [class*="text-white/"],
-html.app-route[data-theme="modern-light"] .pf-on-media [class*="text-white/"] {
+html.app-route[data-theme="light"] .pf-on-media [class*="text-white/"] {
+
   color: #ffffff !important;
 }
 
-html.app-route[data-theme="light"] .pf-on-media [class*="text-white/68"],
-html.app-route[data-theme="modern-light"] .pf-on-media [class*="text-white/68"] {
+html.app-route[data-theme="light"] .pf-on-media [class*="text-white/68"] {
+
   color: rgba(255, 255, 255, 0.68) !important;
 }
 
-html.app-route[data-theme="light"] .pf-on-media [class*="text-white/78"],
-html.app-route[data-theme="modern-light"] .pf-on-media [class*="text-white/78"] {
+html.app-route[data-theme="light"] .pf-on-media [class*="text-white/78"] {
+
   color: rgba(255, 255, 255, 0.78) !important;
 }
 
-html.app-route[data-theme="light"] .pf-home-feed .pf-feed-empty,
-html.app-route[data-theme="modern-light"] .pf-home-feed .pf-feed-empty {
+html.app-route[data-theme="light"] .pf-home-feed .pf-feed-empty {
+
   color: var(--pocket-text);
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope [class*="text-white/"],
-html.app-route[data-theme="modern-light"] .pf-theme-scope [class*="text-white/"],
-html.app-route[data-theme="light"] .pf-feed-chrome [class*="text-white/"],
-html.app-route[data-theme="modern-light"] .pf-feed-chrome [class*="text-white/"] {
+html.app-route[data-theme="light"] .pf-feed-chrome [class*="text-white/"] {
+
   color: var(--pocket-text-muted) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-300,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .text-zinc-300 {
+html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-300 {
+
   color: var(--pocket-text-muted) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-400,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .text-zinc-400,
-html.app-route[data-theme="light"] .pf-feed-chrome .text-zinc-400,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-zinc-400 {
+html.app-route[data-theme="light"] .pf-feed-chrome .text-zinc-400 {
+
   color: var(--pocket-text-muted) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-500,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .text-zinc-500,
-html.app-route[data-theme="light"] .pf-feed-chrome .text-zinc-500,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-zinc-500 {
+html.app-route[data-theme="light"] .pf-feed-chrome .text-zinc-500 {
+
   color: var(--pocket-text-muted) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-600,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .text-zinc-600 {
+html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-600 {
+
   color: var(--pocket-text-subtle) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-700,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .text-zinc-700 {
+html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-700 {
+
   color: var(--pocket-text-subtle) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope [class*="border-white/"],
-html.app-route[data-theme="modern-light"] .pf-theme-scope [class*="border-white/"],
-html.app-route[data-theme="light"] .pf-feed-chrome [class*="border-white/"],
-html.app-route[data-theme="modern-light"] .pf-feed-chrome [class*="border-white/"] {
+html.app-route[data-theme="light"] .pf-feed-chrome [class*="border-white/"] {
+
   border-color: var(--pocket-border) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope [class*="divide-white"] > :not([hidden]) ~ :not([hidden]),
-html.app-route[data-theme="modern-light"] .pf-theme-scope [class*="divide-white"] > :not([hidden]) ~ :not([hidden]) {
+html.app-route[data-theme="light"] .pf-theme-scope [class*="divide-white"] > :not([hidden]) ~ :not([hidden]) {
+
   border-color: var(--pocket-border) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope [class*="bg-white/"]:not(.pf-keep-overlay),
-html.app-route[data-theme="modern-light"] .pf-theme-scope [class*="bg-white/"]:not(.pf-keep-overlay) {
+html.app-route[data-theme="light"] .pf-theme-scope [class*="bg-white/"]:not(.pf-keep-overlay) {
+
   background-color: var(--pocket-surface-hover) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .bg-zinc-700,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .bg-zinc-700 {
+html.app-route[data-theme="light"] .pf-theme-scope .bg-zinc-700 {
+
   background-color: var(--pocket-toggle-off) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .bg-zinc-900,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .bg-zinc-900 {
+html.app-route[data-theme="light"] .pf-theme-scope .bg-zinc-900 {
+
   background-color: var(--pocket-surface) !important;
 }
 
 html.app-route[data-theme="light"] .pf-theme-scope [class*="bg-black/"]:not(.pf-keep-overlay),
-html.app-route[data-theme="modern-light"] .pf-theme-scope [class*="bg-black/"]:not(.pf-keep-overlay),
-html.app-route[data-theme="light"] .pf-feed-chrome [class*="bg-black/"]:not(.pf-keep-overlay),
-html.app-route[data-theme="modern-light"] .pf-feed-chrome [class*="bg-black/"]:not(.pf-keep-overlay) {
+html.app-route[data-theme="light"] .pf-feed-chrome [class*="bg-black/"]:not(.pf-keep-overlay) {
+
   background-color: var(--pocket-surface-hover) !important;
 }
 
-html.app-route[data-theme="light"] .pf-on-media [class*="bg-black/"],
-html.app-route[data-theme="modern-light"] .pf-on-media [class*="bg-black/"] {
+html.app-route[data-theme="light"] .pf-on-media [class*="bg-black/"] {
+
   background-color: rgba(0, 0, 0, 0.45) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .pf-nav-inactive,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .pf-nav-inactive {
+html.app-route[data-theme="light"] .pf-theme-scope .pf-nav-inactive {
+
   color: var(--pocket-nav-inactive) !important;
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope nav.fixed.bottom-0,
-html.app-route[data-theme="modern-light"] .pf-theme-scope nav.fixed.bottom-0 {
+html.app-route[data-theme="light"] .pf-theme-scope nav.fixed.bottom-0 {
+
   background-color: var(--pocket-nav-bg) !important;
   backdrop-filter: blur(12px);
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .after\:from-black::after,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .after\:from-black::after {
+html.app-route[data-theme="light"] .pf-theme-scope .after\:from-black::after {
+
   --tw-gradient-from: var(--pocket-bg) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
-html.app-route[data-theme="light"] .pf-theme-scope .from-black\/70,
-html.app-route[data-theme="modern-light"] .pf-theme-scope .from-black\/70 {
+html.app-route[data-theme="light"] .pf-theme-scope .from-black\/70 {
+
   --tw-gradient-from: rgb(255 255 255 / 0) var(--tw-gradient-from-position);
 }
 
-html.app-route[data-theme="light"] html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide)),
-html.app-route[data-theme="modern-light"] html.app-route :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide)) {
+html.app-route[data-theme="light"] :where(.pf-scroll, .overflow-y-auto:not(.scrollbar-hide)),
+html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:not(.scrollbar-hide)) {
   scrollbar-color: rgba(59, 110, 245, 0.35) rgba(0, 0, 0, 0.04);
 }
 
@@ -1360,17 +1325,40 @@ html.app-route[data-theme="modern-light"] html.app-route :where(.pf-scroll, .ove
 }
 
 .pf-bottom-nav {
-  box-shadow: 0 -1px 0 var(--pocket-border);
+box-shadow: 0 -1px 0 var(--pocket-border);
 }
 
-html.app-route[data-theme="light"] .pf-feed-chrome .text-pocket-text,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-pocket-text {
+html.app-route[data-theme="light"] .pf-feed-chrome .text-pocket-text {
+
   color: var(--pocket-text) !important;
 }
 
-html.app-route[data-theme="light"] .pf-feed-chrome .text-pocket-muted,
-html.app-route[data-theme="modern-light"] .pf-feed-chrome .text-pocket-muted {
+html.app-route[data-theme="light"] .pf-feed-chrome .text-pocket-muted {
   color: var(--pocket-text-muted) !important;
+}
+
+/* Extended legacy class shims for light mode */
+html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-200,
+html.app-route[data-theme="light"] .pf-feed-chrome .text-zinc-200 {
+  color: var(--pocket-text) !important;
+}
+
+html.app-route[data-theme="light"] .pf-theme-scope .text-zinc-100 {
+  color: var(--pocket-text) !important;
+}
+
+html.app-route[data-theme="light"] .pf-theme-scope .bg-zinc-800,
+html.app-route[data-theme="light"] .pf-theme-scope .bg-zinc-800\/50 {
+  background-color: var(--pocket-surface-hover) !important;
+}
+
+html.app-route[data-theme="light"] .pf-theme-scope .border-zinc-700,
+html.app-route[data-theme="light"] .pf-theme-scope .border-zinc-800 {
+  border-color: var(--pocket-border) !important;
+}
+
+html.app-route[data-theme="light"] .pf-theme-scope .bg-\[\#1f2937\] {
+  background-color: var(--pocket-surface) !important;
 }
 
 .pf-follow-unfollow-subtle {

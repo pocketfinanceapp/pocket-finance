@@ -1,10 +1,10 @@
-export type AppTheme = "dark" | "light" | "modern-light";
+export type AppTheme = "dark" | "light";
 
 export const THEME_STORAGE_KEY = "pf_theme_v1";
 
 export const DEFAULT_THEME: AppTheme = "dark";
 
-export const THEME_ORDER: AppTheme[] = ["dark", "light", "modern-light"];
+export const THEME_ORDER: AppTheme[] = ["dark", "light"];
 
 export interface ThemeDefinition {
   id: AppTheme;
@@ -29,23 +29,17 @@ export const THEMES: Record<AppTheme, ThemeDefinition> = {
     description: "Clean and easy on the eyes",
     themeColor: "#f2f2f7",
   },
-  "modern-light": {
-    id: "modern-light",
-    label: "Modern Light",
-    shortLabel: "Modern",
-    description: "Soft surfaces with refined accents",
-    themeColor: "#f8fafc",
-  },
 };
 
 export function isAppTheme(value: string | null | undefined): value is AppTheme {
-  return value === "dark" || value === "light" || value === "modern-light";
+  return value === "dark" || value === "light";
 }
 
 export function loadStoredTheme(): AppTheme {
   if (typeof window === "undefined") return DEFAULT_THEME;
   try {
     const raw = localStorage.getItem(THEME_STORAGE_KEY);
+    if (raw === "modern-light") return "light";
     return isAppTheme(raw) ? raw : DEFAULT_THEME;
   } catch {
     return DEFAULT_THEME;

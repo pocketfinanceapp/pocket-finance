@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useTheme } from "@/context/ThemeContext";
 import type { ChartPoint, ChartRange } from "@/lib/types";
 
 const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "MAX"];
@@ -21,16 +22,41 @@ interface PriceChartProps {
 }
 
 export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
+  const { theme } = useTheme();
   const uid = useId().replace(/:/g, "");
   const lineGradId = `chartLine-${uid}`;
   const fillGradId = `chartFill-${uid}`;
+
+  const chartTheme = useMemo(() => {
+    if (typeof window === "undefined") {
+      return {
+        grid: theme === "light" ? "#e5e7eb" : "#1f1f1f",
+        tick: theme === "light" ? "#6b7280" : "#71717a",
+        tooltipBg: theme === "light" ? "#ffffff" : "#141414",
+        tooltipBorder: theme === "light" ? "rgba(0,0,0,0.1)" : "#262626",
+        tooltipLabel: theme === "light" ? "#6b7280" : "#a1a1aa",
+      };
+    }
+    const root = document.documentElement;
+    const styles = getComputedStyle(root);
+    return {
+      grid: styles.getPropertyValue("--pocket-chart-grid").trim() || "#1f1f1f",
+      tick: styles.getPropertyValue("--pocket-chart-tick").trim() || "#71717a",
+      tooltipBg:
+        styles.getPropertyValue("--pocket-chart-tooltip-bg").trim() || "#141414",
+      tooltipBorder:
+        styles.getPropertyValue("--pocket-chart-tooltip-border").trim() ||
+        "#262626",
+      tooltipLabel: styles.getPropertyValue("--pocket-text-muted").trim() || "#a1a1aa",
+    };
+  }, [theme]);
 
   const prices = data.map((d) => d.price);
   const min = prices.length > 0 ? Math.min(...prices) * 0.998 : 0;
   const max = prices.length > 0 ? Math.max(...prices) * 1.002 : 1;
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+    <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-chart-surface)] p-4">
       <div className="flex gap-1.5 overflow-x-auto pb-3 scrollbar-hide">
         {RANGES.map((r) => (
           <button
@@ -40,7 +66,7 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               range === r
                 ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
-                : "bg-pocket-surface text-zinc-400"
+                : "bg-[var(--pocket-surface-hover)] text-pocket-muted"
             }`}
           >
             {r}
@@ -50,11 +76,11 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
 
       <div className="h-48 w-full">
         {prices.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center rounded-xl border border-white/[0.06] bg-black/20 px-4 text-center">
-            <p className="text-sm font-medium text-zinc-400">
+          <div className="flex h-full flex-col items-center justify-center rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-4 text-center">
+            <p className="text-sm font-medium text-pocket-muted">
               Chart data unavailable
             </p>
-            <p className="mt-1.5 max-w-[240px] text-xs leading-relaxed text-zinc-600">
+            <p className="mt-1.5 max-w-[240px] text-xs leading-relaxed text-pocket-muted">
               We couldn&apos;t load live price history for this asset.
             </p>
           </div>
@@ -75,19 +101,19 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
                 </linearGradient>
               </defs>
               <CartesianGrid
-                stroke="#1f1f1f"
+                stroke={chartTheme.grid}
                 strokeDasharray="3 3"
                 vertical={false}
               />
               <XAxis
                 dataKey="time"
-                tick={{ fill: "#71717a", fontSize: 10 }}
+                tick={{ fill: chartTheme.tick, fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={[min, max]}
-                tick={{ fill: "#71717a", fontSize: 10 }}
+                tick={{ fill: chartTheme.tick, fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
                 width={56}
@@ -99,12 +125,12 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
               />
               <Tooltip
                 contentStyle={{
-                  background: "#141414",
-                  border: "1px solid #262626",
+                  background: chartTheme.tooltipBg,
+                  border: `1px solid ${chartTheme.tooltipBorder}`,
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                labelStyle={{ color: "#a1a1aa" }}
+                labelStyle={{ color: chartTheme.tooltipLabel }}
                 formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
               />
               <Area
