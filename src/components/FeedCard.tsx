@@ -415,7 +415,7 @@ export function FeedCard({
         }`}
       >
         <div
-          className={`pointer-events-none absolute inset-x-0 bottom-0 h-[50%] ${
+          className={`pointer-events-none absolute inset-x-0 bottom-0 ${
             useSoftOverlay
               ? "pf-feed-overlay-bottom--soft"
               : "pf-feed-overlay-bottom"
