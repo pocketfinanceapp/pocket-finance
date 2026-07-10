@@ -27,16 +27,14 @@ function TabPanels({
   initialTrendingArticles,
 }: TabAppShellProps) {
   const { activeTab, navTab, navigate } = useNavigation();
-  const { setMarketFilters, ensureMarketsLoaded, ensureWatchlistLoaded } =
-    useApp();
+  const { setMarketFilters, ensureWatchlistLoaded } = useApp();
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [profileSubPageOpen, setProfileSubPageOpen] = useState(false);
 
   useEffect(() => {
-    ensureMarketsLoaded();
     ensureWatchlistLoaded();
     recordAppVisit();
-  }, [ensureMarketsLoaded, ensureWatchlistLoaded]);
+  }, [ensureWatchlistLoaded]);
 
   const openMarketFeed = useCallback(
     (market: MarketFilter) => {
@@ -65,10 +63,7 @@ function TabPanels({
         </TabPanel>
 
         <TabPanel active={activeTab === "markets"}>
-          <MarketsPage
-            onOpenMarketFeed={openMarketFeed}
-            articles={initialArticles}
-          />
+          <MarketsPage onOpenMarketFeed={openMarketFeed} />
         </TabPanel>
 
         <TabPanel active={activeTab === "discover"}>

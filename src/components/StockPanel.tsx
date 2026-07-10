@@ -47,8 +47,6 @@ interface StockPanelProps {
 
 const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 
-const ETORO_URL = "https://www.etoro.com/";
-
 /** Bottom scroll clearance by Stock Panel variant (Safari toolbar + tap room). */
 const STOCK_PANEL_BOTTOM_CLEARANCE = {
   equity: "calc(7rem + max(1.25rem, env(safe-area-inset-bottom)))",
@@ -159,9 +157,6 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const hasMassiveQuote = liveQuote !== null;
   const isUp = displayChangePercent >= 0;
   const showMarketData = stock !== null && !isNonStockMarketTicker(ticker);
-  const tradeLabel = isCryptoTicker(ticker)
-    ? "Trade this crypto"
-    : "Trade this stock";
   const chartBasePrice = resolveChartBasePrice(
     displayPrice,
     stock?.price,
@@ -359,21 +354,6 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
                 {Math.abs(displayChangePercent).toFixed(2)}%) Today
               </p>
             </section>
-
-            <a
-              href={`${ETORO_URL}?utm_source=pocket_finance`}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-no-drag
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-3.5 text-sm font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.25)] transition-transform active:scale-[0.98]"
-              style={{ touchAction: "manipulation" }}
-            >
-              {tradeLabel}
-              <ExternalLink className="h-4 w-4" />
-            </a>
-            <p className="mt-1.5 text-center text-[10px] text-zinc-600">
-              Affiliate partner · eToro
-            </p>
 
             <div className="mt-7">
               <PriceChart

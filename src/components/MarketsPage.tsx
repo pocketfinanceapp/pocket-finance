@@ -1,554 +1,188 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import { ChevronRight } from "lucide-react";
-import { useApp } from "@/context/AppContext";
-import { useNavigationOptional } from "@/context/NavigationContext";
-import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
+import { useMemo, useRef, useState } from "react";
+import { Search, X } from "lucide-react";
+import { tabEnterFadeStyle, tabEnterStyle, tabStaggerStyle, TAB_ENTER_EASE, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import type { MarketFilter } from "@/lib/filters";
+import { fuzzyMatchesQuery } from "@/lib/fuzzySearch";
 import {
-  MARKET_REGIONS,
-  countMarketMovers,
   formatIndexValue,
-  getGlobalMarketStatus,
-  getMarketById,
-  getMarketSparkline,
-  getMarketsByRegion,
+  GLOBAL_MARKETS,
+  MARKET_REGIONS,
   type GlobalMarket,
 } from "@/lib/markets";
-import type { MarketsSnapshot } from "@/context/AppContext";
-import type { NewsArticle } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
-import { cleanArticleTitle } from "@/lib/sourceBranding";
-import { MarketSparkline } from "./MarketSparkline";
-import { GlobalIndexesSection } from "./GlobalIndexesSection";
-import { TopMoversSection } from "./TopMoversSection";
-
-export const MARKETS_LIST_VERSION = "following-list-v9";
-
-const MARKETS_SCROLL_PADDING =
-  "calc(2.5rem + max(1.25rem, env(safe-area-inset-bottom)))";
-
-/** Shared premium card shell for Markets sections */
-export const MARKETS_SECTION_CARD =
-  "mx-4 mt-2 overflow-hidden rounded-2xl pf-card-surface";
-
-export const MARKETS_SECTION_ROW =
-  "flex items-center gap-3 px-4 py-3";
-
-export const MARKETS_SECTION_HEADING =
-  "px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-pocket-muted";
-
-export const MARKETS_ROW_DIVIDER = "border-b border-[var(--pocket-border)]";
-
-export const MARKETS_SECTION_SPACING = "mt-5";
-
-const PARTICLE_COUNT = 8;
 
 interface MarketsPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
-  articles?: NewsArticle[];
 }
 
-export function MarketsPage({ onOpenMarketFeed, articles = [] }: MarketsPageProps) {
-  const {
-    followedMarkets,
-    toggleFollowMarket,
-    isFollowingMarket,
-    marketsSnapshot,
-    ensureMarketsLoaded,
-  } = useApp();
-  const navigation = useNavigationOptional();
-  const tabEntered = useTabPageEntered("markets");
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const followingBlockRef = useRef<HTMLDivElement>(null);
-  const prevFollowingCountRef = useRef(followedMarkets.length);
-
-  useEffect(() => {
-    ensureMarketsLoaded();
-  }, [ensureMarketsLoaded]);
-
-  const snapshot: MarketsSnapshot = marketsSnapshot ?? {
-    markets: [],
-    movers: countMarketMovers(),
-    session: getGlobalMarketStatus(),
-    loaded: false,
-  };
-  const movers = snapshot.movers;
-  const session = snapshot.session;
-
-  const followingMarkets = useMemo(
-    () =>
-      followedMarkets
-        .map((id) => getMarketById(id))
-        .filter((m): m is GlobalMarket => m !== undefined),
-    [followedMarkets]
-  );
-
-  useLayoutEffect(() => {
-    const prev = prevFollowingCountRef.current;
-    const next = followingMarkets.length;
-    const scrollEl = scrollRef.current;
-    const blockEl = followingBlockRef.current;
-
-    if (scrollEl && blockEl && next > prev && prev === 0) {
-      scrollEl.scrollTop += blockEl.offsetHeight;
-    }
-
-    prevFollowingCountRef.current = next;
-  }, [followingMarkets.length]);
-
-  const marketNews = useMemo(
-    () => articles.slice(0, 2),
-    [articles]
-  );
-
-  const regions = useMemo(
-    () =>
-      MARKET_REGIONS.map((region) => ({
-        ...region,
-        markets: getMarketsByRegion(region).sort((a, b) =>
-          a.name.localeCompare(b.name)
-        ),
-      })),
-    []
-  );
-
-  return (
-    <div
-      data-markets-list={MARKETS_LIST_VERSION}
-      className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg text-pocket-text"
-    >
-      <div
-        className="relative z-20 shrink-0 pf-header-shell"
-        style={tabEnterStyle(tabEntered, 0)}
-      >
-        <header className="px-4 pb-2.5 pt-[max(12px,env(safe-area-inset-top))]">
-          <h1 className="text-[28px] font-bold tracking-tight">Markets</h1>
-        </header>
-      </div>
-
-      <div
-        ref={scrollRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
-        style={{ paddingBottom: MARKETS_SCROLL_PADDING, overflowAnchor: "none" }}
-      >
-        <div className="px-4 pt-3" style={tabEnterStyle(tabEntered, 80)}>
-          <MarketSummaryBar movers={movers} session={session} />
-        </div>
-
-        {followingMarkets.length > 0 && (
-          <div ref={followingBlockRef} style={tabEnterStyle(tabEntered, 160)}>
-            <FollowingSection
-              markets={followingMarkets}
-              onOpen={onOpenMarketFeed}
-              onUnfollow={toggleFollowMarket}
-              scrollRef={scrollRef}
-            />
-          </div>
-        )}
-
-        <div style={tabEnterStyle(tabEntered, 240)}>
-          <GlobalIndexesSection />
-        </div>
-        <div style={tabEnterStyle(tabEntered, 320)}>
-          <TopMoversSection />
-        </div>
-
-        {marketNews.length > 0 && (
-          <div style={tabEnterStyle(tabEntered, 400)}>
-            <MarketNewsSection
-              articles={marketNews}
-              onViewAll={() => navigation?.navigate("home")}
-            />
-          </div>
-        )}
-
-        {regions.map((region, regionIndex) => (
-          <section
-            key={region.id}
-            className={MARKETS_SECTION_SPACING}
-            style={tabEnterStyle(tabEntered, 480 + regionIndex * 60)}
-          >
-            <h2 className={MARKETS_SECTION_HEADING}>{region.label}</h2>
-            <div className={MARKETS_SECTION_CARD}>
-              <ul>
-                {region.markets.map((market, i) => (
-                  <MarketRow
-                    key={market.id}
-                    market={market}
-                    isFollowing={isFollowingMarket(market.id)}
-                    onOpen={() => onOpenMarketFeed(market.id)}
-                    onFollow={() => toggleFollowMarket(market.id)}
-                    showDivider={i < region.markets.length - 1}
-                  />
-                ))}
-              </ul>
-            </div>
-          </section>
-        ))}
-
-        <p
-          className="mx-4 mt-6 px-1 pb-1 text-center text-[11px] leading-relaxed text-zinc-600"
-          style={tabEnterStyle(tabEntered, 540)}
-        >
-          Market data is provided for informational purposes only and should
-          not be considered investment advice.
-        </p>
-      </div>
-    </div>
+function filterMarkets(markets: GlobalMarket[], query: string): GlobalMarket[] {
+  const q = query.trim();
+  if (!q) return markets;
+  return markets.filter((market) =>
+    fuzzyMatchesQuery(q, [
+      market.id,
+      market.name,
+      market.fullName,
+      market.indexName,
+      market.country,
+    ])
   );
 }
 
-function FollowingSection({
-  markets,
-  onOpen,
-  onUnfollow,
-  scrollRef,
-}: {
-  markets: GlobalMarket[];
-  onOpen: (market: MarketFilter) => void;
-  onUnfollow: (marketId: MarketFilter) => void;
-  scrollRef: React.RefObject<HTMLDivElement | null>;
-}) {
-  const [exitingIds, setExitingIds] = useState<Set<string>>(() => new Set());
-  const sectionRef = useRef<HTMLElement>(null);
-
-  const handleUnfollow = (marketId: MarketFilter) => {
-    const scrollEl = scrollRef.current;
-    const scrollTop = scrollEl?.scrollTop ?? 0;
-    const isLast = markets.length === 1;
-    const rowEl = scrollEl?.querySelector(
-      `[data-following-row="${marketId}"]`
-    ) as HTMLElement | null;
-    const removedHeight = isLast
-      ? sectionRef.current?.offsetHeight ?? 120
-      : rowEl?.offsetHeight ?? 72;
-
-    setExitingIds((prev) => new Set(prev).add(marketId));
-    window.setTimeout(() => {
-      onUnfollow(marketId);
-      setExitingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(marketId);
-        return next;
-      });
-      requestAnimationFrame(() => {
-        if (scrollEl) {
-          scrollEl.scrollTop = Math.max(0, scrollTop - removedHeight);
-        }
-      });
-    }, 340);
-  };
-
-  return (
-    <section ref={sectionRef} className={MARKETS_SECTION_SPACING}>
-      <div className="px-4">
-        <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
-          Following
-        </h2>
-        <p className="mt-1 text-[13px] font-medium text-pocket-muted">
-          {markets.length} market{markets.length === 1 ? "" : "s"} · tap to open feed
-        </p>
-      </div>
-      <div className={MARKETS_SECTION_CARD}>
-        <ul>
-          {markets.map((market, i) => (
-            <li
-              key={market.id}
-              data-following-row={market.id}
-              className={
-                exitingIds.has(market.id) ? "pf-market-row-exit overflow-hidden" : "pf-market-row-enter"
-              }
-            >
-              <MarketRow
-                market={market}
-                isFollowing
-                onOpen={() => onOpen(market.id)}
-                onFollow={() => handleUnfollow(market.id)}
-                showDivider={i < markets.length - 1 && !exitingIds.has(market.id)}
-                accentFollowing
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-function MarketSummaryBar({
-  movers,
-  session,
-}: {
-  movers: { up: number; down: number };
-  session: { open: boolean; label: "Markets open" | "Markets closed" };
-}) {
-  return (
-    <div className="mx-4 rounded-2xl pf-card-surface px-4 py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-pocket-green" aria-hidden>
-              ▲
-            </span>
-            <span className="text-sm font-bold tabular-nums text-pocket-green">
-              {movers.up}
-            </span>
-            <span className="text-xs text-pocket-muted">up</span>
-          </div>
-          <div className="h-4 w-px bg-[var(--pocket-border)]" aria-hidden />
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-pocket-red" aria-hidden>
-              ▼
-            </span>
-            <span className="text-sm font-bold tabular-nums text-pocket-red">
-              {movers.down}
-            </span>
-            <span className="text-xs text-pocket-muted">down</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              session.open ? "bg-pocket-green" : "bg-pocket-muted"
-            }`}
-            aria-hidden
-          />
-          <span className="text-xs font-medium text-pocket-muted">
-            {session.label}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NewsThumb({ imageUrl }: { imageUrl: string }) {
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [imageUrl]);
-
-  const showFallback = !imageUrl || imageFailed;
-
-  if (showFallback) {
-    return (
-      <div
-        className="h-14 w-14 shrink-0 rounded-xl"
-        style={{ background: "linear-gradient(135deg, #3B6EF5, #00C6C6)" }}
-      />
-    );
-  }
-
-  return (
-    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[var(--pocket-surface-hover)]">
-      <Image
-        src={imageUrl}
-        alt=""
-        fill
-        className="object-cover"
-        sizes="56px"
-        unoptimized
-        onError={() => setImageFailed(true)}
-      />
-    </div>
-  );
-}
-
-function MarketNewsSection({
-  articles,
-  onViewAll,
-}: {
-  articles: NewsArticle[];
-  onViewAll: () => void;
-}) {
-  return (
-    <section className={MARKETS_SECTION_SPACING}>
-      <h2 className={MARKETS_SECTION_HEADING}>Market News</h2>
-      <div className={MARKETS_SECTION_CARD}>
-        <ul>
-          {articles.map((article, i) => (
-            <li
-              key={article.id}
-              className={`flex gap-3 px-4 py-3 ${
-                i < articles.length - 1 ? MARKETS_ROW_DIVIDER : ""
-              }`}
-            >
-              <NewsThumb imageUrl={article.imageUrl} />
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-pocket-text">
-                  {cleanArticleTitle(article.headline)}
-                </p>
-                <p className="mt-1.5 text-[11px] text-pocket-muted">
-                  {timeAgo(article.publishedAt)} · {article.sourceName}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <button
-          type="button"
-          data-no-drag
-          onClick={onViewAll}
-          className="flex w-full items-center justify-center gap-1 border-t border-[var(--pocket-border)] py-3 text-sm font-medium text-pocket-muted transition-colors active:text-pocket-text"
-        >
-          View all news
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function MarketRow({
+function MarketListCard({
   market,
-  isFollowing,
+  index,
+  entered,
   onOpen,
-  onFollow,
-  showDivider,
-  accentFollowing = false,
 }: {
   market: GlobalMarket;
-  isFollowing: boolean;
+  index: number;
+  entered: boolean;
   onOpen: () => void;
-  onFollow: () => void;
-  showDivider: boolean;
-  accentFollowing?: boolean;
 }) {
   const up = market.changePercent >= 0;
-  const sparkline = useMemo(() => getMarketSparkline(market), [market]);
-
-  return (
-    <li
-      className={`relative flex items-center gap-2 px-4 py-3 ${
-        showDivider ? MARKETS_ROW_DIVIDER : ""
-      } ${accentFollowing ? "bg-[var(--pocket-surface-hover)]" : ""}`}
-    >
-      {accentFollowing && (
-        <div
-          className="absolute bottom-2 left-0 top-2 w-[2px] rounded-full"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(0,198,198,0.55), rgba(59,110,245,0.25))",
-          }}
-        />
-      )}
-
-      <button
-        type="button"
-        data-no-drag
-        className="flex min-w-0 flex-1 items-center gap-3 text-left"
-        onClick={onOpen}
-      >
-        <span className="w-7 shrink-0 text-center text-lg leading-none">
-          {market.flag}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold text-pocket-text">
-            {market.name}
-          </p>
-          <p className="mt-0.5 truncate text-[11px] text-pocket-muted">
-            {market.fullName}
-          </p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-[14px] tabular-nums text-pocket-text">
-            {formatIndexValue(market.value)}
-          </p>
-          <p
-            className={`mt-0.5 text-[12px] tabular-nums ${
-              up ? "text-pocket-green" : "text-pocket-red"
-            }`}
-          >
-            {up ? "+" : ""}
-            {market.changePercent.toFixed(2)}%
-          </p>
-        </div>
-      </button>
-
-      <MarketSparkline points={sparkline} up={up} />
-
-      <FollowMarketButton isFollowing={isFollowing} onFollow={onFollow} />
-    </li>
-  );
-}
-
-function spawnFollowParticles() {
-  return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
-    const angle = (Math.PI * 2 * i) / PARTICLE_COUNT + Math.random() * 0.35;
-    const dist = 10 + Math.random() * 12;
-    return {
-      id: Date.now() + i + Math.random(),
-      dx: Math.cos(angle) * dist,
-      dy: Math.sin(angle) * dist,
-      color: i % 2 === 0 ? "#00C6C6" : "#3B6EF5",
-    };
-  });
-}
-
-function FollowMarketButton({
-  isFollowing,
-  onFollow,
-}: {
-  isFollowing: boolean;
-  onFollow: () => void;
-}) {
-  const [followPop, setFollowPop] = useState(false);
-  const [unfollowAnim, setUnfollowAnim] = useState(false);
-  const [particles, setParticles] = useState<
-    { id: number; dx: number; dy: number; color: string }[]
-  >([]);
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    if (isFollowing) {
-      setUnfollowAnim(true);
-      window.setTimeout(() => setUnfollowAnim(false), 180);
-    } else {
-      setFollowPop(true);
-      setParticles(spawnFollowParticles());
-      window.setTimeout(() => {
-        setFollowPop(false);
-        setParticles([]);
-      }, 520);
-    }
-
-    onFollow();
-  };
 
   return (
     <button
       type="button"
       data-no-drag
-      aria-label={isFollowing ? "Unfollow market" : "Follow market"}
-      onClick={handleClick}
-      className={`relative inline-flex h-7 min-w-[88px] shrink-0 items-center justify-center overflow-visible rounded-full px-3 text-[11px] font-semibold transition-colors duration-200 ${
-        isFollowing
-          ? "h-7 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white shadow-[0_2px_10px_rgba(59,110,245,0.25)]"
-          : "h-7 border border-[var(--pocket-border)] bg-transparent text-pocket-muted hover:border-[var(--pocket-border-strong)] hover:text-pocket-text"
-      } ${followPop ? "pf-follow-pop" : ""} ${
-        unfollowAnim ? "pf-follow-unfollow-subtle" : ""
-      }`}
+      onClick={onOpen}
+      className="pf-card-surface flex w-full items-center gap-3.5 rounded-2xl border border-[var(--pocket-border)] px-4 py-3.5 text-left transition-transform duration-300 active:scale-[0.98]"
+      style={tabStaggerStyle(entered, index, 50)}
     >
-      {particles.map((p) => (
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--pocket-surface-hover)] text-2xl leading-none">
+        {market.flag}
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-bold tracking-tight text-pocket-text">
+          {market.name}
+        </p>
+        <p className="mt-0.5 truncate text-[12px] text-pocket-muted">
+          {market.fullName}
+        </p>
+        <p className="mt-1 truncate text-[11px] text-pocket-muted">
+          {market.indexName}
+        </p>
+      </div>
+
+      <div className="shrink-0 text-right">
+        <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
+          {formatIndexValue(market.value)}
+        </p>
         <span
-          key={p.id}
-          className="pf-pop-particle"
-          style={
-            {
-              "--dx": `${p.dx}px`,
-              "--dy": `${p.dy}px`,
-              backgroundColor: p.color,
-            } as React.CSSProperties
-          }
-          aria-hidden
-        />
-      ))}
-      {isFollowing ? "Following" : "Follow"}
+          className={`mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+            up
+              ? "bg-[#00C6C6]/15 text-[#00C6C6]"
+              : "bg-red-400/15 text-red-400"
+          }`}
+        >
+          {up ? "+" : ""}
+          {market.changePercent.toFixed(2)}%
+        </span>
+      </div>
     </button>
+  );
+}
+
+export function MarketsPage({ onOpenMarketFeed }: MarketsPageProps) {
+  const tabEntered = useTabPageEntered("markets");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const orderedMarkets = useMemo(() => {
+    const byId = new Map(GLOBAL_MARKETS.map((market) => [market.id, market]));
+    const ordered: GlobalMarket[] = [];
+
+    for (const region of MARKET_REGIONS) {
+      for (const id of region.marketIds) {
+        const market = byId.get(id);
+        if (market) ordered.push(market);
+      }
+    }
+
+    return ordered;
+  }, []);
+
+  const displayMarkets = useMemo(
+    () => filterMarkets(orderedMarkets, searchQuery),
+    [orderedMarkets, searchQuery]
+  );
+
+  return (
+    <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
+      <header
+        className="shrink-0 px-4 pb-3"
+        style={{
+          paddingTop: "max(12px, env(safe-area-inset-top))",
+          ...tabEnterStyle(tabEntered, 0),
+        }}
+      >
+        <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">
+          Markets
+        </h1>
+        <p
+          className="mt-0.5 text-[13px] text-pocket-muted"
+          style={tabEnterFadeStyle(tabEntered, 40)}
+        >
+          Browse global exchanges and open a market feed
+        </p>
+
+        <div className="relative mt-4" style={tabEnterStyle(tabEntered, 80)}>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-pocket-muted" />
+          <input
+            ref={inputRef}
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            placeholder="Search market or exchange…"
+            className={`w-full rounded-2xl border bg-[var(--pocket-surface-hover)] py-3 pl-10 pr-10 text-[14px] text-pocket-text outline-none transition-all duration-500 placeholder:text-pocket-muted ${
+              searchFocused
+                ? "border-[#00C6C6]/50 shadow-[0_0_0_3px_rgba(0,198,198,0.12)]"
+                : "border-[var(--pocket-border)]"
+            }`}
+            style={{ transitionTimingFunction: TAB_ENTER_EASE }}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              data-no-drag
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-pocket-muted transition-colors duration-300 active:text-pocket-text"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]">
+        {searchQuery.trim() && displayMarkets.length === 0 ? (
+          <p
+            className="px-1 pt-8 text-center text-[14px] text-pocket-muted"
+            style={tabEnterFadeStyle(tabEntered, 120)}
+          >
+            No markets match &ldquo;{searchQuery.trim()}&rdquo;
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3 pt-1">
+            {displayMarkets.map((market, index) => (
+              <MarketListCard
+                key={market.id}
+                market={market}
+                index={index}
+                entered={tabEntered}
+                onOpen={() => onOpenMarketFeed(market.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
