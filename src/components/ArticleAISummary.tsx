@@ -20,45 +20,32 @@ interface ArticleAISummaryProps {
 
 function BriefingSkeleton() {
   return (
-    <div className="space-y-4" aria-hidden>
-      <div className="space-y-2">
-        <div className="h-4 w-28 animate-pulse rounded-full bg-[#00C6C6]/10" />
-        <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
-        <div className="h-3.5 w-[96%] animate-pulse rounded bg-white/[0.08]" />
-        <div className="h-3.5 w-[92%] animate-pulse rounded bg-white/[0.08]" />
-      </div>
-      <div className="space-y-2">
-        <div className="h-3 w-24 animate-pulse rounded bg-white/[0.06]" />
-        <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
-        <div className="h-3.5 w-[94%] animate-pulse rounded bg-white/[0.08]" />
-        <div className="h-3.5 w-[90%] animate-pulse rounded bg-white/[0.08]" />
-      </div>
-      <div className="space-y-2">
-        <div className="h-3 w-28 animate-pulse rounded bg-white/[0.06]" />
-        <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
-        <div className="h-3.5 w-[88%] animate-pulse rounded bg-white/[0.08]" />
-      </div>
+    <div className="space-y-3" aria-hidden>
+      <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
+      <div className="h-3.5 w-[92%] animate-pulse rounded bg-white/[0.08]" />
+      <div className="h-3 w-20 animate-pulse rounded bg-white/[0.06]" />
+      <div className="h-3.5 w-full animate-pulse rounded bg-white/[0.08]" />
     </div>
   );
 }
 
 function BriefingReport({ briefing }: { briefing: PocketBriefing }) {
   return (
-    <div className="space-y-5">
-      <p className="text-[15px] font-medium leading-[1.65] text-zinc-100">
+    <div className="space-y-3.5">
+      <p className="text-[14px] font-medium leading-[1.55] text-zinc-100">
         {briefing.lede}
       </p>
 
       {briefing.sections.map((section) => (
         <section key={section.title}>
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#00C6C6]">
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#00C6C6]">
             {section.title}
           </h3>
-          <div className="mt-2.5 space-y-3">
+          <div className="mt-1.5 space-y-2">
             {section.paragraphs.map((paragraph) => (
               <p
                 key={paragraph}
-                className="text-[14px] leading-[1.7] text-zinc-300"
+                className="text-[13px] leading-[1.6] text-zinc-300"
               >
                 {paragraph}
               </p>
@@ -67,11 +54,11 @@ function BriefingReport({ briefing }: { briefing: PocketBriefing }) {
         </section>
       ))}
 
-      <div className="rounded-xl border border-[#00C6C6]/20 bg-[#00C6C6]/5 px-3.5 py-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#00C6C6]">
-          Investor takeaway
+      <div className="rounded-lg border border-[#00C6C6]/20 bg-[#00C6C6]/5 px-3 py-2.5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#00C6C6]">
+          Takeaway
         </p>
-        <p className="mt-1.5 text-[14px] font-medium leading-[1.6] text-zinc-100">
+        <p className="mt-1 text-[13px] font-medium leading-[1.5] text-zinc-100">
           {briefing.takeaway}
         </p>
       </div>
@@ -162,7 +149,7 @@ export function ArticleAISummary({ article }: ArticleAISummaryProps) {
       }
     };
 
-    timerRef.current = setTimeout(fireCompletion, 12_000);
+    timerRef.current = setTimeout(fireCompletion, 6_000);
 
     if (bottomRef.current && typeof IntersectionObserver !== "undefined") {
       observerRef.current = new IntersectionObserver(
@@ -200,10 +187,10 @@ export function ArticleAISummary({ article }: ArticleAISummaryProps) {
         <span className="inline-block rounded-full bg-[#00C6C6]/10 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6]">
           Pocket Briefing
         </span>
-        <span className="text-[10px] text-zinc-500">AI-generated report</span>
+        <span className="text-[10px] text-zinc-500">AI summary</span>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         {loading ? <BriefingSkeleton /> : briefing ? <BriefingReport briefing={briefing} /> : null}
       </div>
 

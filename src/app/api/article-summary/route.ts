@@ -3,28 +3,26 @@ import { parseBriefingResponse } from "@/lib/briefing";
 
 const MODEL = "claude-haiku-4-5-20251001";
 
-const SYSTEM_PROMPT = `You are a senior financial news editor at Pocket Finance. Write a detailed Pocket Briefing — an in-depth investor news report, not a short summary.
+const SYSTEM_PROMPT = `You are a senior financial news editor at Pocket Finance. Write a concise Pocket Briefing — short, scannable, and informative for busy investors.
 
 Return ONLY valid JSON in this exact shape:
 {
-  "lede": "2-3 sentence opening paragraph",
+  "lede": "1-2 sentence summary of the core story",
   "sections": [
-    { "title": "What happened", "paragraphs": ["...", "..."] },
-    { "title": "Why it matters", "paragraphs": ["...", "..."] },
-    { "title": "Market impact", "paragraphs": ["...", "..."] },
-    { "title": "What to watch", "paragraphs": ["..."] }
+    { "title": "What happened", "paragraphs": ["One tight paragraph, 1-2 sentences max"] },
+    { "title": "Why it matters", "paragraphs": ["One tight paragraph, 1-2 sentences max"] }
   ],
   "takeaway": "One crisp investor takeaway sentence"
 }
 
 Rules:
-- Write 400-600 words total across lede, sections, and takeaway
-- Each paragraph must be 2-4 full sentences of professional financial journalism
+- Write 80-130 words total across lede, sections, and takeaway
+- Each section has exactly one paragraph of 1-2 sentences
 - Be specific about the company, ticker, sector, and market when relevant
-- Explain context, implications, and investor relevance like Reuters or Bloomberg desk copy
+- Prioritize clarity and signal over length — every word should earn its place
 - No emojis, no bullet points, no markdown, no preamble outside the JSON
 - Do not invent direct quotes, precise statistics, or named sources not implied by the input
-- If source material is thin, expand with careful market context without fabricating facts`;
+- If source material is thin, add only careful, brief market context without fabricating facts`;
 
 interface SummaryRequest {
   headline?: string;
@@ -69,7 +67,7 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join("\n");
 
-  const userPrompt = `Write a detailed Pocket Briefing report for this story:\n\n${contextLines}`;
+  const userPrompt = `Write a concise Pocket Briefing for this story:\n\n${contextLines}`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -81,7 +79,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1400,
+        max_tokens: 500,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userPrompt }],
       }),

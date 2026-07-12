@@ -12,7 +12,7 @@ export interface PocketBriefing {
   takeaway: string;
 }
 
-const BRIEFING_CACHE_KEY = "pf_briefings_v2";
+const BRIEFING_CACHE_KEY = "pf_briefings_v3";
 const MAX_BODY_CHARS = 2400;
 
 function stripHtml(text: string): string {
@@ -188,23 +188,15 @@ export function buildFallbackBriefing(article: NewsArticle): PocketBriefing {
     sections: [
       {
         title: "What happened",
-        paragraphs: detailParagraphs.slice(0, 2),
+        paragraphs: [detailParagraphs[0] ?? lede],
       },
       {
         title: "Why it matters",
         paragraphs: [
-          `For holders and watchers of ${article.ticker}, the story sits at the intersection of company-specific news and broader ${article.sector.toLowerCase()} market dynamics.`,
-          `Moves in this name can also ripple through related ETFs, sector peers, and the ${article.market} tape depending on how institutional investors interpret the update.`,
-        ],
-      },
-      {
-        title: "What to watch",
-        paragraphs: [
-          `Follow whether ${article.companyName} issues an official response, updates guidance, or sees follow-on analyst commentary.`,
-          `Also watch trading volume, sector leadership, and any macro headlines that could amplify or dampen the reaction.`,
+          `For ${article.ticker} holders, this ties into ${article.sector.toLowerCase()} sector sentiment and how the ${article.market} tape is pricing the news.`,
         ],
       },
     ],
-    takeaway: `The key question for investors is whether this development changes the medium-term outlook for ${article.ticker}.`,
+    takeaway: `Watch whether this shifts the near-term outlook for ${article.ticker}.`,
   };
 }
