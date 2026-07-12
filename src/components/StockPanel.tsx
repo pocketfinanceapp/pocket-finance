@@ -37,10 +37,10 @@ import { recordActivityEvent } from "@/lib/progression";
 import { buildCompanyStatColumns, type CompanyStatRow } from "@/lib/companyStats";
 import { formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
+import { FadeInSection } from "./SubPageShell";
 import { FinancialTermPopup } from "./FinancialTermPopup";
 import { PriceChart } from "./PriceChart";
 import { SourceBadge } from "./SourceBadge";
-import { TickerDiscussionTab } from "./TickerDiscussionTab";
 
 interface StockPanelProps {
   article: NewsArticle;
@@ -49,7 +49,7 @@ interface StockPanelProps {
   onOpenTicker?: (symbol: string) => void;
 }
 
-const TABS = ["Overview", "Discussion", "Financials", "News", "Analysis"] as const;
+const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
 
 /** Bottom scroll clearance by Stock Panel variant (Safari toolbar + tap room). */
 const STOCK_PANEL_BOTTOM_CLEARANCE = {
@@ -214,7 +214,6 @@ export function StockPanel({
   const availableTabs = (
     [
       { id: "Overview", available: true },
-      { id: "Discussion", available: !privateCompany && !marketTheme },
       { id: "Financials", available: hasFinancialData },
       { id: "News", available: relatedNews.length > 0 },
       { id: "Analysis", available: Boolean(assetAnalysis) },
@@ -254,6 +253,7 @@ export function StockPanel({
 
   return (
     <div className="pf-page relative flex h-full flex-col bg-pocket-bg text-pocket-text">
+      <FadeInSection key={ticker} className="flex min-h-0 flex-1 flex-col">
       <div className="relative z-20 shrink-0 bg-pocket-bg">
         <header className="px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
           <div className="flex items-center justify-between">
@@ -432,10 +432,6 @@ export function StockPanel({
                   <RelatedNewsList articles={relatedNews.slice(0, 4)} />
                 )}
               </>
-            ) : activeTab === "Discussion" ? (
-              <div className="px-4">
-                <TickerDiscussionTab ticker={ticker} onOpenTicker={openTicker} />
-              </div>
             ) : activeTab === "News" ? (
               <RelatedNewsList articles={relatedNews} />
             ) : (
@@ -455,6 +451,7 @@ export function StockPanel({
           style={{ minHeight: bottomClearance }}
         />
       </div>
+      </FadeInSection>
 
       {toast && (
         <div className="pointer-events-none absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm text-white">

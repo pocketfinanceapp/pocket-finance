@@ -4,6 +4,7 @@ import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
 import { articleFromTicker } from "@/lib/companyPanelArticle";
 import type { NewsArticle } from "@/lib/types";
+import { OverlayPanel } from "./SubPageShell";
 import { StockPanel } from "./StockPanel";
 
 interface GlobalCompanyPanelProps {
@@ -22,7 +23,7 @@ export function GlobalCompanyPanel({
   } = useApp();
   const { navigate } = useNavigation();
 
-  if (!companyPanelTicker) return null;
+  const open = Boolean(companyPanelTicker);
 
   const handleBack = () => {
     const returnTab = companyPanelReturnTab;
@@ -34,13 +35,15 @@ export function GlobalCompanyPanel({
   };
 
   return (
-    <div className="absolute inset-0 z-50 h-full w-full bg-pocket-bg">
-      <StockPanel
-        article={articleFromTicker(companyPanelTicker)}
-        catalogArticles={catalogArticles}
-        onBack={handleBack}
-        onOpenTicker={(symbol) => requestCompanyPanel(symbol)}
-      />
-    </div>
+    <OverlayPanel open={open} onClose={handleBack}>
+      {companyPanelTicker ? (
+        <StockPanel
+          article={articleFromTicker(companyPanelTicker)}
+          catalogArticles={catalogArticles}
+          onBack={handleBack}
+          onOpenTicker={(symbol) => requestCompanyPanel(symbol)}
+        />
+      ) : null}
+    </OverlayPanel>
   );
 }

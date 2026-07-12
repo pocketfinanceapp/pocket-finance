@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Check, ChevronRight, Lock } from "lucide-react";
 import { AchievementIcon } from "@/components/icons/AchievementIcon";
 import { getAchievements, type Achievement } from "@/lib/progression";
+import { tabStaggerStyle, useTabEntered } from "@/lib/tabEnterAnimation";
 
 interface ProfileAchievementsProps {
   likedArticlesCount?: number;
@@ -23,6 +24,7 @@ export function ProfileAchievements({
   maxItems,
   onViewAll,
 }: ProfileAchievementsProps) {
+  const entered = useTabEntered(true);
   const allAchievements = useMemo(
     () => getAchievements({ likedArticlesCount }),
     [likedArticlesCount]
@@ -46,7 +48,7 @@ export function ProfileAchievements({
     <section
       className={
         isPreview
-          ? "pf-card-surface overflow-hidden rounded-2xl px-4 py-4"
+          ? "pf-card-surface overflow-hidden rounded-2xl border border-[var(--pocket-border)] px-4 py-4"
           : "space-y-3"
       }
     >
@@ -72,9 +74,15 @@ export function ProfileAchievements({
         )}
       </div>
 
-      <div className={`${isPreview ? "mt-3" : "mt-1"} space-y-1.5`}>
-        {displayAchievements.map((achievement) => (
-          <AchievementRow key={achievement.id} achievement={achievement} compact={isPreview} />
+      <div className={`${isPreview ? "mt-3" : "mt-1"} space-y-2`}>
+        {displayAchievements.map((achievement, index) => (
+          <AchievementRow
+            key={achievement.id}
+            achievement={achievement}
+            compact={isPreview}
+            entered={entered}
+            index={index}
+          />
         ))}
       </div>
     </section>
@@ -84,20 +92,27 @@ export function ProfileAchievements({
 function AchievementRow({
   achievement,
   compact = false,
+  entered,
+  index,
 }: {
   achievement: Achievement;
   compact?: boolean;
+  entered: boolean;
+  index: number;
 }) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] ${
-        compact ? "px-3 py-2.5" : "px-3.5 py-3"
-      }`}
+      className={`flex items-center gap-3 rounded-xl border bg-[var(--pocket-card)] ${
+        achievement.unlocked
+          ? "border-pocket-teal/45 shadow-[inset_0_0_0_1px_rgba(0,198,198,0.12)]"
+          : "border-[var(--pocket-border)] shadow-[inset_0_0_0_1px_var(--pocket-border)]"
+      } ${compact ? "px-3 py-2.5" : "px-3.5 py-3"}`}
+      style={tabStaggerStyle(entered, index, 40)}
     >
       <div
         className={`flex shrink-0 items-center justify-center rounded-lg border ${
           achievement.unlocked
-            ? "h-9 w-9 border-pocket-teal/20 text-pocket-teal"
+            ? "h-9 w-9 border-pocket-teal/35 text-pocket-teal"
             : "h-9 w-9 border-[var(--pocket-border)] text-pocket-muted"
         }`}
       >

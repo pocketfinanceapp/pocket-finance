@@ -9,6 +9,7 @@ import { formatDate, readTime } from "@/lib/utils";
 import { getArticleSubheading } from "@/lib/articlePreview";
 import { ArticleAISummary } from "./ArticleAISummary";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
+import { FadeInSection } from "./SubPageShell";
 import { MarketBadge } from "./MarketBadge";
 import { SourceBadge } from "./SourceBadge";
 
@@ -74,6 +75,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
 
   return (
     <div className="pf-page relative flex h-full flex-col bg-pocket-bg text-pocket-text">
+      <FadeInSection key={article.id} className="flex min-h-0 flex-1 flex-col">
       <header className="flex shrink-0 items-center justify-between px-5 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <button
           type="button"
@@ -160,6 +162,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           Read full article →
         </a>
       </article>
+      </FadeInSection>
     </div>
   );
 }

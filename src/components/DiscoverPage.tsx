@@ -143,6 +143,7 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
     followedMarkets,
     sectorInterests,
     savedArticles,
+    companyPanelTicker,
   } = useApp();
   const [favouriteTopics, setFavouriteTopics] = useState(() =>
     loadFavouriteTopics()
@@ -284,7 +285,7 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
 
       <div
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]"
-        style={listLayerStyle(true)}
+        style={listLayerStyle(!companyPanelTicker)}
       >
         {searchActive && displayCompanies.length === 0 ? (
           <p

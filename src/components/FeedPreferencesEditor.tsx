@@ -6,6 +6,7 @@ import {
   ONBOARDING_MARKETS,
   SECTOR_FILTERS,
 } from "@/lib/filters";
+import { FadeInSection } from "./SubPageShell";
 
 export function FeedPreferencesEditor() {
   const {
@@ -20,7 +21,7 @@ export function FeedPreferencesEditor() {
     : MARKET_FILTERS;
 
   return (
-    <div className="space-y-6">
+    <FadeInSection className="space-y-6">
       <div>
         <p className="mb-3 text-[13px] font-medium text-pocket-muted">
           Markets you follow shape your For You feed.
@@ -72,6 +73,6 @@ export function FeedPreferencesEditor() {
           })}
         </div>
       </div>
-    </div>
+    </FadeInSection>
   );
 }

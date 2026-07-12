@@ -6,6 +6,7 @@ import { Mail } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { useAuth } from "@/context/AuthContext";
 import { APP_BASE } from "@/lib/appPaths";
+import { FadeInSection } from "@/components/SubPageShell";
 
 type AuthMode = "signIn" | "signUp";
 type AuthView = "form" | "checkInbox" | "forgotPassword" | "resetSent";
@@ -177,7 +178,7 @@ export function AuthScreen() {
   if (view === "resetSent") {
     return (
       <AuthShell>
-        <div className="flex flex-1 flex-col justify-center">
+        <FadeInSection className="flex flex-1 flex-col justify-center">
           <div className="mb-8 flex justify-center">
             <PocketBrand layout="vertical" iconSize={64} glow="none" />
           </div>
@@ -202,7 +203,7 @@ export function AuthScreen() {
           >
             Back to Log In
           </button>
-        </div>
+        </FadeInSection>
       </AuthShell>
     );
   }
@@ -210,7 +211,7 @@ export function AuthScreen() {
   if (view === "forgotPassword") {
     return (
       <AuthShell>
-        <div className="flex flex-1 flex-col justify-start pt-1">
+        <FadeInSection className="flex flex-1 flex-col justify-start pt-1">
           <div className="mb-3 flex justify-center">
             <PocketBrand layout="icon" iconSize={60} glow="none" />
           </div>
@@ -255,7 +256,7 @@ export function AuthScreen() {
               Back to Log In
             </button>
           </form>
-        </div>
+        </FadeInSection>
       </AuthShell>
     );
   }
@@ -263,7 +264,7 @@ export function AuthScreen() {
   if (view === "checkInbox") {
     return (
       <AuthShell>
-        <div className="flex flex-1 flex-col justify-center">
+        <FadeInSection className="flex flex-1 flex-col justify-center">
           <div className="mb-8 flex justify-center">
             <PocketBrand layout="vertical" iconSize={64} glow="none" />
           </div>
@@ -289,14 +290,14 @@ export function AuthScreen() {
           >
             Back to Log In
           </button>
-        </div>
+        </FadeInSection>
       </AuthShell>
     );
   }
 
   return (
     <AuthShell>
-      <div className="flex flex-1 flex-col justify-start pt-1">
+      <FadeInSection className="flex flex-1 flex-col justify-start pt-1">
         <div className="mb-3 flex justify-center">
           <PocketBrand layout="icon" iconSize={60} glow="none" />
         </div>
@@ -476,7 +477,7 @@ export function AuthScreen() {
                 : "Log in"}
           </button>
         </form>
-      </div>
+      </FadeInSection>
     </AuthShell>
   );
 }

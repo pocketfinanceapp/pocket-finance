@@ -28,6 +28,12 @@ import { FeedPreferencesEditor } from "./FeedPreferencesEditor";
 import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ScreenHeader } from "./ScreenHeader";
 import { ThemeSwitcher } from "./ThemeSwitcher";
+import { FadeInSection } from "./SubPageShell";
+import {
+  panelEnterStyle,
+  PANEL_EXIT_MS,
+  useTabEntered,
+} from "@/lib/tabEnterAnimation";
 
 type SettingsScreen = "main" | "liked" | "saved" | "topics" | "feedPrefs";
 
@@ -40,6 +46,8 @@ interface SettingsPageProps {
 export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
   const { user, signOut } = useAuth();
   const [screen, setScreen] = useState<SettingsScreen>(initialScreen ?? "main");
+  const [exiting, setExiting] = useState(false);
+  const pageEntered = useTabEntered(true);
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [likedArticles, setLikedArticles] = useState<LikedArticleEntry[]>([]);
@@ -93,11 +101,14 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
       screen === "main" ||
       (initialScreen && initialScreen !== "main" && screen === initialScreen)
     ) {
-      onBack();
+      setExiting(true);
+      window.setTimeout(() => onBack(), PANEL_EXIT_MS);
       return;
     }
     setScreen("main");
   };
+
+  const pageStyle = panelEnterStyle(pageEntered && !exiting);
 
   const subTitle =
     screen === "liked"
@@ -112,9 +123,13 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
 
   if (screen !== "main") {
     return (
-      <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
+      <div
+        className="absolute inset-0 z-20 flex h-full min-h-0 flex-col pf-page bg-pocket-bg"
+        style={pageStyle}
+      >
         <ScreenHeader title={subTitle} onBack={handleSubBack} />
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
+          <FadeInSection delayMs={80}>
           {screen === "topics" ? (
             <div className="pt-4">
               <p className="mb-4 text-sm text-zinc-500">
@@ -166,15 +181,26 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
               }
             />
           )}
+          </FadeInSection>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
-      <ScreenHeader title="Settings" onBack={onBack} />
+    <div
+      className="absolute inset-0 z-20 flex h-full min-h-0 flex-col pf-page bg-pocket-bg"
+      style={pageStyle}
+    >
+      <ScreenHeader
+        title="Settings"
+        onBack={() => {
+          setExiting(true);
+          window.setTimeout(() => onBack(), PANEL_EXIT_MS);
+        }}
+      />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
+        <FadeInSection delayMs={60}>
         <SettingsSection title="My Activity">
           <SettingsRow
             icon={<Heart className="h-5 w-5 text-red-400" />}
@@ -245,6 +271,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
             {signingOut ? "Signing out…" : "Sign Out"}
           </button>
         </SettingsSection>
+        </FadeInSection>
       </div>
     </div>
   );

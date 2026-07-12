@@ -13,7 +13,14 @@ import {
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
-import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
+import {
+  PANEL_EXIT_MS,
+  panelEnterStyle,
+  tabEnterStyle,
+  useTabEntered,
+  useTabPageEntered,
+} from "@/lib/tabEnterAnimation";
+import { FadeInSection } from "./SubPageShell";
 import {
   loadFavouriteTopics,
   loadRecentlyRead,
@@ -50,6 +57,7 @@ import {
 import { ProfileProgressTabs } from "./ProfileProgressTabs";
 import { AchievementIcon } from "./icons/AchievementIcon";
 import { ScreenHeader } from "./ScreenHeader";
+import { SubPageShell } from "./SubPageShell";
 import { SettingsPage } from "./SettingsPage";
 
 // ---------------------------------------------------------------------------
@@ -246,13 +254,15 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
   if (showSettings) {
     return (
-      <SettingsPage
-        onBack={() => {
-          setShowSettings(false);
-          setSettingsScreen("main");
-        }}
-        initialScreen={settingsScreen}
-      />
+      <div className="relative flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
+        <SettingsPage
+          onBack={() => {
+            setShowSettings(false);
+            setSettingsScreen("main");
+          }}
+          initialScreen={settingsScreen}
+        />
+      </div>
     );
   }
 
@@ -271,31 +281,25 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
 
   if (showAllAchievements) {
     return (
-      <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
-        <ScreenHeader
+      <div className="relative flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
+        <SubPageShell
+          open
           title="Achievements"
-          onBack={() => setShowAllAchievements(false)}
-        />
-        <div
-          className="min-h-0 flex-1 overflow-y-auto px-5 pt-4"
-          style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
+          onClose={() => setShowAllAchievements(false)}
         >
           <ProfileAchievements likedArticlesCount={likedArticlesCount} />
-        </div>
+        </SubPageShell>
       </div>
     );
   }
 
   if (showAllRecentlyRead) {
     return (
-      <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
-        <ScreenHeader
+      <div className="relative flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
+        <SubPageShell
+          open
           title="Recently Read"
-          onBack={() => setShowAllRecentlyRead(false)}
-        />
-        <div
-          className="min-h-0 flex-1 overflow-y-auto px-5 pt-4"
-          style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
+          onClose={() => setShowAllRecentlyRead(false)}
         >
           <ArticleGroupCard>
             {recentlyRead.map((item) => (
@@ -309,7 +313,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
               />
             ))}
           </ArticleGroupCard>
-        </div>
+        </SubPageShell>
       </div>
     );
   }
@@ -611,6 +615,13 @@ function TopicsSubPage({
 }) {
   const [liveTopics, setLiveTopics] = useState<ProfileTopic[]>(initialTopics);
   const [reloadKey, setReloadKey] = useState(0);
+  const [exiting, setExiting] = useState(false);
+  const entered = useTabEntered(true);
+
+  const handleBack = () => {
+    setExiting(true);
+    window.setTimeout(onBack, PANEL_EXIT_MS);
+  };
 
   const handleSuggestion = (topic: ProfileTopic) => {
     toggleFavouriteTopic(topic);
@@ -623,7 +634,10 @@ function TopicsSubPage({
   const showSuggestions = liveTopics.length === 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col pf-page bg-pocket-bg">
+    <div
+      className="absolute inset-0 z-20 flex h-full min-h-0 flex-col pf-page bg-pocket-bg"
+      style={panelEnterStyle(entered && !exiting)}
+    >
       <header
         className="flex shrink-0 flex-col border-b border-white/[0.06] px-4"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
@@ -635,7 +649,7 @@ function TopicsSubPage({
           <button
             type="button"
             data-no-drag
-            onClick={onBack}
+            onClick={handleBack}
             className="flex items-center gap-1.5 active:opacity-60"
           >
             <ArrowLeft className="h-5 w-5 text-zinc-400" />
@@ -646,7 +660,7 @@ function TopicsSubPage({
           <button
             type="button"
             data-no-drag
-            onClick={onBack}
+            onClick={handleBack}
             className="text-[15px] font-semibold text-[#00C6C6] active:opacity-60"
           >
             Done
@@ -657,6 +671,7 @@ function TopicsSubPage({
         className="min-h-0 flex-1 overflow-y-auto px-5 pt-5"
         style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
       >
+        <FadeInSection delayMs={80}>
         <p className="text-sm text-zinc-400">
           Choose topics to personalise your For You feed.
         </p>
@@ -713,6 +728,7 @@ function TopicsSubPage({
             </div>
           </div>
         )}
+        </FadeInSection>
       </div>
     </div>
   );
