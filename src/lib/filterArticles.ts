@@ -9,7 +9,7 @@ import type { ProfileTopic } from "./profileStorage";
 import { TOPIC_KEYWORDS } from "./profileStorage";
 import type { NewsArticle } from "./types";
 
-export type FeedMode = "forYou" | "trending";
+export type FeedMode = "forYou" | "trending" | "following";
 
 export function filterArticles(
   articles: NewsArticle[],
@@ -118,7 +118,7 @@ export function buildFeedArticles(
   favouriteTopics: ProfileTopic[] = [],
   personalization?: FeedPersonalizationInput
 ): NewsArticle[] {
-  if (mode === "trending") return [];
+  if (mode === "trending" || mode === "following") return [];
 
   // Explicit market drill-down from Markets tab
   if (marketFilters.length > 0) {

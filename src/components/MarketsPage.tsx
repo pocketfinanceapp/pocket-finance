@@ -26,6 +26,7 @@ import {
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { GlobalIndexesSection } from "./GlobalIndexesSection";
+import { SectorPerformanceSection } from "./SectorPerformanceSection";
 import { MarketPanel } from "./MarketPanel";
 import { MarketFlag } from "./MarketFlag";
 import { MarketSparkline } from "./MarketSparkline";
@@ -281,6 +282,9 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
             </div>
             <div style={tabEnterStyle(tabEntered, 180)}>
               <GlobalIndexesSection />
+            </div>
+            <div style={tabEnterStyle(tabEntered, 210)}>
+              <SectorPerformanceSection />
             </div>
             <div style={tabEnterStyle(tabEntered, 240)}>
               <TopMoversSection onOpenCompany={onOpenCompany} />

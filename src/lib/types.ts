@@ -118,6 +118,10 @@ export interface StockProfile {
   dividendYield: string;
   volume24h?: string;
   circulatingSupply?: string;
+  totalSupply?: string;
+  fdv?: string;
+  allTimeHigh?: string;
+  allTimeLow?: string;
   competitors: Competitor[];
   chartData: Record<ChartRange, ChartPoint[]>;
 }

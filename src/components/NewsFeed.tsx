@@ -9,6 +9,7 @@ import {
   buildFeedArticles,
   type FeedMode,
 } from "@/lib/filterArticles";
+import { buildFollowingArticles } from "@/lib/followingFeed";
 import { buildFeedPersonalizationInput } from "@/lib/feedPersonalization";
 import { appPath } from "@/lib/appPaths";
 import { isInteractiveTarget } from "@/lib/gesture";
@@ -240,8 +241,30 @@ export function NewsFeed({
     [trendingPool]
   );
 
+  const followingArticles = useMemo(
+    () =>
+      buildFollowingArticles(
+        allArticles,
+        followedMarkets,
+        sectorInterests,
+        favouriteTopics,
+        savedArticles
+      ),
+    [
+      allArticles,
+      followedMarkets,
+      sectorInterests,
+      favouriteTopics,
+      savedArticles,
+    ]
+  );
+
   const verticalFeedArticles =
-    displayedFeedMode === "trending" ? trendingArticles : filteredArticles;
+    displayedFeedMode === "trending"
+      ? trendingArticles
+      : displayedFeedMode === "following"
+        ? followingArticles
+        : filteredArticles;
   const swipeArticle =
     verticalFeedArticles[feedIndex] ?? verticalFeedArticles[0];
   const article = articleOverride ?? swipeArticle;
@@ -631,10 +654,14 @@ export function NewsFeed({
                 style={tabEnterStyle(homeEntered, 120)}
               >
                 <p className="text-lg font-bold text-pocket-text">
-                  No stories match
+                  {displayedFeedMode === "following"
+                    ? "Nothing followed yet"
+                    : "No stories match"}
                 </p>
                 <p className="mt-2 text-sm font-medium text-pocket-muted">
-                  Adjust filters or search to see more news.
+                  {displayedFeedMode === "following"
+                    ? "Follow markets, sectors, topics, or save articles to build your Following feed."
+                    : "Adjust filters or search to see more news."}
                 </p>
                 <button
                   type="button"

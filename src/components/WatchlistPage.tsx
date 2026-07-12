@@ -6,20 +6,11 @@ import {
   ChevronRight,
   Landmark,
   Newspaper,
-  Sparkles,
   TrendingUp,
   X,
   Zap,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { getMarketById } from "@/lib/markets";
-import type { MarketFilter, SectorFilter } from "@/lib/filters";
-import {
-  loadFavouriteTopics,
-  PF_TOPICS_CHANGED_EVENT,
-  toggleFavouriteTopic,
-  type ProfileTopic,
-} from "@/lib/profileStorage";
 import {
   listLayerStyle,
   panelEnterStyle,
@@ -148,119 +139,6 @@ function SummaryCard({
         </div>
       )}
     </div>
-  );
-}
-
-function InterestPills({
-  label,
-  items,
-  onRemove,
-}: {
-  label: string;
-  items: Array<{ id: string; label: string }>;
-  onRemove: (id: string) => void;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div>
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
-        {label}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <span
-            key={item.id}
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] py-1 pl-3 pr-1.5 text-[12px] font-medium text-pocket-text"
-          >
-            {item.label}
-            <button
-              type="button"
-              data-no-drag
-              onClick={() => onRemove(item.id)}
-              className="flex h-6 w-6 items-center justify-center rounded-full text-pocket-muted active:bg-red-500/15 active:text-red-400"
-              aria-label={`Remove ${item.label}`}
-            >
-              <X className="h-3.5 w-3.5" strokeWidth={2.25} />
-            </button>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function InterestsSummary({
-  followedMarkets,
-  sectorInterests,
-  favouriteTopics,
-  onRemoveMarket,
-  onRemoveSector,
-  onRemoveTopic,
-}: {
-  followedMarkets: MarketFilter[];
-  sectorInterests: SectorFilter[];
-  favouriteTopics: ProfileTopic[];
-  onRemoveMarket: (market: MarketFilter) => void;
-  onRemoveSector: (sector: SectorFilter) => void;
-  onRemoveTopic: (topic: ProfileTopic) => void;
-}) {
-  const hasAny =
-    followedMarkets.length > 0 ||
-    sectorInterests.length > 0 ||
-    favouriteTopics.length > 0;
-
-  const marketItems = followedMarkets.map((id) => ({
-    id,
-    label: getMarketById(id)?.name ?? id,
-  }));
-
-  const sectorItems = sectorInterests.map((sector) => ({
-    id: sector,
-    label: sector,
-  }));
-
-  const topicItems = favouriteTopics.map((topic) => ({
-    id: topic,
-    label: topic,
-  }));
-
-  return (
-    <section className="pb-2">
-      <SectionHeader>Your interests</SectionHeader>
-      <div className="mx-5 rounded-2xl pf-card-surface p-5">
-        <div className="mb-3 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-[#3B6EF5]" strokeWidth={2} />
-          <p className="text-[14px] font-semibold text-pocket-text">
-            What shapes your feed
-          </p>
-        </div>
-
-        {!hasAny ? (
-          <p className="text-[13px] leading-relaxed text-pocket-muted">
-            Follow markets and topics in Profile to personalize your For You feed
-            and Companies rankings.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            <InterestPills
-              label="Markets"
-              items={marketItems}
-              onRemove={(id) => onRemoveMarket(id as MarketFilter)}
-            />
-            <InterestPills
-              label="Sectors"
-              items={sectorItems}
-              onRemove={(id) => onRemoveSector(id as SectorFilter)}
-            />
-            <InterestPills
-              label="Topics"
-              items={topicItems}
-              onRemove={(id) => onRemoveTopic(id as ProfileTopic)}
-            />
-          </div>
-        )}
-      </div>
-    </section>
   );
 }
 
@@ -482,10 +360,6 @@ export function WatchlistPage({
   const {
     savedArticles,
     unsaveArticle,
-    followedMarkets,
-    sectorInterests,
-    toggleFollowMarket,
-    toggleSectorInterest,
     requestCompanyPanel,
     ensureWatchlistLoaded,
   } = useApp();
@@ -498,9 +372,6 @@ export function WatchlistPage({
     closePanel,
   } = usePanelTransition<WatchlistPanel>();
   const [dismissedTick, setDismissedTick] = useState(0);
-  const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>(() =>
-    loadFavouriteTopics()
-  );
 
   const articlesById = useMemo(
     () => new Map(articles.map((article) => [article.id, article])),
@@ -510,12 +381,6 @@ export function WatchlistPage({
   useEffect(() => {
     ensureWatchlistLoaded();
   }, [ensureWatchlistLoaded]);
-
-  useEffect(() => {
-    const refresh = () => setFavouriteTopics(loadFavouriteTopics());
-    window.addEventListener(PF_TOPICS_CHANGED_EVENT, refresh);
-    return () => window.removeEventListener(PF_TOPICS_CHANGED_EVENT, refresh);
-  }, []);
 
   const sortedArticles = useMemo(
     () =>
@@ -598,11 +463,6 @@ export function WatchlistPage({
     [unsaveArticle]
   );
 
-  const handleRemoveTopic = useCallback((topic: ProfileTopic) => {
-    toggleFavouriteTopic(topic);
-    setFavouriteTopics(loadFavouriteTopics());
-  }, []);
-
   const openTrackedAsset = useCallback(
     (ticker: string) => {
       requestCompanyPanel(ticker, "watchlist");
@@ -683,7 +543,7 @@ export function WatchlistPage({
 
             {assets.length > 0 && (
               <section style={tabEnterFadeStyle(listEntered, 180)}>
-                <SectionHeader>Tracked assets</SectionHeader>
+                <SectionHeader>Stocks</SectionHeader>
                 <div className={`mx-5 ${CARD_CLASS}`}>
                   <div className="divide-y divide-[var(--pocket-border)]">
                     {assets.map((item, index) => (
@@ -726,9 +586,7 @@ export function WatchlistPage({
             )}
 
             <section style={tabEnterFadeStyle(listEntered, 340)}>
-              <SectionHeader>
-                Saved articles ({sortedArticles.length})
-              </SectionHeader>
+              <SectionHeader>Saved Articles</SectionHeader>
               <div className={`mx-5 ${CARD_CLASS}`}>
                 <div className="divide-y divide-[var(--pocket-border)]">
                   {sortedArticles.map((entry, index) => (
@@ -756,16 +614,7 @@ export function WatchlistPage({
           </>
         )}
 
-        <div style={tabEnterStyle(listEntered, 480)}>
-          <InterestsSummary
-            followedMarkets={followedMarkets}
-            sectorInterests={sectorInterests}
-            favouriteTopics={favouriteTopics}
-            onRemoveMarket={toggleFollowMarket}
-            onRemoveSector={toggleSectorInterest}
-            onRemoveTopic={handleRemoveTopic}
-          />
-        </div>
+
       </div>
     </div>
   );

@@ -29,7 +29,7 @@ export function SourceBadge({
 }: SourceBadgeProps) {
   const brand = resolveSourceBrand(sourceName, sourceId, sourceUrl);
   const [logoFailed, setLogoFailed] = useState(false);
-  const avatarSize = variant === "inline" ? 18 : size === "sm" ? 28 : 36;
+  const avatarSize = variant === "inline" ? 22 : size === "sm" ? 28 : 36;
 
   if (variant === "inline") {
     return (
@@ -39,7 +39,7 @@ export function SourceBadge({
           style={{ width: avatarSize, height: avatarSize }}
         >
           <div
-            className="flex h-full w-full items-center justify-center text-[7px] font-bold"
+            className="flex h-full w-full items-center justify-center text-[8px] font-bold"
             style={{
               backgroundColor: brand.color,
               color: brand.textColor ?? "#ffffff",
@@ -48,8 +48,8 @@ export function SourceBadge({
             {brand.abbr}
           </div>
         </div>
-        <p className="truncate text-[11px] text-white/65">
-          <span className="font-medium text-white/80">{brand.name}</span>
+        <p className="truncate text-[13px] text-white/70">
+          <span className="font-bold text-white">{brand.name}</span>
           <span className="text-white/45"> · </span>
           <time dateTime={publishedAt}>{timeLabel}</time>
         </p>

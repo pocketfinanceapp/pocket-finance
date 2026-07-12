@@ -1,3 +1,4 @@
+import { isCryptoAssetTicker } from "./cryptoAssets";
 import { isPrivateTicker } from "./privateTickers";
 import { isMarketThemeTicker } from "./marketThemes";
 import { getTickerMetaBySymbol } from "./tickerMap";
@@ -22,8 +23,7 @@ export function isNonStockMarketTicker(ticker: string): boolean {
 }
 
 export function isCryptoTicker(ticker: string): boolean {
-  const upper = ticker.toUpperCase();
-  return upper === "BTC" || upper === "ETH";
+  return isCryptoAssetTicker(ticker);
 }
 
 /** Show price / % change on watchlist only for real tradeable tickers */

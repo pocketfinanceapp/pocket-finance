@@ -8,6 +8,7 @@ import {
   getExploreCompanies,
   type ExploreCompany,
 } from "@/lib/exploreCompanies";
+import { getCryptoAssets } from "@/lib/cryptoAssets";
 import {
   buildFeedPersonalizationInput,
   rankExploreCompanies,
@@ -30,6 +31,9 @@ import {
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
+import { SectionTabs } from "./SectionTabs";
+
+type BrowseAssetTab = "companies" | "crypto";
 
 interface DiscoverPageProps {
   articles: NewsArticle[];
@@ -144,7 +148,9 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
     loadFavouriteTopics()
   );
   const [personalizationTick, setPersonalizationTick] = useState(0);
+  const [assetTab, setAssetTab] = useState<BrowseAssetTab>("companies");
   const companies = useMemo(() => getExploreCompanies(), []);
+  const cryptoAssets = useMemo(() => getCryptoAssets(), []);
 
   useEffect(() => {
     prefetchCompanyLogos(companies.map((company) => company.ticker));
@@ -195,11 +201,19 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
     [companies, personalizationInput]
   );
 
+  const rankedCrypto = useMemo(
+    () => rankExploreCompanies(cryptoAssets, personalizationInput),
+    [cryptoAssets, personalizationInput]
+  );
+
+  const activeCatalog =
+    assetTab === "crypto" ? rankedCrypto : rankedCompanies;
+
   const displayCompanies = useMemo(() => {
     const q = searchQuery.trim();
-    if (!q) return rankedCompanies;
-    return filterExploreCompanies(rankedCompanies, q);
-  }, [rankedCompanies, searchQuery]);
+    if (!q) return activeCatalog;
+    return filterExploreCompanies(activeCatalog, q);
+  }, [activeCatalog, searchQuery]);
 
   const searchActive = Boolean(searchQuery.trim());
 
@@ -213,14 +227,25 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
         }}
       >
         <h1 className="text-[28px] font-bold tracking-tight text-pocket-text">
-          Companies
+          Browse
         </h1>
         <p
           className="mt-0.5 text-[13px] text-pocket-muted"
           style={tabEnterFadeStyle(tabEntered, 40)}
         >
-          Browse listed companies ranked for you
+          Explore companies and crypto assets
         </p>
+
+        <div className="mt-4" style={tabEnterStyle(tabEntered, 60)}>
+          <SectionTabs
+            tabs={[
+              { id: "companies", label: "Companies" },
+              { id: "crypto", label: "Crypto" },
+            ]}
+            active={assetTab}
+            onChange={setAssetTab}
+          />
+        </div>
 
         <div className="relative mt-4" style={tabEnterStyle(tabEntered, 80)}>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-pocket-muted" />
@@ -231,7 +256,11 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
-            placeholder="Search ticker or company…"
+            placeholder={
+              assetTab === "crypto"
+                ? "Search crypto symbol…"
+                : "Search ticker or company…"
+            }
             className={`w-full rounded-2xl border bg-[var(--pocket-surface-hover)] py-3 pl-10 pr-10 text-[14px] text-pocket-text outline-none transition-all duration-500 placeholder:text-pocket-muted ${
               searchFocused
                 ? "border-[#00C6C6]/50 shadow-[0_0_0_3px_rgba(0,198,198,0.12)]"
@@ -262,7 +291,7 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
             className="px-1 pt-8 text-center text-[14px] text-pocket-muted"
             style={tabEnterFadeStyle(tabEntered, 120)}
           >
-            No companies match &ldquo;{searchQuery.trim()}&rdquo;
+            No {assetTab === "crypto" ? "crypto assets" : "companies"} match &ldquo;{searchQuery.trim()}&rdquo;
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-3 pt-1">

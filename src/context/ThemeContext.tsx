@@ -11,48 +11,72 @@ import {
 } from "react";
 import {
   applyThemeToDocument,
-  DEFAULT_THEME,
-  loadStoredTheme,
-  nextTheme,
-  saveStoredTheme,
+  DEFAULT_THEME_PREFERENCE,
+  loadStoredThemePreference,
+  nextThemePreference,
+  resolveThemePreference,
+  saveStoredThemePreference,
   type AppTheme,
+  type ThemePreference,
 } from "@/lib/theme";
 
 interface ThemeContextValue {
   theme: AppTheme;
+  preference: ThemePreference;
   setTheme: (theme: AppTheme) => void;
+  setPreference: (preference: ThemePreference) => void;
   cycleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<AppTheme>(DEFAULT_THEME);
+  const [preference, setPreferenceState] = useState<ThemePreference>(
+    DEFAULT_THEME_PREFERENCE
+  );
+  const [theme, setThemeState] = useState<AppTheme>("dark");
+
+  const applyPreference = useCallback((nextPreference: ThemePreference) => {
+    const resolved = resolveThemePreference(nextPreference);
+    setPreferenceState(nextPreference);
+    setThemeState(resolved);
+    saveStoredThemePreference(nextPreference);
+    applyThemeToDocument(resolved);
+  }, []);
 
   useEffect(() => {
-    const stored = loadStoredTheme();
-    setThemeState(stored);
-    applyThemeToDocument(stored);
-  }, []);
+    applyPreference(loadStoredThemePreference());
+  }, [applyPreference]);
 
-  const setTheme = useCallback((next: AppTheme) => {
-    setThemeState(next);
-    saveStoredTheme(next);
-    applyThemeToDocument(next);
-  }, []);
+  useEffect(() => {
+    if (preference !== "system") return;
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const sync = () => applyPreference("system");
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, [preference, applyPreference]);
+
+  const setTheme = useCallback(
+    (next: AppTheme) => {
+      applyPreference(next);
+    },
+    [applyPreference]
+  );
+
+  const setPreference = useCallback(
+    (next: ThemePreference) => {
+      applyPreference(next);
+    },
+    [applyPreference]
+  );
 
   const cycleTheme = useCallback(() => {
-    setThemeState((current) => {
-      const next = nextTheme(current);
-      saveStoredTheme(next);
-      applyThemeToDocument(next);
-      return next;
-    });
-  }, []);
+    applyPreference(nextThemePreference(preference));
+  }, [applyPreference, preference]);
 
   const value = useMemo(
-    () => ({ theme, setTheme, cycleTheme }),
-    [theme, setTheme, cycleTheme]
+    () => ({ theme, preference, setTheme, setPreference, cycleTheme }),
+    [theme, preference, setTheme, setPreference, cycleTheme]
   );
 
   return (

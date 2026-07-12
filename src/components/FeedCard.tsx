@@ -28,6 +28,7 @@ import {
 } from "@/lib/feedOnboarding";
 import { resolveFeedChip } from "@/lib/feedChip";
 import { resolveMarketForArticle } from "@/lib/tickerMap";
+import { shareBrandedArticleCard } from "@/lib/shareCard";
 import { FireSparkIcon } from "@/components/icons/FireSparkIcon";
 
 interface FeedCardProps {
@@ -96,6 +97,8 @@ export function FeedCard({
   const [heartBursts, setHeartBursts] = useState<
     { id: number; x: number; y: number }[]
   >([]);
+  const [railLabel, setRailLabel] = useState<string | null>(null);
+  const [saveRailLabel, setSaveRailLabel] = useState<string | null>(null);
   const lastTapRef = useRef<{ t: number; x: number; y: number } | null>(null);
 
   const displayMarket = resolveMarketForArticle({
@@ -161,6 +164,16 @@ export function FeedCard({
   const flash = useCallback((msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(null), 1400);
+  }, []);
+
+  const showRailLabel = useCallback((label: string) => {
+    setRailLabel(label);
+    window.setTimeout(() => setRailLabel(null), 900);
+  }, []);
+
+  const showSaveRailLabel = useCallback((label: string) => {
+    setSaveRailLabel(label);
+    window.setTimeout(() => setSaveRailLabel(null), 900);
   }, []);
 
   const promptGuestSignIn = useCallback((message: string) => {
@@ -297,7 +310,11 @@ export function FeedCard({
       >
         <RailActionSlot
           meta={
-            likeCount > 0 ? (
+            railLabel ? (
+              <span className="pf-feed-rail-meta text-[10px] font-bold leading-none">
+                {railLabel}
+              </span>
+            ) : likeCount > 0 ? (
               <span className="pf-feed-rail-meta text-[11px] font-bold tabular-nums leading-none">
                 {formatLikeCount(likeCount)}
               </span>
@@ -308,13 +325,56 @@ export function FeedCard({
             aria-label={liked ? "Unlike" : "Like"}
             burst={!liked}
             onClick={() =>
-              guardGuestAction("Sign in to like this", () => void toggleLike())
+              guardGuestAction("Sign in to like this", () => {
+                const wasLiked = liked;
+                void toggleLike().then(() => {
+                  showRailLabel(wasLiked ? "Unliked" : "Liked");
+                });
+              })
             }
             className="flex h-11 w-11 shrink-0 items-center justify-center transition-transform active:scale-90"
           >
             <Heart
-              className={`${iconClass} transition-colors ${
-                liked ? "fill-[#00C6C6] text-[#00C6C6]" : ""
+              className={`${iconClass} transition-all duration-200 ${
+                liked ? "scale-110 fill-[#00C6C6] text-[#00C6C6]" : ""
+              }`}
+              strokeWidth={2.25}
+            />
+          </PopReaction>
+        </RailActionSlot>
+
+        <RailActionSlot
+          meta={
+            saveRailLabel ? (
+              <span className="pf-feed-rail-meta text-[10px] font-bold leading-none">
+                {saveRailLabel}
+              </span>
+            ) : null
+          }
+        >
+          <PopReaction
+            aria-label={saved ? "Unsave" : "Save"}
+            burst={!saved}
+            onClick={() =>
+              guardGuestAction("Sign in to save this", () => {
+                void (async () => {
+                  if (saved) {
+                    const ok = await unsaveArticle(article.id);
+                    if (ok) showSaveRailLabel("Removed");
+                    flash(ok ? "Removed" : "Could not remove");
+                  } else {
+                    const ok = await saveArticle(article);
+                    if (ok) showSaveRailLabel("Saved");
+                    flash(ok ? "Article saved" : "Could not save");
+                  }
+                })();
+              })
+            }
+            className="flex h-11 w-11 shrink-0 items-center justify-center transition-transform active:scale-90"
+          >
+            <Bookmark
+              className={`${iconClass} transition-all duration-200 ${
+                saved ? "scale-110 fill-[#00C6C6] text-[#00C6C6]" : ""
               }`}
               strokeWidth={2.25}
             />
@@ -344,50 +404,17 @@ export function FeedCard({
           <RailAction
             label="Share"
             onClick={async () => {
-              const payload = {
-                title: article.headline,
-                text: article.subheading,
-                url: article.sourceUrl,
-              };
-              if (navigator.share) {
-                try {
-                  await navigator.share(payload);
-                  return;
-                } catch {
-                  /* cancelled */
-                }
+              const result = await shareBrandedArticleCard(article);
+              if (result === "shared") return;
+              if (result === "copied") {
+                flash("Share card copied");
+                return;
               }
-              flash("Link copied to clipboard");
-              void navigator.clipboard?.writeText(article.sourceUrl);
+              if (result === "cancelled") return;
+              flash("Could not create share card");
             }}
           >
             <Share2 className={iconClass} strokeWidth={2.25} />
-          </RailAction>
-        </RailActionSlot>
-
-        <RailActionSlot>
-          <RailAction
-            label={saved ? "Unsave" : "Save"}
-            onClick={() =>
-              guardGuestAction("Sign in to save this", () => {
-                void (async () => {
-                  if (saved) {
-                    const ok = await unsaveArticle(article.id);
-                    flash(ok ? "Removed" : "Could not remove");
-                  } else {
-                    const ok = await saveArticle(article);
-                    flash(ok ? "Article saved" : "Could not save");
-                  }
-                })();
-              })
-            }
-          >
-            <Bookmark
-              className={`${iconClass} transition-colors ${
-                saved ? "fill-[#00C6C6] text-[#00C6C6]" : ""
-              }`}
-              strokeWidth={2.25}
-            />
           </RailAction>
         </RailActionSlot>
       </aside>

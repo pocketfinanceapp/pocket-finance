@@ -110,7 +110,7 @@ function TabPanels({
           />
         </TabPanel>
 
-        <GlobalCompanyPanel />
+        <GlobalCompanyPanel catalogArticles={initialArticles} />
       </div>
     </MobilePageShell>
   );

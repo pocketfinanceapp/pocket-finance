@@ -179,6 +179,10 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
     dividendYield: "—",
     volume24h: "$42.6B",
     circulatingSupply: "19.8M BTC",
+    totalSupply: "21M BTC",
+    fdv: "$2.0T",
+    allTimeHigh: "$73,750",
+    allTimeLow: "$67.81",
     competitors: [
       { ticker: "ETH", name: "Ethereum", price: 3421.8, changePercent: 2.1, color: "#627eea" },
       { ticker: "COIN", name: "Coinbase Global", price: 245.6, changePercent: 1.4, color: "#0052ff" },
@@ -264,6 +268,10 @@ function demoFinancials(seed: string, isCrypto: boolean) {
       dividendYield: "—",
       volume24h: `$${pseudoRandom(`${seed}-vol`, 8, 68).toFixed(1)}B`,
       circulatingSupply: `${pseudoRandom(`${seed}-sup`, 80, 120).toFixed(1)}M ${seed}`,
+      totalSupply: `${pseudoRandom(`${seed}-total`, 100, 220).toFixed(0)}M ${seed}`,
+      fdv: `$${(capT * 1.08).toFixed(2)}T`,
+      allTimeHigh: `$${pseudoRandom(`${seed}-ath`, 40, 120).toFixed(0)}`,
+      allTimeLow: `$${pseudoRandom(`${seed}-atl`, 0.2, 12).toFixed(2)}`,
     };
   }
 
@@ -308,6 +316,16 @@ function withDemoFinancials(
     circulatingSupply:
       profile.circulatingSupply ??
       ("circulatingSupply" in demo ? demo.circulatingSupply : undefined),
+    totalSupply:
+      profile.totalSupply ??
+      ("totalSupply" in demo ? demo.totalSupply : undefined),
+    fdv: profile.fdv ?? ("fdv" in demo ? demo.fdv : undefined),
+    allTimeHigh:
+      profile.allTimeHigh ??
+      ("allTimeHigh" in demo ? demo.allTimeHigh : undefined),
+    allTimeLow:
+      profile.allTimeLow ??
+      ("allTimeLow" in demo ? demo.allTimeLow : undefined),
   };
 }
 

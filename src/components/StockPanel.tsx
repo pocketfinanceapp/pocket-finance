@@ -40,13 +40,16 @@ import { CompanyLogo } from "./CompanyLogo";
 import { FinancialTermPopup } from "./FinancialTermPopup";
 import { PriceChart } from "./PriceChart";
 import { SourceBadge } from "./SourceBadge";
+import { TickerDiscussionTab } from "./TickerDiscussionTab";
 
 interface StockPanelProps {
   article: NewsArticle;
+  catalogArticles?: NewsArticle[];
   onBack: () => void;
+  onOpenTicker?: (symbol: string) => void;
 }
 
-const TABS = ["Overview", "Financials", "News", "Analysis"] as const;
+const TABS = ["Overview", "Discussion", "Financials", "News", "Analysis"] as const;
 
 /** Bottom scroll clearance by Stock Panel variant (Safari toolbar + tap room). */
 const STOCK_PANEL_BOTTOM_CLEARANCE = {
@@ -80,6 +83,10 @@ function buildMetrics(ticker: string, stock: NonNullable<ReturnType<typeof getSt
         value: stock.circulatingSupply ?? "—",
         explanationKey: "Circulating Supply",
       },
+      { label: "Total Supply", value: stock.totalSupply ?? "—" },
+      { label: "FDV", value: stock.fdv ?? "—" },
+      { label: "All-Time High", value: stock.allTimeHigh ?? "—" },
+      { label: "All-Time Low", value: stock.allTimeLow ?? "—" },
     ];
   }
 
@@ -97,7 +104,12 @@ function buildMetrics(ticker: string, stock: NonNullable<ReturnType<typeof getSt
   ];
 }
 
-export function StockPanel({ article, onBack }: StockPanelProps) {
+export function StockPanel({
+  article,
+  catalogArticles = [],
+  onBack,
+  onOpenTicker,
+}: StockPanelProps) {
   const ticker = getArticleDisplayTicker(article);
   const privateCompany = isPrivateTicker(ticker);
   const marketTheme = isMarketThemeTicker(ticker);
@@ -106,6 +118,7 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const meta = getTickerMetaBySymbol(ticker);
   const themeConfig = marketTheme ? getMarketThemeConfig(ticker) : null;
   const { saveArticle, unsaveArticle, isArticleSaved, requestCompanyPanel } = useApp();
+  const openTicker = onOpenTicker ?? ((symbol: string) => requestCompanyPanel(symbol));
   const saved = isArticleSaved(article.id);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
@@ -184,18 +197,26 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
   const relatedTitle =
     isCryptoTicker(ticker) || marketTheme ? "Related assets" : "Competitors";
   const competitors = stock?.competitors ?? [];
+  const hasFinancialData = false;
 
   // Determine which tabs have real content to show.
-  // Set to true / non-empty when that tab's content is implemented.
-  const hasFinancialData = false;
-  const relatedNews: NewsArticle[] | null = null;
+  const relatedNews = useMemo(
+    () =>
+      catalogArticles.filter(
+        (item) =>
+          item.ticker.toUpperCase() === ticker.toUpperCase() ||
+          item.tags.some((tag) => tag.toUpperCase() === ticker.toUpperCase())
+      ),
+    [catalogArticles, ticker]
+  );
   const assetAnalysis: unknown = null;
 
   const availableTabs = (
     [
       { id: "Overview", available: true },
+      { id: "Discussion", available: !privateCompany && !marketTheme },
       { id: "Financials", available: hasFinancialData },
-      { id: "News", available: (relatedNews ?? []).length > 0 },
+      { id: "News", available: relatedNews.length > 0 },
       { id: "Analysis", available: Boolean(assetAnalysis) },
     ] as Array<{ id: (typeof TABS)[number]; available: boolean }>
   ).filter((tab) => tab.available);
@@ -330,83 +351,91 @@ export function StockPanel({ article, onBack }: StockPanelProps) {
             {activeTab === "Overview" && showMarketData ? (
               <>
                 <section className="mt-4 shrink-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[2rem] font-bold leading-none tracking-tight">
-                  {displayPrice.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  <span className="text-base font-normal text-zinc-500">
-                    USD
-                  </span>
-                </p>
-                {hasMassiveQuote && (
-                  <div className="flex flex-col gap-0.5">
-                    <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                      Delayed
-                    </span>
-                    <span className="text-[10px] text-zinc-500">
-                      Prices delayed 15min
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[2rem] font-bold leading-none tracking-tight">
+                      {displayPrice.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      <span className="text-base font-normal text-zinc-500">
+                        USD
+                      </span>
+                    </p>
+                    {hasMassiveQuote && (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                          Delayed
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          Prices delayed 15min
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <p
-                className={`mt-2 text-sm font-semibold ${
-                  isUp ? "text-pocket-green" : "text-pocket-red"
-                }`}
-              >
-                {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
-                {Math.abs(displayChangePercent).toFixed(2)}%) Today
-              </p>
-            </section>
+                  <p
+                    className={`mt-2 text-sm font-semibold ${
+                      isUp ? "text-pocket-green" : "text-pocket-red"
+                    }`}
+                  >
+                    {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
+                    {Math.abs(displayChangePercent).toFixed(2)}%) Today
+                  </p>
+                </section>
 
-            <div className="mt-7">
-              <PriceChart
-                key={`${ticker}-${chartRange}-${Math.round(chartBasePrice)}`}
-                data={chartPoints}
-                range={chartRange}
-                onRangeChange={setChartRange}
-              />
-            </div>
+                <div className="mt-7">
+                  <PriceChart
+                    key={`${ticker}-${chartRange}-${Math.round(chartBasePrice)}`}
+                    data={chartPoints}
+                    range={chartRange}
+                    onRangeChange={setChartRange}
+                  />
+                </div>
 
-            <div className="mt-6">
-              {statColumns ? (
-                <CompanyStatsGrid
-                  columns={statColumns}
-                  onInfoClick={(key) =>
-                    setActiveMetric(STOCK_METRIC_EXPLANATIONS[key])
-                  }
-                />
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {metrics.map((metric) => (
-                    <Stat
-                      key={metric.label}
-                      label={metric.label}
-                      value={metric.value}
-                      onInfoClick={
-                        metric.explanationKey
-                          ? () =>
-                              setActiveMetric(
-                                STOCK_METRIC_EXPLANATIONS[metric.explanationKey!]
-                              )
-                          : undefined
+                <div className="mt-6">
+                  {statColumns ? (
+                    <CompanyStatsGrid
+                      columns={statColumns}
+                      onInfoClick={(key) =>
+                        setActiveMetric(STOCK_METRIC_EXPLANATIONS[key])
                       }
                     />
-                  ))}
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {metrics.map((metric) => (
+                        <Stat
+                          key={metric.label}
+                          label={metric.label}
+                          value={metric.value}
+                          onInfoClick={
+                            metric.explanationKey
+                              ? () =>
+                                  setActiveMetric(
+                                    STOCK_METRIC_EXPLANATIONS[metric.explanationKey!]
+                                  )
+                              : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {competitors.length > 0 && (
-              <AssetList
-                title={relatedTitle}
-                assets={competitors}
-                onOpenTicker={(ticker) => requestCompanyPanel(ticker)}
-              />
-            )}
+                {competitors.length > 0 && (
+                  <AssetList
+                    title={relatedTitle}
+                    assets={competitors}
+                    onOpenTicker={openTicker}
+                  />
+                )}
+
+                {isCryptoTicker(ticker) && relatedNews.length > 0 && (
+                  <RelatedNewsList articles={relatedNews.slice(0, 4)} />
+                )}
               </>
+            ) : activeTab === "Discussion" ? (
+              <TickerDiscussionTab ticker={ticker} onOpenTicker={openTicker} />
+            ) : activeTab === "News" ? (
+              <RelatedNewsList articles={relatedNews} />
             ) : (
               <div className="flex h-48 items-center justify-center text-zinc-500">
                 <p className="text-sm">{activeTab} — coming soon</p>
@@ -619,6 +648,38 @@ function PrivateCompanyProfileView({
 
       <PrivateCompanyNews article={article} />
     </div>
+  );
+}
+
+function RelatedNewsList({ articles }: { articles: NewsArticle[] }) {
+  return (
+    <section className="mt-8 pb-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        Related News
+      </h2>
+      <div className="mt-4 space-y-3">
+        {articles.map((item) => (
+          <a
+            key={item.id}
+            href={item.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-no-drag
+            className="block rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 transition-colors active:bg-white/[0.06]"
+          >
+            <h3 className="text-[15px] font-bold leading-snug text-white">
+              {item.headline}
+            </h3>
+            <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-zinc-400">
+              {item.subheading}
+            </p>
+            <p className="mt-2 text-[11px] text-zinc-500">
+              {item.sourceName} · {formatDate(item.publishedAt)}
+            </p>
+          </a>
+        ))}
+      </div>
+    </section>
   );
 }
 

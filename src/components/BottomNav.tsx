@@ -102,7 +102,7 @@ export function BottomNav({ active }: BottomNavProps) {
           />
         </NavItem>
 
-        <NavItem label="Companies" active={discoverActive} onClick={() => navigate("discover")}>
+        <NavItem label="Browse" active={discoverActive} onClick={() => navigate("discover")}>
           <Building2
             className={`h-[26px] w-[26px] ${discoverActive ? "text-[#00C6C6]" : "text-[var(--pocket-nav-inactive)]"}`}
             strokeWidth={discoverActive ? 2.5 : 2}

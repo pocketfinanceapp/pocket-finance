@@ -1,10 +1,11 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import { THEME_ORDER, THEMES, type AppTheme } from "@/lib/theme";
+import { THEME_ORDER, THEMES, type ThemePreference } from "@/lib/theme";
 
-const THEME_ICONS: Record<AppTheme, typeof Moon> = {
+const THEME_ICONS: Record<ThemePreference, typeof Moon> = {
+  system: Monitor,
   dark: Moon,
   light: Sun,
 };
@@ -13,25 +14,25 @@ interface ThemeSwitcherProps {
   variant?: "icon" | "picker";
 }
 
-/** Compact icon button or Dark / Light picker (Settings). */
+/** Compact icon button or System / Dark / Light picker (Settings). */
 export function ThemeSwitcher({ variant = "icon" }: ThemeSwitcherProps) {
-  const { theme, setTheme, cycleTheme } = useTheme();
-  const Icon = THEME_ICONS[theme];
-  const meta = THEMES[theme];
+  const { theme, preference, setPreference, cycleTheme } = useTheme();
+  const Icon = THEME_ICONS[preference === "system" ? "system" : theme];
+  const meta = THEMES[preference];
 
   if (variant === "picker") {
     return (
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {THEME_ORDER.map((id) => {
           const def = THEMES[id];
-          const active = theme === id;
+          const active = preference === id;
           const OptionIcon = THEME_ICONS[id];
           return (
             <button
               key={id}
               type="button"
               data-no-drag
-              onClick={() => setTheme(id)}
+              onClick={() => setPreference(id)}
               className={`flex flex-col items-center rounded-2xl border px-2 py-3 text-center transition-all active:scale-[0.98] ${
                 active
                   ? "border-[#00C6C6]/40 bg-[#00C6C6]/10 shadow-[0_0_0_1px_rgba(0,198,198,0.15)]"

@@ -24,11 +24,12 @@ import {
 import type { LikedArticleEntry, SavedArticleEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
+import { FeedPreferencesEditor } from "./FeedPreferencesEditor";
 import { MyTopicsSelector } from "./MyTopicsSelector";
 import { ScreenHeader } from "./ScreenHeader";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
-type SettingsScreen = "main" | "liked" | "saved" | "topics";
+type SettingsScreen = "main" | "liked" | "saved" | "topics" | "feedPrefs";
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -105,6 +106,8 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
         ? "Saved Articles"
         : screen === "topics"
           ? "My Topics"
+          : screen === "feedPrefs"
+            ? "Feed Preferences"
           : "Settings";
 
   if (screen !== "main") {
@@ -118,6 +121,10 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
                 Choose topics to personalise your Following feed.
               </p>
               <MyTopicsSelector />
+            </div>
+          ) : screen === "feedPrefs" ? (
+            <div className="pt-4">
+              <FeedPreferencesEditor />
             </div>
           ) : (
             <ArticleList
@@ -186,6 +193,11 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
             <p className="mb-3 text-[13px] font-medium text-white">Appearance</p>
             <ThemeSwitcher variant="picker" />
           </div>
+          <SettingsRow
+            icon={<Newspaper className="h-5 w-5 text-[#3B6EF5]" />}
+            label="Feed Preferences"
+            onClick={() => setScreen("feedPrefs")}
+          />
           <SettingsRow
             icon={<Tag className="h-5 w-5 text-zinc-400" />}
             label="My Topics"
