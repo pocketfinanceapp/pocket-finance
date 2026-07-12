@@ -1,16 +1,58 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { useAuth } from "@/context/AuthContext";
+import { APP_BASE } from "@/lib/appPaths";
 
 type AuthMode = "signIn" | "signUp";
 type AuthView = "form" | "checkInbox" | "forgotPassword" | "resetSent";
 
+const REMEMBER_ME_KEY = "pf_remember_me";
 const REMEMBERED_EMAIL_KEY = "pf_remembered_email";
+const REMEMBERED_PASSWORD_KEY = "pf_remembered_password";
+
+function loadRememberedCredentials(): {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+} {
+  try {
+    const rememberMe = localStorage.getItem(REMEMBER_ME_KEY) === "true";
+    const email = localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? "";
+    const password = rememberMe
+      ? localStorage.getItem(REMEMBERED_PASSWORD_KEY) ?? ""
+      : "";
+    return { email, password, rememberMe: rememberMe && Boolean(email) };
+  } catch {
+    return { email: "", password: "", rememberMe: false };
+  }
+}
+
+function persistRememberedCredentials(
+  rememberMe: boolean,
+  email: string,
+  password: string
+): void {
+  try {
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_ME_KEY, "true");
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+      localStorage.setItem(REMEMBERED_PASSWORD_KEY, password);
+    } else {
+      localStorage.removeItem(REMEMBER_ME_KEY);
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+      localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+    }
+  } catch {
+    /* ignore storage errors */
+  }
+}
 
 export function AuthScreen() {
+  const router = useRouter();
   const {
     signIn,
     signUp,
@@ -42,16 +84,21 @@ export function AuthScreen() {
   }, [authBanner]);
 
   useEffect(() => {
-    try {
-      const savedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
-      if (savedEmail) {
-        setEmail(savedEmail);
-        setRememberMe(true);
-      }
-    } catch {
-      /* ignore storage errors */
+    const saved = loadRememberedCredentials();
+    if (saved.rememberMe) {
+      setEmail(saved.email);
+      setPassword(saved.password);
+      setRememberMe(true);
     }
   }, []);
+
+  const handleRememberMeChange = (checked: boolean) => {
+    setRememberMe(checked);
+    if (!checked) {
+      persistRememberedCredentials(false, "", "");
+      setPassword("");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,15 +120,8 @@ export function AuthScreen() {
         if (result.error) {
           setError(result.error);
         } else {
-          try {
-            if (rememberMe) {
-              localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
-            } else {
-              localStorage.removeItem(REMEMBERED_EMAIL_KEY);
-            }
-          } catch {
-            /* ignore storage errors */
-          }
+          persistRememberedCredentials(rememberMe, email.trim(), password);
+          router.replace(APP_BASE);
         }
       }
     } catch {
@@ -339,7 +379,10 @@ export function AuthScreen() {
           />
           <button
             type="button"
-            onClick={continueAsGuest}
+            onClick={() => {
+              continueAsGuest();
+              router.replace(APP_BASE);
+            }}
             disabled={submitting}
             className="flex w-full items-center justify-center rounded-xl border border-[#333] bg-transparent py-3.5 text-sm font-normal text-white transition-colors active:bg-white/[0.04] disabled:opacity-50"
           >
@@ -411,7 +454,7 @@ export function AuthScreen() {
           {!isSignUp && (
             <RememberMeToggle
               checked={rememberMe}
-              onChange={setRememberMe}
+              onChange={handleRememberMeChange}
             />
           )}
 

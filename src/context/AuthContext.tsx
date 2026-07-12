@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { getEmailConfirmRedirectUrl, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
+import { LOGIN_PATH } from "@/lib/appPaths";
 import {
   clearGuestMode,
   enableGuestMode,
@@ -230,6 +231,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setUser(null);
     setAuthBanner(null);
+    if (typeof window !== "undefined") {
+      window.location.href = LOGIN_PATH;
+    }
   }, []);
 
   const continueAsGuest = useCallback(() => {
@@ -240,6 +244,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const requestSignIn = useCallback(() => {
     clearGuestMode();
     setIsGuest(false);
+    if (typeof window !== "undefined") {
+      window.location.href = LOGIN_PATH;
+    }
   }, []);
 
   const signInWithOAuth = useCallback(

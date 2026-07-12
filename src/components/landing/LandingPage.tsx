@@ -9,7 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
-import { APP_BASE } from "@/lib/appPaths";
+import { LOGIN_PATH } from "@/lib/appPaths";
 import {
   ArticleCardPreview,
   FeedCardPreview,
@@ -92,7 +92,7 @@ export function LandingPage() {
           <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-2.5 sm:px-8 sm:py-4">
             <PocketBrand layout="horizontal" iconSize={32} glow="normal" />
             <Link
-              href={APP_BASE}
+              href={LOGIN_PATH}
               className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-[#00C6C6] transition-colors hover:border-[#3B6EF5]"
             >
               Try the app
@@ -120,7 +120,7 @@ export function LandingPage() {
               </p>
               <div className="mt-3.5 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:gap-3 md:justify-start">
                 <Link
-                  href={APP_BASE}
+                  href={LOGIN_PATH}
                   className="w-full rounded-xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-3 text-center text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-transform active:scale-[0.98] sm:w-auto sm:px-8 sm:py-3.5"
                 >
                   Try the app

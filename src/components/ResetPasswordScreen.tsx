@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { useAuth } from "@/context/AuthContext";
+import { APP_BASE } from "@/lib/appPaths";
 
 export function ResetPasswordScreen() {
+  const router = useRouter();
   const { updatePassword, clearPasswordRecovery } = useAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -32,6 +35,7 @@ export function ResetPasswordScreen() {
         setError(result.error);
       } else {
         clearPasswordRecovery();
+        router.replace(APP_BASE);
       }
     } catch {
       setError("Could not update password. Please try again.");
