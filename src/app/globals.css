@@ -162,13 +162,14 @@
   --pocket-feed-scrim-body-soft: none;
   --pocket-feed-scrim-bottom: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.96) 0%,
-    rgba(255, 255, 255, 0.93) 14%,
-    rgba(255, 255, 255, 0.82) 28%,
-    rgba(255, 255, 255, 0.64) 44%,
-    rgba(255, 255, 255, 0.4) 58%,
-    rgba(255, 255, 255, 0.2) 72%,
-    rgba(255, 255, 255, 0.07) 86%,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(255, 255, 255, 0.95) 12%,
+    rgba(255, 255, 255, 0.88) 24%,
+    rgba(255, 255, 255, 0.74) 38%,
+    rgba(255, 255, 255, 0.52) 52%,
+    rgba(255, 255, 255, 0.3) 66%,
+    rgba(255, 255, 255, 0.12) 80%,
+    rgba(255, 255, 255, 0.04) 92%,
     transparent 100%
   );
   --pocket-feed-scrim-bottom-soft: linear-gradient(
@@ -486,16 +487,16 @@ html.app-route[data-theme="light"] .pf-feed-bottom-text::before {
   position: absolute;
   left: -0.75rem;
   right: -0.75rem;
-  top: -5.5rem;
+  top: -6.25rem;
   bottom: -0.75rem;
   z-index: -1;
   pointer-events: none;
   background: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(255, 255, 255, 0.66) 32%,
-    rgba(255, 255, 255, 0.3) 62%,
-    rgba(255, 255, 255, 0.08) 84%,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(255, 255, 255, 0.74) 28%,
+    rgba(255, 255, 255, 0.42) 58%,
+    rgba(255, 255, 255, 0.14) 82%,
     transparent 100%
   );
 }
@@ -658,7 +659,7 @@ html.app-route[data-theme="light"] .feed-header-scrim {
 
 html.app-route[data-theme="light"] .pf-feed-overlay-bottom,
 html.app-route[data-theme="light"] .pf-feed-overlay-bottom--soft {
-  height: 80%;
+  height: 86%;
 }
 
 html.app-route[data-theme="light"] .pf-feed-bottom-text {

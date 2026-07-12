@@ -351,7 +351,7 @@ export function BrowsePage({ articles, embedded = false }: BrowsePageProps) {
   const navigation = useNavigation();
   const { requestFeedJump } = useApp();
 
-  const categorySlug = pathname.match(/^\/app\/browse\/([^/]+)$/)?.[1] ?? null;
+  const categorySlug = pathname.match(/^\/home\/browse\/([^/]+)$/)?.[1] ?? null;
   const category = categorySlug ? categoryFromSlug(categorySlug) : null;
   const tabEntered = useTabPageEntered("discover", true, categorySlug ?? "landing");
 

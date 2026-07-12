@@ -14,10 +14,10 @@ export function getSiteUrl(): string {
 
 /** Where Supabase sends users after they confirm their email */
 export function getEmailConfirmRedirectUrl(): string {
-  return `${getSiteUrl()}/app?email_confirmed=1`;
+  return `${getSiteUrl()}/home?email_confirmed=1`;
 }
 
 /** Where Supabase sends users to set a new password after reset email */
 export function getPasswordResetRedirectUrl(): string {
-  return `${getSiteUrl()}/app?password_reset=1`;
+  return `${getSiteUrl()}/home?password_reset=1`;
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AppBootSplash } from "@/components/AppBootSplash";
 import { AuthScreen } from "@/components/AuthScreen";
+import { ForceDarkTheme } from "@/components/ForceDarkTheme";
 import { ResetPasswordScreen } from "@/components/ResetPasswordScreen";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { useApp } from "@/context/AppContext";
@@ -58,8 +59,16 @@ export function AppGate({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {showAuth && <AuthScreen />}
-      {passwordRecoveryPending && <ResetPasswordScreen />}
+      {showAuth && (
+        <ForceDarkTheme>
+          <AuthScreen />
+        </ForceDarkTheme>
+      )}
+      {passwordRecoveryPending && (
+        <ForceDarkTheme>
+          <ResetPasswordScreen />
+        </ForceDarkTheme>
+      )}
       {showOnboarding && <OnboardingFlow />}
     </>
   );

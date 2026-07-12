@@ -10,7 +10,7 @@
     }
   ],
   "description": "Bold news. Smarter moves.",
-  "start_url": "/app",
+  "start_url": "/home",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",

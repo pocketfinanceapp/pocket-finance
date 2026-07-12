@@ -3,6 +3,20 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /** Hides the circular Next.js "N" dev indicator during onboarding */
   devIndicators: false,
+  async redirects() {
+    return [
+      {
+        source: "/app",
+        destination: "/home",
+        permanent: true,
+      },
+      {
+        source: "/app/:path*",
+        destination: "/home/:path*",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     unoptimized: true,
   },

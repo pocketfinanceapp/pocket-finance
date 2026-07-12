@@ -1,5 +1,10 @@
+import { ForceDarkTheme } from "@/components/ForceDarkTheme";
 import { LandingPage } from "@/components/landing/LandingPage";
 
 export default function HomePage() {
-  return <LandingPage />;
+  return (
+    <ForceDarkTheme>
+      <LandingPage />
+    </ForceDarkTheme>
+  );
 }
