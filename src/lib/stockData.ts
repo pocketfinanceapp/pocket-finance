@@ -364,3 +364,14 @@ export function getStockProfile(ticker: string): StockProfile {
 
   return { ...base, chartData };
 }
+
+/** Tickers referenced as competitors in seeded stock profiles */
+export function getStockProfileCompetitorTickers(): string[] {
+  const tickers = new Set<string>();
+  for (const profile of Object.values(STOCK_PROFILES)) {
+    for (const competitor of profile.competitors) {
+      tickers.add(competitor.ticker.toUpperCase());
+    }
+  }
+  return [...tickers];
+}

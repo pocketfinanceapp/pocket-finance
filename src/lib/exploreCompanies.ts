@@ -1,54 +1,6 @@
 import { fuzzyMatchesQuery } from "./fuzzySearch";
+import { getBrowsableCompanyTickers } from "./catalogTickers";
 import { getTickerMetaBySymbol, type TickerMeta } from "./tickerMap";
-
-export const EXPLORE_COMPANY_TICKERS = [
-  "AAPL",
-  "MSFT",
-  "NVDA",
-  "GOOGL",
-  "AMZN",
-  "META",
-  "TSLA",
-  "AMD",
-  "NFLX",
-  "JPM",
-  "V",
-  "MA",
-  "BAC",
-  "GS",
-  "XOM",
-  "CVX",
-  "COIN",
-  "BTC",
-  "ETH",
-  "DIS",
-  "WMT",
-  "KO",
-  "NKE",
-  "SBUX",
-  "CRM",
-  "ORCL",
-  "UBER",
-  "ABNB",
-  "PLTR",
-  "INTC",
-  "AVGO",
-  "QCOM",
-  "SHOP",
-  "PYPL",
-  "BA",
-  "JNJ",
-  "PFE",
-  "TSM",
-  "ASML",
-  "TM",
-  "SONY",
-  "BHP",
-  "LLY",
-  "COST",
-  "HD",
-  "MCD",
-] as const;
 
 export interface ExploreCompany {
   ticker: string;
@@ -56,7 +8,7 @@ export interface ExploreCompany {
 }
 
 export function getExploreCompanies(): ExploreCompany[] {
-  return EXPLORE_COMPANY_TICKERS.map((ticker) => ({
+  return getBrowsableCompanyTickers().map((ticker) => ({
     ticker,
     meta: getTickerMetaBySymbol(ticker),
   }));

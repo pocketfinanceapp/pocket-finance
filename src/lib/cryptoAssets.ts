@@ -1,20 +1,8 @@
 import { getTickerMetaBySymbol, type TickerMeta } from "./tickerMap";
+import { CRYPTO_ASSET_TICKERS } from "./cryptoBrand";
 
-export const CRYPTO_ASSET_TICKERS = [
-  "BTC",
-  "ETH",
-  "SOL",
-  "BNB",
-  "XRP",
-  "ADA",
-  "DOGE",
-  "AVAX",
-  "DOT",
-  "LINK",
-  "COIN",
-] as const;
-
-export type CryptoAssetTicker = (typeof CRYPTO_ASSET_TICKERS)[number];
+export { CRYPTO_ASSET_TICKERS, isCryptoAssetTicker } from "./cryptoBrand";
+export type { CryptoAssetTicker } from "./cryptoBrand";
 
 export interface CryptoAsset {
   ticker: string;
@@ -26,9 +14,4 @@ export function getCryptoAssets(): CryptoAsset[] {
     ticker,
     meta: getTickerMetaBySymbol(ticker),
   }));
-}
-
-export function isCryptoAssetTicker(ticker: string): boolean {
-  const upper = ticker.toUpperCase();
-  return (CRYPTO_ASSET_TICKERS as readonly string[]).includes(upper);
 }

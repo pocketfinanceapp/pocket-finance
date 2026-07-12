@@ -7,11 +7,16 @@ export const MARKET_FILTERS = [
   "HKEX",
   "TSX",
   "Euronext",
+  "XETRA",
+  "SIX",
   "SGX",
   "BSE",
   "SSE",
   "KRX",
   "TWSE",
+  "B3",
+  "BMV",
+  "TADAWUL",
 ] as const;
 
 export type MarketFilter = (typeof MARKET_FILTERS)[number];
@@ -85,6 +90,15 @@ export function marketToFilter(market: string): MarketFilter | null {
     return "KRX";
   if (m.includes("TWSE") || m.includes("TAIWAN") || m.includes("TAIEX"))
     return "TWSE";
+  if (m.includes("XETRA") || m.includes("DAX") || m.includes("FRANKFURT"))
+    return "XETRA";
+  if (m.includes("SIX") || m.includes("SWISS")) return "SIX";
+  if (m.includes("BOVESPA") || m.includes("B3") || m.includes("BRAZIL"))
+    return "B3";
+  if (m.includes("BMV") || m.includes("MEXICO") || m.includes("BOLSA"))
+    return "BMV";
+  if (m.includes("TADAWUL") || m.includes("SAUDI") || m.includes("RIYADH"))
+    return "TADAWUL";
 
   return "NASDAQ";
 }

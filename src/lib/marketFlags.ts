@@ -14,6 +14,10 @@ const FLAG_EMOJI: Record<string, string> = {
   kr: "🇰🇷",
   de: "🇩🇪",
   fr: "🇫🇷",
+  br: "🇧🇷",
+  ch: "🇨🇭",
+  sa: "🇸🇦",
+  mx: "🇲🇽",
 };
 
 /** Self-hosted flag asset in /public/flags */

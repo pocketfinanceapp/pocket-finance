@@ -22,6 +22,9 @@ export const TOP_MOVERS: Record<TopMoverTab, TopMover[]> = {
     { ticker: "TSLA", name: "Tesla, Inc.", price: 248.32, changePercent: -2.15 },
     { ticker: "META", name: "Meta Platforms, Inc.", price: 612.8, changePercent: 1.32 },
     { ticker: "MSFT", name: "Microsoft Corporation", price: 415.6, changePercent: 0.55 },
+    { ticker: "AMZN", name: "Amazon.com, Inc.", price: 198.5, changePercent: 0.45 },
+    { ticker: "AMD", name: "Advanced Micro Devices", price: 168.9, changePercent: 1.45 },
+    { ticker: "GOOGL", name: "Alphabet Inc.", price: 178.92, changePercent: 1.12 },
   ],
   gainers: [
     { ticker: "AVGO", name: "Broadcom Inc.", price: 245.8, changePercent: 8.44 },
@@ -29,6 +32,9 @@ export const TOP_MOVERS: Record<TopMoverTab, TopMover[]> = {
     { ticker: "LLY", name: "Eli Lilly and Company", price: 1131.42, changePercent: 5.18 },
     { ticker: "ORCL", name: "Oracle Corporation", price: 198.3, changePercent: 4.87 },
     { ticker: "UBER", name: "Uber Technologies, Inc.", price: 88.45, changePercent: 3.92 },
+    { ticker: "CRWD", name: "CrowdStrike Holdings", price: 412.2, changePercent: 4.12 },
+    { ticker: "MSTR", name: "MicroStrategy Inc.", price: 1680.2, changePercent: 3.8 },
+    { ticker: "SMCI", name: "Super Micro Computer", price: 42.8, changePercent: 3.55 },
   ],
   losers: [
     { ticker: "INTC", name: "Intel Corporation", price: 21.34, changePercent: -11.28 },
@@ -36,6 +42,9 @@ export const TOP_MOVERS: Record<TopMoverTab, TopMover[]> = {
     { ticker: "QCOM", name: "QUALCOMM Incorporated", price: 152.3, changePercent: -5.88 },
     { ticker: "AMD", name: "Advanced Micro Devices, Inc.", price: 168.9, changePercent: -4.92 },
     { ticker: "NFLX", name: "Netflix, Inc.", price: 1042.5, changePercent: -3.15 },
+    { ticker: "SNAP", name: "Snap Inc.", price: 11.42, changePercent: -2.88 },
+    { ticker: "PYPL", name: "PayPal Holdings, Inc.", price: 62.4, changePercent: -2.41 },
+    { ticker: "BA", name: "Boeing Company", price: 178.2, changePercent: -2.12 },
   ],
 };
 
