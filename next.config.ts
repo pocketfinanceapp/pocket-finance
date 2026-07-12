@@ -19,6 +19,13 @@ const nextConfig: NextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "flagcdn.com",
+        pathname: "/**",
+      },
+    ],
   },
   /** Stable transpilation for icon/chart packages (avoids broken vendor chunks) */
   transpilePackages: ["lucide-react", "recharts"],

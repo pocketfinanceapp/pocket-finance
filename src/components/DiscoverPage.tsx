@@ -42,10 +42,10 @@ import {
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
+import { BrowseAssetTabs } from "./BrowseAssetTabs";
 import { MarketFlag } from "./MarketFlag";
 import { MarketPanel } from "./MarketPanel";
 import { MarketSparkline } from "./MarketSparkline";
-import { SectionTabs } from "./SectionTabs";
 
 type BrowseAssetTab = "companies" | "markets" | "crypto";
 
@@ -171,19 +171,16 @@ function MarketBrowseCard({
       type="button"
       data-no-drag
       onClick={onOpen}
-      className="pf-card-surface flex min-h-[128px] w-full items-center gap-3 rounded-2xl border border-[var(--pocket-border)] px-4 py-3.5 text-left transition-transform duration-300 active:scale-[0.97]"
+      className="pf-card-surface flex w-full items-center gap-3 rounded-2xl border border-[var(--pocket-border)] px-3.5 py-2.5 text-left transition-transform duration-300 active:scale-[0.98]"
       style={tabStaggerStyle(entered, index, 60)}
     >
-      <MarketFlag countryCode={market.countryCode} size={48} />
+      <MarketFlag countryCode={market.countryCode} size={40} />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-bold tracking-tight text-pocket-text">
           {market.name}
         </p>
         <p className="mt-0.5 truncate text-[12px] text-pocket-muted">
-          {market.fullName}
-        </p>
-        <p className="mt-1 truncate text-[11px] text-pocket-muted">
           {market.indexName}
         </p>
       </div>
@@ -342,8 +339,8 @@ export function DiscoverPage({
     let fadeInTimer: number | undefined;
     const fadeOutTimer = window.setTimeout(() => {
       setDisplayedAssetTab(assetTab);
-      fadeInTimer = window.setTimeout(() => setGridVisible(true), 40);
-    }, 200);
+      fadeInTimer = window.setTimeout(() => setGridVisible(true), 20);
+    }, 120);
 
     return () => {
       window.clearTimeout(fadeOutTimer);
@@ -386,17 +383,8 @@ export function DiscoverPage({
           Explore companies, markets, and crypto
         </p>
 
-        <div className="mt-4" style={tabEnterStyle(tabEntered, 60)}>
-          <SectionTabs
-            tabs={[
-              { id: "companies", label: "Companies" },
-              { id: "markets", label: "Markets" },
-              { id: "crypto", label: "Crypto" },
-            ]}
-            active={assetTab}
-            onChange={setAssetTab}
-            className="justify-center px-0"
-          />
+        <div className="mt-5" style={tabEnterStyle(tabEntered, 60)}>
+          <BrowseAssetTabs active={assetTab} onChange={setAssetTab} />
         </div>
 
         <div className="relative mt-4" style={tabEnterStyle(tabEntered, 80)}>
@@ -457,16 +445,16 @@ export function DiscoverPage({
         ) : (
           <div
             key={displayedAssetTab}
-            className={`pt-1 transition-all duration-200 ease-out ${
+            className={`pt-1 transition-opacity duration-150 ease-out ${
               showingMarkets
-                ? "flex flex-col gap-3"
+                ? "flex flex-col gap-2.5"
                 : "grid grid-cols-2 gap-3"
             }`}
             style={{
               opacity: gridVisible ? 1 : 0,
-              transform: gridVisible
-                ? "translateY(0) scale(1)"
-                : "translateY(8px) scale(0.98)",
+              transform: gridVisible ? "translateY(0)" : "translateY(3px)",
+              transitionProperty: "opacity, transform",
+              transitionDuration: "150ms",
               transitionTimingFunction: gridVisible
                 ? TAB_ENTER_EASE
                 : TAB_EXIT_EASE,
