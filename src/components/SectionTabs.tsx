@@ -18,7 +18,9 @@ export function SectionTabs<T extends string>({
 }: SectionTabsProps<T>) {
   return (
     <div
-      className={`flex gap-6 border-b border-[var(--pocket-border)] px-4 ${className}`}
+      className={`flex gap-6 border-b border-[var(--pocket-border)] ${
+        className || "px-4"
+      }`}
     >
       {tabs.map((tab) => (
         <button

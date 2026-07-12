@@ -13,13 +13,6 @@ import { FadeInSection } from "./SubPageShell";
 import { MarketBadge } from "./MarketBadge";
 import { SourceBadge } from "./SourceBadge";
 
-function articleSnippet(article: NewsArticle): string {
-  const subheading = article.subheading?.trim();
-  if (subheading) return subheading;
-  const first = article.body.split(/\n\n+/).map((p) => p.trim()).find(Boolean);
-  return first?.slice(0, 400) ?? "";
-}
-
 interface ArticlePanelProps {
   article: NewsArticle;
   onBack: () => void;
@@ -107,9 +100,15 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
         ref={scrollRef}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(6rem+env(safe-area-inset-bottom))]"
       >
-        <MarketBadge market={article.market} />
+        <div className="flex flex-wrap items-center gap-2">
+          <MarketBadge market={article.market} />
+          <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] font-bold text-[#00C6C6]">
+            {article.ticker}
+          </span>
+          <span className="text-[12px] text-zinc-500">{article.companyName}</span>
+        </div>
 
-        <h1 className="mt-2 text-[1.75rem] font-bold leading-[1.2] tracking-tight">
+        <h1 className="mt-3 text-[1.75rem] font-bold leading-[1.2] tracking-tight">
           {article.headline}
         </h1>
 
@@ -145,11 +144,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           </div>
         )}
 
-        <ArticleAISummary
-          articleId={article.id}
-          headline={article.headline}
-          snippet={articleSnippet(article)}
-        />
+        <ArticleAISummary article={article} />
 
         <a
           href={article.sourceUrl}

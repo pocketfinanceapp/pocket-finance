@@ -28,7 +28,6 @@ import {
 } from "@/lib/feedOnboarding";
 import { resolveFeedChip } from "@/lib/feedChip";
 import { resolveMarketForArticle } from "@/lib/tickerMap";
-import { shareBrandedArticleCard } from "@/lib/shareCard";
 import { FireSparkIcon } from "@/components/icons/FireSparkIcon";
 
 interface FeedCardProps {
@@ -404,14 +403,26 @@ export function FeedCard({
           <RailAction
             label="Share"
             onClick={async () => {
-              const result = await shareBrandedArticleCard(article);
-              if (result === "shared") return;
-              if (result === "copied") {
-                flash("Share card copied");
-                return;
+              const url = article.sourceUrl;
+              const title = cleanArticleTitle(article.headline);
+              try {
+                if (navigator.share) {
+                  await navigator.share({ title, url });
+                  return;
+                }
+                await navigator.clipboard.writeText(url);
+                flash("Link copied");
+              } catch (err) {
+                if (err instanceof DOMException && err.name === "AbortError") {
+                  return;
+                }
+                try {
+                  await navigator.clipboard.writeText(url);
+                  flash("Link copied");
+                } catch {
+                  flash("Could not share");
+                }
               }
-              if (result === "cancelled") return;
-              flash("Could not create share card");
             }}
           >
             <Share2 className={iconClass} strokeWidth={2.25} />

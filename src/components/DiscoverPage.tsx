@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import type { MarketFilter } from "@/lib/filters";
 import {
   filterExploreCompanies,
   getExploreCompanies,
@@ -13,10 +14,17 @@ import {
   buildFeedPersonalizationInput,
   rankExploreCompanies,
 } from "@/lib/feedPersonalization";
+import { fuzzyMatchesQuery } from "@/lib/fuzzySearch";
 import { prefetchCompanyLogos } from "@/lib/logoCache";
+import {
+  formatIndexValue,
+  getMarketSparkline,
+  GLOBAL_MARKETS,
+  MARKET_REGIONS,
+  type GlobalMarket,
+} from "@/lib/markets";
 import { getStockProfile } from "@/lib/stockData";
 import { fetchStockQuote } from "@/lib/stockQuoteClient";
-import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import type { NewsArticle } from "@/lib/types";
 import {
   loadFavouriteTopics,
@@ -24,21 +32,27 @@ import {
 } from "@/lib/profileStorage";
 import {
   listLayerStyle,
+  panelEnterStyle,
   tabEnterFadeStyle,
   tabEnterStyle,
   tabStaggerStyle,
   TAB_ENTER_EASE,
   TAB_EXIT_EASE,
+  usePanelTransition,
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
+import { MarketFlag } from "./MarketFlag";
+import { MarketPanel } from "./MarketPanel";
+import { MarketSparkline } from "./MarketSparkline";
 import { SectionTabs } from "./SectionTabs";
 
-type BrowseAssetTab = "companies" | "crypto";
+type BrowseAssetTab = "companies" | "markets" | "crypto";
 
 interface DiscoverPageProps {
   articles: NewsArticle[];
   onOpenCompany: (ticker: string) => void;
+  onOpenMarketFeed: (market: MarketFilter) => void;
 }
 
 function formatPrice(price: number): string {
@@ -138,7 +152,82 @@ function CompanyCard({
   );
 }
 
-export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
+function MarketBrowseCard({
+  market,
+  index,
+  entered,
+  onOpen,
+}: {
+  market: GlobalMarket;
+  index: number;
+  entered: boolean;
+  onOpen: () => void;
+}) {
+  const up = market.changePercent >= 0;
+  const sparkline = useMemo(() => getMarketSparkline(market), [market]);
+
+  return (
+    <button
+      type="button"
+      data-no-drag
+      onClick={onOpen}
+      className="pf-card-surface flex min-h-[128px] w-full items-center gap-3 rounded-2xl border border-[var(--pocket-border)] px-4 py-3.5 text-left transition-transform duration-300 active:scale-[0.97]"
+      style={tabStaggerStyle(entered, index, 60)}
+    >
+      <MarketFlag countryCode={market.countryCode} size={48} />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-bold tracking-tight text-pocket-text">
+          {market.name}
+        </p>
+        <p className="mt-0.5 truncate text-[12px] text-pocket-muted">
+          {market.fullName}
+        </p>
+        <p className="mt-1 truncate text-[11px] text-pocket-muted">
+          {market.indexName}
+        </p>
+      </div>
+
+      <MarketSparkline points={sparkline} up={up} />
+
+      <div className="shrink-0 text-right">
+        <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
+          {formatIndexValue(market.value)}
+        </p>
+        <span
+          className={`mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+            up
+              ? "bg-[#00C6C6]/15 text-[#00C6C6]"
+              : "bg-red-400/15 text-red-400"
+          }`}
+        >
+          {up ? "+" : ""}
+          {market.changePercent.toFixed(2)}%
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function filterMarkets(markets: GlobalMarket[], query: string): GlobalMarket[] {
+  const q = query.trim();
+  if (!q) return markets;
+  return markets.filter((market) =>
+    fuzzyMatchesQuery(q, [
+      market.id,
+      market.name,
+      market.fullName,
+      market.indexName,
+      market.country,
+    ])
+  );
+}
+
+export function DiscoverPage({
+  articles,
+  onOpenCompany,
+  onOpenMarketFeed,
+}: DiscoverPageProps) {
   const tabEntered = useTabPageEntered("discover");
   const {
     followedMarkets,
@@ -154,8 +243,26 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
   const [displayedAssetTab, setDisplayedAssetTab] =
     useState<BrowseAssetTab>("companies");
   const [gridVisible, setGridVisible] = useState(true);
+  const {
+    panelItem: panelMarket,
+    panelVisible,
+    listVisible,
+    openPanel: openMarket,
+    closePanel,
+  } = usePanelTransition<MarketFilter>();
   const companies = useMemo(() => getExploreCompanies(), []);
   const cryptoAssets = useMemo(() => getCryptoAssets(), []);
+  const markets = useMemo(() => {
+    const byId = new Map(GLOBAL_MARKETS.map((market) => [market.id, market]));
+    const ordered: GlobalMarket[] = [];
+    for (const region of MARKET_REGIONS) {
+      for (const id of region.marketIds) {
+        const market = byId.get(id);
+        if (market) ordered.push(market);
+      }
+    }
+    return ordered;
+  }, []);
 
   useEffect(() => {
     prefetchCompanyLogos(companies.map((company) => company.ticker));
@@ -220,6 +327,11 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
     return filterExploreCompanies(activeCatalog, q);
   }, [activeCatalog, searchQuery]);
 
+  const displayMarkets = useMemo(
+    () => filterMarkets(markets, searchQuery),
+    [markets, searchQuery]
+  );
+
   useEffect(() => {
     if (assetTab === displayedAssetTab) {
       setGridVisible(true);
@@ -240,6 +352,20 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
   }, [assetTab, displayedAssetTab]);
 
   const searchActive = Boolean(searchQuery.trim());
+  const showingMarkets = displayedAssetTab === "markets";
+
+  if (panelMarket) {
+    return (
+      <div className="pf-page h-full bg-pocket-bg" style={panelEnterStyle(panelVisible)}>
+        <MarketPanel
+          marketId={panelMarket}
+          onBack={closePanel}
+          onOpenFeed={onOpenMarketFeed}
+          onOpenCompany={onOpenCompany}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
@@ -257,17 +383,19 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
           className="mt-0.5 text-[13px] text-pocket-muted"
           style={tabEnterFadeStyle(tabEntered, 40)}
         >
-          Explore companies and crypto assets
+          Explore companies, markets, and crypto
         </p>
 
         <div className="mt-4" style={tabEnterStyle(tabEntered, 60)}>
           <SectionTabs
             tabs={[
               { id: "companies", label: "Companies" },
+              { id: "markets", label: "Markets" },
               { id: "crypto", label: "Crypto" },
             ]}
             active={assetTab}
             onChange={setAssetTab}
+            className="justify-center px-0"
           />
         </div>
 
@@ -283,7 +411,9 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
             placeholder={
               displayedAssetTab === "crypto"
                 ? "Search crypto symbol…"
-                : "Search ticker or company…"
+                : displayedAssetTab === "markets"
+                  ? "Search market or exchange…"
+                  : "Search ticker or company…"
             }
             className={`w-full rounded-2xl border bg-[var(--pocket-surface-hover)] py-3 pl-10 pr-10 text-[14px] text-pocket-text outline-none transition-all duration-500 placeholder:text-pocket-muted ${
               searchFocused
@@ -308,34 +438,59 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
 
       <div
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(9rem+env(safe-area-inset-bottom))]"
-        style={listLayerStyle(!companyPanelTicker)}
+        style={listLayerStyle(!companyPanelTicker && listVisible)}
       >
-        {searchActive && displayCompanies.length === 0 ? (
+        {searchActive &&
+        (showingMarkets ? displayMarkets.length === 0 : displayCompanies.length === 0) ? (
           <p
             className="px-1 pt-8 text-center text-[14px] text-pocket-muted"
             style={tabEnterFadeStyle(tabEntered, 120)}
           >
-            No {displayedAssetTab === "crypto" ? "crypto assets" : "companies"} match &ldquo;{searchQuery.trim()}&rdquo;
+            No{" "}
+            {displayedAssetTab === "crypto"
+              ? "crypto assets"
+              : displayedAssetTab === "markets"
+                ? "markets"
+                : "companies"}{" "}
+            match &ldquo;{searchQuery.trim()}&rdquo;
           </p>
         ) : (
           <div
             key={displayedAssetTab}
-            className="grid grid-cols-2 gap-3 pt-1 transition-all duration-200 ease-out"
+            className={`pt-1 transition-all duration-200 ease-out ${
+              showingMarkets
+                ? "flex flex-col gap-3"
+                : "grid grid-cols-2 gap-3"
+            }`}
             style={{
               opacity: gridVisible ? 1 : 0,
-              transform: gridVisible ? "translateY(0) scale(1)" : "translateY(8px) scale(0.98)",
-              transitionTimingFunction: gridVisible ? TAB_ENTER_EASE : TAB_EXIT_EASE,
+              transform: gridVisible
+                ? "translateY(0) scale(1)"
+                : "translateY(8px) scale(0.98)",
+              transitionTimingFunction: gridVisible
+                ? TAB_ENTER_EASE
+                : TAB_EXIT_EASE,
             }}
           >
-            {displayCompanies.map((company, index) => (
-              <CompanyCard
-                key={company.ticker}
-                company={company}
-                index={index}
-                entered={tabEntered}
-                onOpen={() => onOpenCompany(company.ticker)}
-              />
-            ))}
+            {showingMarkets
+              ? displayMarkets.map((market, index) => (
+                  <MarketBrowseCard
+                    key={market.id}
+                    market={market}
+                    index={index}
+                    entered={tabEntered}
+                    onOpen={() => openMarket(market.id)}
+                  />
+                ))
+              : displayCompanies.map((company, index) => (
+                  <CompanyCard
+                    key={company.ticker}
+                    company={company}
+                    index={index}
+                    entered={tabEntered}
+                    onOpen={() => onOpenCompany(company.ticker)}
+                  />
+                ))}
           </div>
         )}
       </div>

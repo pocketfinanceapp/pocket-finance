@@ -104,7 +104,7 @@ export function PocketBrand({
       <PocketMarkIcon size={iconSize} glow={glow} />
       <div className={isVertical ? "flex flex-col items-center" : ""}>
         <span
-          className={`font-bold tracking-tight text-white ${
+          className={`font-bold tracking-tight text-pocket-text ${
             iconSize >= 64
               ? "text-2xl"
               : iconSize >= 44

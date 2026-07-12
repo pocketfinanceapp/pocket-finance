@@ -96,6 +96,7 @@ function TabPanels({
           <DiscoverPage
             articles={initialArticles}
             onOpenCompany={openCompanyFromTab}
+            onOpenMarketFeed={openMarketFeed}
           />
         </TabPanel>
 

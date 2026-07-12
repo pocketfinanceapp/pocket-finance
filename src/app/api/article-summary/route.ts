@@ -1,20 +1,40 @@
 import { NextResponse } from "next/server";
+import { parseBriefingResponse } from "@/lib/briefing";
 
 const MODEL = "claude-haiku-4-5-20251001";
-const SYSTEM_PROMPT =
-  "You are a financial news summariser. Return exactly 3 bullet points, no preamble, no extra text. Format: bullet 1 starting with 🔴, bullet 2 starting with 📈, bullet 3 starting with 👀. Each bullet is one concise sentence.";
+
+const SYSTEM_PROMPT = `You are a senior financial news editor at Pocket Finance. Write a detailed Pocket Briefing — an in-depth investor news report, not a short summary.
+
+Return ONLY valid JSON in this exact shape:
+{
+  "lede": "2-3 sentence opening paragraph",
+  "sections": [
+    { "title": "What happened", "paragraphs": ["...", "..."] },
+    { "title": "Why it matters", "paragraphs": ["...", "..."] },
+    { "title": "Market impact", "paragraphs": ["...", "..."] },
+    { "title": "What to watch", "paragraphs": ["..."] }
+  ],
+  "takeaway": "One crisp investor takeaway sentence"
+}
+
+Rules:
+- Write 400-600 words total across lede, sections, and takeaway
+- Each paragraph must be 2-4 full sentences of professional financial journalism
+- Be specific about the company, ticker, sector, and market when relevant
+- Explain context, implications, and investor relevance like Reuters or Bloomberg desk copy
+- No emojis, no bullet points, no markdown, no preamble outside the JSON
+- Do not invent direct quotes, precise statistics, or named sources not implied by the input
+- If source material is thin, expand with careful market context without fabricating facts`;
 
 interface SummaryRequest {
   headline?: string;
-  snippet?: string;
-}
-
-function parseBullets(text: string): string[] {
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .slice(0, 3);
+  sourceText?: string;
+  ticker?: string;
+  companyName?: string;
+  market?: string;
+  sector?: string;
+  tags?: string[];
+  sourceName?: string;
 }
 
 export async function POST(request: Request) {
@@ -31,12 +51,25 @@ export async function POST(request: Request) {
   }
 
   const headline = body.headline?.trim();
-  const snippet = body.snippet?.trim() ?? "";
+  const sourceText = body.sourceText?.trim() ?? "";
   if (!headline) {
     return NextResponse.json({ error: "Headline required" }, { status: 400 });
   }
 
-  const userPrompt = `Summarise this article in 3 bullets: ${headline} - ${snippet}`;
+  const contextLines = [
+    `Headline: ${headline}`,
+    body.ticker ? `Ticker: ${body.ticker}` : null,
+    body.companyName ? `Company: ${body.companyName}` : null,
+    body.market ? `Market: ${body.market}` : null,
+    body.sector ? `Sector: ${body.sector}` : null,
+    body.tags?.length ? `Tags: ${body.tags.join(", ")}` : null,
+    body.sourceName ? `Publisher: ${body.sourceName}` : null,
+    sourceText ? `Source material:\n${sourceText}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const userPrompt = `Write a detailed Pocket Briefing report for this story:\n\n${contextLines}`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -48,11 +81,11 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 300,
+        max_tokens: 1400,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userPrompt }],
       }),
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(25000),
     });
 
     if (!res.ok) {
@@ -65,13 +98,13 @@ export async function POST(request: Request) {
 
     const text =
       data.content?.find((block) => block.type === "text")?.text?.trim() ?? "";
-    const bullets = parseBullets(text);
+    const briefing = parseBriefingResponse(text);
 
-    if (bullets.length === 0) {
+    if (!briefing) {
       return NextResponse.json({ error: "Empty summary" }, { status: 502 });
     }
 
-    return NextResponse.json({ bullets });
+    return NextResponse.json({ briefing });
   } catch {
     return NextResponse.json({ error: "Summary failed" }, { status: 502 });
   }
