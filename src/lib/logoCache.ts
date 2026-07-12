@@ -1,6 +1,6 @@
 import { getCompanyLogoUrls } from "./companyLogos";
 
-const STORAGE_KEY = "pf-logo-cache-v1";
+const STORAGE_KEY = "pf-logo-cache-v2";
 
 const resolvedByTicker = new Map<string, string>();
 const exhaustedTickers = new Set<string>();

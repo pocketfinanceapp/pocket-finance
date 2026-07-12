@@ -50,6 +50,8 @@ const MANUAL_LOGOS: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Klarna_Payment_Badge.svg/512px-Klarna_Payment_Badge.svg.png",
   CHIME:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Chime_%28company%29_logo.svg/512px-Chime_%28company%29_logo.svg.png",
+  TM: "/logos/companies/tm.png",
+  ORCL: "/logos/companies/orcl.png",
 };
 
 function isStockSymbol(symbol: string): boolean {
