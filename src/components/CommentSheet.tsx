@@ -26,6 +26,11 @@ import {
 import { PF_AVATAR_CHANGED_EVENT } from "@/lib/profileStorage";
 import { getUserAvatarUrl, getUserDisplayName } from "@/lib/userIdentity";
 import {
+  PANEL_EXIT_MS,
+  TAB_ENTER_EASE,
+  TAB_EXIT_EASE,
+} from "@/lib/tabEnterAnimation";
+import {
   fetchCommentLikeCounts,
   fetchComments,
   fetchCommentCount,
@@ -105,7 +110,7 @@ export function CommentSheet({
     setReplyTo(null);
     setExpandedIds(new Set());
     document.body.style.overflow = "";
-    const t = window.setTimeout(() => setMounted(false), 200);
+    const t = window.setTimeout(() => setMounted(false), PANEL_EXIT_MS);
     return () => window.clearTimeout(t);
   }, [open]);
 
@@ -245,10 +250,14 @@ export function CommentSheet({
       <button
         type="button"
         aria-label="Close comments"
-        className={`absolute inset-0 backdrop-blur-md transition-opacity duration-200 ${
-          entered ? "opacity-100" : "opacity-0"
-        }`}
-        style={{ background: "var(--pocket-backdrop)" }}
+        className="absolute inset-0 backdrop-blur-md"
+        style={{
+          background: "var(--pocket-backdrop)",
+          opacity: entered ? 1 : 0,
+          transition: entered
+            ? `opacity 320ms ${TAB_ENTER_EASE}`
+            : `opacity 260ms ${TAB_EXIT_EASE}`,
+        }}
         onClick={onClose}
       />
 
@@ -256,9 +265,7 @@ export function CommentSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="comment-sheet-title"
-        className={`absolute inset-x-0 mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] border border-[var(--pocket-border)] shadow-[0_-24px_80px_rgba(0,0,0,0.25)] transition-transform duration-200 ease-out ${
-          entered ? "translate-y-0" : "translate-y-full"
-        }`}
+        className="absolute inset-x-0 mx-auto flex w-full max-w-mobile flex-col overflow-hidden rounded-t-[28px] border border-[var(--pocket-border)] shadow-[0_-24px_80px_rgba(0,0,0,0.25)]"
         style={{
           bottom: sheetBottom,
           height:
@@ -266,6 +273,11 @@ export function CommentSheet({
               ? "min(72dvh, calc(100dvh - 1rem))"
               : "min(88dvh, calc(100dvh - 0.5rem))",
           background: "var(--pocket-sheet)",
+          opacity: entered ? 1 : 0,
+          transform: entered ? "translateY(0) scale(1)" : "translateY(100%) scale(0.98)",
+          transition: entered
+            ? `transform 420ms ${TAB_ENTER_EASE}, opacity 320ms ${TAB_ENTER_EASE}`
+            : `transform 320ms ${TAB_EXIT_EASE}, opacity 240ms ${TAB_EXIT_EASE}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >

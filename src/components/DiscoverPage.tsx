@@ -28,6 +28,7 @@ import {
   tabEnterStyle,
   tabStaggerStyle,
   TAB_ENTER_EASE,
+  TAB_EXIT_EASE,
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
@@ -150,6 +151,9 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
   );
   const [personalizationTick, setPersonalizationTick] = useState(0);
   const [assetTab, setAssetTab] = useState<BrowseAssetTab>("companies");
+  const [displayedAssetTab, setDisplayedAssetTab] =
+    useState<BrowseAssetTab>("companies");
+  const [gridVisible, setGridVisible] = useState(true);
   const companies = useMemo(() => getExploreCompanies(), []);
   const cryptoAssets = useMemo(() => getCryptoAssets(), []);
 
@@ -208,13 +212,32 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
   );
 
   const activeCatalog =
-    assetTab === "crypto" ? rankedCrypto : rankedCompanies;
+    displayedAssetTab === "crypto" ? rankedCrypto : rankedCompanies;
 
   const displayCompanies = useMemo(() => {
     const q = searchQuery.trim();
     if (!q) return activeCatalog;
     return filterExploreCompanies(activeCatalog, q);
   }, [activeCatalog, searchQuery]);
+
+  useEffect(() => {
+    if (assetTab === displayedAssetTab) {
+      setGridVisible(true);
+      return;
+    }
+
+    setGridVisible(false);
+    let fadeInTimer: number | undefined;
+    const fadeOutTimer = window.setTimeout(() => {
+      setDisplayedAssetTab(assetTab);
+      fadeInTimer = window.setTimeout(() => setGridVisible(true), 40);
+    }, 200);
+
+    return () => {
+      window.clearTimeout(fadeOutTimer);
+      if (fadeInTimer !== undefined) window.clearTimeout(fadeInTimer);
+    };
+  }, [assetTab, displayedAssetTab]);
 
   const searchActive = Boolean(searchQuery.trim());
 
@@ -258,7 +281,7 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
             placeholder={
-              assetTab === "crypto"
+              displayedAssetTab === "crypto"
                 ? "Search crypto symbol…"
                 : "Search ticker or company…"
             }
@@ -292,10 +315,18 @@ export function DiscoverPage({ articles, onOpenCompany }: DiscoverPageProps) {
             className="px-1 pt-8 text-center text-[14px] text-pocket-muted"
             style={tabEnterFadeStyle(tabEntered, 120)}
           >
-            No {assetTab === "crypto" ? "crypto assets" : "companies"} match &ldquo;{searchQuery.trim()}&rdquo;
+            No {displayedAssetTab === "crypto" ? "crypto assets" : "companies"} match &ldquo;{searchQuery.trim()}&rdquo;
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 pt-1">
+          <div
+            key={displayedAssetTab}
+            className="grid grid-cols-2 gap-3 pt-1 transition-all duration-200 ease-out"
+            style={{
+              opacity: gridVisible ? 1 : 0,
+              transform: gridVisible ? "translateY(0) scale(1)" : "translateY(8px) scale(0.98)",
+              transitionTimingFunction: gridVisible ? TAB_ENTER_EASE : TAB_EXIT_EASE,
+            }}
+          >
             {displayCompanies.map((company, index) => (
               <CompanyCard
                 key={company.ticker}

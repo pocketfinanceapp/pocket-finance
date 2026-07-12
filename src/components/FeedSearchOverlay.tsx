@@ -6,6 +6,11 @@ import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 import { fuzzyMatchesQuery } from "@/lib/fuzzySearch";
+import {
+  PANEL_EXIT_MS,
+  TAB_ENTER_EASE,
+  TAB_EXIT_EASE,
+} from "@/lib/tabEnterAnimation";
 
 interface FeedSearchOverlayProps {
   open: boolean;
@@ -58,25 +63,35 @@ export function FeedSearchOverlay({
   onSelectArticle,
 }: FeedSearchOverlayProps) {
   const [query, setQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
   const [entered, setEntered] = useState(false);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setEntered(false);
-      setFocused(false);
-      return;
+    if (open) {
+      setMounted(true);
+      document.body.style.overflow = "hidden";
+      const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 100);
+      let raf2 = 0;
+      const raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => setEntered(true));
+      });
+      return () => {
+        window.clearTimeout(focusTimer);
+        cancelAnimationFrame(raf1);
+        if (raf2) cancelAnimationFrame(raf2);
+      };
     }
 
-    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 80);
-    const enterTimer = window.setTimeout(() => setEntered(true), 16);
-
-    return () => {
-      window.clearTimeout(focusTimer);
-      window.clearTimeout(enterTimer);
-    };
+    setEntered(false);
+    setFocused(false);
+    document.body.style.overflow = "";
+    const resetTimer = window.setTimeout(() => {
+      setQuery("");
+      setMounted(false);
+    }, PANEL_EXIT_MS);
+    return () => window.clearTimeout(resetTimer);
   }, [open]);
 
   const suggestions = useMemo(() => {
@@ -111,25 +126,33 @@ export function FeedSearchOverlay({
       .slice(0, 30);
   }, [articles, query]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   const trimmedQuery = query.trim();
 
   return (
     <div
-      className={`pf-theme-scope fixed inset-0 z-50 flex flex-col transition-opacity duration-250 ${
-        entered ? "opacity-100" : "opacity-0"
-      }`}
+      className="pf-theme-scope fixed inset-0 z-50 flex flex-col"
       style={{
         background: "var(--pocket-search-overlay)",
-        backdropFilter: "blur(16px)",
+        backdropFilter: entered ? "blur(16px)" : "blur(0px)",
+        opacity: entered ? 1 : 0,
+        transform: entered ? "translateY(0) scale(1)" : "translateY(12px) scale(1.02)",
+        transition: entered
+          ? `opacity 360ms ${TAB_ENTER_EASE}, transform 420ms ${TAB_ENTER_EASE}, backdrop-filter 360ms ${TAB_ENTER_EASE}`
+          : `opacity 280ms ${TAB_EXIT_EASE}, transform 320ms ${TAB_EXIT_EASE}, backdrop-filter 280ms ${TAB_EXIT_EASE}`,
       }}
     >
       <div
-        className={`shrink-0 px-4 pb-2 transition-all duration-250 ease-out ${
-          entered ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"
-        }`}
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        className="shrink-0 px-4 pb-2"
+        style={{
+          paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+          opacity: entered ? 1 : 0,
+          transform: entered ? "translateY(0)" : "translateY(-8px)",
+          transition: entered
+            ? `opacity 400ms ${TAB_ENTER_EASE} 40ms, transform 460ms ${TAB_ENTER_EASE} 40ms`
+            : `opacity 240ms ${TAB_EXIT_EASE}, transform 280ms ${TAB_EXIT_EASE}`,
+        }}
       >
         <div className="flex items-center gap-2">
           <button
@@ -142,7 +165,7 @@ export function FeedSearchOverlay({
           </button>
 
           <div
-            className={`relative min-w-0 flex-1 overflow-hidden rounded-2xl border transition-all duration-200 ${
+            className={`relative min-w-0 flex-1 overflow-hidden rounded-2xl border transition-colors duration-200 ${
               focused
                 ? "border-[#00C6C6]/40 shadow-[0_0_0_3px_rgba(0,198,198,0.08)]"
                 : "border-[var(--pocket-border)]"
@@ -179,10 +202,15 @@ export function FeedSearchOverlay({
       </div>
 
       <div
-        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 transition-all duration-250 delay-50 ${
-          entered ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
-        }`}
-        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4"
+        style={{
+          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+          opacity: entered ? 1 : 0,
+          transform: entered ? "translateY(0)" : "translateY(10px)",
+          transition: entered
+            ? `opacity 420ms ${TAB_ENTER_EASE} 80ms, transform 480ms ${TAB_ENTER_EASE} 80ms`
+            : `opacity 260ms ${TAB_EXIT_EASE}, transform 300ms ${TAB_EXIT_EASE}`,
+        }}
       >
         {trimmedQuery === "" ? (
           <div className="pt-2">
