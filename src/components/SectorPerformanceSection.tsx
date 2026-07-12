@@ -12,10 +12,10 @@ export function SectorPerformanceSection() {
 
   return (
     <section className="mt-5">
-      <h2 className="px-0 pb-2 text-xs font-semibold uppercase tracking-widest text-pocket-muted">
+      <h2 className="px-4 pb-2 text-xs font-semibold uppercase tracking-widest text-pocket-muted">
         Sector performance
       </h2>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="mx-4 grid grid-cols-2 gap-2">
         {sectors.map((sector, index) => {
           const positive = sector.changePercent >= 0;
           return (
