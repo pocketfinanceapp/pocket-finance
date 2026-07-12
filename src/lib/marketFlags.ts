@@ -1,4 +1,4 @@
-/** ISO 3166-1 alpha-2 (plus `eu`) → flag emoji for reliable offline display */
+/** ISO 3166-1 alpha-2 (plus `eu`) → flag emoji fallback */
 const FLAG_EMOJI: Record<string, string> = {
   au: "🇦🇺",
   us: "🇺🇸",
@@ -16,12 +16,17 @@ const FLAG_EMOJI: Record<string, string> = {
   fr: "🇫🇷",
 };
 
-/** ISO 3166-1 alpha-2 country codes for market venues */
-export function getMarketFlagUrl(countryCode: string, width = 80): string {
-  return `https://flagcdn.com/w${width}/${countryCode.toLowerCase()}.png`;
+/** Self-hosted flag asset in /public/flags */
+export function getMarketFlagPath(countryCode: string): string {
+  return `/flags/${countryCode.toLowerCase()}.png`;
 }
 
-/** Request a CDN width ~2.5× display size for crisp rendering on retina screens */
+/** @deprecated Use getMarketFlagPath — kept for any external references */
+export function getMarketFlagUrl(countryCode: string, width = 80): string {
+  return getMarketFlagPath(countryCode);
+}
+
+/** @deprecated No longer needed for self-hosted assets */
 export function getMarketFlagSrcWidth(displaySize: number): number {
   return Math.max(80, Math.round(displaySize * 2.5));
 }

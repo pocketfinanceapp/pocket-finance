@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import {
-  getMarketFlagEmoji,
-  getMarketFlagSrcWidth,
-  getMarketFlagUrl,
-} from "@/lib/marketFlags";
+import { getMarketFlagEmoji, getMarketFlagPath } from "@/lib/marketFlags";
 
 interface MarketFlagProps {
   countryCode: string;
@@ -23,7 +18,6 @@ export function MarketFlag({
 }: MarketFlagProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const code = countryCode.toLowerCase();
-  const flagSize = Math.round(size * 0.88);
 
   useEffect(() => {
     setImageFailed(false);
@@ -55,18 +49,21 @@ export function MarketFlag({
 
   return (
     <div
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden bg-[var(--pocket-surface-hover)] ${radius} ${className}`}
+      className={`relative shrink-0 overflow-hidden bg-[var(--pocket-surface-hover)] ${radius} ${className}`}
       style={{ width: size, height: size }}
       aria-hidden
       title={code.toUpperCase()}
     >
-      <Image
-        src={getMarketFlagUrl(code, getMarketFlagSrcWidth(flagSize))}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={getMarketFlagPath(code)}
         alt=""
-        width={flagSize}
-        height={flagSize}
-        className="h-full w-full object-cover"
-        unoptimized
+        width={size}
+        height={size}
+        className="block h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
+        draggable={false}
         onError={() => setImageFailed(true)}
       />
     </div>
