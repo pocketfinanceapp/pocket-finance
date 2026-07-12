@@ -23,7 +23,7 @@ export function FeedPreferencesEditor() {
     <div className="space-y-6">
       <div>
         <p className="mb-3 text-[13px] font-medium text-pocket-muted">
-          Markets you follow shape your For You and Following feeds.
+          Markets you follow shape your For You feed.
         </p>
         <div className="flex flex-wrap gap-2">
           {marketOptions.map((market) => {

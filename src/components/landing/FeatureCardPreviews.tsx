@@ -29,7 +29,6 @@ export function FeedCardPreview() {
         <div className="flex gap-2 text-[8px] font-semibold">
           <span className="text-white">For You</span>
           <span className="text-white/30">Trending</span>
-          <span className="text-white/30">Following</span>
         </div>
       </div>
       <div className="space-y-1.5 p-2">

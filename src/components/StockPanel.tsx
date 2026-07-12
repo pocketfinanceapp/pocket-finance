@@ -433,7 +433,9 @@ export function StockPanel({
                 )}
               </>
             ) : activeTab === "Discussion" ? (
-              <TickerDiscussionTab ticker={ticker} onOpenTicker={openTicker} />
+              <div className="px-4">
+                <TickerDiscussionTab ticker={ticker} onOpenTicker={openTicker} />
+              </div>
             ) : activeTab === "News" ? (
               <RelatedNewsList articles={relatedNews} />
             ) : (

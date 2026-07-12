@@ -96,7 +96,7 @@ export function ProfileIdentitySection({
 
   return (
     <section
-      className="pf-card-surface px-5 pb-5 pt-6"
+      className="pf-card-surface overflow-hidden rounded-2xl px-5 pb-5 pt-6"
       style={tabEnterStyle(animateIn, 0)}
     >
       <div className="flex flex-col items-center text-center">

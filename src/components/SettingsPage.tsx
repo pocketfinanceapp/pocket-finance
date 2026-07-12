@@ -118,7 +118,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
           {screen === "topics" ? (
             <div className="pt-4">
               <p className="mb-4 text-sm text-zinc-500">
-                Choose topics to personalise your Following feed.
+                Choose topics to personalise your For You feed.
               </p>
               <MyTopicsSelector />
             </div>

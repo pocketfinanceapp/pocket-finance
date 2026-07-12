@@ -55,6 +55,8 @@ export interface Comment {
   username: string;
   avatar: string;
   avatarColor: string;
+  avatarUrl?: string | null;
+  userId?: string;
   text: string;
   timeAgo: string;
   parentId?: string | null;

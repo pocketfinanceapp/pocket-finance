@@ -1,4 +1,5 @@
 import { getSupabase } from "@/lib/supabase";
+import { loadProfileAvatar } from "@/lib/profileStorage";
 import { resolveArticleTicker } from "@/lib/tickerMap";
 import type {
   Comment,
@@ -282,7 +283,7 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("comments")
-    .select("id, display_name, comment_text, created_at, parent_id")
+    .select("id, user_id, display_name, comment_text, created_at, parent_id")
     .eq("article_id", articleId)
     .order("created_at", { ascending: false });
 
@@ -293,9 +294,11 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
 
   return (data ?? []).map((row) => ({
     id: row.id,
+    userId: row.user_id,
     username: row.display_name,
     avatar: initials(row.display_name),
     avatarColor: avatarColor(row.display_name),
+    avatarUrl: row.user_id ? loadProfileAvatar(row.user_id) : null,
     text: row.comment_text,
     timeAgo: timeAgo(row.created_at),
     parentId: row.parent_id ?? null,
@@ -340,7 +343,7 @@ export async function postComment(
   const { data, error } = await supabase
     .from("comments")
     .insert(payload)
-    .select("id, display_name, comment_text, created_at, parent_id")
+    .select("id, user_id, display_name, comment_text, created_at, parent_id")
     .single();
 
   if (error || !data) {
@@ -350,9 +353,11 @@ export async function postComment(
 
   return {
     id: data.id,
+    userId: data.user_id,
     username: data.display_name,
     avatar: initials(data.display_name),
     avatarColor: avatarColor(data.display_name),
+    avatarUrl: loadProfileAvatar(userId),
     text: data.comment_text,
     timeAgo: "Just now",
     parentId: data.parent_id ?? null,

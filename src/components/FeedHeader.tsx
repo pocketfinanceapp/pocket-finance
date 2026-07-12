@@ -20,7 +20,6 @@ interface FeedHeaderProps {
 const FEED_TABS: { id: FeedMode; label: string }[] = [
   { id: "forYou", label: "For You" },
   { id: "trending", label: "Trending" },
-  { id: "following", label: "Following" },
 ];
 
 const TAB_SHADOW =

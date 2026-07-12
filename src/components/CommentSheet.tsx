@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  ChevronDown,
-  ChevronUp,
-  Heart,
   MessageCircle,
   Send,
   X,
 } from "lucide-react";
-import { PopReaction } from "@/components/PopReaction";
+import { DiscussionThread } from "@/components/DiscussionThread";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useAuth } from "@/context/AuthContext";
 import {
   appendReplyToTree,
@@ -25,6 +23,8 @@ import type { NewsArticle } from "@/lib/types";
 import {
   emitArticleCommentUpdated,
 } from "@/lib/articleInteractionEvents";
+import { PF_AVATAR_CHANGED_EVENT } from "@/lib/profileStorage";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/userIdentity";
 import {
   fetchCommentLikeCounts,
   fetchComments,
@@ -61,12 +61,9 @@ export function CommentSheet({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const displayName =
-    (user?.user_metadata?.display_name as string | undefined) ||
-    user?.email?.split("@")[0] ||
-    "Investor";
+  const displayName = getUserDisplayName(user);
+  const avatarUrl = user ? getUserAvatarUrl(user.id) : null;
 
-  const userInitial = displayName.charAt(0).toUpperCase();
   const totalCount = countThreadComments(comments);
 
   const loadComments = useCallback(async () => {
@@ -139,6 +136,13 @@ export function CommentSheet({
       vv.removeEventListener("scroll", syncKeyboard);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onAvatarChange = () => void loadComments();
+    window.addEventListener(PF_AVATAR_CHANGED_EVENT, onAvatarChange);
+    return () => window.removeEventListener(PF_AVATAR_CHANGED_EVENT, onAvatarChange);
+  }, [open, loadComments]);
 
   const ensureThreadExpanded = useCallback(
     (commentId: string) => {
@@ -335,7 +339,7 @@ export function CommentSheet({
           ) : (
             <div className="space-y-1">
               {comments.map((comment) => (
-                <CommentThread
+                <DiscussionThread
                   key={comment.id}
                   comment={comment}
                   depth={0}
@@ -393,15 +397,12 @@ export function CommentSheet({
             </p>
           ) : (
             <div className="flex items-end gap-2.5">
-              <div
-                className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(59,110,245,0.85), rgba(0,198,198,0.75))",
-                }}
-              >
-                {userInitial}
-              </div>
+              <UserAvatar
+                name={displayName}
+                avatarUrl={avatarUrl}
+                size="md"
+                className="mb-0.5"
+              />
 
               <div
                 className="min-w-0 flex-1 rounded-[20px] border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-1 py-1 shadow-[inset_0_1px_0_var(--pocket-border)] focus-within:border-[#00C6C6]/35"
@@ -450,195 +451,5 @@ export function CommentSheet({
       </div>
     </div>,
     document.body
-  );
-}
-
-const REPLY_INDENT = "ml-8";
-
-function CommentBody({ text, resetKey }: { text: string; resetKey: number }) {
-  const [expanded, setExpanded] = useState(false);
-  useEffect(() => {
-    setExpanded(false);
-  }, [resetKey]);
-  const isLong =
-    text.length > 160 || text.split("\n").length > 3;
-
-  if (!isLong) {
-    return (
-      <p className="mt-1 text-[14px] leading-relaxed text-pocket-text">{text}</p>
-    );
-  }
-
-  return (
-    <div className="mt-1">
-      <p
-        className={`text-[14px] leading-relaxed text-pocket-text ${
-          expanded ? "" : "line-clamp-4"
-        }`}
-      >
-        {text}
-      </p>
-      <button
-        type="button"
-        data-no-drag
-        onClick={() => setExpanded((v) => !v)}
-        className="mt-1 text-[11px] font-semibold text-[#00C6C6] active:opacity-70"
-      >
-        {expanded ? "Show less" : "Read more"}
-      </button>
-    </div>
-  );
-}
-
-function CommentAvatar({
-  comment,
-  compact = false,
-}: {
-  comment: ThreadComment;
-  compact?: boolean;
-}) {
-  const size = compact ? "h-8 w-8 text-[10px]" : "h-9 w-9 text-[11px]";
-  return (
-    <div
-      className={`relative z-[1] flex shrink-0 items-center justify-center rounded-full font-bold text-white ${size}`}
-      style={{ backgroundColor: comment.avatarColor }}
-    >
-      {comment.avatar}
-    </div>
-  );
-}
-
-function CommentThread({
-  comment,
-  depth,
-  onLike,
-  onReply,
-  replyTargetId,
-  expandedIds,
-  onToggleExpanded,
-  resetKey,
-}: {
-  comment: ThreadComment;
-  depth: number;
-  onLike: (id: string) => void;
-  onReply: (comment: ThreadComment) => void;
-  replyTargetId: string | null;
-  expandedIds: Set<string>;
-  onToggleExpanded: (id: string, open: boolean) => void;
-  resetKey: number;
-}) {
-  const [localExpanded, setLocalExpanded] = useState(depth === 0);
-  const hasReplies = comment.replies.length > 0;
-  const expanded = expandedIds.has(comment.id) || localExpanded;
-  const isReplyTarget = replyTargetId === comment.id;
-
-  const toggleExpanded = () => {
-    const next = !expanded;
-    setLocalExpanded(next);
-    onToggleExpanded(comment.id, next);
-  };
-
-  return (
-    <article
-      id={`comment-${comment.id}`}
-      className={depth === 0 ? "py-2.5" : "pt-3"}
-    >
-      <div className="flex gap-3">
-        <CommentAvatar comment={comment} compact={depth > 0} />
-
-        <div className="min-w-0 flex-1">
-          <div
-            className={`rounded-2xl border px-3.5 py-2.5 transition-colors ${
-              isReplyTarget
-                ? "border-[#00C6C6]/45 bg-[#00C6C6]/[0.07] shadow-[0_0_0_1px_rgba(0,198,198,0.12)]"
-                : "border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)]"
-            }`}
-          >
-            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <span className="text-[13px] font-semibold text-pocket-text">
-                {comment.username}
-              </span>
-              <span className="text-[10px] text-pocket-muted">{comment.timeAgo}</span>
-            </div>
-            <CommentBody text={comment.text} resetKey={resetKey} />
-          </div>
-
-          <div className="mt-1.5 flex items-center gap-1">
-            <PopReaction
-              aria-label={comment.likedByMe ? "Unlike comment" : "Like comment"}
-              burst={!comment.likedByMe}
-              onClick={() => onLike(comment.id)}
-              className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
-                comment.likedByMe
-                  ? "text-[#00C6C6]"
-                  : "text-pocket-muted hover:text-pocket-text"
-              }`}
-            >
-              <Heart
-                className={`h-3.5 w-3.5 ${comment.likedByMe ? "fill-[#00C6C6] text-[#00C6C6]" : ""}`}
-                strokeWidth={2.25}
-              />
-              {comment.likes > 0 && (
-                <span className="tabular-nums">{comment.likes}</span>
-              )}
-            </PopReaction>
-
-            <button
-              type="button"
-              data-no-drag
-              onClick={() => onReply(comment)}
-              className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
-                isReplyTarget
-                  ? "text-[#00C6C6]"
-                  : "text-pocket-muted hover:text-pocket-text"
-              }`}
-            >
-              Reply
-            </button>
-          </div>
-
-          {hasReplies && (
-            <button
-              type="button"
-              data-no-drag
-              onClick={toggleExpanded}
-              className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-[#00C6C6]/90"
-            >
-              {expanded ? (
-                <>
-                  <ChevronUp className="h-3.5 w-3.5" />
-                  Hide {comment.replies.length}{" "}
-                  {comment.replies.length === 1 ? "reply" : "replies"}
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-3.5 w-3.5" />
-                  View {comment.replies.length}{" "}
-                  {comment.replies.length === 1 ? "reply" : "replies"}
-                </>
-              )}
-            </button>
-          )}
-
-          {expanded && hasReplies && (
-            <div className={`mt-2 space-y-0 ${REPLY_INDENT}`}>
-              {comment.replies.map((reply) => (
-                <CommentThread
-                  key={reply.id}
-                  comment={reply}
-                  depth={depth + 1}
-                  onLike={onLike}
-                  onReply={onReply}
-                  replyTargetId={replyTargetId}
-                  expandedIds={expandedIds}
-                  onToggleExpanded={onToggleExpanded}
-                  resetKey={resetKey}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </article>
   );
 }

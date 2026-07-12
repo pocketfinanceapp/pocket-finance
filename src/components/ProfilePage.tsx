@@ -280,10 +280,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
           className="min-h-0 flex-1 overflow-y-auto px-5 pt-4"
           style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
         >
-          <ProfileAchievements
-            likedArticlesCount={likedArticlesCount}
-            showCategoryFilter
-          />
+          <ProfileAchievements likedArticlesCount={likedArticlesCount} />
         </div>
       </div>
     );
@@ -508,7 +505,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         <section className="mt-5" style={tabEnterStyle(profileEntered, 440)}>
           <ProfileAchievements
             likedArticlesCount={likedArticlesCount}
-            maxItems={4}
+            maxItems={3}
             onViewAll={() => setShowAllAchievements(true)}
           />
         </section>
@@ -661,7 +658,7 @@ function TopicsSubPage({
         style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
       >
         <p className="text-sm text-zinc-400">
-          Choose topics to personalise your Following feed.
+          Choose topics to personalise your For You feed.
         </p>
         <MyTopicsSelector
           showCount
@@ -683,7 +680,7 @@ function TopicsSubPage({
             <div>
               <p className="text-[13px] font-semibold text-white">Your feed</p>
               <p className="mt-0.5 text-[12px] leading-relaxed text-zinc-500">
-                Selected topics shape the Following tab and help personalise
+                Selected topics shape your For You feed and help personalise
                 your Companies recommendations.
               </p>
             </div>

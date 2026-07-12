@@ -5,7 +5,7 @@ import {
   Share2,
 } from "lucide-react";
 
-const FEED_TABS = ["For You", "Trending", "Following"] as const;
+const FEED_TABS = ["For You", "Trending"] as const;
 
 export function PhoneMockup() {
   return (
