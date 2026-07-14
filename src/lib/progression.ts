@@ -123,6 +123,8 @@ export type Achievement = {
   required: number;
   xpReward: number;
   unlocked: boolean;
+  /** Human label for progress, e.g. "articles read". */
+  progressUnit: string;
 };
 
 export type SessionSnapshot = {
@@ -862,6 +864,41 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       .map((e) => e.entityId)
   ).size;
 
+  function defaultProgressUnit(
+    id: string,
+    category: AchievementCategory
+  ): string {
+    if (category === "reading" || id === "first_steps") return "articles read";
+    if (
+      id.includes("watchlist") ||
+      id === "stock_follower" ||
+      id === "portfolio_architect"
+    ) {
+      return "stocks watchlisted";
+    }
+    if (category === "markets") return "stock panels viewed";
+    if (id === "daily_champion" || id === "goal_machine") return "daily goals";
+    if (category === "consistency") return "day streak";
+    if (id.includes("briefing")) return "briefings completed";
+    if (id.includes("topic") || id === "polymath") return "topics explored";
+    if (
+      id.includes("saver") ||
+      id === "archive_keeper" ||
+      id === "saver"
+    ) {
+      return "articles saved";
+    }
+    if (
+      id.includes("curator") ||
+      id.includes("heart") ||
+      id === "curator"
+    ) {
+      return "articles liked";
+    }
+    if (category === "engagement") return "XP earned";
+    return "completed";
+  }
+
   // Helper
   function make(
     id: string,
@@ -872,7 +909,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     icon: string,
     progress: number,
     required: number,
-    xpReward: number
+    xpReward: number,
+    progressUnit?: string
   ): Achievement {
     return {
       id,
@@ -885,6 +923,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       required,
       xpReward,
       unlocked: progress >= required,
+      progressUnit: progressUnit ?? defaultProgressUnit(id, category),
     };
   }
 
