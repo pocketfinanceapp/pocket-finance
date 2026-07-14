@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpenText,
   Building2,
@@ -36,32 +36,51 @@ const TIPS = [
   },
 ] as const;
 
+const EXIT_MS = 420;
+
 export function FeedOnboardingOverlay() {
   const [open, setOpen] = useState(false);
+  const [exiting, setExiting] = useState(false);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isFeedOnboardingComplete()) {
       setOpen(true);
     }
+    return () => {
+      if (exitTimer.current) clearTimeout(exitTimer.current);
+    };
   }, []);
 
   const dismiss = useCallback(() => {
-    markFeedOnboardingComplete();
-    setOpen(false);
-  }, []);
+    if (exiting) return;
+    setExiting(true);
+    exitTimer.current = setTimeout(() => {
+      markFeedOnboardingComplete();
+      setOpen(false);
+      setExiting(false);
+      exitTimer.current = null;
+    }, EXIT_MS);
+  }, [exiting]);
 
   if (!open) return null;
 
   return (
     <div
-      className="onboarding-backdrop-enter fixed inset-0 z-[200] flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-10 sm:items-center sm:pb-10"
+      className={`fixed inset-0 z-[200] flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-10 sm:items-center sm:pb-10 ${
+        exiting ? "onboarding-backdrop-exit" : "onboarding-backdrop-enter"
+      }`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="feed-tour-title"
     >
-      <div className="onboarding-sheet-enter w-full max-w-[380px] overflow-hidden rounded-[28px] border border-[var(--pocket-border)] bg-pocket-bg shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+      <div
+        className={`w-full max-w-[380px] overflow-hidden rounded-[28px] border border-[var(--pocket-border)] bg-pocket-bg shadow-[0_24px_80px_rgba(0,0,0,0.35)] ${
+          exiting ? "onboarding-sheet-exit" : "onboarding-sheet-enter"
+        }`}
+      >
         <div className="flex items-start justify-between gap-3 px-5 pt-5">
-          <div className="onboarding-enter onboarding-enter-d1">
+          <div className="onboarding-enter onboarding-enter-d1 min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-pocket-teal">
               Quick tour
             </p>
@@ -69,7 +88,7 @@ export function FeedOnboardingOverlay() {
               id="feed-tour-title"
               className="mt-1 text-[22px] font-bold tracking-tight text-pocket-text"
             >
-              How Pocket works
+              How Pocket Finance works
             </h2>
           </div>
           <button

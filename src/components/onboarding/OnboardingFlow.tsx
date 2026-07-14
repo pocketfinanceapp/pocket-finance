@@ -89,7 +89,7 @@ export function OnboardingFlow() {
     exitTimer.current = setTimeout(() => {
       completeOnboarding(markets, sectors);
       exitTimer.current = null;
-    }, 1250);
+    }, 1350);
   }, [completeOnboarding, exiting, markets, sectors]);
 
   return (
@@ -266,40 +266,40 @@ function MarketsStep({
   onNext: () => void;
 }) {
   const markets = ONBOARDING_MARKETS.map((id) => getMarketById(id)).filter(
-    Boolean
+    (m): m is NonNullable<typeof m> => Boolean(m)
   );
 
   return (
-    <div className="flex flex-1 flex-col px-6 pb-10">
-      <h1 className="onboarding-enter onboarding-enter-d1 text-2xl font-bold tracking-tight">
+    <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <h1 className="onboarding-enter onboarding-enter-d1 shrink-0 text-2xl font-bold tracking-tight">
         Which markets do you follow?
       </h1>
-      <p className="onboarding-enter onboarding-enter-d2 mt-2 text-sm text-pocket-muted">
+      <p className="onboarding-enter onboarding-enter-d2 mt-2 shrink-0 text-sm text-pocket-muted">
         Pick a few — we&apos;ll personalise For You. You can change this later.
       </p>
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        {markets.map((m, index) => {
-          if (!m) return null;
-          const active = selected.includes(m.id);
-          return (
-            <div
-              key={m.id}
-              className="onboarding-stagger"
-              style={{ ["--ob-i" as string]: index }}
-            >
-              <SelectTile
-                active={active}
-                onClick={() => onToggle(m.id)}
-                label={m.name}
-                sub={m.country}
-                flagCode={m.countryCode}
-              />
-            </div>
-          );
-        })}
+      <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4">
+        <div className="onboarding-pref-grid">
+          {markets.map((m, index) => {
+            const active = selected.includes(m.id);
+            return (
+              <div
+                key={m.id}
+                className="onboarding-stagger"
+                style={{ ["--ob-i" as string]: index }}
+              >
+                <SelectTile
+                  active={active}
+                  onClick={() => onToggle(m.id)}
+                  label={m.name}
+                  sub={m.country}
+                  flagCode={m.countryCode}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="flex-1" />
-      <div className="onboarding-enter onboarding-enter-d5">
+      <div className="onboarding-enter onboarding-enter-d5 shrink-0 pt-2">
         <GradientButton onClick={onNext} disabled={selected.length === 0}>
           Continue
         </GradientButton>
@@ -318,34 +318,35 @@ function SectorsStep({
   onNext: () => void;
 }) {
   return (
-    <div className="flex flex-1 flex-col px-6 pb-10">
-      <h1 className="onboarding-enter onboarding-enter-d1 text-2xl font-bold tracking-tight">
+    <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <h1 className="onboarding-enter onboarding-enter-d1 shrink-0 text-2xl font-bold tracking-tight">
         What sectors interest you?
       </h1>
-      <p className="onboarding-enter onboarding-enter-d2 mt-2 text-sm text-pocket-muted">
+      <p className="onboarding-enter onboarding-enter-d2 mt-2 shrink-0 text-sm text-pocket-muted">
         Select at least one so we can personalise stories and Browse.
       </p>
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        {SECTOR_FILTERS.map((sector, index) => {
-          const active = selected.includes(sector);
-          return (
-            <div
-              key={sector}
-              className="onboarding-stagger"
-              style={{ ["--ob-i" as string]: index }}
-            >
-              <SelectTile
-                active={active}
-                onClick={() => onToggle(sector)}
-                label={sector}
-                icon={SECTOR_ICONS[sector]}
-              />
-            </div>
-          );
-        })}
+      <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4">
+        <div className="onboarding-pref-grid">
+          {SECTOR_FILTERS.map((sector, index) => {
+            const active = selected.includes(sector);
+            return (
+              <div
+                key={sector}
+                className="onboarding-stagger"
+                style={{ ["--ob-i" as string]: index }}
+              >
+                <SelectTile
+                  active={active}
+                  onClick={() => onToggle(sector)}
+                  label={sector}
+                  icon={SECTOR_ICONS[sector]}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="flex-1" />
-      <div className="onboarding-enter onboarding-enter-d5">
+      <div className="onboarding-enter onboarding-enter-d5 shrink-0 pt-2">
         <GradientButton onClick={onNext} disabled={selected.length === 0}>
           Continue
         </GradientButton>
@@ -509,7 +510,7 @@ function SelectTile({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex min-h-[104px] flex-col rounded-[20px] p-5 text-left transition-all duration-200 active:scale-[0.98]"
+      className="onboarding-pref-tile relative"
       style={{
         background: active
           ? "linear-gradient(165deg, rgba(59,110,245,0.05) 0%, rgba(0,198,198,0.10) 100%)"
@@ -540,14 +541,16 @@ function SelectTile({
         ) : null}
       </div>
 
-      <div className="mt-auto pt-3">
-        <span className="block text-[15px] font-semibold leading-tight text-pocket-text">
+      <div className="mt-auto min-w-0 pr-6 pt-3">
+        <span className="block truncate text-[14px] font-semibold leading-tight text-pocket-text">
           {label}
         </span>
-        {sub && (
-          <span className="mt-0.5 block text-xs leading-snug text-pocket-muted">
+        {sub ? (
+          <span className="mt-0.5 block truncate text-xs leading-snug text-pocket-muted">
             {sub}
           </span>
+        ) : (
+          <span className="mt-0.5 block h-4" aria-hidden />
         )}
       </div>
     </button>

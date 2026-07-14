@@ -1113,11 +1113,54 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
   animation-delay: 0.76s;
 }
 
+@keyframes onboarding-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .onboarding-stagger {
   opacity: 0;
-  animation: onboarding-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  animation-delay: calc(var(--ob-i, 0) * 65ms + 120ms);
-  will-change: transform, opacity, filter;
+  animation: onboarding-stagger-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--ob-i, 0) * 55ms + 100ms);
+  will-change: transform, opacity;
+}
+
+.onboarding-pref-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.onboarding-pref-grid > .onboarding-stagger {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+}
+
+.onboarding-pref-tile {
+  display: flex;
+  height: 7.25rem;
+  width: 100%;
+  flex-direction: column;
+  border-radius: 1.25rem;
+  padding: 1rem;
+  text-align: left;
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease,
+    background 200ms ease;
+}
+
+.onboarding-pref-tile:active {
+  transform: scale(0.98);
 }
 
 .onboarding-mark-float {
@@ -1189,20 +1232,50 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
 }
 
 @keyframes onboarding-shell-exit {
-  from {
+  0% {
     opacity: 1;
     transform: scale(1);
+    filter: blur(0);
   }
-  to {
+  100% {
     opacity: 0;
-    transform: scale(1.04);
+    transform: scale(1.035);
+    filter: blur(6px);
   }
 }
 
 .onboarding-shell-exit {
-  animation: onboarding-shell-exit 0.45s 0.72s cubic-bezier(0.4, 0, 0.2, 1)
+  animation: onboarding-shell-exit 0.55s 0.65s cubic-bezier(0.4, 0, 0.2, 1)
     forwards;
   pointer-events: none;
+}
+
+@keyframes onboarding-sheet-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+}
+
+@keyframes onboarding-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.onboarding-sheet-exit {
+  animation: onboarding-sheet-out 0.42s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.onboarding-backdrop-exit {
+  animation: onboarding-backdrop-out 0.42s ease-in forwards;
 }
 
 @keyframes onboarding-outro-check {
@@ -1275,6 +1348,8 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
   .onboarding-particle,
   .onboarding-cta-glow,
   .onboarding-step-dot-active,
+  .onboarding-sheet-exit,
+  .onboarding-backdrop-exit,
   .onboarding-shell-exit,
   .onboarding-outro-check,
   .onboarding-outro-ring,
