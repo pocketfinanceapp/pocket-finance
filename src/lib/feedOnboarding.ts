@@ -1,4 +1,4 @@
-const FEED_ONBOARDING_KEY = "pf-onboarded";
+const FEED_ONBOARDING_KEY = "pf-onboarded-v2";
 
 export function isFeedOnboardingComplete(): boolean {
   if (typeof window === "undefined") return true;
@@ -13,6 +13,8 @@ export function markFeedOnboardingComplete(): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(FEED_ONBOARDING_KEY, "true");
+    // Clear legacy key so we don't leave stale flags around
+    localStorage.removeItem("pf-onboarded");
     window.dispatchEvent(new CustomEvent("pf-onboarding-dismissed"));
   } catch {
     /* private mode / quota */

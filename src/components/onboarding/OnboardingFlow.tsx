@@ -193,11 +193,12 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
           </h1>
 
           <p className="onboarding-enter onboarding-enter-d3 mt-3 bg-gradient-to-r from-[#3B6EF5] via-[#5B8EF7] to-[#00C6C6] bg-clip-text text-lg font-semibold tracking-wide text-transparent">
-            Bold news. Smarter moves.
+            Markets, briefly.
           </p>
 
-          <p className="onboarding-enter onboarding-enter-d4 mt-5 max-w-[280px] text-[15px] leading-relaxed text-pocket-muted">
-            The world&apos;s markets in your pocket
+          <p className="onboarding-enter onboarding-enter-d4 mt-5 max-w-[300px] text-[15px] leading-relaxed text-pocket-muted">
+            Swipe headlines, get AI briefings, and track what matters — without
+            the noise.
           </p>
         </div>
 
@@ -242,7 +243,7 @@ function MarketsStep({
         Which markets do you follow?
       </h1>
       <p className="mt-2 text-sm text-pocket-muted">
-        Select at least one to personalise your feed.
+        Pick a few — we&apos;ll personalise For You. You can change this later.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3">
         {ONBOARDING_MARKETS.map((id) => {
@@ -284,7 +285,7 @@ function SectorsStep({
         What sectors interest you?
       </h1>
       <p className="mt-2 text-sm text-pocket-muted">
-        We&apos;ll surface stories that match your interests.
+        Optional focus areas for stories and Browse suggestions.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3">
         {SECTOR_FILTERS.map((sector) => {
@@ -301,8 +302,8 @@ function SectorsStep({
         })}
       </div>
       <div className="flex-1" />
-      <GradientButton onClick={onNext} disabled={selected.length === 0}>
-        Continue
+      <GradientButton onClick={onNext}>
+        {selected.length === 0 ? "Skip for now" : "Continue"}
       </GradientButton>
     </div>
   );
@@ -319,37 +320,54 @@ function ReadyStep({
 }) {
   return (
     <div className="flex flex-1 flex-col px-6 pb-10">
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#00C6C6]/15">
-          <svg
-            className="h-8 w-8 text-[#00C6C6]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
+      <div className="pt-2 text-center">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#00C6C6]/15">
+          <Check className="h-7 w-7 text-[#00C6C6]" strokeWidth={2.75} />
         </div>
-        <h1 className="text-2xl font-bold">Your feed is ready</h1>
+        <h1 className="text-2xl font-bold tracking-tight">You&apos;re set</h1>
         <p className="mt-2 text-sm text-pocket-muted">
-          Tailored to the markets and sectors you chose.
+          Your For You feed is ready. Here&apos;s what else to try.
         </p>
       </div>
 
-      <div className="mb-8 space-y-4 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-4">
+      <div className="mt-6 space-y-3 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4">
         <SummaryBlock
           title="Markets"
           items={markets.map((id) => getMarketById(id)?.name ?? id)}
         />
-        <SummaryBlock title="Sectors" items={[...sectors]} />
+        {sectors.length > 0 && (
+          <SummaryBlock title="Sectors" items={[...sectors]} />
+        )}
       </div>
 
-      <GradientButton onClick={onFinish}>Start Reading</GradientButton>
+      <ul className="mt-5 space-y-3 px-0.5">
+        {[
+          {
+            title: "Pocket Briefing",
+            body: "AI snapshot inside each article",
+          },
+          {
+            title: "Browse",
+            body: "Companies, markets, and crypto",
+          },
+          {
+            title: "Profile",
+            body: "Streak, level, and achievements",
+          },
+        ].map((tip) => (
+          <li key={tip.title} className="flex gap-3">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pocket-teal" />
+            <p className="text-[13px] leading-snug text-pocket-muted">
+              <span className="font-semibold text-pocket-text">{tip.title}</span>
+              {" — "}
+              {tip.body}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <div className="flex-1" />
+      <GradientButton onClick={onFinish}>Start reading</GradientButton>
     </div>
   );
 }

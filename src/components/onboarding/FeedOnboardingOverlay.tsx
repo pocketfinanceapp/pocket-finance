@@ -1,40 +1,43 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, BookOpen, TrendingUp, type LucideIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  BookOpenText,
+  Building2,
+  Flame,
+  Hand,
+  Sparkles,
+} from "lucide-react";
 import {
   isFeedOnboardingComplete,
   markFeedOnboardingComplete,
 } from "@/lib/feedOnboarding";
 
-const SLIDES: {
-  icon: LucideIcon;
-  headline: string;
-  description: string;
-}[] = [
+const TIPS = [
   {
-    icon: ArrowUp,
-    headline: "Swipe up & down",
-    description: "Browse through the latest market headlines",
+    icon: Hand,
+    title: "Navigate the feed",
+    body: "Swipe up for the next story. Left to read. Right for company details.",
   },
   {
-    icon: BookOpen,
-    headline: "Swipe left to read",
-    description: "Open the full article from any headline",
+    icon: Sparkles,
+    title: "Pocket Briefing",
+    body: "Open any article for a short AI summary — what happened, why it matters.",
   },
   {
-    icon: TrendingUp,
-    headline: "Swipe right for stocks",
-    description: "See live prices, charts and stock intelligence",
+    icon: Building2,
+    title: "Browse & Markets",
+    body: "Explore companies, markets, and crypto. Follow tickers into your watchlist.",
   },
-];
-
-const SWIPE_THRESHOLD_PX = 48;
+  {
+    icon: Flame,
+    title: "Streak & achievements",
+    body: "Read daily to keep your streak. Level up and unlock achievements on Profile.",
+  },
+] as const;
 
 export function FeedOnboardingOverlay() {
   const [open, setOpen] = useState(false);
-  const [slide, setSlide] = useState(0);
-  const touchStartX = useRef(0);
 
   useEffect(() => {
     if (!isFeedOnboardingComplete()) {
@@ -47,105 +50,77 @@ export function FeedOnboardingOverlay() {
     setOpen(false);
   }, []);
 
-  const goNext = useCallback(() => {
-    if (slide < SLIDES.length - 1) {
-      setSlide((s) => s + 1);
-      return;
-    }
-    dismiss();
-  }, [dismiss, slide]);
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0]?.clientX ?? 0;
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const endX = e.changedTouches[0]?.clientX ?? 0;
-    const delta = endX - touchStartX.current;
-    if (delta < -SWIPE_THRESHOLD_PX && slide < SLIDES.length - 1) {
-      setSlide((s) => s + 1);
-    } else if (delta > SWIPE_THRESHOLD_PX && slide > 0) {
-      setSlide((s) => s - 1);
-    }
-  };
-
   if (!open) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 px-5 text-white"
+      className="fixed inset-0 z-[200] flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-10 sm:items-center sm:pb-10"
       role="dialog"
       aria-modal="true"
-      aria-label="How to use Pocket Finance"
+      aria-labelledby="feed-tour-title"
     >
-      <div
-        className="w-full max-w-[340px] overflow-hidden"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-        <div
-          className="flex transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${slide * 100}%)` }}
-        >
-          {SLIDES.map((item, index) => {
-            const Icon = item.icon;
-            const isLastSlide = index === SLIDES.length - 1;
-            const isActive = index === slide;
+      <div className="w-full max-w-[380px] overflow-hidden rounded-[28px] border border-[var(--pocket-border)] bg-pocket-bg shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <div className="flex items-start justify-between gap-3 px-5 pt-5">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-pocket-teal">
+              Quick tour
+            </p>
+            <h2
+              id="feed-tour-title"
+              className="mt-1 text-[22px] font-bold tracking-tight text-pocket-text"
+            >
+              How Pocket works
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold text-pocket-muted active:opacity-70"
+          >
+            Skip
+          </button>
+        </div>
 
+        <p className="mt-1.5 px-5 text-[13px] leading-relaxed text-pocket-muted">
+          A few seconds so you get the best bits.
+        </p>
+
+        <ul className="mt-5 space-y-1 px-3 pb-2">
+          {TIPS.map((tip) => {
+            const Icon = tip.icon;
             return (
-              <div key={item.headline} className="w-full shrink-0 px-0.5">
-                <div
-                  className={`relative rounded-2xl border border-[#1f2937] bg-[#111] px-6 pb-6 pt-5 ${
-                    isActive ? "feed-onboard-card-active" : ""
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={dismiss}
-                    className="absolute right-4 top-4 text-xs font-medium text-[#9ca3af] transition-colors hover:text-white"
-                  >
-                    Skip
-                  </button>
-
-                  <div className="flex flex-col items-center px-2 pt-6 text-center">
-                    <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] shadow-[0_8px_24px_rgba(59,110,245,0.35)]">
-                      <Icon className="h-7 w-7 text-white" strokeWidth={2.25} />
-                    </div>
-
-                    <h2 className="mt-6 text-[24px] font-bold leading-tight text-white">
-                      {item.headline}
-                    </h2>
-                    <p className="mt-3 max-w-[280px] text-[15px] leading-relaxed text-[#9ca3af]">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  <div className="mt-8 flex items-center justify-center gap-2">
-                    {SLIDES.map((dot, dotIndex) => (
-                      <span
-                        key={dot.headline}
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          dotIndex === slide
-                            ? "w-6 bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
-                            : "w-2 bg-[#4b5563]"
-                        }`}
-                        aria-hidden
-                      />
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={isActive ? goNext : undefined}
-                    tabIndex={isActive ? 0 : -1}
-                    className="mt-6 w-full rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-[15px] font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-transform active:scale-[0.98]"
-                  >
-                    {isLastSlide ? "Get Started" : "Next"}
-                  </button>
+              <li
+                key={tip.title}
+                className="flex gap-3 rounded-2xl px-2.5 py-2.5"
+              >
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3B6EF5]/15 to-[#00C6C6]/15 text-pocket-teal">
+                  <Icon className="h-4 w-4" strokeWidth={2.25} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[14px] font-semibold text-pocket-text">
+                    {tip.title}
+                  </p>
+                  <p className="mt-0.5 text-[12.5px] leading-snug text-pocket-muted">
+                    {tip.body}
+                  </p>
                 </div>
-              </div>
+              </li>
             );
           })}
+        </ul>
+
+        <div className="border-t border-[var(--pocket-border)] px-5 py-4">
+          <button
+            type="button"
+            onClick={dismiss}
+            className="w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-3.5 text-[15px] font-bold text-white active:scale-[0.98]"
+          >
+            Got it
+          </button>
+          <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center text-[11px] text-pocket-muted">
+            <BookOpenText className="h-3 w-3" strokeWidth={2.25} />
+            Shown once — you can explore anytime
+          </p>
         </div>
       </div>
     </div>
