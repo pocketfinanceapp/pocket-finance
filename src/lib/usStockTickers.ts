@@ -4,8 +4,6 @@ import { isMarketThemeTicker } from "./marketThemes";
 import { getTickerMetaBySymbol } from "./tickerMap";
 
 const NON_LIVE_TICKERS = new Set([
-  "BTC",
-  "ETH",
   "OIL",
   "GOLD",
   "FED",
@@ -31,8 +29,7 @@ export function shouldShowWatchlistPrice(ticker: string): boolean {
   const upper = ticker.toUpperCase();
   if (isPrivateTicker(upper)) return false;
   if (isMarketThemeTicker(upper)) return false;
-
-  if (upper === "BTC" || upper === "ETH") return true;
+  if (isCryptoAssetTicker(upper)) return true;
 
   const market = getTickerMetaBySymbol(upper).market;
   return market === "NASDAQ" || market === "NYSE";
@@ -42,7 +39,9 @@ export function shouldShowWatchlistPrice(ticker: string): boolean {
 export function isUsListedStockTicker(ticker: string): boolean {
   const upper = ticker.toUpperCase();
   if (isPrivateTicker(upper)) return false;
+  if (isCryptoAssetTicker(upper)) return false;
   if (NON_LIVE_TICKERS.has(upper)) return false;
+  if (isMarketThemeTicker(upper)) return false;
 
   const market = getTickerMetaBySymbol(upper).market;
   return market === "NASDAQ" || market === "NYSE";

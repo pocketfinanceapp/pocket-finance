@@ -40,8 +40,8 @@ const BASE_METAS: Record<string, TickerMeta> = {
   INTC: meta("INTC", "Intel Corporation", "NASDAQ", "Technology", "#0071c5"),
   AVGO: meta("AVGO", "Broadcom Inc.", "NASDAQ", "Technology", "#cc092f"),
   LULU: meta("LULU", "Lululemon Athletica", "NASDAQ", "Consumer", "#d31334"),
-  BTC: meta("BTC", "Bitcoin", "NASDAQ", "Crypto", "#f7931a", ["BTC", "Crypto"]),
-  ETH: meta("ETH", "Ethereum", "NASDAQ", "Crypto", "#627eea", ["ETH", "Crypto"]),
+  BTC: meta("BTC", "Bitcoin", "CRYPTO", "Crypto", "#f7931a", ["BTC", "Crypto"]),
+  ETH: meta("ETH", "Ethereum", "CRYPTO", "Crypto", "#627eea", ["ETH", "Crypto"]),
   JPM: meta("JPM", "JPMorgan Chase & Co.", "NYSE", "Finance", "#006747"),
   GS: meta("GS", "Goldman Sachs Group", "NYSE", "Finance", "#6cace4"),
   XOM: meta("XOM", "Exxon Mobil Corporation", "NYSE", "Energy", "#e4002b"),
@@ -149,24 +149,50 @@ const BASE_METAS: Record<string, TickerMeta> = {
   DE: meta("DE", "Deere & Company", "NYSE", "Technology", "#367c2b"),
   RTX: meta("RTX", "RTX Corporation", "NYSE", "Technology", "#002d72"),
   LMT: meta("LMT", "Lockheed Martin", "NYSE", "Technology", "#003087"),
-  SOL: meta("SOL", "Solana", "NASDAQ", "Crypto", "#9945ff", ["SOL", "Crypto"]),
-  BNB: meta("BNB", "BNB", "NASDAQ", "Crypto", "#f3ba2f", ["BNB", "Crypto"]),
-  XRP: meta("XRP", "XRP", "NASDAQ", "Crypto", "#0a74da", ["XRP", "Crypto"]),
-  ADA: meta("ADA", "Cardano", "NASDAQ", "Crypto", "#0033ad", ["ADA", "Crypto"]),
-  DOGE: meta("DOGE", "Dogecoin", "NASDAQ", "Crypto", "#c2a633", ["DOGE", "Crypto"]),
-  AVAX: meta("AVAX", "Avalanche", "NASDAQ", "Crypto", "#e84142", ["AVAX", "Crypto"]),
-  DOT: meta("DOT", "Polkadot", "NASDAQ", "Crypto", "#e6007a", ["DOT", "Crypto"]),
-  LINK: meta("LINK", "Chainlink", "NASDAQ", "Crypto", "#375bd2", ["LINK", "Crypto"]),
-  MATIC: meta("MATIC", "Polygon", "NASDAQ", "Crypto", "#8247e5", ["MATIC", "Crypto"]),
-  SHIB: meta("SHIB", "Shiba Inu", "NASDAQ", "Crypto", "#ffa409", ["SHIB", "Crypto"]),
-  LTC: meta("LTC", "Litecoin", "NASDAQ", "Crypto", "#345d9d", ["LTC", "Crypto"]),
-  UNI: meta("UNI", "Uniswap", "NASDAQ", "Crypto", "#ff007a", ["UNI", "Crypto"]),
-  ATOM: meta("ATOM", "Cosmos", "NASDAQ", "Crypto", "#2e3148", ["ATOM", "Crypto"]),
-  TRX: meta("TRX", "TRON", "NASDAQ", "Crypto", "#ef0027", ["TRX", "Crypto"]),
-  TON: meta("TON", "Toncoin", "NASDAQ", "Crypto", "#0098ea", ["TON", "Crypto"]),
-  NEAR: meta("NEAR", "NEAR Protocol", "NASDAQ", "Crypto", "#00c08b", ["NEAR", "Crypto"]),
-  APT: meta("APT", "Aptos", "NASDAQ", "Crypto", "#00bfff", ["APT", "Crypto"]),
-  ARB: meta("ARB", "Arbitrum", "NASDAQ", "Crypto", "#28a0f0", ["ARB", "Crypto"]),
+  SOL: meta("SOL", "Solana", "CRYPTO", "Crypto", "#9945ff", ["SOL", "Crypto"]),
+  BNB: meta("BNB", "BNB", "CRYPTO", "Crypto", "#f3ba2f", ["BNB", "Crypto"]),
+  XRP: meta("XRP", "XRP", "CRYPTO", "Crypto", "#0a74da", ["XRP", "Crypto"]),
+  ADA: meta("ADA", "Cardano", "CRYPTO", "Crypto", "#0033ad", ["ADA", "Crypto"]),
+  DOGE: meta("DOGE", "Dogecoin", "CRYPTO", "Crypto", "#c2a633", ["DOGE", "Crypto"]),
+  AVAX: meta("AVAX", "Avalanche", "CRYPTO", "Crypto", "#e84142", ["AVAX", "Crypto"]),
+  DOT: meta("DOT", "Polkadot", "CRYPTO", "Crypto", "#e6007a", ["DOT", "Crypto"]),
+  LINK: meta("LINK", "Chainlink", "CRYPTO", "Crypto", "#375bd2", ["LINK", "Crypto"]),
+  MATIC: meta("MATIC", "Polygon", "CRYPTO", "Crypto", "#8247e5", ["MATIC", "Crypto"]),
+  SHIB: meta("SHIB", "Shiba Inu", "CRYPTO", "Crypto", "#ffa409", ["SHIB", "Crypto"]),
+  LTC: meta("LTC", "Litecoin", "CRYPTO", "Crypto", "#345d9d", ["LTC", "Crypto"]),
+  UNI: meta("UNI", "Uniswap", "CRYPTO", "Crypto", "#ff007a", ["UNI", "Crypto"]),
+  ATOM: meta("ATOM", "Cosmos", "CRYPTO", "Crypto", "#2e3148", ["ATOM", "Crypto"]),
+  TRX: meta("TRX", "TRON", "CRYPTO", "Crypto", "#ef0027", ["TRX", "Crypto"]),
+  TON: meta("TON", "Toncoin", "CRYPTO", "Crypto", "#0098ea", ["TON", "Crypto"]),
+  NEAR: meta("NEAR", "NEAR Protocol", "CRYPTO", "Crypto", "#00c08b", ["NEAR", "Crypto"]),
+  APT: meta("APT", "Aptos", "CRYPTO", "Crypto", "#00bfff", ["APT", "Crypto"]),
+  ARB: meta("ARB", "Arbitrum", "CRYPTO", "Crypto", "#28a0f0", ["ARB", "Crypto"]),
+
+  // Market-profile constituents that previously lacked identity metadata
+  SAP: meta("SAP", "SAP SE", "NYSE", "Technology", "#008fd3"),
+  NVS: meta("NVS", "Novartis AG", "NYSE", "Healthcare", "#0460a9"),
+  ROG: meta("ROG", "Roche Holding AG", "SIX", "Healthcare", "#e11b22"),
+  UBS: meta("UBS", "UBS Group AG", "NYSE", "Finance", "#e6001a"),
+  NESN: meta("NESN", "Nestlé S.A.", "SIX", "Consumer", "#005ea8"),
+  ABBN: meta("ABBN", "ABB Ltd", "SIX", "Technology", "#ff000f"),
+  ZURN: meta("ZURN", "Zurich Insurance Group", "SIX", "Finance", "#003d6b"),
+  VALE: meta("VALE", "Vale S.A.", "NYSE", "Mining", "#007e54"),
+  PETR: meta("PETR", "Petrobras", "B3", "Energy", "#00853f"),
+  ITUB: meta("ITUB", "Itaú Unibanco", "NYSE", "Finance", "#ec7000"),
+  BBD: meta("BBD", "Banco Bradesco", "NYSE", "Finance", "#cc092f"),
+  ABEV: meta("ABEV", "Ambev S.A.", "NYSE", "Consumer", "#cf0a2c"),
+  WEGE: meta("WEGE", "WEG S.A.", "B3", "Technology", "#0055a5"),
+  AMX: meta("AMX", "América Móvil", "NYSE", "Technology", "#005dab"),
+  WALMEX: meta("WALMEX", "Walmart de México", "BMV", "Consumer", "#0071ce"),
+  BIMBO: meta("BIMBO", "Grupo Bimbo", "BMV", "Consumer", "#0033a0"),
+  CEMEX: meta("CEMEX", "Cemex S.A.B.", "BMV", "Mining", "#f36c21"),
+  FEMSA: meta("FEMSA", "FEMSA", "BMV", "Consumer", "#c8102e"),
+  ARAMCO: meta("ARAMCO", "Saudi Aramco", "TADAWUL", "Energy", "#00a651"),
+  RJHI: meta("RJHI", "Al Rajhi Bank", "TADAWUL", "Finance", "#006b3f"),
+  SABIC: meta("SABIC", "SABIC", "TADAWUL", "Energy", "#004b87"),
+  STC: meta("STC", "Saudi Telecom", "TADAWUL", "Technology", "#6d1a7f"),
+  MAADEN: meta("MAADEN", "Ma'aden", "TADAWUL", "Mining", "#8b5e00"),
+  SAM: meta("SAM", "Samsung Electronics", "KRX", "Technology", "#1428a0"),
 };
 
 /** Themed / index tickers */
@@ -578,7 +604,7 @@ export function getTickerMetaBySymbol(ticker: string): TickerMeta {
     return {
       ticker: upper,
       companyName: getCryptoDisplayName(upper),
-      market: "NASDAQ",
+      market: "CRYPTO",
       sector: "Crypto",
       tags: [upper, "Crypto"],
       logoColor: getCryptoBrandColor(upper),
@@ -595,10 +621,11 @@ export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   };
 }
 
-const CRYPTO_DISPLAY_TICKERS = new Set(["BTC", "ETH"]);
 const COMMODITY_DISPLAY_TICKERS = new Set(["OIL", "GOLD"]);
 const US_MARKETS_DISPLAY_TICKERS = new Set([
   "FED",
+  "RATES",
+  "ENERGY",
   "MARKET",
   "SPX",
   "QQQ",
@@ -608,7 +635,7 @@ const US_MARKETS_DISPLAY_TICKERS = new Set([
 function isUsListedEquity(ticker: string): boolean {
   const upper = ticker.toUpperCase();
   if (isPrivateTicker(upper)) return false;
-  if (CRYPTO_DISPLAY_TICKERS.has(upper)) return false;
+  if (isCryptoAssetTicker(upper)) return false;
   if (COMMODITY_DISPLAY_TICKERS.has(upper)) return false;
   if (US_MARKETS_DISPLAY_TICKERS.has(upper)) return false;
 
@@ -653,7 +680,7 @@ function resolveMarketFromSource(
 export function resolveMarketForTicker(ticker: string): MarketExchange {
   const upper = ticker.toUpperCase();
 
-  if (CRYPTO_DISPLAY_TICKERS.has(upper)) return "CRYPTO";
+  if (isCryptoAssetTicker(upper)) return "CRYPTO";
   if (COMMODITY_DISPLAY_TICKERS.has(upper)) return "COMMODITIES";
   if (US_MARKETS_DISPLAY_TICKERS.has(upper)) return "US MARKETS";
   if (isPrivateTicker(upper)) return "NASDAQ";

@@ -1,5 +1,14 @@
-import type { ChartPoint, ChartRange, StockProfile } from "./types";
-import { getTickerMetaBySymbol } from "./tickerMap";
+import type { ChartPoint, ChartRange, Competitor, StockProfile } from "./types";
+import { isCryptoAssetTicker } from "./cryptoBrand";
+import {
+  buildCryptoCompetitor,
+  CRYPTO_BASE_PROFILES,
+  getCryptoBaseProfile,
+} from "./cryptoProfiles";
+import {
+  getKnownTickerSymbols,
+  getTickerMetaBySymbol,
+} from "./tickerMap";
 import { pseudoRandom } from "./utils";
 
 function generateChart(
@@ -34,7 +43,8 @@ export function resolveChartBasePrice(
   const profile = profilePrice ?? 0;
 
   if (displayPrice > 1000) return displayPrice;
-  if ((upper === "BTC" || upper === "ETH") && profile > 1000) return profile;
+  if (isCryptoAssetTicker(upper) && profile > 1000) return profile;
+  if (isCryptoAssetTicker(upper) && profile > 0) return profile;
   if (displayPrice > 0) return displayPrice;
   return profile;
 }
@@ -164,31 +174,6 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
       { ticker: "RIVN", name: "Rivian Automotive", price: 12.68, changePercent: 2.1, color: "#1a1a1a" },
     ],
   },
-  BTC: {
-    ticker: "BTC",
-    name: "Bitcoin",
-    price: 67240.5,
-    change: 1240.2,
-    changePercent: 1.88,
-    logoColor: "#f7931a",
-    marketCap: "$1.9T",
-    revenue: "—",
-    peRatio: "N/A",
-    eps: "N/A",
-    ebitda: "—",
-    dividendYield: "—",
-    volume24h: "$42.6B",
-    circulatingSupply: "19.8M BTC",
-    totalSupply: "21M BTC",
-    fdv: "$2.0T",
-    allTimeHigh: "$73,750",
-    allTimeLow: "$67.81",
-    competitors: [
-      { ticker: "ETH", name: "Ethereum", price: 3421.8, changePercent: 2.1, color: "#627eea" },
-      { ticker: "COIN", name: "Coinbase Global", price: 245.6, changePercent: 1.4, color: "#0052ff" },
-      { ticker: "MSTR", name: "MicroStrategy", price: 1680.2, changePercent: 3.2, color: "#d9232e" },
-    ],
-  },
   MSFT: {
     ticker: "MSFT",
     name: "Microsoft Corporation",
@@ -246,9 +231,102 @@ const STOCK_PROFILES: Record<string, Omit<StockProfile, "chartData">> = {
       { ticker: "C", name: "Citigroup Inc.", price: 62.4, changePercent: 0.32, color: "#056dae" },
     ],
   },
+  AMZN: {
+    ticker: "AMZN",
+    name: "Amazon.com, Inc.",
+    price: 198.5,
+    change: 0.9,
+    changePercent: 0.45,
+    logoColor: "#ff9900",
+    marketCap: "$2.1T",
+    revenue: "$638.0B",
+    peRatio: "38.4",
+    eps: "$5.53",
+    ebitda: "$112.0B",
+    dividendYield: "—",
+    competitors: [
+      { ticker: "WMT", name: "Walmart Inc.", price: 95.2, changePercent: 0.4, color: "#0071ce" },
+      { ticker: "SHOP", name: "Shopify Inc.", price: 78.4, changePercent: 1.1, color: "#96bf48" },
+      { ticker: "COST", name: "Costco Wholesale", price: 875.2, changePercent: 0.3, color: "#e31837" },
+    ],
+  },
+  AMD: {
+    ticker: "AMD",
+    name: "Advanced Micro Devices",
+    price: 168.32,
+    change: 2.4,
+    changePercent: 1.45,
+    logoColor: "#ed1c24",
+    marketCap: "$272B",
+    revenue: "$25.8B",
+    peRatio: "42.1",
+    eps: "$1.22",
+    ebitda: "$5.4B",
+    dividendYield: "—",
+    competitors: [
+      { ticker: "NVDA", name: "NVIDIA Corporation", price: 131.38, changePercent: -2.29, color: "#76b900" },
+      { ticker: "INTC", name: "Intel Corporation", price: 31.86, changePercent: -0.31, color: "#0071c5" },
+      { ticker: "QCOM", name: "Qualcomm Incorporated", price: 195.41, changePercent: 0.92, color: "#3253dc" },
+    ],
+  },
+  JPM: {
+    ticker: "JPM",
+    name: "JPMorgan Chase & Co.",
+    price: 198.5,
+    change: 1.28,
+    changePercent: 0.65,
+    logoColor: "#006747",
+    marketCap: "$570B",
+    revenue: "$162.0B",
+    peRatio: "12.4",
+    eps: "$16.22",
+    ebitda: "$72.0B",
+    dividendYield: "2.1%",
+    competitors: [
+      { ticker: "BAC", name: "Bank of America Corp.", price: 38.24, changePercent: 1.11, color: "#012169" },
+      { ticker: "GS", name: "Goldman Sachs Group", price: 520.4, changePercent: 0.7, color: "#6cace4" },
+      { ticker: "MS", name: "Morgan Stanley", price: 112.8, changePercent: 0.5, color: "#002b51" },
+    ],
+  },
+  ORCL: {
+    ticker: "ORCL",
+    name: "Oracle Corporation",
+    price: 128.4,
+    change: 0.42,
+    changePercent: 0.33,
+    logoColor: "#f80000",
+    marketCap: "$355B",
+    revenue: "$53.0B",
+    peRatio: "32.8",
+    eps: "$4.34",
+    ebitda: "$22.1B",
+    dividendYield: "1.2%",
+    competitors: [
+      { ticker: "MSFT", name: "Microsoft Corporation", price: 425.18, changePercent: 0.68, color: "#00a4ef" },
+      { ticker: "CRM", name: "Salesforce, Inc.", price: 290.4, changePercent: 0.8, color: "#00a1e0" },
+      { ticker: "IBM", name: "IBM Corporation", price: 188.2, changePercent: 0.4, color: "#054ada" },
+    ],
+  },
+  NFLX: {
+    ticker: "NFLX",
+    name: "Netflix, Inc.",
+    price: 725.4,
+    change: 8.2,
+    changePercent: 1.14,
+    logoColor: "#e50914",
+    marketCap: "$312B",
+    revenue: "$39.0B",
+    peRatio: "41.2",
+    eps: "$17.67",
+    ebitda: "$10.2B",
+    dividendYield: "—",
+    competitors: [
+      { ticker: "DIS", name: "The Walt Disney Company", price: 112.4, changePercent: 0.5, color: "#113ccf" },
+      { ticker: "SPOT", name: "Spotify Technology", price: 480.2, changePercent: 1.2, color: "#1db954" },
+      { ticker: "AMZN", name: "Amazon.com, Inc.", price: 198.5, changePercent: 0.45, color: "#ff9900" },
+    ],
+  },
 };
-
-const CRYPTO_TICKERS = new Set(["BTC", "ETH"]);
 
 function isMissingFinancial(value: string): boolean {
   const v = value.trim();
@@ -258,20 +336,20 @@ function isMissingFinancial(value: string): boolean {
 /** Plausible demo financials for unknown tickers */
 function demoFinancials(seed: string, isCrypto: boolean) {
   if (isCrypto) {
-    const capT = pseudoRandom(`${seed}-cap`, 0.5, 2.5);
+    const capB = pseudoRandom(`${seed}-cap`, 2, 90);
     return {
-      marketCap: `$${capT.toFixed(2)}T`,
+      marketCap: `$${capB.toFixed(1)}B`,
       revenue: "—",
       peRatio: "N/A",
       eps: "N/A",
       ebitda: "—",
       dividendYield: "—",
-      volume24h: `$${pseudoRandom(`${seed}-vol`, 8, 68).toFixed(1)}B`,
-      circulatingSupply: `${pseudoRandom(`${seed}-sup`, 80, 120).toFixed(1)}M ${seed}`,
-      totalSupply: `${pseudoRandom(`${seed}-total`, 100, 220).toFixed(0)}M ${seed}`,
-      fdv: `$${(capT * 1.08).toFixed(2)}T`,
-      allTimeHigh: `$${pseudoRandom(`${seed}-ath`, 40, 120).toFixed(0)}`,
-      allTimeLow: `$${pseudoRandom(`${seed}-atl`, 0.2, 12).toFixed(2)}`,
+      volume24h: `$${pseudoRandom(`${seed}-vol`, 0.1, 4).toFixed(2)}B`,
+      circulatingSupply: `${pseudoRandom(`${seed}-sup`, 50, 900).toFixed(0)}M ${seed}`,
+      totalSupply: `${pseudoRandom(`${seed}-total`, 80, 1200).toFixed(0)}M ${seed}`,
+      fdv: `$${(capB * 1.15).toFixed(1)}B`,
+      allTimeHigh: `$${pseudoRandom(`${seed}-ath`, 20, 400).toFixed(2)}`,
+      allTimeLow: `$${pseudoRandom(`${seed}-atl`, 0.05, 8).toFixed(2)}`,
     };
   }
 
@@ -295,7 +373,7 @@ function withDemoFinancials(
   profile: Omit<StockProfile, "chartData">,
   seed: string
 ): Omit<StockProfile, "chartData"> {
-  const demo = demoFinancials(seed, CRYPTO_TICKERS.has(profile.ticker));
+  const demo = demoFinancials(seed, isCryptoAssetTicker(profile.ticker));
   return {
     ...profile,
     marketCap: isMissingFinancial(profile.marketCap)
@@ -329,28 +407,91 @@ function withDemoFinancials(
   };
 }
 
+/** Reference peers by sector when a profile has no explicit competitors */
+function resolveSectorCompetitors(
+  ticker: string,
+  count = 3
+): Competitor[] {
+  const meta = getTickerMetaBySymbol(ticker);
+  const peers = getKnownTickerSymbols()
+    .filter((symbol) => {
+      if (symbol === ticker) return false;
+      if (isCryptoAssetTicker(symbol) !== isCryptoAssetTicker(ticker)) {
+        return false;
+      }
+      const peer = getTickerMetaBySymbol(symbol);
+      return peer.sector === meta.sector;
+    })
+    .slice(0, count);
+
+  return peers.map((symbol) => {
+    if (isCryptoAssetTicker(symbol)) {
+      return buildCryptoCompetitor(symbol);
+    }
+    const peerMeta = getTickerMetaBySymbol(symbol);
+    const peerStored = STOCK_PROFILES[symbol];
+    return {
+      ticker: symbol,
+      name: peerMeta.companyName,
+      price: peerStored?.price ?? pseudoRandom(symbol, 20, 400),
+      changePercent:
+        peerStored?.changePercent ??
+        Number(pseudoRandom(`${symbol}-p`, -2, 3).toFixed(2)),
+      color: peerMeta.logoColor,
+    };
+  });
+}
+
+function withCompetitors(
+  profile: Omit<StockProfile, "chartData">
+): Omit<StockProfile, "chartData"> {
+  if (profile.competitors.length > 0) return profile;
+  return {
+    ...profile,
+    competitors: resolveSectorCompetitors(profile.ticker),
+  };
+}
+
+function profileFromCrypto(ticker: string): Omit<StockProfile, "chartData"> | null {
+  const crypto = getCryptoBaseProfile(ticker);
+  if (!crypto) return null;
+  const { competitorTickers, ...rest } = crypto;
+  return {
+    ...rest,
+    competitors: competitorTickers
+      .filter((peer) => peer.toUpperCase() !== ticker.toUpperCase())
+      .slice(0, 3)
+      .map((peer) => buildCryptoCompetitor(peer)),
+  };
+}
+
 export function getStockProfile(ticker: string): StockProfile {
   const upper = ticker.toUpperCase();
   const meta = getTickerMetaBySymbol(upper);
+  const cryptoProfile = profileFromCrypto(upper);
   const stored = STOCK_PROFILES[upper];
 
-  const raw: Omit<StockProfile, "chartData"> = stored ?? {
-    ticker: upper,
-    name: meta.companyName,
-    logoColor: meta.logoColor,
-    price: pseudoRandom(upper, 50, 500),
-    change: pseudoRandom(`${upper}-c`, 0.5, 15),
-    changePercent: pseudoRandom(`${upper}-p`, -2, 4),
-    marketCap: "",
-    revenue: "",
-    peRatio: "",
-    eps: "",
-    ebitda: "",
-    dividendYield: "",
-    competitors: [],
-  };
+  const raw: Omit<StockProfile, "chartData"> =
+    cryptoProfile ??
+    stored ?? {
+      ticker: upper,
+      name: meta.companyName,
+      logoColor: meta.logoColor,
+      price: isCryptoAssetTicker(upper)
+        ? pseudoRandom(upper, 0.05, 80)
+        : pseudoRandom(upper, 15, 420),
+      change: pseudoRandom(`${upper}-c`, -6, 8),
+      changePercent: Number(pseudoRandom(`${upper}-p`, -2.5, 3.5).toFixed(2)),
+      marketCap: "",
+      revenue: "",
+      peRatio: "",
+      eps: "",
+      ebitda: "",
+      dividendYield: "",
+      competitors: [],
+    };
 
-  const base = withDemoFinancials(raw, upper);
+  const base = withCompetitors(withDemoFinancials(raw, upper));
 
   const chartData = {} as Record<ChartRange, ChartPoint[]>;
   (Object.keys(CHART_LABELS) as ChartRange[]).forEach((range) => {
@@ -365,12 +506,17 @@ export function getStockProfile(ticker: string): StockProfile {
   return { ...base, chartData };
 }
 
-/** Tickers referenced as competitors in seeded stock profiles */
+/** Tickers referenced as competitors in seeded stock/crypto profiles */
 export function getStockProfileCompetitorTickers(): string[] {
   const tickers = new Set<string>();
   for (const profile of Object.values(STOCK_PROFILES)) {
     for (const competitor of profile.competitors) {
       tickers.add(competitor.ticker.toUpperCase());
+    }
+  }
+  for (const profile of Object.values(CRYPTO_BASE_PROFILES)) {
+    for (const peer of profile.competitorTickers) {
+      tickers.add(peer.toUpperCase());
     }
   }
   return [...tickers];
