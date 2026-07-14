@@ -1,3 +1,4 @@
+import { COUNTRY_SEEDS } from "./countries";
 import type { MarketFilter } from "./filters";
 import { marketToFilter } from "./filters";
 import type { MarketRegionId } from "./markets";
@@ -7,6 +8,7 @@ const REGION_KEY = "pocket-preferred-region";
 const CURRENCY_KEY = "pocket-preferred-currency";
 const CURRENCY_OVERRIDE_KEY = "pocket-currency-manual";
 
+/** Currencies selectable for display conversion. */
 export const APP_CURRENCIES = [
   "USD",
   "EUR",
@@ -18,96 +20,72 @@ export const APP_CURRENCIES = [
   "SGD",
   "INR",
   "CHF",
+  "CNY",
+  "TWD",
+  "KRW",
+  "NZD",
+  "SEK",
+  "NOK",
+  "DKK",
+  "PLN",
+  "BRL",
+  "MXN",
+  "ZAR",
+  "AED",
+  "SAR",
+  "THB",
+  "MYR",
+  "IDR",
+  "PHP",
+  "VND",
+  "TRY",
 ] as const;
 
 export type AppCurrency = (typeof APP_CURRENCIES)[number];
 
-export const APP_REGIONS = [
-  {
-    id: "us",
-    label: "United States",
-    countryCode: "us",
-    currency: "USD",
-    marketRegion: "americas",
-    primaryMarkets: ["NASDAQ", "NYSE"],
-  },
-  {
-    id: "uk",
-    label: "United Kingdom",
-    countryCode: "gb",
-    currency: "GBP",
-    marketRegion: "europe",
-    primaryMarkets: ["LSE"],
-  },
-  {
-    id: "eu",
-    label: "Europe",
-    countryCode: "eu",
-    currency: "EUR",
-    marketRegion: "europe",
-    primaryMarkets: ["Euronext", "XETRA"],
-  },
-  {
-    id: "au",
-    label: "Australia",
-    countryCode: "au",
-    currency: "AUD",
-    marketRegion: "apac",
-    primaryMarkets: ["ASX"],
-  },
-  {
-    id: "ca",
-    label: "Canada",
-    countryCode: "ca",
-    currency: "CAD",
-    marketRegion: "americas",
-    primaryMarkets: ["TSX"],
-  },
-  {
-    id: "jp",
-    label: "Japan",
-    countryCode: "jp",
-    currency: "JPY",
-    marketRegion: "apac",
-    primaryMarkets: ["Nikkei"],
-  },
-  {
-    id: "hk",
-    label: "Hong Kong",
-    countryCode: "hk",
-    currency: "HKD",
-    marketRegion: "apac",
-    primaryMarkets: ["HKEX"],
-  },
-  {
-    id: "sg",
-    label: "Singapore",
-    countryCode: "sg",
-    currency: "SGD",
-    marketRegion: "apac",
-    primaryMarkets: ["SGX"],
-  },
-  {
-    id: "in",
-    label: "India",
-    countryCode: "in",
-    currency: "INR",
-    marketRegion: "apac",
-    primaryMarkets: ["BSE"],
-  },
-] as const satisfies readonly {
+export interface AppRegion {
   id: string;
   label: string;
   countryCode: string;
   currency: AppCurrency;
   marketRegion: MarketRegionId;
   primaryMarkets: readonly MarketFilter[];
-}[];
+}
 
-export type AppRegionId = (typeof APP_REGIONS)[number]["id"];
+const REGION_DEFAULT_MARKETS: Record<MarketRegionId, readonly MarketFilter[]> = {
+  americas: ["NASDAQ", "NYSE"],
+  europe: ["Euronext", "LSE"],
+  apac: ["HKEX", "Nikkei"],
+};
+
+/** Map legacy / unsupported ISO codes onto display currencies we convert. */
+function resolveAppCurrency(code: string): AppCurrency {
+  const upper = code.toUpperCase();
+  if ((APP_CURRENCIES as readonly string[]).includes(upper)) {
+    return upper as AppCurrency;
+  }
+  return "USD";
+}
+
+export const APP_REGIONS: AppRegion[] = COUNTRY_SEEDS.map((seed) => ({
+  id: seed.id,
+  label: seed.label,
+  countryCode: seed.id === "eu" ? "eu" : seed.id,
+  currency: resolveAppCurrency(seed.currency),
+  marketRegion: seed.marketRegion,
+  primaryMarkets:
+    seed.primaryMarkets ?? REGION_DEFAULT_MARKETS[seed.marketRegion],
+}));
+
+export type AppRegionId = string;
 
 export const DEFAULT_APP_REGION: AppRegionId = "us";
 export const DEFAULT_APP_CURRENCY: AppCurrency = "USD";
+
+/** Older shortlist ids → current catalog ids. */
+const LEGACY_REGION_IDS: Record<string, AppRegionId> = {
+  uk: "gb",
+};
 
 /** Approximate USD → local for display only (quotes remain USD-seeded). */
 const USD_TO_CURRENCY: Record<AppCurrency, number> = {
@@ -121,6 +99,25 @@ const USD_TO_CURRENCY: Record<AppCurrency, number> = {
   SGD: 1.34,
   INR: 83.5,
   CHF: 0.88,
+  CNY: 7.24,
+  TWD: 32.2,
+  KRW: 1380,
+  NZD: 1.66,
+  SEK: 10.5,
+  NOK: 10.7,
+  DKK: 6.9,
+  PLN: 3.95,
+  BRL: 5.7,
+  MXN: 19.8,
+  ZAR: 18.2,
+  AED: 3.67,
+  SAR: 3.75,
+  THB: 34.5,
+  MYR: 4.45,
+  IDR: 16200,
+  PHP: 58,
+  VND: 25400,
+  TRY: 34.5,
 };
 
 const CURRENCY_SYMBOL: Record<AppCurrency, string> = {
@@ -134,29 +131,67 @@ const CURRENCY_SYMBOL: Record<AppCurrency, string> = {
   SGD: "S$",
   INR: "₹",
   CHF: "CHF ",
+  CNY: "¥",
+  TWD: "NT$",
+  KRW: "₩",
+  NZD: "NZ$",
+  SEK: "kr ",
+  NOK: "kr ",
+  DKK: "kr ",
+  PLN: "zł ",
+  BRL: "R$",
+  MXN: "MX$",
+  ZAR: "R ",
+  AED: "AED ",
+  SAR: "SAR ",
+  THB: "฿",
+  MYR: "RM ",
+  IDR: "Rp ",
+  PHP: "₱",
+  VND: "₫",
+  TRY: "₺",
 };
 
 export function isAppRegionId(value: string): value is AppRegionId {
-  return APP_REGIONS.some((region) => region.id === value);
+  const normalized = LEGACY_REGION_IDS[value] ?? value;
+  return APP_REGIONS.some((region) => region.id === normalized);
 }
 
 export function isAppCurrency(value: string): value is AppCurrency {
   return (APP_CURRENCIES as readonly string[]).includes(value);
 }
 
-export function getAppRegion(id: AppRegionId) {
-  return APP_REGIONS.find((region) => region.id === id) ?? APP_REGIONS[0];
+export function getAppRegion(id: AppRegionId): AppRegion {
+  const normalized = LEGACY_REGION_IDS[id] ?? id;
+  return (
+    APP_REGIONS.find((region) => region.id === normalized) ??
+    APP_REGIONS.find((region) => region.id === DEFAULT_APP_REGION) ??
+    APP_REGIONS[0]
+  );
 }
 
 export function currencyForRegion(regionId: AppRegionId): AppCurrency {
   return getAppRegion(regionId).currency;
 }
 
+export function filterAppRegions(query: string): AppRegion[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return APP_REGIONS;
+  return APP_REGIONS.filter(
+    (region) =>
+      region.label.toLowerCase().includes(q) ||
+      region.id.includes(q) ||
+      region.currency.toLowerCase().includes(q)
+  );
+}
+
 export function loadPreferredRegion(): AppRegionId {
   if (typeof window === "undefined") return DEFAULT_APP_REGION;
   try {
     const raw = localStorage.getItem(REGION_KEY);
-    if (raw && isAppRegionId(raw)) return raw;
+    if (!raw) return DEFAULT_APP_REGION;
+    const normalized = LEGACY_REGION_IDS[raw] ?? raw;
+    if (isAppRegionId(normalized)) return normalized;
   } catch {
     /* ignore */
   }
@@ -165,7 +200,7 @@ export function loadPreferredRegion(): AppRegionId {
 
 export function savePreferredRegion(regionId: AppRegionId): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(REGION_KEY, regionId);
+  localStorage.setItem(REGION_KEY, LEGACY_REGION_IDS[regionId] ?? regionId);
 }
 
 export function loadPreferredCurrency(): AppCurrency {
@@ -203,7 +238,9 @@ export function hasSavedRegionPreference(): boolean {
   if (typeof window === "undefined") return false;
   try {
     const raw = localStorage.getItem(REGION_KEY);
-    return Boolean(raw && isAppRegionId(raw));
+    if (!raw) return false;
+    const normalized = LEGACY_REGION_IDS[raw] ?? raw;
+    return isAppRegionId(normalized);
   } catch {
     return false;
   }

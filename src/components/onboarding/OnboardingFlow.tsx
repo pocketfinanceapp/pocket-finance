@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bitcoin,
   Building2,
@@ -24,8 +24,8 @@ import {
 } from "@/lib/filters";
 import { getMarketById } from "@/lib/markets";
 import {
-  APP_REGIONS,
   currencyForRegion,
+  filterAppRegions,
   getAppRegion,
   type AppCurrency,
   type AppRegionId,
@@ -302,6 +302,9 @@ function RegionStep({
   onSelect: (region: AppRegionId) => void;
   onNext: () => void;
 }) {
+  const [query, setQuery] = useState("");
+  const regions = useMemo(() => filterAppRegions(query), [query]);
+
   return (
     <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <h1 className="onboarding-enter onboarding-enter-d1 shrink-0 text-2xl font-bold tracking-tight">
@@ -312,24 +315,33 @@ function RegionStep({
         gets hidden.
       </p>
 
-      <div className="mt-6 min-h-0 flex-1 overflow-y-auto pb-4">
-        <div className="space-y-2">
-          {APP_REGIONS.map((item, index) => {
+      <div className="onboarding-enter onboarding-enter-d2 relative mt-5 shrink-0">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search countries"
+          className="w-full rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3 text-[15px] text-pocket-text outline-none placeholder:text-pocket-muted focus:border-[#00C6C6]/60"
+        />
+      </div>
+
+      <div className="mt-3 min-h-0 flex-1 overflow-y-auto pb-4">
+        <div className="space-y-1.5">
+          {regions.map((item) => {
             const active = selected === item.id;
             return (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => onSelect(item.id)}
-                className="onboarding-stagger flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.99]"
+                className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-left transition-all duration-200 active:scale-[0.99]"
                 style={{
-                  ["--ob-i" as string]: index,
                   background: active
                     ? "linear-gradient(165deg, rgba(59,110,245,0.08) 0%, rgba(0,198,198,0.10) 100%)"
                     : "transparent",
                   border: active
                     ? "1.5px solid #00C6C6"
-                    : "1px solid var(--pocket-border)",
+                    : "1px solid transparent",
                 }}
               >
                 <MarketFlag
@@ -358,12 +370,19 @@ function RegionStep({
               </button>
             );
           })}
+          {regions.length === 0 && (
+            <p className="px-1 py-8 text-center text-sm text-pocket-muted">
+              No countries match &ldquo;{query.trim()}&rdquo;
+            </p>
+          )}
         </div>
       </div>
 
       <p className="onboarding-enter onboarding-enter-d4 shrink-0 pb-3 text-center text-[12px] text-pocket-muted">
-        Currency set to <span className="font-semibold text-pocket-text">{currency}</span>
-        {" — "}change anytime in Settings
+        Currency set to{" "}
+        <span className="font-semibold text-pocket-text">{currency}</span>
+        {" — "}
+        change anytime in Settings
       </p>
 
       <div className="onboarding-enter onboarding-enter-d5 shrink-0">

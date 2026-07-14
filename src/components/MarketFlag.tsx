@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMarketFlagEmoji, getMarketFlagPath } from "@/lib/marketFlags";
+import {
+  getMarketFlagEmoji,
+  getMarketFlagPath,
+  hasLocalFlagAsset,
+} from "@/lib/marketFlags";
 
 interface MarketFlagProps {
   countryCode: string;
@@ -16,15 +20,19 @@ export function MarketFlag({
   className = "",
   rounded = "xl",
 }: MarketFlagProps) {
-  const [imageFailed, setImageFailed] = useState(false);
   const code = countryCode.toLowerCase();
+  const [imageFailed, setImageFailed] = useState(!hasLocalFlagAsset(code));
 
   useEffect(() => {
-    setImageFailed(false);
+    setImageFailed(!hasLocalFlagAsset(code));
   }, [code]);
 
   const radius =
-    rounded === "xl" ? "rounded-xl" : rounded === "lg" ? "rounded-lg" : "rounded-md";
+    rounded === "xl"
+      ? "rounded-xl"
+      : rounded === "lg"
+        ? "rounded-lg"
+        : "rounded-md";
 
   if (imageFailed) {
     const emoji = getMarketFlagEmoji(code);
