@@ -1,4 +1,5 @@
 import type { ChartPoint, ChartRange, Competitor, StockProfile } from "./types";
+import { parseMarketCapToNumber } from "./companyStats";
 import { isCryptoAssetTicker } from "./cryptoBrand";
 import {
   buildCryptoCompetitor,
@@ -504,6 +505,16 @@ export function getStockProfile(ticker: string): StockProfile {
   });
 
   return { ...base, chartData };
+}
+
+/**
+ * Seeded equity market-cap only (no demo fill) — used to rank Browse companies
+ * by size without random placeholders floating to the top.
+ */
+export function getSeededEquityMarketCap(ticker: string): number | null {
+  const stored = STOCK_PROFILES[ticker.toUpperCase()];
+  if (!stored?.marketCap) return null;
+  return parseMarketCapToNumber(stored.marketCap);
 }
 
 /** Tickers referenced as competitors in seeded stock/crypto profiles */

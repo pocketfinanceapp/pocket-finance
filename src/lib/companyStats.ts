@@ -63,6 +63,8 @@ function parseMarketCapToNumber(value: string): number | null {
   return amount;
 }
 
+export { parseMarketCapToNumber };
+
 function formatExDividendDate(seed: string): string {
   const offsetDays = Math.floor(pseudoRandom(`${seed}-exdiv`, 20, 120));
   const date = new Date();
