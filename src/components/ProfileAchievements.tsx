@@ -185,36 +185,16 @@ function AchievementRow({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border ${
+      className={`overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] ${
         compact ? "px-3 py-3" : "px-3.5 py-3.5"
       }`}
-      style={{
-        ...tabStaggerStyle(entered, index, 40),
-        borderColor: achievement.unlocked
-          ? `${theme.accent}66`
-          : "var(--pocket-border)",
-        background: achievement.unlocked
-          ? `linear-gradient(135deg, ${theme.tint} 0%, var(--pocket-card) 55%)`
-          : `linear-gradient(180deg, ${theme.tint} 0%, var(--pocket-card) 42%)`,
-        boxShadow: achievement.unlocked
-          ? `inset 0 0 0 1px ${theme.accent}22`
-          : undefined,
-      }}
+      style={tabStaggerStyle(entered, index, 40)}
     >
-      <span
-        className="absolute inset-y-0 left-0 w-[3px]"
-        style={{ background: theme.accent }}
-        aria-hidden
-      />
-
-      <div className="flex items-start gap-3 pl-1.5">
+      <div className="flex items-start gap-3">
         <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--pocket-border)]"
           style={{
             color: achievement.unlocked ? theme.accent : "var(--pocket-muted)",
-            borderColor: achievement.unlocked
-              ? `${theme.accent}55`
-              : "var(--pocket-border)",
             background: theme.tint,
           }}
         >
@@ -282,7 +262,7 @@ function AchievementRow({
       </div>
 
       {showBar && (
-        <div className="mt-2.5 pl-1.5">
+        <div className="mt-2.5">
           <div className="h-1.5 overflow-hidden rounded-full bg-[var(--pocket-surface-hover)]">
             <div
               className="h-full rounded-full transition-[width] duration-500 ease-out"
