@@ -17,9 +17,9 @@ const FEED_ROWS = [
 ] as const;
 
 const STOCK_METRICS = [
-  { label: "Mkt Cap", value: "2.8T" },
-  { label: "P/E", value: "71.4" },
-  { label: "Vol", value: "48.2M" },
+  { label: "Mkt Cap", value: "3.3T" },
+  { label: "P/E", value: "35.2" },
+  { label: "Vol", value: "52.1M" },
 ] as const;
 
 export function FeedCardPreview() {
@@ -97,12 +97,12 @@ export function StockCardPreview() {
     <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-black/50 p-2.5">
       <div className="flex items-baseline justify-between">
         <div>
-          <span className="text-[11px] font-bold text-white">SOXX</span>
-          <p className="text-[8px] text-[#9ca3af]">Semiconductor ETF</p>
+          <span className="text-[11px] font-bold text-white">NVDA</span>
+          <p className="text-[8px] text-[#9ca3af]">NVIDIA Corporation</p>
         </div>
         <div className="text-right">
-          <span className="text-[11px] font-bold text-white">$268.40</span>
-          <p className="text-[9px] font-semibold text-[#00C6C6]">+2.8%</p>
+          <span className="text-[11px] font-bold text-white">$131.38</span>
+          <p className="text-[9px] font-semibold text-[#00C6C6]">+1.4%</p>
         </div>
       </div>
       <svg
@@ -144,6 +144,74 @@ export function StockCardPreview() {
             <p className="text-[8px] font-semibold text-white/80">{value}</p>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+const BROWSE_ROWS = [
+  { ticker: "AAPL", name: "Apple", tab: "Companies" },
+  { ticker: "BTC", name: "Bitcoin", tab: "Crypto" },
+  { ticker: "NASDAQ", name: "Nasdaq", tab: "Markets" },
+] as const;
+
+export function BrowseCardPreview() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-black/50">
+      <div className="flex gap-3 border-b border-white/[0.06] px-2.5 py-1.5 text-[8px] font-semibold">
+        <span className="text-white">Companies</span>
+        <span className="text-white/30">Markets</span>
+        <span className="text-white/30">Crypto</span>
+      </div>
+      <div className="space-y-1 p-2">
+        {BROWSE_ROWS.map((row) => (
+          <div
+            key={row.ticker}
+            className="flex items-center gap-2 rounded-lg border border-white/[0.04] bg-white/[0.03] px-2 py-1.5"
+          >
+            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#3B6EF5]/20 text-[7px] font-bold text-[#7BA3FF]">
+              {row.ticker.slice(0, 1)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[9px] font-semibold text-white">
+                {row.ticker}
+              </p>
+              <p className="truncate text-[7px] text-[#9ca3af]">{row.name}</p>
+            </div>
+            <span className="text-[7px] text-white/35">{row.tab}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ProgressCardPreview() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-black/50 p-2.5">
+      <div className="flex items-center justify-between">
+        <p className="text-[9px] font-bold text-white">News Regular</p>
+        <span className="rounded-md bg-[#3B6EF5]/15 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wide text-[#7BA3FF]">
+          Reading
+        </span>
+      </div>
+      <p className="mt-1.5 text-[9px] font-semibold tabular-nums text-[#00C6C6]">
+        4/10 articles read
+      </p>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6]"
+          style={{ width: "40%" }}
+        />
+      </div>
+      <div className="mt-2.5 flex items-center gap-2 rounded-lg border border-white/[0.05] bg-white/[0.03] px-2 py-1.5">
+        <span className="text-[12px]" aria-hidden>
+          🔥
+        </span>
+        <div>
+          <p className="text-[8px] font-semibold text-white">5-day streak</p>
+          <p className="text-[7px] text-[#9ca3af]">Keep reading today</p>
+        </div>
       </div>
     </div>
   );

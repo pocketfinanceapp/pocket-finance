@@ -26,8 +26,8 @@ const GESTURES: {
   {
     icon: ArrowRight,
     gesture: "Swipe right",
-    label: "Stock intel",
-    hint: "Live prices & charts",
+    label: "Company panel",
+    hint: "Prices, charts & stats",
   },
 ];
 
@@ -44,10 +44,10 @@ export function SwipeGestureSection() {
       />
       <div className="relative mx-auto max-w-6xl">
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-[#00C6C6]/80">
-          How it works
+          How Pocket Finance works
         </p>
         <h2 className="mt-2 text-center text-xl font-bold tracking-tight text-white sm:text-2xl">
-          Three swipes. All you need.
+          Three gestures. The whole market.
         </h2>
 
         <div className="mt-5 flex flex-col gap-2.5 md:mt-8 md:grid md:grid-cols-3 md:gap-3">
