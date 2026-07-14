@@ -41,53 +41,77 @@ export function OnboardingFlow() {
   const { completeOnboarding } = useApp();
   const [step, setStep] = useState<Step>(0);
   const [transitioning, setTransitioning] = useState(false);
+  const [exiting, setExiting] = useState(false);
   const [markets, setMarkets] = useState<MarketFilter[]>([]);
   const [sectors, setSectors] = useState<SectorFilter[]>([]);
 
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (transitionTimer.current) clearTimeout(transitionTimer.current);
+      if (exitTimer.current) clearTimeout(exitTimer.current);
     };
   }, []);
 
-  const goTo = useCallback((next: Step) => {
-    if (transitionTimer.current) clearTimeout(transitionTimer.current);
-    setTransitioning(true);
-    transitionTimer.current = setTimeout(() => {
-      setStep(next);
-      setTransitioning(false);
-      transitionTimer.current = null;
-    }, 220);
-  }, []);
+  const goTo = useCallback(
+    (next: Step) => {
+      if (exiting) return;
+      if (transitionTimer.current) clearTimeout(transitionTimer.current);
+      setTransitioning(true);
+      transitionTimer.current = setTimeout(() => {
+        setStep(next);
+        setTransitioning(false);
+        transitionTimer.current = null;
+      }, 220);
+    },
+    [exiting]
+  );
 
   const toggleMarket = (m: MarketFilter) => {
+    if (exiting) return;
     setMarkets((prev) =>
       prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]
     );
   };
 
   const toggleSector = (s: SectorFilter) => {
+    if (exiting) return;
     setSectors((prev) =>
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
     );
   };
 
-  const finish = () => {
-    completeOnboarding(markets, sectors);
-  };
+  const finish = useCallback(() => {
+    if (exiting) return;
+    setExiting(true);
+    exitTimer.current = setTimeout(() => {
+      completeOnboarding(markets, sectors);
+      exitTimer.current = null;
+    }, 1250);
+  }, [completeOnboarding, exiting, markets, sectors]);
 
   return (
-    <div className="app-shell-height fixed inset-0 z-[100] mx-auto flex w-full max-w-mobile flex-col pf-theme-scope bg-pocket-bg text-pocket-text">
-      <div className="flex justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))]">
+    <div
+      className={`app-shell-height fixed inset-0 z-[100] mx-auto flex w-full max-w-mobile flex-col pf-theme-scope bg-pocket-bg text-pocket-text ${
+        exiting ? "onboarding-shell-exit" : ""
+      }`}
+    >
+      <div
+        className={`flex justify-center px-6 pt-[max(1.5rem,env(safe-area-inset-top))] transition-opacity duration-300 ${
+          exiting ? "pointer-events-none opacity-0" : "opacity-100"
+        }`}
+      >
         <StepDots total={4} current={step} />
       </div>
 
       <div
-        className={`flex min-h-0 flex-1 flex-col transition-transform duration-300 ease-out ${
-          transitioning ? "translate-x-3" : "translate-x-0"
-        }`}
+        className={`flex min-h-0 flex-1 flex-col transition-all duration-300 ease-out ${
+          transitioning
+            ? "translate-x-3 opacity-70"
+            : "translate-x-0 opacity-100"
+        } ${exiting ? "pointer-events-none opacity-0" : ""}`}
       >
         {step === 0 && <WelcomeStep onNext={() => goTo(1)} />}
         {step === 1 && (
@@ -104,7 +128,7 @@ export function OnboardingFlow() {
             onNext={() => goTo(3)}
           />
         )}
-        {step === 3 && (
+        {step === 3 && !exiting && (
           <ReadyStep
             markets={markets}
             sectors={sectors}
@@ -112,6 +136,8 @@ export function OnboardingFlow() {
           />
         )}
       </div>
+
+      {exiting && <OnboardingOutro markets={markets} sectors={sectors} />}
     </div>
   );
 }
@@ -297,7 +323,7 @@ function SectorsStep({
         What sectors interest you?
       </h1>
       <p className="onboarding-enter onboarding-enter-d2 mt-2 text-sm text-pocket-muted">
-        Optional focus areas for stories and Browse suggestions.
+        Select at least one so we can personalise stories and Browse.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3">
         {SECTOR_FILTERS.map((sector, index) => {
@@ -320,8 +346,8 @@ function SectorsStep({
       </div>
       <div className="flex-1" />
       <div className="onboarding-enter onboarding-enter-d5">
-        <GradientButton onClick={onNext}>
-          {selected.length === 0 ? "Skip for now" : "Continue"}
+        <GradientButton onClick={onNext} disabled={selected.length === 0}>
+          Continue
         </GradientButton>
       </div>
     </div>
@@ -373,9 +399,7 @@ function ReadyStep({
           title="Markets"
           items={markets.map((id) => getMarketById(id)?.name ?? id)}
         />
-        {sectors.length > 0 && (
-          <SummaryBlock title="Sectors" items={[...sectors]} />
-        )}
+        <SummaryBlock title="Sectors" items={[...sectors]} />
       </div>
 
       <ul className="mt-5 space-y-3 px-0.5">
@@ -399,6 +423,43 @@ function ReadyStep({
       <div className="onboarding-enter onboarding-enter-d6">
         <GradientButton onClick={onFinish}>Start reading</GradientButton>
       </div>
+    </div>
+  );
+}
+
+function OnboardingOutro({
+  markets,
+  sectors,
+}: {
+  markets: MarketFilter[];
+  sectors: SectorFilter[];
+}) {
+  const marketLabel =
+    markets
+      .map((id) => getMarketById(id)?.name ?? id)
+      .slice(0, 2)
+      .join(" · ") || "your markets";
+  const sectorLabel = sectors.slice(0, 2).join(" · ") || "your interests";
+
+  return (
+    <div
+      className="onboarding-outro absolute inset-0 z-20 flex flex-col items-center justify-center px-8 text-center"
+      aria-live="polite"
+    >
+      <div className="relative mb-7 flex h-24 w-24 items-center justify-center">
+        <span className="onboarding-outro-ring absolute inset-0 rounded-full border-2 border-[#00C6C6]/50" />
+        <span className="onboarding-outro-ring onboarding-outro-ring-delay absolute inset-0 rounded-full border border-[#3B6EF5]/40" />
+        <span className="onboarding-outro-check relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#3B6EF5] to-[#00C6C6] shadow-[0_12px_40px_rgba(0,198,198,0.35)]">
+          <Check className="h-10 w-10 text-white" strokeWidth={2.75} />
+        </span>
+      </div>
+
+      <h2 className="onboarding-outro-title text-[28px] font-extrabold tracking-tight text-pocket-text">
+        You&apos;re in
+      </h2>
+      <p className="onboarding-outro-copy mt-3 max-w-[280px] text-[14px] leading-relaxed text-pocket-muted">
+        Personalising For You around {marketLabel} and {sectorLabel}.
+      </p>
     </div>
   );
 }
