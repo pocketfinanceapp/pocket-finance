@@ -23,6 +23,13 @@ import {
   type SectorFilter,
 } from "@/lib/filters";
 import { getMarketById } from "@/lib/markets";
+import {
+  APP_REGIONS,
+  currencyForRegion,
+  getAppRegion,
+  type AppCurrency,
+  type AppRegionId,
+} from "@/lib/regionPreferences";
 
 const SECTOR_ICONS: Record<SectorFilter, LucideIcon> = {
   Technology: Cpu,
@@ -35,13 +42,15 @@ const SECTOR_ICONS: Record<SectorFilter, LucideIcon> = {
   "Real Estate": Building2,
 };
 
-type Step = 0 | 1 | 2 | 3;
+type Step = 0 | 1 | 2 | 3 | 4;
 
 export function OnboardingFlow() {
   const { completeOnboarding } = useApp();
   const [step, setStep] = useState<Step>(0);
   const [transitioning, setTransitioning] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [region, setRegion] = useState<AppRegionId>("us");
+  const [currency, setCurrency] = useState<AppCurrency>("USD");
   const [markets, setMarkets] = useState<MarketFilter[]>([]);
   const [sectors, setSectors] = useState<SectorFilter[]>([]);
 
@@ -69,6 +78,16 @@ export function OnboardingFlow() {
     [exiting]
   );
 
+  const selectRegion = (next: AppRegionId) => {
+    if (exiting) return;
+    setRegion(next);
+    setCurrency(currencyForRegion(next));
+    // Soft-start markets empty only once — preselect home exchanges.
+    setMarkets((prev) =>
+      prev.length > 0 ? prev : [...getAppRegion(next).primaryMarkets]
+    );
+  };
+
   const toggleMarket = (m: MarketFilter) => {
     if (exiting) return;
     setMarkets((prev) =>
@@ -87,10 +106,10 @@ export function OnboardingFlow() {
     if (exiting) return;
     setExiting(true);
     exitTimer.current = setTimeout(() => {
-      completeOnboarding(markets, sectors);
+      completeOnboarding(markets, sectors, region, currency);
       exitTimer.current = null;
     }, 1350);
-  }, [completeOnboarding, exiting, markets, sectors]);
+  }, [completeOnboarding, currency, exiting, markets, region, sectors]);
 
   return (
     <div
@@ -103,7 +122,7 @@ export function OnboardingFlow() {
           exiting ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
-        <StepDots total={4} current={step} />
+        <StepDots total={5} current={step} />
       </div>
 
       <div
@@ -115,21 +134,31 @@ export function OnboardingFlow() {
       >
         {step === 0 && <WelcomeStep onNext={() => goTo(1)} />}
         {step === 1 && (
-          <MarketsStep
-            selected={markets}
-            onToggle={toggleMarket}
+          <RegionStep
+            selected={region}
+            currency={currency}
+            onSelect={selectRegion}
             onNext={() => goTo(2)}
           />
         )}
         {step === 2 && (
-          <SectorsStep
-            selected={sectors}
-            onToggle={toggleSector}
+          <MarketsStep
+            selected={markets}
+            onToggle={toggleMarket}
             onNext={() => goTo(3)}
           />
         )}
-        {step === 3 && !exiting && (
+        {step === 3 && (
+          <SectorsStep
+            selected={sectors}
+            onToggle={toggleSector}
+            onNext={() => goTo(4)}
+          />
+        )}
+        {step === 4 && !exiting && (
           <ReadyStep
+            region={region}
+            currency={currency}
             markets={markets}
             sectors={sectors}
             onFinish={finish}
@@ -137,7 +166,13 @@ export function OnboardingFlow() {
         )}
       </div>
 
-      {exiting && <OnboardingOutro markets={markets} sectors={sectors} />}
+      {exiting && (
+        <OnboardingOutro
+          region={region}
+          markets={markets}
+          sectors={sectors}
+        />
+      )}
     </div>
   );
 }
@@ -256,6 +291,88 @@ function WelcomeCtaButton({
   );
 }
 
+function RegionStep({
+  selected,
+  currency,
+  onSelect,
+  onNext,
+}: {
+  selected: AppRegionId;
+  currency: AppCurrency;
+  onSelect: (region: AppRegionId) => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <h1 className="onboarding-enter onboarding-enter-d1 shrink-0 text-2xl font-bold tracking-tight">
+        Where are you based?
+      </h1>
+      <p className="onboarding-enter onboarding-enter-d2 mt-2 shrink-0 text-sm text-pocket-muted">
+        We&apos;ll lightly prioritise local news and markets — nothing important
+        gets hidden.
+      </p>
+
+      <div className="mt-6 min-h-0 flex-1 overflow-y-auto pb-4">
+        <div className="space-y-2">
+          {APP_REGIONS.map((item, index) => {
+            const active = selected === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelect(item.id)}
+                className="onboarding-stagger flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.99]"
+                style={{
+                  ["--ob-i" as string]: index,
+                  background: active
+                    ? "linear-gradient(165deg, rgba(59,110,245,0.08) 0%, rgba(0,198,198,0.10) 100%)"
+                    : "transparent",
+                  border: active
+                    ? "1.5px solid #00C6C6"
+                    : "1px solid var(--pocket-border)",
+                }}
+              >
+                <MarketFlag
+                  countryCode={item.countryCode}
+                  size={28}
+                  rounded="lg"
+                />
+                <span className="min-w-0 flex-1 text-[15px] font-semibold text-pocket-text">
+                  {item.label}
+                </span>
+                <span className="shrink-0 text-[12px] font-medium tabular-nums text-pocket-muted">
+                  {item.currency}
+                </span>
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    active
+                      ? "border-[#00C6C6] bg-[#00C6C6]"
+                      : "border-[var(--pocket-border)] bg-transparent"
+                  }`}
+                  aria-hidden
+                >
+                  {active && (
+                    <Check className="h-3 w-3 text-black" strokeWidth={3} />
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="onboarding-enter onboarding-enter-d4 shrink-0 pb-3 text-center text-[12px] text-pocket-muted">
+        Currency set to <span className="font-semibold text-pocket-text">{currency}</span>
+        {" — "}change anytime in Settings
+      </p>
+
+      <div className="onboarding-enter onboarding-enter-d5 shrink-0">
+        <GradientButton onClick={onNext}>Continue</GradientButton>
+      </div>
+    </div>
+  );
+}
+
 function MarketsStep({
   selected,
   onToggle,
@@ -356,10 +473,14 @@ function SectorsStep({
 }
 
 function ReadyStep({
+  region,
+  currency,
   markets,
   sectors,
   onFinish,
 }: {
+  region: AppRegionId;
+  currency: AppCurrency;
   markets: MarketFilter[];
   sectors: SectorFilter[];
   onFinish: () => void;
@@ -397,6 +518,10 @@ function ReadyStep({
 
       <div className="onboarding-enter onboarding-enter-d4 mt-6 space-y-3 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4">
         <SummaryBlock
+          title="Region"
+          items={[`${getAppRegion(region).label} · ${currency}`]}
+        />
+        <SummaryBlock
           title="Markets"
           items={markets.map((id) => getMarketById(id)?.name ?? id)}
         />
@@ -429,9 +554,11 @@ function ReadyStep({
 }
 
 function OnboardingOutro({
+  region,
   markets,
   sectors,
 }: {
+  region: AppRegionId;
   markets: MarketFilter[];
   sectors: SectorFilter[];
 }) {
@@ -459,7 +586,8 @@ function OnboardingOutro({
         You&apos;re in
       </h2>
       <p className="onboarding-outro-copy mt-3 max-w-[280px] text-[14px] leading-relaxed text-pocket-muted">
-        Personalising For You around {marketLabel} and {sectorLabel}.
+        Personalising For You around {getAppRegion(region).label}, {marketLabel}{" "}
+        and {sectorLabel}.
       </p>
     </div>
   );

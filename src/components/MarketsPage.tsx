@@ -12,9 +12,9 @@ import {
   getMarketSparkline,
   getMarketsByRegion,
   GLOBAL_MARKETS,
-  MARKET_REGIONS,
   type GlobalMarket,
 } from "@/lib/markets";
+import { orderMarketRegionsByPreference } from "@/lib/regionPreferences";
 import {
   listLayerStyle,
   panelEnterStyle,
@@ -159,7 +159,7 @@ function MarketListCard({
 }
 
 export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProps) {
-  const { ensureMarketsLoaded } = useApp();
+  const { ensureMarketsLoaded, preferredRegion } = useApp();
   const tabEntered = useTabPageEntered("markets");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -181,26 +181,26 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
 
   const regions = useMemo(
     () =>
-      MARKET_REGIONS.map((region) => ({
+      orderMarketRegionsByPreference(preferredRegion).map((region) => ({
         ...region,
         markets: getMarketsByRegion(region).sort((a, b) =>
           a.name.localeCompare(b.name)
         ),
       })),
-    []
+    [preferredRegion]
   );
 
   const flatMarkets = useMemo(() => {
     const byId = new Map(GLOBAL_MARKETS.map((market) => [market.id, market]));
     const ordered: GlobalMarket[] = [];
-    for (const region of MARKET_REGIONS) {
+    for (const region of orderMarketRegionsByPreference(preferredRegion)) {
       for (const id of region.marketIds) {
         const market = byId.get(id);
         if (market) ordered.push(market);
       }
     }
     return ordered;
-  }, []);
+  }, [preferredRegion]);
 
   const isSearching = searchQuery.trim().length > 0;
   const displayMarkets = useMemo(

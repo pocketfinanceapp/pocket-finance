@@ -20,9 +20,9 @@ import {
   formatIndexValue,
   getMarketSparkline,
   GLOBAL_MARKETS,
-  MARKET_REGIONS,
   type GlobalMarket,
 } from "@/lib/markets";
+import { orderMarketRegionsByPreference } from "@/lib/regionPreferences";
 import { getStockProfile } from "@/lib/stockData";
 import { fetchStockQuote } from "@/lib/stockQuoteClient";
 import { isUsListedStockTicker } from "@/lib/usStockTickers";
@@ -225,6 +225,7 @@ export function DiscoverPage({
   const {
     followedMarkets,
     sectorInterests,
+    preferredRegion,
     savedArticles,
     companyPanelTicker,
   } = useApp();
@@ -248,14 +249,14 @@ export function DiscoverPage({
   const markets = useMemo(() => {
     const byId = new Map(GLOBAL_MARKETS.map((market) => [market.id, market]));
     const ordered: GlobalMarket[] = [];
-    for (const region of MARKET_REGIONS) {
+    for (const region of orderMarketRegionsByPreference(preferredRegion)) {
       for (const id of region.marketIds) {
         const market = byId.get(id);
         if (market) ordered.push(market);
       }
     }
     return ordered;
-  }, []);
+  }, [preferredRegion]);
 
   useEffect(() => {
     prefetchCompanyLogos(companies.map((company) => company.ticker));
@@ -289,6 +290,7 @@ export function DiscoverPage({
       followedMarkets,
       sectorInterests,
       favouriteTopics,
+      preferredRegion,
       savedArticles,
       articlesById,
     });
@@ -296,6 +298,7 @@ export function DiscoverPage({
     followedMarkets,
     sectorInterests,
     favouriteTopics,
+    preferredRegion,
     savedArticles,
     articlesById,
     personalizationTick,

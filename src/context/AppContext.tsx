@@ -20,6 +20,20 @@ import {
   saveSectorInterests,
 } from "@/lib/sectorPreferences";
 import {
+  currencyForRegion,
+  DEFAULT_APP_CURRENCY,
+  DEFAULT_APP_REGION,
+  loadCurrencyManualOverride,
+  loadPreferredCurrency,
+  loadPreferredRegion,
+  saveCurrencyManualOverride,
+  savePreferredCurrency,
+  savePreferredRegion,
+  type AppCurrency,
+  type AppRegionId,
+} from "@/lib/regionPreferences";
+import { setActiveDisplayCurrency } from "@/lib/utils";
+import {
   fetchSavedArticles,
   fetchUserLikedCount,
   fetchUserStoriesRead,
@@ -68,6 +82,13 @@ interface AppContextValue {
   setFollowedMarkets: (markets: MarketFilter[]) => void;
   sectorInterests: SectorFilter[];
   toggleSectorInterest: (s: SectorFilter) => void;
+  preferredRegion: AppRegionId;
+  preferredCurrency: AppCurrency;
+  setPreferredRegion: (region: AppRegionId) => void;
+  setPreferredCurrency: (
+    currency: AppCurrency,
+    options?: { manual?: boolean }
+  ) => void;
   marketFilters: MarketFilter[];
   setMarketFilters: (filters: MarketFilter[]) => void;
   toggleMarketFilter: (m: MarketFilter) => void;
@@ -94,7 +115,9 @@ interface AppContextValue {
   onboardingComplete: boolean;
   completeOnboarding: (
     markets: MarketFilter[],
-    sectors: SectorFilter[]
+    sectors: SectorFilter[],
+    region: AppRegionId,
+    currency?: AppCurrency
   ) => void;
   syncAppUser: (userId: string | null) => void;
 }
@@ -110,6 +133,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [sectorInterests, setSectorInterestsState] = useState<SectorFilter[]>(
     []
   );
+  const [preferredRegion, setPreferredRegionState] = useState<AppRegionId>(
+    DEFAULT_APP_REGION
+  );
+  const [preferredCurrency, setPreferredCurrencyState] =
+    useState<AppCurrency>(DEFAULT_APP_CURRENCY);
   const [marketFilters, setMarketFilters] = useState<MarketFilter[]>([]);
   const [sectorFilters, setSectorFiltersState] = useState<SectorFilter[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,6 +210,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setReady(true);
     ensureMarketsLoaded();
+    const region = loadPreferredRegion();
+    const currency = loadPreferredCurrency();
+    setPreferredRegionState(region);
+    setPreferredCurrencyState(currency);
+    setActiveDisplayCurrency(currency);
     if (isOnboardingComplete()) {
       setFollowedMarketsState(loadFollowedMarkets());
       setSectorInterestsState(loadSectorInterests());
@@ -365,11 +398,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSearchQuery("");
   }, []);
 
+  const setPreferredRegion = useCallback((region: AppRegionId) => {
+    setPreferredRegionState(region);
+    savePreferredRegion(region);
+    if (!loadCurrencyManualOverride()) {
+      const nextCurrency = currencyForRegion(region);
+      setPreferredCurrencyState(nextCurrency);
+      savePreferredCurrency(nextCurrency);
+      setActiveDisplayCurrency(nextCurrency);
+    }
+  }, []);
+
+  const setPreferredCurrency = useCallback(
+    (currency: AppCurrency, options?: { manual?: boolean }) => {
+      setPreferredCurrencyState(currency);
+      savePreferredCurrency(currency);
+      saveCurrencyManualOverride(options?.manual !== false);
+      setActiveDisplayCurrency(currency);
+    },
+    []
+  );
+
   const completeOnboarding = useCallback(
-    (markets: MarketFilter[], sectors: SectorFilter[]) => {
+    (
+      markets: MarketFilter[],
+      sectors: SectorFilter[],
+      region: AppRegionId,
+      currency?: AppCurrency
+    ) => {
+      const nextCurrency = currency ?? currencyForRegion(region);
       setFollowedMarkets(markets);
       setSectorInterestsState(sectors);
       saveSectorInterests(sectors);
+      setPreferredRegionState(region);
+      savePreferredRegion(region);
+      setPreferredCurrencyState(nextCurrency);
+      savePreferredCurrency(nextCurrency);
+      saveCurrencyManualOverride(false);
+      setActiveDisplayCurrency(nextCurrency);
       setOnboardingComplete(true);
       try {
         markOnboardingComplete(appUserId ?? undefined);
@@ -442,6 +508,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFollowedMarkets,
       sectorInterests,
       toggleSectorInterest,
+      preferredRegion,
+      preferredCurrency,
+      setPreferredRegion,
+      setPreferredCurrency,
       marketFilters,
       setMarketFilters,
       toggleMarketFilter,
@@ -486,6 +556,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFollowedMarkets,
       sectorInterests,
       toggleSectorInterest,
+      preferredRegion,
+      preferredCurrency,
+      setPreferredRegion,
+      setPreferredCurrency,
       marketFilters,
       toggleMarketFilter,
       sectorFilters,

@@ -1,16 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useApp } from "@/context/AppContext";
 import {
   GLOBAL_INDEX_REGIONS,
   GLOBAL_INDEXES,
   type GlobalIndexRegion,
 } from "@/lib/globalIndexes";
 import { formatIndexValue } from "@/lib/markets";
+import {
+  getAppRegion,
+  type AppRegionId,
+} from "@/lib/regionPreferences";
 import { SectionTabs } from "./SectionTabs";
 
+function indexRegionFromAppRegion(preferred: AppRegionId): GlobalIndexRegion {
+  const marketRegion = getAppRegion(preferred).marketRegion;
+  if (marketRegion === "europe") return "europe";
+  if (marketRegion === "apac") return "apac";
+  return "us";
+}
+
 export function GlobalIndexesSection() {
-  const [region, setRegion] = useState<GlobalIndexRegion>("us");
+  const { preferredRegion } = useApp();
+  const [region, setRegion] = useState<GlobalIndexRegion>(() =>
+    indexRegionFromAppRegion(preferredRegion)
+  );
+
+  useEffect(() => {
+    setRegion(indexRegionFromAppRegion(preferredRegion));
+  }, [preferredRegion]);
+
   const indexes = GLOBAL_INDEXES[region];
 
   return (

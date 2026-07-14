@@ -117,7 +117,13 @@ export function StockPanel({
   const stock = privateCompany || marketTheme ? null : getStockProfile(ticker);
   const meta = getTickerMetaBySymbol(ticker);
   const themeConfig = marketTheme ? getMarketThemeConfig(ticker) : null;
-  const { saveArticle, unsaveArticle, isArticleSaved, requestCompanyPanel } = useApp();
+  const {
+    saveArticle,
+    unsaveArticle,
+    isArticleSaved,
+    requestCompanyPanel,
+    preferredCurrency,
+  } = useApp();
   const openTicker = onOpenTicker ?? ((symbol: string) => requestCompanyPanel(symbol));
   const saved = isArticleSaved(article.id);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
@@ -355,7 +361,7 @@ export function StockPanel({
                     <p className="text-[2rem] font-bold leading-none tracking-tight">
                       {formatAssetPrice(displayPrice)}{" "}
                       <span className="text-base font-normal text-zinc-500">
-                        USD
+                        {preferredCurrency}
                       </span>
                     </p>
                     {hasMassiveQuote && (

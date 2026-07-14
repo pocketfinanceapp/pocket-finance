@@ -8,6 +8,11 @@ import {
 } from "./profileStorage";
 import { getActivityEvents } from "./progression";
 import type { ExploreCompany } from "./exploreCompanies";
+import {
+  articleMatchesPreferredRegion,
+  marketMatchesPreferredRegion,
+  type AppRegionId,
+} from "./regionPreferences";
 import type { NewsArticle, SavedArticleEntry } from "./types";
 
 function articleMatchesTopics(
@@ -34,6 +39,7 @@ export interface FeedPersonalizationInput {
   followedMarkets: MarketFilter[];
   sectorInterests: SectorFilter[];
   favouriteTopics: ProfileTopic[];
+  preferredRegion: AppRegionId | null;
   savedTickers: Set<string>;
   engagedTickers: Set<string>;
   recentlyReadTickers: Set<string>;
@@ -45,6 +51,7 @@ interface BuildPersonalizationOptions {
   followedMarkets: MarketFilter[];
   sectorInterests: SectorFilter[];
   favouriteTopics: ProfileTopic[];
+  preferredRegion?: AppRegionId | null;
   savedArticles: SavedArticleEntry[];
   articlesById: Map<string, NewsArticle>;
 }
@@ -102,6 +109,7 @@ export function buildFeedPersonalizationInput(
     followedMarkets: opts.followedMarkets,
     sectorInterests: opts.sectorInterests,
     favouriteTopics: opts.favouriteTopics,
+    preferredRegion: opts.preferredRegion ?? null,
     savedTickers,
     engagedTickers,
     recentlyReadTickers,
@@ -124,6 +132,14 @@ export function computeForYouScore(
     )
   ) {
     score += 48;
+  }
+
+  // Soft home-region nudge — never a hard filter.
+  if (
+    input.preferredRegion &&
+    articleMatchesPreferredRegion(article.market, input.preferredRegion)
+  ) {
+    score += 22;
   }
 
   if (
@@ -195,6 +211,13 @@ export function computeCompanyRelevanceScore(
   }
 
   if (
+    input.preferredRegion &&
+    marketMatchesPreferredRegion(company.meta.market, input.preferredRegion)
+  ) {
+    score += 18;
+  }
+
+  if (
     input.favouriteTopics.length > 0 &&
     articleMatchesTopics(
       {
@@ -232,17 +255,27 @@ export function rankExploreCompanies(
     input.followedMarkets.length > 0 ||
     input.sectorInterests.length > 0 ||
     input.favouriteTopics.length > 0 ||
+    Boolean(input.preferredRegion) ||
     input.savedTickers.size > 0 ||
     input.engagedTickers.size > 0 ||
     input.recentlyReadTickers.size > 0;
 
+  // Preserve catalog order (already most-relevant-first) when the user has no prefs.
   if (!hasSignals) return companies;
+
+  // Catalog index is the popularity baseline — prefer it over A–Z when scores tie.
+  const catalogIndex = new Map(
+    companies.map((company, index) => [company.ticker.toUpperCase(), index])
+  );
 
   return [...companies].sort((a, b) => {
     const diff =
       computeCompanyRelevanceScore(b, input) -
       computeCompanyRelevanceScore(a, input);
     if (diff !== 0) return diff;
-    return a.ticker.localeCompare(b.ticker);
+    return (
+      (catalogIndex.get(a.ticker.toUpperCase()) ?? 9999) -
+      (catalogIndex.get(b.ticker.toUpperCase()) ?? 9999)
+    );
   });
 }

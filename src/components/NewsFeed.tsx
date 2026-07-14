@@ -77,6 +77,7 @@ export function NewsFeed({
     marketFilters,
     sectorFilters,
     sectorInterests,
+    preferredRegion,
     searchQuery,
     savedArticles,
     feedIndex,
@@ -124,12 +125,14 @@ export function NewsFeed({
       followedMarkets,
       sectorInterests,
       favouriteTopics,
+      preferredRegion,
       savedArticles,
       articlesById,
     });
   }, [
       followedMarkets,
       sectorInterests,
+      preferredRegion,
       favouriteTopics,
       savedArticles,
       articlesById,

@@ -1,27 +1,51 @@
+import {
+  type AppCurrency,
+  convertFromUsd,
+  currencySymbol,
+  DEFAULT_APP_CURRENCY,
+} from "./regionPreferences";
+
 export function formatCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
 
+/** Active display currency — updated from AppContext when prefs change. */
+let activeDisplayCurrency: AppCurrency = DEFAULT_APP_CURRENCY;
+
+export function setActiveDisplayCurrency(currency: AppCurrency): void {
+  activeDisplayCurrency = currency;
+}
+
+export function getActiveDisplayCurrency(): AppCurrency {
+  return activeDisplayCurrency;
+}
+
 /** Adaptive decimals for equities and micro-priced crypto */
 export function formatAssetPrice(price: number, withSymbol = false): string {
-  if (!Number.isFinite(price)) return withSymbol ? "$—" : "—";
+  const currency = activeDisplayCurrency;
+  if (!Number.isFinite(price)) {
+    return withSymbol ? `${currencySymbol(currency)}—` : "—";
+  }
 
-  const abs = Math.abs(price);
+  const converted = convertFromUsd(price, currency);
+  const abs = Math.abs(converted);
   let digits = 2;
-  if (abs > 0 && abs < 0.0001) digits = 8;
+  if (currency === "JPY") {
+    digits = 0;
+  } else if (abs > 0 && abs < 0.0001) digits = 8;
   else if (abs > 0 && abs < 0.01) digits = 6;
   else if (abs > 0 && abs < 1) digits = 4;
   else if (abs >= 1000) digits = 2;
 
   const formatted = abs.toLocaleString("en-US", {
-    minimumFractionDigits: Math.min(2, digits),
+    minimumFractionDigits: currency === "JPY" ? 0 : Math.min(2, digits),
     maximumFractionDigits: digits,
   });
 
-  const signed = price < 0 ? `-${formatted}` : formatted;
-  return withSymbol ? `$${signed}` : signed;
+  const signed = converted < 0 ? `-${formatted}` : formatted;
+  return withSymbol ? `${currencySymbol(currency)}${signed}` : signed;
 }
 
 export function formatAssetChange(change: number): string {

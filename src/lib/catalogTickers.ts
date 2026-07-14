@@ -29,6 +29,28 @@ function isBrowsableCompanyTicker(ticker: string): boolean {
   return /^[A-Z][A-Z0-9.-]{0,9}$/.test(upper);
 }
 
+/** Prefer these exchanges when building the default “most relevant” company order. */
+const PRIORITY_MARKET_ORDER: MarketFilter[] = [
+  "NASDAQ",
+  "NYSE",
+  "LSE",
+  "Euronext",
+  "XETRA",
+  "Nikkei",
+  "HKEX",
+  "TWSE",
+  "TSX",
+  "ASX",
+  "SGX",
+  "BSE",
+  "SSE",
+  "KRX",
+  "SIX",
+  "B3",
+  "BMV",
+  "TADAWUL",
+];
+
 /** Union of tickers already modeled across maps, movers, and market constituents */
 export function getBrowsableCompanyTickers(): string[] {
   const tickers = new Set<string>();
@@ -53,7 +75,38 @@ export function getBrowsableCompanyTickers(): string[] {
     if (isBrowsableCompanyTicker(symbol)) tickers.add(symbol);
   }
 
-  return [...tickers].sort((a, b) => a.localeCompare(b));
+  // Most relevant first: top movers → flagship constituents by major market → A–Z rest
+  const ordered: string[] = [];
+  const seen = new Set<string>();
+  const push = (ticker: string) => {
+    const upper = ticker.toUpperCase();
+    if (!tickers.has(upper) || seen.has(upper)) return;
+    seen.add(upper);
+    ordered.push(upper);
+  };
+
+  for (const mover of TOP_MOVERS.active) push(mover.ticker);
+  for (const mover of TOP_MOVERS.gainers) push(mover.ticker);
+  for (const mover of TOP_MOVERS.losers) push(mover.ticker);
+
+  for (const marketId of PRIORITY_MARKET_ORDER) {
+    for (const constituent of getMarketProfile(marketId).constituents) {
+      push(constituent);
+    }
+  }
+
+  for (const marketId of MARKET_FILTERS) {
+    if ((PRIORITY_MARKET_ORDER as readonly string[]).includes(marketId)) continue;
+    for (const constituent of getMarketProfile(marketId).constituents) {
+      push(constituent);
+    }
+  }
+
+  for (const ticker of [...tickers].sort((a, b) => a.localeCompare(b))) {
+    push(ticker);
+  }
+
+  return ordered;
 }
 
 /** Major global exchanges represented in the app catalog */
