@@ -1135,25 +1135,83 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
 @keyframes streak-flame-flicker {
   0%,
   100% {
-    transform: scale(1) translateY(0);
+    transform: scale(1, 1) translateY(0) rotate(0deg);
   }
-  35% {
-    transform: scale(1.04) translateY(-1px);
+  25% {
+    transform: scale(1.03, 1.06) translateY(-1.5px) rotate(-1.2deg);
+  }
+  50% {
+    transform: scale(0.98, 1.02) translateY(-0.5px) rotate(0.8deg);
+  }
+  75% {
+    transform: scale(1.02, 1.05) translateY(-1.8px) rotate(-0.6deg);
+  }
+}
+
+@keyframes streak-flame-layer-outer {
+  0%,
+  100% {
+    transform: scale(1, 1) translateY(0);
+  }
+  33% {
+    transform: scale(1.02, 1.04) translateY(-1px);
+  }
+  66% {
+    transform: scale(0.99, 1.01) translateY(0.4px);
+  }
+}
+
+@keyframes streak-flame-layer-mid {
+  0%,
+  100% {
+    transform: scale(1, 1) translate(0, 0);
+  }
+  40% {
+    transform: scale(1.04, 1.08) translate(0.4px, -1.6px);
   }
   70% {
-    transform: scale(0.98) translateY(0.5px);
+    transform: scale(0.97, 1.02) translate(-0.3px, -0.4px);
+  }
+}
+
+@keyframes streak-flame-layer-core {
+  0%,
+  100% {
+    transform: scale(1, 1) translateY(0);
+    opacity: 0.98;
+  }
+  50% {
+    transform: scale(1.08, 1.12) translateY(-1.2px);
+    opacity: 1;
   }
 }
 
 @keyframes streak-glow-pulse {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.4;
     transform: scale(1);
   }
   50% {
-    opacity: 0.75;
-    transform: scale(1.08);
+    opacity: 0.85;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes streak-ember-float {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(2px, -12px) scale(0.2);
   }
 }
 
@@ -1192,13 +1250,55 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
 }
 
 .streak-flame-animate {
-  animation: streak-flame-flicker 2.8s ease-in-out infinite;
-  transform-origin: center bottom;
+  animation: streak-flame-flicker 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  transform-origin: 50% 80%;
+  will-change: transform;
+}
+
+.streak-flame-layer-outer,
+.streak-flame-layer-mid,
+.streak-flame-layer-core {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+  will-change: transform, opacity;
+}
+
+.streak-flame-layer-outer {
+  animation: streak-flame-layer-outer 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.streak-flame-layer-mid {
+  animation: streak-flame-layer-mid 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+}
+
+.streak-flame-layer-core {
+  animation: streak-flame-layer-core 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
 }
 
 .streak-glow-pulse {
-  animation: streak-glow-pulse 2.4s ease-in-out infinite;
+  animation: streak-glow-pulse 2s ease-in-out infinite;
   transform-origin: center;
+  transform-box: fill-box;
+}
+
+.streak-ember {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.streak-ember-a {
+  animation: streak-ember-float 2.4s ease-out infinite;
+}
+
+.streak-ember-b {
+  animation: streak-ember-float 2.8s ease-out 0.7s infinite;
+}
+
+.streak-ember-c {
+  animation: streak-ember-float 2.2s ease-out 1.3s infinite;
 }
 
 .streak-day-complete {

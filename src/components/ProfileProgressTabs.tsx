@@ -84,7 +84,7 @@ export function ProfileProgressTabs({
 
         <div className="my-5 border-t border-[var(--pocket-border)]" />
 
-        <div className="flex items-start gap-4">
+        <div className="flex items-center gap-4">
           <div className="relative shrink-0 pf-level-badge-enter">
             <LevelHeroIcon
               uid={uid}
@@ -93,7 +93,7 @@ export function ProfileProgressTabs({
             />
           </div>
 
-          <div className="min-w-0 flex-1 pt-1">
+          <div className="min-w-0 flex-1">
             <p className="text-[34px] font-black leading-none tracking-tight text-pocket-text">
               Level {progression.level}
             </p>
