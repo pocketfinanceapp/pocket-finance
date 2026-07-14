@@ -34,8 +34,13 @@ export function AppGate({ children }: { children: React.ReactNode }) {
   const showSplash = !splashElapsed && (authLoading || !ready);
   const showAuth = !showSplash && !user && !isGuest;
   const onboardingDone =
-    onboardingComplete || (user ? isOnboardingComplete(user.id) : false);
-  const showOnboarding = !showSplash && Boolean(user) && !onboardingDone && !passwordRecoveryPending;
+    onboardingComplete ||
+    (user ? isOnboardingComplete(user.id) : isOnboardingComplete());
+  const showOnboarding =
+    !showSplash &&
+    (Boolean(user) || isGuest) &&
+    !onboardingDone &&
+    !passwordRecoveryPending;
   const appInteractive =
     !showSplash && !showAuth && !showOnboarding && !passwordRecoveryPending;
 

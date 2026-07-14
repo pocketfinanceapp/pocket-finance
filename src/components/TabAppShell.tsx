@@ -51,9 +51,12 @@ function TabPanels({
 
   const showAuth = !user && !isGuest;
   const onboardingDone =
-    onboardingComplete || (user ? isOnboardingComplete(user.id) : false);
+    onboardingComplete ||
+    (user ? isOnboardingComplete(user.id) : isOnboardingComplete());
   const showOnboarding =
-    Boolean(user) && !onboardingDone && !passwordRecoveryPending;
+    (Boolean(user) || isGuest) &&
+    !onboardingDone &&
+    !passwordRecoveryPending;
 
   const hideBottomNav =
     sidePanelOpen ||

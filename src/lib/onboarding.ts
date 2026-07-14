@@ -29,16 +29,22 @@ export function hasSavedOnboardingPreferences(): boolean {
   return false;
 }
 
+/**
+ * Complete only when markets/sectors were actually saved.
+ * A completion flag alone is not enough (avoids skipping personalization).
+ */
 export function isOnboardingComplete(userId?: string): boolean {
   if (typeof window === "undefined") return false;
   try {
-    if (localStorage.getItem(PF_ONBOARDING_COMPLETE_KEY) === "true") return true;
-    if (localStorage.getItem(storageKey(userId)) === "true") return true;
+    // Preferences are the source of truth for personalization.
     if (hasSavedOnboardingPreferences()) return true;
+
+    // Incomplete: flagged done but no prefs — treat as not complete.
+    void userId;
+    return false;
   } catch {
     return false;
   }
-  return false;
 }
 
 export function markOnboardingComplete(userId?: string): void {

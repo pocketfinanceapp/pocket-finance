@@ -193,7 +193,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (userId: string | null) => {
       if (!userId) {
         setAppUserId(null);
-        setOnboardingComplete(false);
+        const complete = isOnboardingComplete();
+        setOnboardingComplete(complete);
+        if (complete) {
+          setFollowedMarketsState(loadFollowedMarkets());
+          setSectorInterestsState(loadSectorInterests());
+        } else {
+          setFollowedMarketsState([]);
+          setSectorInterestsState([]);
+        }
         setSavedArticles([]);
         setWatchlistLoaded(false);
         setStoriesRead(0);
