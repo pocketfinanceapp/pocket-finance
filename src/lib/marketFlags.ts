@@ -1,32 +1,12 @@
-/** ISO 3166-1 alpha-2 (plus `eu`) codes that ship a PNG under /public/flags */
-const LOCAL_FLAG_ASSETS = new Set([
-  "au",
-  "us",
-  "gb",
-  "jp",
-  "hk",
-  "tw",
-  "ca",
-  "eu",
-  "sg",
-  "in",
-  "cn",
-  "kr",
-  "de",
-  "fr",
-  "br",
-  "ch",
-  "sa",
-  "mx",
-]);
-
-/** Self-hosted flag asset in /public/flags */
+/** Self-hosted flag asset in /public/flags/{code}.png (w160 from flagcdn). */
 export function getMarketFlagPath(countryCode: string): string {
   return `/flags/${countryCode.toLowerCase()}.png`;
 }
 
+/** True for ISO alpha-2 (and `eu`) — all catalog codes ship a PNG. */
 export function hasLocalFlagAsset(countryCode: string): boolean {
-  return LOCAL_FLAG_ASSETS.has(countryCode.toLowerCase());
+  const code = countryCode.toLowerCase();
+  return code === "eu" || /^[a-z]{2}$/.test(code);
 }
 
 /** @deprecated Use getMarketFlagPath — kept for any external references */

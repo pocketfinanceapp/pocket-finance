@@ -21,10 +21,10 @@ export function MarketFlag({
   rounded = "xl",
 }: MarketFlagProps) {
   const code = countryCode.toLowerCase();
-  const [imageFailed, setImageFailed] = useState(!hasLocalFlagAsset(code));
+  const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
-    setImageFailed(!hasLocalFlagAsset(code));
+    setImageFailed(false);
   }, [code]);
 
   const radius =
@@ -34,7 +34,7 @@ export function MarketFlag({
         ? "rounded-lg"
         : "rounded-md";
 
-  if (imageFailed) {
+  if (imageFailed || !hasLocalFlagAsset(code)) {
     const emoji = getMarketFlagEmoji(code);
     return (
       <div
