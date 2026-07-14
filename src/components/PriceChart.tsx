@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { useTheme } from "@/context/ThemeContext";
 import type { ChartPoint, ChartRange } from "@/lib/types";
+import { formatAssetPrice } from "@/lib/utils";
 
 const RANGES: ChartRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "MAX"];
 
@@ -117,11 +118,12 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
                 axisLine={false}
                 tickLine={false}
                 width={56}
-                tickFormatter={(v) =>
-                  v >= 1000
-                    ? `${Math.round(v / 1000)}k`
-                    : v.toLocaleString("en-US", { maximumFractionDigits: 0 })
-                }
+                tickFormatter={(v) => {
+                  if (Math.abs(v) >= 1000) {
+                    return `${(v / 1000).toFixed(Math.abs(v) >= 10_000 ? 0 : 1)}k`;
+                  }
+                  return formatAssetPrice(v);
+                }}
               />
               <Tooltip
                 contentStyle={{
@@ -131,7 +133,10 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
                   fontSize: 12,
                 }}
                 labelStyle={{ color: chartTheme.tooltipLabel }}
-                formatter={(value: number) => [`$${value.toFixed(2)}`, "Price"]}
+                formatter={(value: number) => [
+                  formatAssetPrice(value, true),
+                  "Price",
+                ]}
               />
               <Area
                 type="monotone"

@@ -6,7 +6,7 @@ import { pseudoRandom } from "@/lib/utils";
 export interface CompanyStatRow {
   label: string;
   value: string;
-  explanationKey?: keyof typeof STOCK_METRIC_EXPLANATIONS;
+  explanationKey: keyof typeof STOCK_METRIC_EXPLANATIONS;
 }
 
 const EMPLOYEE_COUNTS: Record<string, string> = {
@@ -123,40 +123,72 @@ export function buildCompanyStatColumns(
     `${Math.round(pseudoRandom(`${seed}-emp`, 4, 420))}K`;
 
   const columnOne: CompanyStatRow[] = [
-    { label: "Open", value: formatUsd(day.open) },
-    { label: "High", value: formatUsd(day.high) },
-    { label: "Low", value: formatUsd(day.low) },
+    { label: "Open", value: formatUsd(day.open), explanationKey: "Open" },
+    { label: "High", value: formatUsd(day.high), explanationKey: "High" },
+    { label: "Low", value: formatUsd(day.low), explanationKey: "Low" },
     {
       label: "Mkt. cap",
       value: stock.marketCap,
-      explanationKey: "Market Cap",
+      explanationKey: "Mkt. cap",
     },
-    { label: "Avg. vol.", value: formatCompact(avgVolume) },
-    { label: "Volume", value: formatCompact(day.volume) },
+    {
+      label: "Avg. vol.",
+      value: formatCompact(avgVolume),
+      explanationKey: "Avg. vol.",
+    },
+    {
+      label: "Volume",
+      value: formatCompact(day.volume),
+      explanationKey: "Volume",
+    },
   ];
 
   const columnTwo: CompanyStatRow[] = [
     {
       label: "Dividend",
       value: stock.dividendYield,
-      explanationKey: "Dividend Yield",
+      explanationKey: "Dividend",
     },
-    { label: "Quarterly dividend", value: quarterlyDividend },
-    { label: "Ex-dividend date", value: formatExDividendDate(seed) },
+    {
+      label: "Quarterly dividend",
+      value: quarterlyDividend,
+      explanationKey: "Quarterly dividend",
+    },
+    {
+      label: "Ex-dividend date",
+      value: formatExDividendDate(seed),
+      explanationKey: "Ex-dividend date",
+    },
     {
       label: "P/E ratio",
       value: stock.peRatio,
-      explanationKey: "P/E Ratio",
+      explanationKey: "P/E ratio",
     },
-    { label: "52-wk high", value: formatUsd(week52High) },
-    { label: "52-wk low", value: formatUsd(week52Low) },
+    {
+      label: "52-wk high",
+      value: formatUsd(week52High),
+      explanationKey: "52-wk high",
+    },
+    {
+      label: "52-wk low",
+      value: formatUsd(week52Low),
+      explanationKey: "52-wk low",
+    },
   ];
 
   const columnThree: CompanyStatRow[] = [
-    { label: "EPS", value: stock.eps, explanationKey: "EPS (TTM)" },
-    { label: "Beta", value: beta },
-    { label: "Shares outstanding", value: sharesOutstanding },
-    { label: "No. of employees", value: employees },
+    { label: "EPS", value: stock.eps, explanationKey: "EPS" },
+    { label: "Beta", value: beta, explanationKey: "Beta" },
+    {
+      label: "Shares outstanding",
+      value: sharesOutstanding,
+      explanationKey: "Shares outstanding",
+    },
+    {
+      label: "No. of employees",
+      value: employees,
+      explanationKey: "No. of employees",
+    },
   ];
 
   return [columnOne, columnTwo, columnThree];

@@ -25,6 +25,8 @@ import {
 } from "@/lib/markets";
 import { getStockProfile } from "@/lib/stockData";
 import { fetchStockQuote } from "@/lib/stockQuoteClient";
+import { isUsListedStockTicker } from "@/lib/usStockTickers";
+import { formatAssetPrice } from "@/lib/utils";
 import type { NewsArticle } from "@/lib/types";
 import {
   loadFavouriteTopics,
@@ -55,17 +57,6 @@ interface DiscoverPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
 }
 
-function formatPrice(price: number): string {
-  if (price >= 1000) {
-    return price.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  }
-  if (price >= 1) return price.toFixed(2);
-  return price.toFixed(4);
-}
-
 function useLiveQuote(ticker: string) {
   const profile = useMemo(() => getStockProfile(ticker), [ticker]);
   const [livePrice, setLivePrice] = useState<number | null>(null);
@@ -73,6 +64,11 @@ function useLiveQuote(ticker: string) {
 
   useEffect(() => {
     let cancelled = false;
+    if (!isUsListedStockTicker(ticker)) {
+      setLivePrice(null);
+      setLiveChangePct(null);
+      return;
+    }
 
     void fetchStockQuote(ticker).then((quote) => {
       if (cancelled || !quote) return;
@@ -146,7 +142,7 @@ function CompanyCard({
       </div>
 
       <p className="mt-2 text-[13px] font-semibold text-pocket-text">
-        ${formatPrice(quote.price)}
+        {formatAssetPrice(quote.price, true)}
       </p>
     </button>
   );

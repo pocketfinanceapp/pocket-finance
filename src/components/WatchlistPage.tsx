@@ -23,7 +23,7 @@ import {
 import { getStockProfile } from "@/lib/stockData";
 import { getTickerMetaBySymbol, resolveSavedTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
+import { formatAssetPrice, timeAgo } from "@/lib/utils";
 import { shouldShowWatchlistPrice } from "@/lib/usStockTickers";
 import {
   articleFromSavedEntry,
@@ -209,7 +209,7 @@ function AssetRow({
         {stock && showPrice && (
           <div className="shrink-0 text-right">
             <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
-              ${stock.price.toFixed(2)}
+              {formatAssetPrice(stock.price, true)}
             </p>
             <p
               className={`text-[12px] font-medium tabular-nums ${

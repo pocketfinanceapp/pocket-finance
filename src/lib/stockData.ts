@@ -9,7 +9,7 @@ import {
   getKnownTickerSymbols,
   getTickerMetaBySymbol,
 } from "./tickerMap";
-import { pseudoRandom } from "./utils";
+import { pseudoRandom, roundPrice } from "./utils";
 
 function generateChart(
   seed: string,
@@ -23,12 +23,12 @@ function generateChart(
     const price = basePrice * (1 + pct);
     data.push({
       time: labels[i] ?? `${i}`,
-      price: Math.round(price * 100) / 100,
+      price: roundPrice(price),
     });
   }
   data[data.length - 1] = {
     time: labels[labels.length - 1] ?? "Now",
-    price: Math.round(basePrice * 100) / 100,
+    price: roundPrice(basePrice),
   };
   return data;
 }

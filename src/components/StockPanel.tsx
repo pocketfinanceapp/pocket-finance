@@ -35,7 +35,7 @@ import {
 import { markFirstStockViewed } from "@/lib/achievements";
 import { recordActivityEvent } from "@/lib/progression";
 import { buildCompanyStatColumns, type CompanyStatRow } from "@/lib/companyStats";
-import { formatDate, readTime } from "@/lib/utils";
+import { formatAssetChange, formatAssetPrice, formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { FadeInSection } from "./SubPageShell";
 import { FinancialTermPopup } from "./FinancialTermPopup";
@@ -70,7 +70,7 @@ function getStockPanelBottomClearance(
 interface MetricItem {
   label: string;
   value: string;
-  explanationKey?: keyof typeof STOCK_METRIC_EXPLANATIONS;
+  explanationKey: keyof typeof STOCK_METRIC_EXPLANATIONS;
 }
 
 function buildMetrics(ticker: string, stock: NonNullable<ReturnType<typeof getStockProfile>>): MetricItem[] {
@@ -83,10 +83,10 @@ function buildMetrics(ticker: string, stock: NonNullable<ReturnType<typeof getSt
         value: stock.circulatingSupply ?? "—",
         explanationKey: "Circulating Supply",
       },
-      { label: "Total Supply", value: stock.totalSupply ?? "—" },
-      { label: "FDV", value: stock.fdv ?? "—" },
-      { label: "All-Time High", value: stock.allTimeHigh ?? "—" },
-      { label: "All-Time Low", value: stock.allTimeLow ?? "—" },
+      { label: "Total Supply", value: stock.totalSupply ?? "—", explanationKey: "Total Supply" },
+      { label: "FDV", value: stock.fdv ?? "—", explanationKey: "FDV" },
+      { label: "All-Time High", value: stock.allTimeHigh ?? "—", explanationKey: "All-Time High" },
+      { label: "All-Time Low", value: stock.allTimeLow ?? "—", explanationKey: "All-Time Low" },
     ];
   }
 
@@ -353,10 +353,7 @@ export function StockPanel({
                 <section className="mt-4 shrink-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-[2rem] font-bold leading-none tracking-tight">
-                      {displayPrice.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{" "}
+                      {formatAssetPrice(displayPrice)}{" "}
                       <span className="text-base font-normal text-zinc-500">
                         USD
                       </span>
@@ -377,14 +374,14 @@ export function StockPanel({
                       isUp ? "text-pocket-green" : "text-pocket-red"
                     }`}
                   >
-                    {isUp ? "▲" : "▼"} {Math.abs(displayChange).toFixed(2)} (
+                    {isUp ? "▲" : "▼"} {formatAssetChange(displayChange)} (
                     {Math.abs(displayChangePercent).toFixed(2)}%) Today
                   </p>
                 </section>
 
                 <div className="mt-7">
                   <PriceChart
-                    key={`${ticker}-${chartRange}-${Math.round(chartBasePrice)}`}
+                    key={`${ticker}-${chartRange}-${chartBasePrice}`}
                     data={chartPoints}
                     range={chartRange}
                     onRangeChange={setChartRange}
@@ -406,13 +403,10 @@ export function StockPanel({
                           key={metric.label}
                           label={metric.label}
                           value={metric.value}
-                          onInfoClick={
-                            metric.explanationKey
-                              ? () =>
-                                  setActiveMetric(
-                                    STOCK_METRIC_EXPLANATIONS[metric.explanationKey!]
-                                  )
-                              : undefined
+                          onInfoClick={() =>
+                            setActiveMetric(
+                              STOCK_METRIC_EXPLANATIONS[metric.explanationKey]
+                            )
                           }
                         />
                       ))}
@@ -526,7 +520,7 @@ function AssetList({
                 <p className="text-xs text-pocket-muted">{asset.name}</p>
               </div>
               <div className="ml-auto text-right">
-                <p className="font-semibold">{asset.price.toFixed(2)}</p>
+                <p className="font-semibold">{formatAssetPrice(asset.price)}</p>
                 <p
                   className={`text-xs font-medium ${
                     asset.changePercent >= 0
@@ -754,11 +748,7 @@ function CompanyStatsGrid({
           key={row.label}
           label={row.label}
           value={row.value}
-          onInfoClick={
-            row.explanationKey
-              ? () => onInfoClick(row.explanationKey!)
-              : undefined
-          }
+          onInfoClick={() => onInfoClick(row.explanationKey)}
         />
       ))}
     </div>
@@ -772,7 +762,7 @@ function Stat({
 }: {
   label: string;
   value: string;
-  onInfoClick?: () => void;
+  onInfoClick: () => void;
 }) {
   return (
     <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3.5">
@@ -780,24 +770,22 @@ function Stat({
         <p className="text-[11px] font-semibold uppercase tracking-wide text-pocket-muted">
           {label}
         </p>
-        {onInfoClick && (
-          <button
-            type="button"
-            data-no-drag
-            data-interactive
-            onPointerDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              onInfoClick();
-            }}
-            className="flex h-4 w-4 items-center justify-center text-xs leading-none text-pocket-muted"
-            aria-label={`What is ${label}?`}
-            style={{ touchAction: "manipulation" }}
-          >
-            ⓘ
-          </button>
-        )}
+        <button
+          type="button"
+          data-no-drag
+          data-interactive
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfoClick();
+          }}
+          className="flex h-4 w-4 items-center justify-center text-xs leading-none text-pocket-muted"
+          aria-label={`What is ${label}?`}
+          style={{ touchAction: "manipulation" }}
+        >
+          ⓘ
+        </button>
       </div>
       <p className="mt-2 text-[1.125rem] font-bold leading-tight text-pocket-text">
         {value}

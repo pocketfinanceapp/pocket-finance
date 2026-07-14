@@ -4,6 +4,44 @@ export function formatCount(n: number): string {
   return String(n);
 }
 
+/** Adaptive decimals for equities and micro-priced crypto */
+export function formatAssetPrice(price: number, withSymbol = false): string {
+  if (!Number.isFinite(price)) return withSymbol ? "$—" : "—";
+
+  const abs = Math.abs(price);
+  let digits = 2;
+  if (abs > 0 && abs < 0.0001) digits = 8;
+  else if (abs > 0 && abs < 0.01) digits = 6;
+  else if (abs > 0 && abs < 1) digits = 4;
+  else if (abs >= 1000) digits = 2;
+
+  const formatted = abs.toLocaleString("en-US", {
+    minimumFractionDigits: Math.min(2, digits),
+    maximumFractionDigits: digits,
+  });
+
+  const signed = price < 0 ? `-${formatted}` : formatted;
+  return withSymbol ? `$${signed}` : signed;
+}
+
+export function formatAssetChange(change: number): string {
+  if (!Number.isFinite(change)) return "—";
+  return formatAssetPrice(Math.abs(change));
+}
+
+/** Round prices without zeroing out micro crypto quotes */
+export function roundPrice(price: number): number {
+  if (!Number.isFinite(price)) return 0;
+  const abs = Math.abs(price);
+  let factor = 100;
+  if (abs > 0 && abs < 0.0001) factor = 1e10;
+  else if (abs > 0 && abs < 0.01) factor = 1e8;
+  else if (abs > 0 && abs < 1) factor = 1e6;
+  else if (abs < 100) factor = 100;
+  else factor = 100;
+  return Math.round(price * factor) / factor;
+}
+
 export function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
