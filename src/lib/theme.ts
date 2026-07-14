@@ -3,9 +3,9 @@ export type ThemePreference = "system" | AppTheme;
 
 export const THEME_STORAGE_KEY = "pf_theme_v1";
 
-export const DEFAULT_THEME_PREFERENCE: ThemePreference = "system";
+export const DEFAULT_THEME_PREFERENCE: ThemePreference = "dark";
 
-export const THEME_ORDER: ThemePreference[] = ["system", "dark", "light"];
+export const THEME_ORDER: ThemePreference[] = ["dark", "light", "system"];
 
 export interface ThemeDefinition {
   id: ThemePreference;

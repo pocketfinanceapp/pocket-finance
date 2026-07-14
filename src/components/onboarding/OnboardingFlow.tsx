@@ -123,7 +123,9 @@ function StepDots({ total, current }: { total: number; current: number }) {
         <div
           key={i}
           className={`h-1 rounded-full transition-all duration-300 ${
-            i === current ? "w-6 bg-[#00C6C6]" : "w-1.5 bg-[var(--pocket-surface-hover)]"
+            i === current
+              ? "w-6 bg-[#00C6C6] onboarding-step-dot-active"
+              : "w-1.5 bg-[var(--pocket-surface-hover)]"
           }`}
         />
       ))}
@@ -182,11 +184,11 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-8 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4">
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <PocketMarkIcon
-            size={120}
-            glow="none"
-            className="onboarding-enter onboarding-enter-d1 mx-auto mb-10"
-          />
+          <div className="onboarding-enter onboarding-enter-d1 mx-auto mb-10">
+            <div className="onboarding-mark-float">
+              <PocketMarkIcon size={120} glow="none" />
+            </div>
+          </div>
 
           <h1 className="onboarding-enter onboarding-enter-d2 text-[34px] font-extrabold leading-tight tracking-tight text-pocket-text antialiased">
             Pocket Finance
@@ -237,35 +239,45 @@ function MarketsStep({
   onToggle: (m: MarketFilter) => void;
   onNext: () => void;
 }) {
+  const markets = ONBOARDING_MARKETS.map((id) => getMarketById(id)).filter(
+    Boolean
+  );
+
   return (
     <div className="flex flex-1 flex-col px-6 pb-10">
-      <h1 className="text-2xl font-bold tracking-tight">
+      <h1 className="onboarding-enter onboarding-enter-d1 text-2xl font-bold tracking-tight">
         Which markets do you follow?
       </h1>
-      <p className="mt-2 text-sm text-pocket-muted">
+      <p className="onboarding-enter onboarding-enter-d2 mt-2 text-sm text-pocket-muted">
         Pick a few — we&apos;ll personalise For You. You can change this later.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3">
-        {ONBOARDING_MARKETS.map((id) => {
-          const m = getMarketById(id);
+        {markets.map((m, index) => {
           if (!m) return null;
-          const active = selected.includes(id);
+          const active = selected.includes(m.id);
           return (
-            <SelectTile
-              key={id}
-              active={active}
-              onClick={() => onToggle(id)}
-              label={m.name}
-              sub={m.country}
-              flagCode={m.countryCode}
-            />
+            <div
+              key={m.id}
+              className="onboarding-stagger"
+              style={{ ["--ob-i" as string]: index }}
+            >
+              <SelectTile
+                active={active}
+                onClick={() => onToggle(m.id)}
+                label={m.name}
+                sub={m.country}
+                flagCode={m.countryCode}
+              />
+            </div>
           );
         })}
       </div>
       <div className="flex-1" />
-      <GradientButton onClick={onNext} disabled={selected.length === 0}>
-        Continue
-      </GradientButton>
+      <div className="onboarding-enter onboarding-enter-d5">
+        <GradientButton onClick={onNext} disabled={selected.length === 0}>
+          Continue
+        </GradientButton>
+      </div>
     </div>
   );
 }
@@ -281,30 +293,37 @@ function SectorsStep({
 }) {
   return (
     <div className="flex flex-1 flex-col px-6 pb-10">
-      <h1 className="text-2xl font-bold tracking-tight">
+      <h1 className="onboarding-enter onboarding-enter-d1 text-2xl font-bold tracking-tight">
         What sectors interest you?
       </h1>
-      <p className="mt-2 text-sm text-pocket-muted">
+      <p className="onboarding-enter onboarding-enter-d2 mt-2 text-sm text-pocket-muted">
         Optional focus areas for stories and Browse suggestions.
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3">
-        {SECTOR_FILTERS.map((sector) => {
+        {SECTOR_FILTERS.map((sector, index) => {
           const active = selected.includes(sector);
           return (
-            <SelectTile
+            <div
               key={sector}
-              active={active}
-              onClick={() => onToggle(sector)}
-              label={sector}
-              icon={SECTOR_ICONS[sector]}
-            />
+              className="onboarding-stagger"
+              style={{ ["--ob-i" as string]: index }}
+            >
+              <SelectTile
+                active={active}
+                onClick={() => onToggle(sector)}
+                label={sector}
+                icon={SECTOR_ICONS[sector]}
+              />
+            </div>
           );
         })}
       </div>
       <div className="flex-1" />
-      <GradientButton onClick={onNext}>
-        {selected.length === 0 ? "Skip for now" : "Continue"}
-      </GradientButton>
+      <div className="onboarding-enter onboarding-enter-d5">
+        <GradientButton onClick={onNext}>
+          {selected.length === 0 ? "Skip for now" : "Continue"}
+        </GradientButton>
+      </div>
     </div>
   );
 }
@@ -318,19 +337,38 @@ function ReadyStep({
   sectors: SectorFilter[];
   onFinish: () => void;
 }) {
+  const tips = [
+    {
+      title: "Pocket Briefing",
+      body: "AI snapshot inside each article",
+    },
+    {
+      title: "Browse",
+      body: "Companies, markets, and crypto",
+    },
+    {
+      title: "Profile",
+      body: "Streak, level, and achievements",
+    },
+  ] as const;
+
   return (
     <div className="flex flex-1 flex-col px-6 pb-10">
       <div className="pt-2 text-center">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#00C6C6]/15">
-          <Check className="h-7 w-7 text-[#00C6C6]" strokeWidth={2.75} />
+        <div className="onboarding-enter onboarding-enter-d1 mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#00C6C6]/15">
+          <span className="onboarding-soft-pulse inline-flex">
+            <Check className="h-7 w-7 text-[#00C6C6]" strokeWidth={2.75} />
+          </span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">You&apos;re set</h1>
-        <p className="mt-2 text-sm text-pocket-muted">
+        <h1 className="onboarding-enter onboarding-enter-d2 text-2xl font-bold tracking-tight">
+          You&apos;re set
+        </h1>
+        <p className="onboarding-enter onboarding-enter-d3 mt-2 text-sm text-pocket-muted">
           Your For You feed is ready. Here&apos;s what else to try.
         </p>
       </div>
 
-      <div className="mt-6 space-y-3 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4">
+      <div className="onboarding-enter onboarding-enter-d4 mt-6 space-y-3 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4">
         <SummaryBlock
           title="Markets"
           items={markets.map((id) => getMarketById(id)?.name ?? id)}
@@ -341,21 +379,12 @@ function ReadyStep({
       </div>
 
       <ul className="mt-5 space-y-3 px-0.5">
-        {[
-          {
-            title: "Pocket Briefing",
-            body: "AI snapshot inside each article",
-          },
-          {
-            title: "Browse",
-            body: "Companies, markets, and crypto",
-          },
-          {
-            title: "Profile",
-            body: "Streak, level, and achievements",
-          },
-        ].map((tip) => (
-          <li key={tip.title} className="flex gap-3">
+        {tips.map((tip, index) => (
+          <li
+            key={tip.title}
+            className="onboarding-stagger flex gap-3"
+            style={{ ["--ob-i" as string]: index + 2 }}
+          >
             <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pocket-teal" />
             <p className="text-[13px] leading-snug text-pocket-muted">
               <span className="font-semibold text-pocket-text">{tip.title}</span>
@@ -367,7 +396,9 @@ function ReadyStep({
       </ul>
 
       <div className="flex-1" />
-      <GradientButton onClick={onFinish}>Start reading</GradientButton>
+      <div className="onboarding-enter onboarding-enter-d6">
+        <GradientButton onClick={onFinish}>Start reading</GradientButton>
+      </div>
     </div>
   );
 }

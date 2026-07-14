@@ -971,15 +971,17 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
   opacity: 0.92;
 }
 
-/* Onboarding welcome — premium entrance & ambient motion */
+/* Onboarding — staggered entrance & looping ambient motion */
 @keyframes onboarding-enter {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(18px) scale(0.98);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -1034,25 +1036,107 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
   }
 }
 
+@keyframes onboarding-mark-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.035);
+  }
+}
+
+@keyframes onboarding-soft-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.88;
+  }
+}
+
+@keyframes onboarding-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes onboarding-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes onboarding-dot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 198, 198, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(0, 198, 198, 0);
+  }
+}
+
 .onboarding-enter {
-  animation: onboarding-enter 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: onboarding-enter 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   opacity: 0;
+  will-change: transform, opacity, filter;
 }
 
 .onboarding-enter-d1 {
-  animation-delay: 0.1s;
+  animation-delay: 0.08s;
 }
 .onboarding-enter-d2 {
-  animation-delay: 0.22s;
+  animation-delay: 0.2s;
 }
 .onboarding-enter-d3 {
   animation-delay: 0.34s;
 }
 .onboarding-enter-d4 {
-  animation-delay: 0.46s;
+  animation-delay: 0.48s;
 }
 .onboarding-enter-d5 {
-  animation-delay: 0.58s;
+  animation-delay: 0.62s;
+}
+.onboarding-enter-d6 {
+  animation-delay: 0.76s;
+}
+
+.onboarding-stagger {
+  opacity: 0;
+  animation: onboarding-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--ob-i, 0) * 65ms + 120ms);
+  will-change: transform, opacity, filter;
+}
+
+.onboarding-mark-float {
+  animation: onboarding-mark-breathe 4.8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.onboarding-soft-pulse {
+  animation: onboarding-soft-pulse 3.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.onboarding-sheet-enter {
+  animation: onboarding-sheet-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.onboarding-backdrop-enter {
+  animation: onboarding-backdrop-in 0.35s ease-out both;
 }
 
 .onboarding-ambient-orb {
@@ -1098,6 +1182,29 @@ html.app-route[data-theme="light"] :where(.overflow-y-auto.overscroll-contain:no
 
 .onboarding-cta-glow {
   animation: onboarding-cta-glow 3s ease-in-out infinite;
+}
+
+.onboarding-step-dot-active {
+  animation: onboarding-dot-pulse 2.4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-enter,
+  .onboarding-stagger,
+  .onboarding-mark-float,
+  .onboarding-soft-pulse,
+  .onboarding-sheet-enter,
+  .onboarding-backdrop-enter,
+  .onboarding-ambient-orb-a,
+  .onboarding-ambient-orb-b,
+  .onboarding-particle,
+  .onboarding-cta-glow,
+  .onboarding-step-dot-active {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
 }
 
 /* Feed onboarding — subtle shimmer border on active card */

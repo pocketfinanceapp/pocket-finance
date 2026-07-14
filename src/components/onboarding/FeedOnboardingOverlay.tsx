@@ -54,14 +54,14 @@ export function FeedOnboardingOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-10 sm:items-center sm:pb-10"
+      className="onboarding-backdrop-enter fixed inset-0 z-[200] flex items-end justify-center bg-black/55 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-10 sm:items-center sm:pb-10"
       role="dialog"
       aria-modal="true"
       aria-labelledby="feed-tour-title"
     >
-      <div className="w-full max-w-[380px] overflow-hidden rounded-[28px] border border-[var(--pocket-border)] bg-pocket-bg shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+      <div className="onboarding-sheet-enter w-full max-w-[380px] overflow-hidden rounded-[28px] border border-[var(--pocket-border)] bg-pocket-bg shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3 px-5 pt-5">
-          <div>
+          <div className="onboarding-enter onboarding-enter-d1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-pocket-teal">
               Quick tour
             </p>
@@ -75,25 +75,26 @@ export function FeedOnboardingOverlay() {
           <button
             type="button"
             onClick={dismiss}
-            className="shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold text-pocket-muted active:opacity-70"
+            className="onboarding-enter onboarding-enter-d1 shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold text-pocket-muted active:opacity-70"
           >
             Skip
           </button>
         </div>
 
-        <p className="mt-1.5 px-5 text-[13px] leading-relaxed text-pocket-muted">
+        <p className="onboarding-enter onboarding-enter-d2 mt-1.5 px-5 text-[13px] leading-relaxed text-pocket-muted">
           A few seconds so you get the best bits.
         </p>
 
         <ul className="mt-5 space-y-1 px-3 pb-2">
-          {TIPS.map((tip) => {
+          {TIPS.map((tip, index) => {
             const Icon = tip.icon;
             return (
               <li
                 key={tip.title}
-                className="flex gap-3 rounded-2xl px-2.5 py-2.5"
+                className="onboarding-stagger flex gap-3 rounded-2xl px-2.5 py-2.5"
+                style={{ ["--ob-i" as string]: index }}
               >
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3B6EF5]/15 to-[#00C6C6]/15 text-pocket-teal">
+                <span className="onboarding-soft-pulse mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3B6EF5]/15 to-[#00C6C6]/15 text-pocket-teal">
                   <Icon className="h-4 w-4" strokeWidth={2.25} />
                 </span>
                 <div className="min-w-0">
@@ -109,11 +110,11 @@ export function FeedOnboardingOverlay() {
           })}
         </ul>
 
-        <div className="border-t border-[var(--pocket-border)] px-5 py-4">
+        <div className="onboarding-enter onboarding-enter-d5 border-t border-[var(--pocket-border)] px-5 py-4">
           <button
             type="button"
             onClick={dismiss}
-            className="w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-3.5 text-[15px] font-bold text-white active:scale-[0.98]"
+            className="onboarding-cta-glow w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-3.5 text-[15px] font-bold text-white active:scale-[0.98]"
           >
             Got it
           </button>
