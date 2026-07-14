@@ -113,9 +113,6 @@ export function FeedCard({
   const useSoftOverlay = hasHeroImage && isDarkImage;
   const iconClass =
     "pf-feed-rail-icon h-[26px] w-[26px] opacity-100";
-  const hotHeadline =
-    showTrendingLabel || likeCount + commentCount >= 35;
-
   useEffect(() => {
     setImageFailed(false);
     setIsDarkImage(false);
@@ -476,12 +473,9 @@ export function FeedCard({
             )}
           </div>
 
-          <div className="mt-2 flex items-start gap-2">
-            {hotHeadline && <FireSparkIcon className="mt-1 h-4 w-4 shrink-0" />}
-            <h1 className="pf-feed-headline line-clamp-3 text-[1.42rem] font-bold leading-[1.16] tracking-tight sm:text-[1.5rem]">
-              {cleanArticleTitle(article.headline)}
-            </h1>
-          </div>
+          <h1 className="pf-feed-headline mt-2 line-clamp-3 text-[1.42rem] font-bold leading-[1.16] tracking-tight sm:text-[1.5rem]">
+            {cleanArticleTitle(article.headline)}
+          </h1>
 
           {contextLine ? (
             <p className="pf-feed-subline mt-2 line-clamp-2 text-[13px] leading-snug">

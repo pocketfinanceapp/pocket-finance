@@ -42,10 +42,10 @@ import {
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
-import { BrowseAssetTabs } from "./BrowseAssetTabs";
 import { MarketFlag } from "./MarketFlag";
 import { MarketPanel } from "./MarketPanel";
 import { MarketSparkline } from "./MarketSparkline";
+import { SectionTabs } from "./SectionTabs";
 
 type BrowseAssetTab = "companies" | "markets" | "crypto";
 
@@ -383,8 +383,16 @@ export function DiscoverPage({
           Explore companies, markets, and crypto
         </p>
 
-        <div className="mt-5" style={tabEnterStyle(tabEntered, 60)}>
-          <BrowseAssetTabs active={assetTab} onChange={setAssetTab} />
+        <div className="-mx-4 mt-4" style={tabEnterStyle(tabEntered, 60)}>
+          <SectionTabs
+            tabs={[
+              { id: "companies", label: "Companies" },
+              { id: "markets", label: "Markets" },
+              { id: "crypto", label: "Crypto" },
+            ]}
+            active={assetTab}
+            onChange={setAssetTab}
+          />
         </div>
 
         <div className="relative mt-4" style={tabEnterStyle(tabEntered, 80)}>
