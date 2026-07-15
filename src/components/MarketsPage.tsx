@@ -262,7 +262,7 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
               type="button"
               data-no-drag
               onClick={() => setSearchQuery("")}
-              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-pocket-muted transition-colors duration-300 active:text-pocket-text"
+              className="absolute right-1.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-pocket-muted transition-colors duration-300 active:text-pocket-text"
               aria-label="Clear search"
             >
               <X className="h-4 w-4" />

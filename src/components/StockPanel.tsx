@@ -241,13 +241,13 @@ export function StockPanel({
   const toggleSave = async () => {
     if (saved) {
       const ok = await unsaveArticle(article.id);
-      setToast(ok ? "Removed from watchlist" : "Could not remove");
+      setToast(ok ? "Removed from Saved" : "Could not remove");
     } else {
       const ok = await saveArticle(article);
       if (ok) {
         recordActivityEvent("stock_watchlisted", ticker, { ticker });
       }
-      setToast(ok ? "Added to watchlist" : "Could not save");
+      setToast(ok ? "Saved" : "Could not save");
     }
     setTimeout(() => setToast(null), 1500);
   };
@@ -282,11 +282,15 @@ export function StockPanel({
                 onPointerDown={stop}
                 onClick={toggleSave}
                 className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
-                aria-label={saved ? "Remove from watchlist" : "Save to watchlist"}
+                aria-label={saved ? "Remove from Saved" : "Save article"}
                 style={{ touchAction: "manipulation" }}
               >
                 <Bookmark
-                  className={`h-6 w-6 ${saved ? "fill-white text-white" : "text-white"}`}
+                  className={`h-6 w-6 ${
+                    saved
+                      ? "fill-pocket-teal text-pocket-teal"
+                      : "text-pocket-text"
+                  }`}
                 />
               </button>
               <button
@@ -327,7 +331,7 @@ export function StockPanel({
                 onPointerDown={stop}
                 onClick={() => setActiveTab(tab)}
                 className={`relative flex-1 pb-2.5 pt-1 text-center text-sm font-medium ${
-                  activeTab === tab ? "text-white" : "text-zinc-500"
+                  activeTab === tab ? "text-pocket-text" : "text-pocket-muted"
                 }`}
               >
                 {tab}
@@ -361,16 +365,16 @@ export function StockPanel({
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-[2rem] font-bold leading-none tracking-tight">
                       {formatAssetPrice(displayPrice)}{" "}
-                      <span className="text-base font-normal text-zinc-500">
+                      <span className="text-base font-normal text-pocket-muted">
                         {preferredCurrency}
                       </span>
                     </p>
                     {hasMassiveQuote && (
                       <div className="flex flex-col gap-0.5">
-                        <span className="w-fit rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        <span className="w-fit rounded-full bg-[var(--pocket-surface-hover)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pocket-muted">
                           Delayed
                         </span>
-                        <span className="text-[10px] text-zinc-500">
+                        <span className="text-[10px] text-pocket-muted">
                           Prices delayed 15min
                         </span>
                       </div>
@@ -436,14 +440,14 @@ export function StockPanel({
             ) : activeTab === "News" ? (
               <RelatedNewsList articles={relatedNews} />
             ) : (
-              <div className="flex h-48 items-center justify-center text-zinc-500">
-                <p className="text-sm">{activeTab} — coming soon</p>
+              <div className="flex h-48 items-center justify-center text-pocket-muted">
+                <p className="text-sm">{activeTab} details aren&apos;t available yet</p>
               </div>
             )}
           </>
         ) : (
-          <div className="flex h-48 items-center justify-center text-zinc-500">
-            <p className="text-sm">Overview — coming soon</p>
+          <div className="flex h-48 items-center justify-center text-pocket-muted">
+            <p className="text-sm">Market data isn&apos;t available for this view</p>
           </div>
         )}
         <div
@@ -480,7 +484,7 @@ function StockIdentityHeader({
   return (
     <div className={className}>
       <h1 className="text-[1.625rem] font-bold tracking-tight">{title}</h1>
-      <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p>
+      <p className="mt-0.5 text-sm text-pocket-muted">{subtitle}</p>
     </div>
   );
 }

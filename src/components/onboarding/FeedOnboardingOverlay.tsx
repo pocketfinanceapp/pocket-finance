@@ -94,7 +94,7 @@ export function FeedOnboardingOverlay() {
           <button
             type="button"
             onClick={dismiss}
-            className="onboarding-enter onboarding-enter-d1 shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold text-pocket-muted active:opacity-70"
+            className="onboarding-enter onboarding-enter-d1 flex h-11 min-w-11 shrink-0 items-center justify-center rounded-full px-3 text-[13px] font-semibold text-pocket-muted active:opacity-70"
           >
             Skip
           </button>

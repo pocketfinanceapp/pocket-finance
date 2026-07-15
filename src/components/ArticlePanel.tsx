@@ -87,11 +87,13 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           onPointerDown={stop}
           onClick={() => void toggleSave()}
           className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
-          aria-label={saved ? "Remove bookmark" : "Save article"}
+          aria-label={saved ? "Remove from Saved" : "Save article"}
           style={{ touchAction: "manipulation" }}
         >
           <Bookmark
-            className={`h-5 w-5 ${saved ? "fill-white text-white" : ""}`}
+            className={`h-5 w-5 ${
+              saved ? "fill-pocket-teal text-pocket-teal" : "text-pocket-text"
+            }`}
           />
         </button>
       </header>
@@ -102,18 +104,18 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
       >
         <div className="flex flex-wrap items-center gap-2">
           <MarketBadge market={article.market} />
-          <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] font-bold text-[#00C6C6]">
+          <span className="rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-2.5 py-1 text-[11px] font-bold text-[#00C6C6]">
             {article.ticker}
           </span>
-          <span className="text-[12px] text-zinc-500">{article.companyName}</span>
+          <span className="text-[12px] text-pocket-muted">{article.companyName}</span>
         </div>
 
-        <h1 className="mt-3 text-[1.75rem] font-bold leading-[1.2] tracking-tight">
+        <h1 className="mt-3 text-[1.75rem] font-bold leading-[1.2] tracking-tight text-pocket-text">
           {article.headline}
         </h1>
 
         {displaySubheading ? (
-          <p className="mt-2 text-[15px] leading-snug text-zinc-400">
+          <p className="mt-2 text-[15px] leading-snug text-pocket-muted">
             {displaySubheading}
           </p>
         ) : null}
@@ -136,7 +138,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
             {article.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-1.5 text-sm font-medium text-zinc-300"
+                className="rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-3.5 py-1.5 text-sm font-medium text-pocket-text"
               >
                 {tag}
               </span>

@@ -32,7 +32,7 @@ function BriefingSkeleton() {
 function BriefingReport({ briefing }: { briefing: PocketBriefing }) {
   return (
     <div className="space-y-3.5">
-      <p className="text-[14px] font-medium leading-[1.55] text-zinc-100">
+      <p className="text-[14px] font-medium leading-[1.55] text-pocket-text">
         {briefing.lede}
       </p>
 
@@ -45,7 +45,7 @@ function BriefingReport({ briefing }: { briefing: PocketBriefing }) {
             {section.paragraphs.map((paragraph) => (
               <p
                 key={paragraph}
-                className="text-[13px] leading-[1.6] text-zinc-300"
+                className="text-[13px] leading-[1.6] text-pocket-muted"
               >
                 {paragraph}
               </p>
@@ -58,7 +58,7 @@ function BriefingReport({ briefing }: { briefing: PocketBriefing }) {
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#00C6C6]">
           Takeaway
         </p>
-        <p className="mt-1 text-[13px] font-medium leading-[1.5] text-zinc-100">
+        <p className="mt-1 text-[13px] font-medium leading-[1.5] text-pocket-text">
           {briefing.takeaway}
         </p>
       </div>
@@ -187,7 +187,7 @@ export function ArticleAISummary({ article }: ArticleAISummaryProps) {
         <span className="inline-block rounded-full bg-[#00C6C6]/10 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6]">
           Pocket Briefing
         </span>
-        <span className="text-[10px] text-zinc-500">AI summary</span>
+        <span className="text-[10px] text-pocket-muted">AI summary</span>
       </div>
 
       <div className="mt-3">

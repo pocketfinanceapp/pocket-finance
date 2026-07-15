@@ -344,7 +344,7 @@ function EmptySavedState() {
       </div>
       <p className="text-[15px] font-semibold text-pocket-text">No saved articles yet</p>
       <p className="mt-1.5 max-w-[260px] text-[13px] leading-relaxed text-pocket-muted">
-        Save articles from your feed or stock panels — they&apos;ll show up here
+        Save articles from the feed or a company panel — they&apos;ll show up here
       </p>
     </div>
   );

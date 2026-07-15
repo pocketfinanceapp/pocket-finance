@@ -81,7 +81,7 @@ export function ProfileArticlePreview({
   endIcon = "chevron",
 }: ProfileArticlePreviewProps) {
   const row = (
-    <div className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.04]">
+    <div className="flex items-center gap-3 px-4 py-3 active:bg-[var(--pocket-surface-hover)]">
       {/* Logo tile: only for known company tickers; else neutral editorial */}
       {ticker && isKnownTicker(ticker) ? (
         <div className="shrink-0 overflow-hidden rounded-xl">
@@ -94,31 +94,27 @@ export function ProfileArticlePreview({
         </div>
       ) : (
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-          style={{
-            backgroundColor: "rgba(18,22,50,0.90)",
-            border: "1px solid rgba(255,255,255,0.07)",
-          }}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-surface)]"
         >
-          <Newspaper className="h-5 w-5 text-zinc-600" />
+          <Newspaper className="h-5 w-5 text-pocket-muted" />
         </div>
       )}
 
       {/* Text */}
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white">
+        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-pocket-text">
           {title}
         </p>
-        <p className="mt-0.5 text-[11px] text-zinc-500">
+        <p className="mt-0.5 text-[11px] text-pocket-muted">
           {source} · {timestamp}
         </p>
       </div>
 
       {/* End icon */}
       {endIcon === "link" ? (
-        <ExternalLink className="h-4 w-4 shrink-0 text-zinc-600" />
+        <ExternalLink className="h-4 w-4 shrink-0 text-pocket-muted" />
       ) : (
-        <ChevronRight className="h-4 w-4 shrink-0 text-zinc-700" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" />
       )}
     </div>
   );

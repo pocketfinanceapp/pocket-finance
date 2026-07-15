@@ -24,6 +24,7 @@ import { useArticleLikes } from "@/hooks/useArticleLikes";
 import { useArticleCommentCount } from "@/hooks/useArticleCommentCount";
 import {
   hasSeenSwipeHintThisSession,
+  isFeedOnboardingComplete,
   markSwipeHintSeen,
 } from "@/lib/feedOnboarding";
 import { resolveFeedChip } from "@/lib/feedChip";
@@ -140,6 +141,8 @@ export function FeedCard({
       return;
     }
 
+    // Tour already teaches gestures; don't stack a second hint underneath it.
+    if (!isFeedOnboardingComplete()) return;
     if (hasSeenSwipeHintThisSession()) return;
 
     setShowSwipeHint(true);

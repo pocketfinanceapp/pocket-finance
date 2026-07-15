@@ -402,8 +402,8 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             />
           </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
-            <p className="text-lg font-semibold text-white">Track your market mastery</p>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+            <p className="text-lg font-semibold text-pocket-text">Track your market mastery</p>
+            <p className="mt-2 text-sm leading-relaxed text-pocket-muted">
               Sign in to earn XP, unlock achievements, and build your reading streak.
             </p>
             <button
@@ -893,10 +893,10 @@ function ProfileRootHeader({
         type="button"
         data-no-drag
         onClick={onSettings}
-        className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/[0.08]"
+        className="flex h-11 w-11 items-center justify-center rounded-full active:bg-[var(--pocket-surface-hover)]"
         aria-label="Settings"
       >
-        <Settings className="h-5 w-5 text-zinc-400" />
+        <Settings className="h-5 w-5 text-pocket-muted" />
       </button>
     </header>
   );
@@ -930,10 +930,10 @@ function QuickActionRow({
         <Icon className="h-[18px] w-[18px] text-[#8BA8FF]" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-semibold text-white">{title}</p>
-        <p className="mt-0.5 text-[12px] text-zinc-500">{subtitle}</p>
+        <p className="text-[14px] font-semibold text-pocket-text">{title}</p>
+        <p className="mt-0.5 text-[12px] text-pocket-muted">{subtitle}</p>
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-zinc-600" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-pocket-muted" />
     </button>
   );
 }
@@ -954,10 +954,10 @@ function LibraryGroup({
 
   return (
     <div className={CARD_STYLE}>
-      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-[var(--pocket-border)] px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <GroupIcon className="h-3.5 w-3.5 text-zinc-500" />
-          <p className="text-[13px] font-semibold text-white">{title}</p>
+          <GroupIcon className="h-3.5 w-3.5 text-pocket-muted" />
+          <p className="text-[13px] font-semibold text-pocket-text">{title}</p>
         </div>
         <button
           type="button"
@@ -968,7 +968,7 @@ function LibraryGroup({
           {action}
         </button>
       </div>
-      <div className="divide-y divide-white/[0.05]">{children}</div>
+      <div className="divide-y divide-[var(--pocket-border)]">{children}</div>
     </div>
   );
 }
@@ -984,7 +984,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <h3 className="text-[15px] font-bold text-white">{title}</h3>
+      <h3 className="text-[15px] font-bold text-pocket-text">{title}</h3>
       {action && (
         <button
           type="button"

@@ -132,7 +132,7 @@ export function FeedHeader({
         className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-1 px-3 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
-        <div className="h-10 w-10 shrink-0" aria-hidden />
+        <div className="h-11 w-11 shrink-0" aria-hidden />
         <nav
           ref={navRef}
           className="pf-feed-tab-bar relative flex items-end justify-center gap-6 px-2 pb-0.5 pt-1"
@@ -175,7 +175,7 @@ export function FeedHeader({
           data-no-drag
           onPointerDown={stop}
           onClick={onOpenSearch}
-          className={`relative flex h-10 w-10 items-center justify-center justify-self-end rounded-full active:scale-95 pf-feed-search-btn ${TAB_SHADOW}`}
+          className={`relative flex h-11 w-11 items-center justify-center justify-self-end rounded-full active:scale-95 pf-feed-search-btn ${TAB_SHADOW}`}
           aria-label="Search"
         >
           <FeedSearchIcon active={searchOpen} />
@@ -187,7 +187,7 @@ export function FeedHeader({
             type="button"
             onPointerDown={stop}
             onClick={clearFilters}
-            className={`max-w-full truncate rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-3 py-1.5 text-[12px] font-semibold text-pocket-text active:opacity-80 ${TAB_SHADOW}`}
+            className={`max-w-full truncate rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-3.5 py-2 text-[12px] font-semibold text-pocket-text active:opacity-80 ${TAB_SHADOW}`}
           >
             {filterLabels.join(" · ")}
             <span className="ml-1.5 text-pocket-muted">×</span>

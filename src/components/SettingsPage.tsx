@@ -13,10 +13,6 @@ import {
   Tag,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  loadNotificationsEnabled,
-  saveNotificationsEnabled,
-} from "@/lib/notificationPreferences";
 import { recordActivityEvent } from "@/lib/progression";
 import {
   fetchLikedArticles,
@@ -56,15 +52,10 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
   const [screen, setScreen] = useState<SettingsScreen>(initialScreen ?? "main");
   const [exiting, setExiting] = useState(false);
   const pageEntered = useTabEntered(true);
-  const [notificationsOn, setNotificationsOn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [likedArticles, setLikedArticles] = useState<LikedArticleEntry[]>([]);
   const [savedArticles, setSavedArticles] = useState<SavedArticleEntry[]>([]);
   const [loadingList, setLoadingList] = useState(false);
-
-  useEffect(() => {
-    setNotificationsOn(loadNotificationsEnabled());
-  }, []);
 
   const loadLiked = useCallback(async () => {
     if (!user?.id) return;
@@ -86,12 +77,6 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
     if (screen === "liked") void loadLiked();
     if (screen === "saved") void loadSaved();
   }, [screen, loadLiked, loadSaved]);
-
-  const handleNotificationsToggle = () => {
-    const next = !notificationsOn;
-    setNotificationsOn(next);
-    saveNotificationsEnabled(next);
-  };
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -142,7 +127,7 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
           <FadeInSection delayMs={80}>
           {screen === "topics" ? (
             <div className="pt-4">
-              <p className="mb-4 text-sm text-zinc-500">
+              <p className="mb-4 text-sm text-pocket-muted">
                 Choose topics to personalise your For You feed.
               </p>
               <MyTopicsSelector />
@@ -229,8 +214,10 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
         </SettingsSection>
 
         <SettingsSection title="Preferences">
-          <div className="border-b border-white/[0.06] px-4 py-4 last:border-b-0">
-            <p className="mb-3 text-[13px] font-medium text-white">Appearance</p>
+          <div className="border-b border-[var(--pocket-border)] px-4 py-4 last:border-b-0">
+            <p className="mb-3 text-[13px] font-medium text-pocket-text">
+              Appearance
+            </p>
             <ThemeSwitcher variant="picker" />
           </div>
           <SettingsRow
@@ -244,40 +231,27 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
             onClick={() => setScreen("feedPrefs")}
           />
           <SettingsRow
-            icon={<Tag className="h-5 w-5 text-zinc-400" />}
+            icon={<Tag className="h-5 w-5 text-pocket-muted" />}
             label="My Topics"
             onClick={() => setScreen("topics")}
           />
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3 last:border-b-0">
+          <div className="flex items-center justify-between border-b border-[var(--pocket-border)] px-4 py-3 last:border-b-0">
             <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-zinc-400" />
-              <span className="font-medium text-white">Notifications</span>
+              <Bell className="h-5 w-5 text-pocket-muted" />
+              <span className="font-medium text-pocket-text">Notifications</span>
             </div>
-            <button
-              type="button"
-              data-no-drag
-              role="switch"
-              aria-checked={notificationsOn}
-              onClick={handleNotificationsToggle}
-              className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-                notificationsOn ? "bg-[#00C6C6]" : "bg-zinc-700"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
-                  notificationsOn ? "left-[22px]" : "left-0.5"
-                }`}
-              />
-            </button>
+            <span className="rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-pocket-muted">
+              Soon
+            </span>
           </div>
         </SettingsSection>
 
         <SettingsSection title="Account">
-          <div className="border-b border-white/[0.06] px-4 py-3">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+          <div className="border-b border-[var(--pocket-border)] px-4 py-3">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-pocket-muted">
               Email
             </p>
-            <p className="mt-1 text-sm text-white">{user?.email ?? "—"}</p>
+            <p className="mt-1 text-sm text-pocket-text">{user?.email ?? "—"}</p>
           </div>
           <button
             type="button"
@@ -305,7 +279,7 @@ function SettingsSection({
 }) {
   return (
     <section className="mt-6">
-      <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+      <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-pocket-muted">
         {title}
       </h3>
       <div
@@ -331,13 +305,13 @@ function SettingsRow({
       type="button"
       data-no-drag
       onClick={onClick}
-      className="flex w-full items-center justify-between border-b border-white/[0.06] px-4 py-3 text-left last:border-b-0 active:bg-white/[0.06]"
+      className="flex w-full items-center justify-between border-b border-[var(--pocket-border)] px-4 py-3 text-left last:border-b-0 active:bg-[var(--pocket-surface-hover)]"
     >
       <div className="flex items-center gap-3">
         {icon}
-        <span className="font-medium text-white">{label}</span>
+        <span className="font-medium text-pocket-text">{label}</span>
       </div>
-      <ChevronRight className="h-5 w-5 text-zinc-500" />
+      <ChevronRight className="h-5 w-5 text-pocket-muted" />
     </button>
   );
 }
@@ -394,21 +368,21 @@ function ArticleList({
   countLabel?: string;
 }) {
   if (loading) {
-    return <p className="pt-6 text-center text-sm text-zinc-500">Loading…</p>;
+    return <p className="pt-6 text-center text-sm text-pocket-muted">Loading…</p>;
   }
 
   if (items.length === 0) {
     return (
-      <p className="pt-6 text-center text-sm text-zinc-600">{emptyMessage}</p>
+      <p className="pt-6 text-center text-sm text-pocket-muted">{emptyMessage}</p>
     );
   }
 
   return (
     <>
       {countLabel && (
-        <p className="px-1 pt-4 text-[13px] text-zinc-500">{countLabel}</p>
+        <p className="px-1 pt-4 text-[13px] text-pocket-muted">{countLabel}</p>
       )}
-      <ul className="mt-3 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+      <ul className="mt-3 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
         {items.map((item) => (
           <li key={item.id}>
             <a
@@ -416,7 +390,7 @@ function ArticleList({
               target="_blank"
               rel="noopener noreferrer"
               data-no-drag
-              className="flex items-center gap-3 px-4 py-3 active:bg-white/[0.04]"
+              className="flex items-center gap-3 px-4 py-3 active:bg-[var(--pocket-surface-hover)]"
               onClick={() =>
                 recordActivityEvent("article_opened", item.articleId, {
                   articleId: item.articleId,
@@ -442,16 +416,16 @@ function ArticleList({
                     border: "1px solid var(--pocket-border)",
                   }}
                 >
-                  <Newspaper className="h-5 w-5 text-zinc-600" />
+                  <Newspaper className="h-5 w-5 text-pocket-muted" />
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white">
+                <p className="line-clamp-2 text-[13px] font-medium leading-snug text-pocket-text">
                   {item.title}
                 </p>
-                <p className="mt-1 text-[11px] text-zinc-500">{item.meta}</p>
+                <p className="mt-1 text-[11px] text-pocket-muted">{item.meta}</p>
               </div>
-              <ExternalLink className="h-4 w-4 shrink-0 text-zinc-600" />
+              <ExternalLink className="h-4 w-4 shrink-0 text-pocket-muted" />
             </a>
           </li>
         ))}

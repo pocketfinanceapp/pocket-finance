@@ -57,7 +57,6 @@ export function MyTopicsSelector({ showCount, onTopicsChange, reloadKey }: MyTop
 
   const handleToggle = (topic: ProfileTopic) => {
     const next = toggleFavouriteTopic(topic);
-    console.log("[pf-topics] MyTopicsSelector toggled:", topic, "→", next);
     setTopics(next);
     onTopicsChange?.(next);
     setPulseTopic(topic);
@@ -67,7 +66,7 @@ export function MyTopicsSelector({ showCount, onTopicsChange, reloadKey }: MyTop
   return (
     <div>
       {showCount && (
-        <p className="mb-4 mt-1 text-[12px] font-semibold text-zinc-500">
+        <p className="mb-4 mt-1 text-[12px] font-semibold text-pocket-muted">
           {topics.length} selected
         </p>
       )}
