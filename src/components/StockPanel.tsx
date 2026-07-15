@@ -39,6 +39,7 @@ import { formatAssetChange, formatAssetPrice, formatDate, readTime } from "@/lib
 import { CompanyLogo } from "./CompanyLogo";
 import { FadeInSection } from "./SubPageShell";
 import { FinancialTermPopup } from "./FinancialTermPopup";
+import { MetricInfoButton } from "./MetricInfoButton";
 import { PriceChart } from "./PriceChart";
 import { SourceBadge } from "./SourceBadge";
 
@@ -772,26 +773,11 @@ function Stat({
 }) {
   return (
     <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3.5">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-pocket-muted">
           {label}
         </p>
-        <button
-          type="button"
-          data-no-drag
-          data-interactive
-          onPointerDown={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onInfoClick();
-          }}
-          className="flex h-4 w-4 items-center justify-center text-xs leading-none text-pocket-muted"
-          aria-label={`What is ${label}?`}
-          style={{ touchAction: "manipulation" }}
-        >
-          ⓘ
-        </button>
+        <MetricInfoButton label={label} onClick={onInfoClick} />
       </div>
       <p className="mt-2 text-[1.125rem] font-bold leading-tight text-pocket-text">
         {value}

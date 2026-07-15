@@ -23,6 +23,7 @@ import type { ChartRange } from "@/lib/types";
 import { CompanyLogo } from "./CompanyLogo";
 import { FinancialTermPopup } from "./FinancialTermPopup";
 import { MarketFlag } from "./MarketFlag";
+import { MetricInfoButton } from "./MetricInfoButton";
 import { MarketSparkline } from "./MarketSparkline";
 import { PriceChart } from "./PriceChart";
 
@@ -115,26 +116,11 @@ function Stat({
 }) {
   return (
     <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-3.5">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <p className="text-[11px] font-medium uppercase tracking-wide text-pocket-muted">
           {label}
         </p>
-        <button
-          type="button"
-          data-no-drag
-          data-interactive
-          onPointerDown={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onInfoClick();
-          }}
-          className="flex h-4 w-4 items-center justify-center text-xs leading-none text-pocket-muted"
-          aria-label={`What is ${label}?`}
-          style={{ touchAction: "manipulation" }}
-        >
-          ⓘ
-        </button>
+        <MetricInfoButton label={label} onClick={onInfoClick} />
       </div>
       <p className="mt-1.5 text-[15px] font-semibold text-pocket-text">{value}</p>
     </div>
@@ -314,24 +300,15 @@ function MarketPanelContent({
                   <p className="text-[10px] font-medium uppercase text-pocket-muted">
                     {stat.label}
                   </p>
-                  <button
-                    type="button"
-                    data-no-drag
-                    data-interactive
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
+                  <MetricInfoButton
+                    label={stat.label}
+                    size="sm"
+                    onClick={() =>
                       setActiveMetric(
                         STOCK_METRIC_EXPLANATIONS[stat.explanationKey]
-                      );
-                    }}
-                    className="flex h-3.5 w-3.5 items-center justify-center text-[10px] leading-none text-pocket-muted"
-                    aria-label={`What is ${stat.label}?`}
-                    style={{ touchAction: "manipulation" }}
-                  >
-                    ⓘ
-                  </button>
+                      )
+                    }
+                  />
                 </div>
                 <div className="mt-1.5 flex justify-center">
                   <ChangePill value={stat.getValue(detail)} />
