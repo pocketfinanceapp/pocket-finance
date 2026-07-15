@@ -14,9 +14,14 @@ import {
 } from "@/lib/marketProfiles";
 import { getChartPointsForPrice } from "@/lib/stockData";
 import { getStockProfile } from "@/lib/stockData";
+import {
+  STOCK_METRIC_EXPLANATIONS,
+  type StockMetricExplanation,
+} from "@/lib/stockMetricExplanations";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import type { ChartRange } from "@/lib/types";
 import { CompanyLogo } from "./CompanyLogo";
+import { FinancialTermPopup } from "./FinancialTermPopup";
 import { MarketFlag } from "./MarketFlag";
 import { MarketSparkline } from "./MarketSparkline";
 import { PriceChart } from "./PriceChart";
@@ -28,12 +33,109 @@ interface MarketPanelProps {
   onOpenCompany?: (ticker: string) => void;
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+type MarketMetricKey = keyof typeof STOCK_METRIC_EXPLANATIONS;
+
+const MARKET_STATS: {
+  label: string;
+  explanationKey: MarketMetricKey;
+  getValue: (detail: MarketDetail) => string;
+}[] = [
+  {
+    label: "Market cap",
+    explanationKey: "Market cap",
+    getValue: (d) => d.profile.marketCap,
+  },
+  {
+    label: "Listed companies",
+    explanationKey: "Listed companies",
+    getValue: (d) => d.profile.listedCompanies.toLocaleString(),
+  },
+  {
+    label: "Avg daily volume",
+    explanationKey: "Avg daily volume",
+    getValue: (d) => d.profile.avgDailyVolume,
+  },
+  {
+    label: "Region",
+    explanationKey: "Region",
+    getValue: (d) => d.regionLabel,
+  },
+  {
+    label: "52-week high",
+    explanationKey: "52-week high",
+    getValue: (d) => formatIndexValue(d.profile.yearHigh),
+  },
+  {
+    label: "52-week low",
+    explanationKey: "52-week low",
+    getValue: (d) => formatIndexValue(d.profile.yearLow),
+  },
+  {
+    label: "Trading hours",
+    explanationKey: "Trading hours",
+    getValue: (d) => d.profile.tradingHours,
+  },
+  {
+    label: "Time zone",
+    explanationKey: "Time zone",
+    getValue: (d) => d.profile.timeZone.replace(/_/g, " "),
+  },
+];
+
+const PERFORMANCE_STATS: {
+  label: string;
+  explanationKey: MarketMetricKey;
+  getValue: (detail: MarketDetail) => number;
+}[] = [
+  {
+    label: "1W",
+    explanationKey: "1W",
+    getValue: (d) => d.profile.weekChange,
+  },
+  {
+    label: "1M",
+    explanationKey: "1M",
+    getValue: (d) => d.profile.monthChange,
+  },
+  {
+    label: "YTD",
+    explanationKey: "YTD",
+    getValue: (d) => d.profile.ytdChange,
+  },
+];
+
+function Stat({
+  label,
+  value,
+  onInfoClick,
+}: {
+  label: string;
+  value: string;
+  onInfoClick: () => void;
+}) {
   return (
     <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-3.5">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-pocket-muted">
-        {label}
-      </p>
+      <div className="flex items-center gap-1">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-pocket-muted">
+          {label}
+        </p>
+        <button
+          type="button"
+          data-no-drag
+          data-interactive
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfoClick();
+          }}
+          className="flex h-4 w-4 items-center justify-center text-xs leading-none text-pocket-muted"
+          aria-label={`What is ${label}?`}
+          style={{ touchAction: "manipulation" }}
+        >
+          ⓘ
+        </button>
+      </div>
       <p className="mt-1.5 text-[15px] font-semibold text-pocket-text">{value}</p>
     </div>
   );
@@ -101,6 +203,9 @@ function MarketPanelContent({
   const isUp = detail.changePercent >= 0;
   const sessionOpen = isMarketSessionOpen(detail.id);
   const sparkline = getMarketSparkline(detail);
+  const [activeMetric, setActiveMetric] = useState<StockMetricExplanation | null>(
+    null
+  );
   const chartPoints = useMemo(
     () =>
       getChartPointsForPrice(
@@ -200,36 +305,53 @@ function MarketPanelContent({
             Performance
           </h2>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-3 text-center">
-              <p className="text-[10px] font-medium uppercase text-pocket-muted">1W</p>
-              <div className="mt-1.5 flex justify-center">
-                <ChangePill value={profile.weekChange} />
+            {PERFORMANCE_STATS.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-3 text-center"
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <p className="text-[10px] font-medium uppercase text-pocket-muted">
+                    {stat.label}
+                  </p>
+                  <button
+                    type="button"
+                    data-no-drag
+                    data-interactive
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMetric(
+                        STOCK_METRIC_EXPLANATIONS[stat.explanationKey]
+                      );
+                    }}
+                    className="flex h-3.5 w-3.5 items-center justify-center text-[10px] leading-none text-pocket-muted"
+                    aria-label={`What is ${stat.label}?`}
+                    style={{ touchAction: "manipulation" }}
+                  >
+                    ⓘ
+                  </button>
+                </div>
+                <div className="mt-1.5 flex justify-center">
+                  <ChangePill value={stat.getValue(detail)} />
+                </div>
               </div>
-            </div>
-            <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-3 text-center">
-              <p className="text-[10px] font-medium uppercase text-pocket-muted">1M</p>
-              <div className="mt-1.5 flex justify-center">
-                <ChangePill value={profile.monthChange} />
-              </div>
-            </div>
-            <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-3 text-center">
-              <p className="text-[10px] font-medium uppercase text-pocket-muted">YTD</p>
-              <div className="mt-1.5 flex justify-center">
-                <ChangePill value={profile.ytdChange} />
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
         <section className="mt-6 grid grid-cols-2 gap-3">
-          <Stat label="Market cap" value={profile.marketCap} />
-          <Stat label="Listed companies" value={profile.listedCompanies.toLocaleString()} />
-          <Stat label="Avg daily volume" value={profile.avgDailyVolume} />
-          <Stat label="Region" value={detail.regionLabel} />
-          <Stat label="52-week high" value={formatIndexValue(profile.yearHigh)} />
-          <Stat label="52-week low" value={formatIndexValue(profile.yearLow)} />
-          <Stat label="Trading hours" value={profile.tradingHours} />
-          <Stat label="Time zone" value={profile.timeZone.replace(/_/g, " ")} />
+          {MARKET_STATS.map((stat) => (
+            <Stat
+              key={stat.label}
+              label={stat.label}
+              value={stat.getValue(detail)}
+              onInfoClick={() =>
+                setActiveMetric(STOCK_METRIC_EXPLANATIONS[stat.explanationKey])
+              }
+            />
+          ))}
         </section>
 
         <section className="mt-6">
@@ -322,6 +444,11 @@ function MarketPanelContent({
           Market data is for informational purposes only and is not investment advice.
         </p>
       </div>
+
+      <FinancialTermPopup
+        term={activeMetric}
+        onClose={() => setActiveMetric(null)}
+      />
     </div>
   );
 }

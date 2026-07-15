@@ -266,6 +266,94 @@ export const STOCK_METRIC_EXPLANATIONS: Record<string, StockMetricExplanation> =
         tip: "Distance from ATL shows long-term recovery. New all-time lows after years of trading can be a stark confidence signal.",
       }
     ),
+
+    // Market / exchange panel metrics
+    "Market cap": entry(
+      "Market Cap",
+      "For a market or index, market cap is the combined value of listed companies — a snapshot of how large that exchange or universe is.",
+      {
+        formula: "Market Cap ≈ Sum of (Share Price × Shares) across listed companies",
+        tip: "Bigger market cap usually means a deeper, more liquid marketplace. It doesn’t tell you whether prices are cheap or expensive.",
+        rangeGuide:
+          "US megamarkets run into many trillions; regional exchanges are smaller but can still be highly active.",
+      }
+    ),
+    "Listed companies": entry(
+      "Listed Companies",
+      "How many companies (or securities) are officially listed and tradeable on this exchange or market universe.",
+      {
+        tip: "More listings can mean broader choice and sector coverage. Depth also depends on liquidity — not every listing trades actively every day.",
+      }
+    ),
+    "Avg daily volume": entry(
+      "Average Daily Volume",
+      "A typical day’s trading activity for this market — how much is usually bought and sold.",
+      {
+        formula: "Avg daily volume ≈ Typical shares (or value) traded per day",
+        tip: "Higher average volume generally means easier entry/exit and tighter spreads. Quiet markets can move more sharply on smaller orders.",
+      }
+    ),
+    Region: entry(
+      "Region",
+      "The geographic region this market belongs to — useful for time zones, local economic drivers, and currency context.",
+      {
+        tip: "Regional grouping helps you compare Asia vs Europe vs Americas sessions, and see where overnight moves may start.",
+      }
+    ),
+    "52-week high": entry(
+      "52-Week High",
+      "The highest index level over the past year. It marks the recent peak for this market benchmark.",
+      {
+        formula: "% below high ≈ (High − Index) ÷ High × 100",
+        tip: "Trading near the 52-week high can show broad market strength. Sitting far below it can signal a prolonged pullback.",
+      }
+    ),
+    "52-week low": entry(
+      "52-Week Low",
+      "The lowest index level over the past year. It shows how close the market is to its recent bottom.",
+      {
+        formula: "% above low ≈ (Index − Low) ÷ Low × 100",
+        tip: "A bounce from the 52-week low can mark recovery. New lows often mean sellers still dominate risk appetite.",
+      }
+    ),
+    "Trading hours": entry(
+      "Trading Hours",
+      "When the regular cash session for this market is open for trading, shown in local exchange time.",
+      {
+        tip: "Outside those hours, the main session is closed — futures or other venues may still trade, but the cash market isn’t in its normal session.",
+      }
+    ),
+    "Time zone": entry(
+      "Time Zone",
+      "The local time zone this market runs on — it defines when the session opens and closes for your day.",
+      {
+        tip: "Convert trading hours into your local clock so you know when earnings, opens, and closes line up with your day.",
+      }
+    ),
+    "1W": entry(
+      "1-Week Change",
+      "How much this market/index moved over roughly the last five trading days.",
+      {
+        formula: "1W % ≈ (Today − Price ~1 week ago) ÷ Price ~1 week ago × 100",
+        tip: "Short-term noise is common. Use 1W to spot recent momentum, then check 1M and YTD for the bigger trend.",
+      }
+    ),
+    "1M": entry(
+      "1-Month Change",
+      "How much this market/index moved over about the last month of trading.",
+      {
+        formula: "1M % ≈ (Today − Price ~1 month ago) ÷ Price ~1 month ago × 100",
+        tip: "1M smooths a bit of daily noise and is a good check on whether the recent week was a blip or a trend.",
+      }
+    ),
+    YTD: entry(
+      "Year-to-Date Change",
+      "How much this market/index has moved since the start of the calendar year.",
+      {
+        formula: "YTD % ≈ (Today − Year-start level) ÷ Year-start level × 100",
+        tip: "YTD is a common scorecard for the year so far. Compare across markets in the same region for context.",
+      }
+    ),
   };
 
 export function getStockMetricExplanation(
