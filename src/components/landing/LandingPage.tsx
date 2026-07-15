@@ -19,9 +19,9 @@ import {
   FeedCardPreview,
   ProgressCardPreview,
   StockCardPreview,
-} from "./FeatureCardPreviews";
-import { PhoneMockup } from "./PhoneMockup";
-import { SwipeGestureSection } from "./SwipeGestureSection";
+} from "./LandingFeatureDemos";
+import { LandingAppDemo } from "./LandingAppDemo";
+import { SwipeGestureSection } from "./LandingGestureDemo";
 
 const TRUST_CHIPS = [
   "Pocket Briefings",
@@ -187,7 +187,7 @@ export function LandingPage() {
                     "drop-shadow(0 0 60px rgba(0,198,198,0.18)) drop-shadow(0 24px 48px rgba(0,0,0,0.5))",
                 }}
               >
-                <PhoneMockup />
+                <LandingAppDemo />
               </div>
               <div className="mt-3 flex w-full max-w-[220px] justify-between gap-1.5 sm:mt-4 sm:max-w-[280px] sm:gap-2">
                 {SWIPE_LABELS.map(({ icon: Icon, label }) => (
