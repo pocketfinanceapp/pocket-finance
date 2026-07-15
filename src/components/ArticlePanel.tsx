@@ -75,7 +75,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           data-no-drag
           onPointerDown={stop}
           onClick={onBack}
-          className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+          className="flex h-11 w-11 items-center justify-center rounded-full active:bg-[var(--pocket-surface-hover)]"
           aria-label="Back"
           style={{ touchAction: "manipulation" }}
         >
@@ -86,7 +86,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
           data-no-drag
           onPointerDown={stop}
           onClick={() => void toggleSave()}
-          className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+          className="flex h-11 w-11 items-center justify-center rounded-full active:bg-[var(--pocket-surface-hover)]"
           aria-label={saved ? "Remove from Saved" : "Save article"}
           style={{ touchAction: "manipulation" }}
         >

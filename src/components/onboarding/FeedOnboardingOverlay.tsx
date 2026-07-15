@@ -27,7 +27,7 @@ const TIPS = [
   {
     icon: Building2,
     title: "Browse & Markets",
-    body: "Explore companies, markets, and crypto. Follow tickers into your watchlist.",
+    body: "Explore companies, markets, and crypto. Save stories to revisit later in Watchlist.",
   },
   {
     icon: Flame,

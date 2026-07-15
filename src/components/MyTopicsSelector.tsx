@@ -82,30 +82,15 @@ export function MyTopicsSelector({ showCount, onTopicsChange, reloadKey }: MyTop
               type="button"
               data-no-drag
               onClick={() => handleToggle(topic)}
-              className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] transition-colors duration-150 active:scale-[0.98] ${
+              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] transition-colors duration-150 active:scale-[0.98] ${
                 pulsing ? "scale-[0.97]" : ""
-              }`}
-              style={
+              } ${
                 selected
-                  ? {
-                      background:
-                        "linear-gradient(135deg, rgba(0,90,110,0.80), rgba(0,198,198,0.28))",
-                      border: "1px solid rgba(0,198,198,0.70)",
-                      boxShadow: "0 0 10px rgba(0,198,198,0.15)",
-                      color: "#ffffff",
-                      fontWeight: 600,
-                    }
-                  : {
-                      backgroundColor: "rgba(255,255,255,0.045)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      color: "rgba(161,161,170,1)", // zinc-400
-                      fontWeight: 500,
-                    }
-              }
+                  ? "border-[#00C6C6]/70 bg-[#00C6C6]/15 font-semibold text-pocket-text shadow-[0_0_10px_rgba(0,198,198,0.12)]"
+                  : "border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] font-medium text-pocket-muted"
+              }`}
             >
-              <span
-                style={{ opacity: selected ? 0.9 : 0.6 }}
-              >
+              <span className={selected ? "opacity-90" : "opacity-60"}>
                 {TOPIC_ICON[topic]}
               </span>
               {topic}
@@ -113,8 +98,7 @@ export function MyTopicsSelector({ showCount, onTopicsChange, reloadKey }: MyTop
                 <Check
                   size={10}
                   strokeWidth={3}
-                  className="ml-0.5 shrink-0"
-                  style={{ color: "rgba(0,198,198,1)" }}
+                  className="ml-0.5 shrink-0 text-[#00C6C6]"
                 />
               )}
             </button>

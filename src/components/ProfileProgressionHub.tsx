@@ -70,12 +70,12 @@ export function ProfileActivitySection({
             briefings · {weekly.xpEarned} XP earned
           </p>
         ) : (
-          <p className="mt-1.5 text-[13px] text-zinc-500">
+          <p className="mt-1.5 text-[13px] text-pocket-muted">
             Read a story to start tracking your week.
           </p>
         )}
         {isMaxLevel && (
-          <p className="mt-2 text-[11px] tabular-nums text-zinc-600">
+          <p className="mt-2 text-[11px] tabular-nums text-pocket-muted">
             {totalXP.toLocaleString()} lifetime XP
           </p>
         )}
@@ -99,9 +99,9 @@ export function ProfileDailyGoalSection({
 
   return (
     <section className={CARD} style={tabEnterStyle(animateIn, enterDelay)}>
-      <div className="border-b border-white/[0.06] px-4 py-3">
-        <h3 className="text-[14px] font-semibold text-white">Today&apos;s goal</h3>
-        <p className="mt-0.5 text-[12px] text-zinc-500">
+      <div className="border-b border-[var(--pocket-border)] px-4 py-3">
+        <h3 className="text-[14px] font-semibold text-pocket-text">Today&apos;s goal</h3>
+        <p className="mt-0.5 text-[12px] text-pocket-muted">
           {dailyGoal.isComplete
             ? `Nice work — +${DAILY_GOAL_XP_REWARD} XP earned`
             : `Complete all ${dailyGoal.totalTasks} tasks for +${DAILY_GOAL_XP_REWARD} XP`}
@@ -113,18 +113,18 @@ export function ProfileDailyGoalSection({
           <div
             className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
             style={{
-              background: `conic-gradient(#00C6C6 ${goalPct}%, rgba(255,255,255,0.08) 0)`,
+              background: `conic-gradient(#00C6C6 ${goalPct}%, color-mix(in srgb, var(--pocket-border) 80%, transparent) 0)`,
             }}
           >
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold tabular-nums text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold tabular-nums text-pocket-text"
               style={{ background: "var(--pocket-card-solid)" }}
             >
               {goalPct}%
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-semibold text-white">
+            <p className="text-[14px] font-semibold text-pocket-text">
               {dailyGoal.isComplete
                 ? "All done for today"
                 : `${dailyGoal.completedTasks} of ${dailyGoal.totalTasks} complete`}
@@ -195,14 +195,11 @@ function TaskRow({ task }: { task: DailyGoalTask }) {
           <Check className="h-2.5 w-2.5 text-black" strokeWidth={3} />
         </div>
       ) : (
-        <div
-          className="h-4 w-4 shrink-0 rounded-full"
-          style={{ border: "1.5px solid rgba(255,255,255,0.16)" }}
-        />
+        <div className="h-4 w-4 shrink-0 rounded-full border-[1.5px] border-[var(--pocket-border)]" />
       )}
-      <span className="flex-1 text-[12px] text-zinc-400">{task.label}</span>
+      <span className="flex-1 text-[12px] text-pocket-muted">{task.label}</span>
       <span className="text-[10px] font-medium text-[#00C6C6]/80">{xpLabel}</span>
-      <span className="text-[11px] tabular-nums text-zinc-600">
+      <span className="text-[11px] tabular-nums text-pocket-muted">
         {task.completed}/{task.required}
       </span>
     </div>

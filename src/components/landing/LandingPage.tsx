@@ -25,7 +25,7 @@ import { SwipeGestureSection } from "./SwipeGestureSection";
 
 const TRUST_CHIPS = [
   "Pocket Briefings",
-  "Personalized feed",
+  "Personalised feed",
   "Global markets",
   "Streaks & levels",
 ] as const;
@@ -83,7 +83,7 @@ const PILLARS = [
   },
   {
     icon: Target,
-    title: "Markets & sectors you follow",
+    title: "Markets & sectors you care about",
     description:
       "Personalise For You without hiding the bigger story. Change preferences anytime in Settings.",
   },
@@ -314,7 +314,7 @@ export function LandingPage() {
             Ready when you are.
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[#9ca3af] sm:text-base">
-            Jump into a personalized For You feed, explore Browse, and start
+            Jump into a personalised For You feed, explore Browse, and start
             your streak in under a minute.
           </p>
           <Link

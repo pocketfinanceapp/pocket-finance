@@ -269,7 +269,7 @@ export function StockPanel({
               data-no-drag
               onPointerDown={stop}
               onClick={onBack}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-white/10"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:bg-[var(--pocket-surface-hover)]"
               aria-label="Back"
               style={{ touchAction: "manipulation" }}
             >
@@ -281,7 +281,7 @@ export function StockPanel({
                 data-no-drag
                 onPointerDown={stop}
                 onClick={toggleSave}
-                className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+                className="flex h-11 w-11 items-center justify-center rounded-full active:bg-[var(--pocket-surface-hover)]"
                 aria-label={saved ? "Remove from Saved" : "Save article"}
                 style={{ touchAction: "manipulation" }}
               >
@@ -303,7 +303,7 @@ export function StockPanel({
                     url: article.sourceUrl,
                   });
                 }}
-                className="flex h-11 w-11 items-center justify-center rounded-full active:bg-white/10"
+                className="flex h-11 w-11 items-center justify-center rounded-full active:bg-[var(--pocket-surface-hover)]"
                 aria-label="Share"
                 style={{ touchAction: "manipulation" }}
               >
@@ -498,8 +498,8 @@ function MarketThemePanelView({
 
   return (
     <div>
-      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-6 text-center">
-        <p className="text-sm leading-relaxed text-zinc-400">{config.message}</p>
+      <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-5 py-6 text-center">
+        <p className="text-sm leading-relaxed text-pocket-muted">{config.message}</p>
       </div>
 
       {relatedAssets.length > 0 && (
@@ -602,46 +602,46 @@ function PrivateCompanyProfileView({
         <h1 className="mt-4 text-2xl font-bold tracking-tight">
           {profile.fullName}
         </h1>
-        <span className="mt-2 rounded-full bg-zinc-700/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-300">
+        <span className="mt-2 rounded-full bg-[var(--pocket-surface-hover)] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-pocket-muted">
           Private Company
         </span>
-        <p className="mt-3 text-sm text-zinc-500">
+        <p className="mt-3 text-sm text-pocket-muted">
           Founded {profile.founded} · {profile.headquarters} · CEO{" "}
           {profile.ceo}
         </p>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4 text-center">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+      <div className="mt-6 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4 text-center">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-pocket-muted">
           Last Known Valuation
         </p>
-        <p className="mt-1.5 text-3xl font-bold tracking-tight text-white">
+        <p className="mt-1.5 text-3xl font-bold tracking-tight text-pocket-text">
           {profile.valuation}
         </p>
-        <p className="mt-1 text-xs text-zinc-500">Not publicly traded</p>
+        <p className="mt-1 text-xs text-pocket-muted">Not publicly traded</p>
       </div>
 
-      <p className="mt-6 text-[15px] leading-relaxed text-zinc-300">
+      <p className="mt-6 text-[15px] leading-relaxed text-pocket-text/90">
         {profile.description}
       </p>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-pocket-muted">
           Key Milestones
         </h2>
-        <ul className="relative mt-4 space-y-0 border-l border-white/[0.1] pl-5">
+        <ul className="relative mt-4 space-y-0 border-l border-[var(--pocket-border)] pl-5">
           {profile.milestones.map((entry) => {
             const { year, text } = parseMilestone(entry);
             return (
               <li key={entry} className="relative pb-5 last:pb-0">
                 <span
-                  className="absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-[#0a0a0a]"
+                  className="absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-pocket-bg"
                   style={{ backgroundColor: profile.color }}
                 />
                 {year && (
-                  <p className="text-xs font-semibold text-zinc-500">{year}</p>
+                  <p className="text-xs font-semibold text-pocket-muted">{year}</p>
                 )}
-                <p className="mt-0.5 text-sm leading-snug text-zinc-200">
+                <p className="mt-0.5 text-sm leading-snug text-pocket-text">
                   {text}
                 </p>
               </li>
@@ -658,7 +658,7 @@ function PrivateCompanyProfileView({
 function RelatedNewsList({ articles }: { articles: NewsArticle[] }) {
   return (
     <section className="mt-8 pb-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-pocket-muted">
         Related News
       </h2>
       <div className="mt-4 space-y-3">
@@ -669,15 +669,15 @@ function RelatedNewsList({ articles }: { articles: NewsArticle[] }) {
             target="_blank"
             rel="noopener noreferrer"
             data-no-drag
-            className="block rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 transition-colors active:bg-white/[0.06]"
+            className="block rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-4 transition-colors active:bg-[var(--pocket-surface-hover)]"
           >
-            <h3 className="text-[15px] font-bold leading-snug text-white">
+            <h3 className="text-[15px] font-bold leading-snug text-pocket-text">
               {item.headline}
             </h3>
-            <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-zinc-400">
+            <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-pocket-muted">
               {item.subheading}
             </p>
-            <p className="mt-2 text-[11px] text-zinc-500">
+            <p className="mt-2 text-[11px] text-pocket-muted">
               {item.sourceName} · {formatDate(item.publishedAt)}
             </p>
           </a>
@@ -690,15 +690,17 @@ function RelatedNewsList({ articles }: { articles: NewsArticle[] }) {
 function PrivateCompanyNews({ article }: { article: NewsArticle }) {
   return (
     <section className="mt-8">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-pocket-muted">
         News
       </h2>
 
-      <article className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-        <h3 className="text-lg font-bold leading-snug">{article.headline}</h3>
+      <article className="mt-4 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-4">
+        <h3 className="text-lg font-bold leading-snug text-pocket-text">
+          {article.headline}
+        </h3>
 
         {article.subheading && (
-          <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+          <p className="mt-2 text-sm leading-relaxed text-pocket-muted">
             {article.subheading}
           </p>
         )}
@@ -732,7 +734,7 @@ function PrivateCompanyNews({ article }: { article: NewsArticle }) {
           target="_blank"
           rel="noopener noreferrer"
           data-no-drag
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.04] py-3 text-sm font-semibold text-white transition-colors active:scale-[0.98] active:bg-white/[0.08]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] py-3 text-sm font-semibold text-pocket-text transition-colors active:scale-[0.98] active:opacity-80"
           style={{ touchAction: "manipulation" }}
         >
           Read full article

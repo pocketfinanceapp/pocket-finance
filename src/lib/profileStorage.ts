@@ -150,16 +150,10 @@ export function loadFavouriteTopics(): ProfileTopic[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(TOPICS_KEY);
-    if (!raw) {
-      console.log("[pf-topics] read:", []);
-      return [];
-    }
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as string[];
-    const topics = PROFILE_TOPICS.filter((t) => parsed.includes(t));
-    console.log("[pf-topics] read:", topics);
-    return topics;
+    return PROFILE_TOPICS.filter((t) => parsed.includes(t));
   } catch {
-    console.log("[pf-topics] read:", []);
     return [];
   }
 }
@@ -167,7 +161,6 @@ export function loadFavouriteTopics(): ProfileTopic[] {
 export function saveFavouriteTopics(topics: ProfileTopic[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(TOPICS_KEY, JSON.stringify(topics));
-  console.log("[pf-topics] saved:", topics);
   window.dispatchEvent(new CustomEvent(PF_TOPICS_CHANGED_EVENT));
 }
 

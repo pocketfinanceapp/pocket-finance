@@ -584,7 +584,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
         )}
 
         {/* ── 10. Footer ───────────────────────────────────────────────── */}
-        <p className="mt-10 text-center text-[11px] text-zinc-700">
+        <p className="mt-10 text-center text-[11px] text-pocket-muted">
           Pocket Finance · Bold news. Smarter moves.
         </p>
       </div>
@@ -639,10 +639,10 @@ function TopicsSubPage({
       style={panelEnterStyle(entered && !exiting)}
     >
       <header
-        className="flex shrink-0 flex-col border-b border-white/[0.06] px-4"
+        className="flex shrink-0 flex-col border-b border-[var(--pocket-border)] px-4"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-600">
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-pocket-muted">
           Pocket Finance
         </p>
         <div className="flex items-center justify-between pb-3 pt-1.5">
@@ -652,8 +652,8 @@ function TopicsSubPage({
             onClick={handleBack}
             className="flex items-center gap-1.5 active:opacity-60"
           >
-            <ArrowLeft className="h-5 w-5 text-zinc-400" />
-            <span className="text-[15px] font-semibold text-white">
+            <ArrowLeft className="h-5 w-5 text-pocket-muted" />
+            <span className="text-[15px] font-semibold text-pocket-text">
               My Topics
             </span>
           </button>
@@ -672,7 +672,7 @@ function TopicsSubPage({
         style={{ paddingBottom: "calc(9rem + env(safe-area-inset-bottom))" }}
       >
         <FadeInSection delayMs={80}>
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-pocket-muted">
           Choose topics to personalise your For You feed.
         </p>
         <MyTopicsSelector
@@ -682,19 +682,12 @@ function TopicsSubPage({
         />
 
         {/* "Your feed" info card */}
-        <div
-          className="mt-5 rounded-2xl p-4"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(10,18,50,0.85), rgba(6,10,28,0.90))",
-            border: "1px solid rgba(255,255,255,0.07)",
-          }}
-        >
+        <div className="mt-5 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-4">
           <div className="flex items-start gap-3">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#3B6EF5]/70" />
             <div>
-              <p className="text-[13px] font-semibold text-white">Your feed</p>
-              <p className="mt-0.5 text-[12px] leading-relaxed text-zinc-500">
+              <p className="text-[13px] font-semibold text-pocket-text">Your feed</p>
+              <p className="mt-0.5 text-[12px] leading-relaxed text-pocket-muted">
                 Selected topics shape your For You feed and help personalise
                 your Companies recommendations.
               </p>
@@ -705,7 +698,7 @@ function TopicsSubPage({
         {/* Suggested topics prompt — only when nothing selected */}
         {showSuggestions && (
           <div className="mt-5">
-            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
+            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
               Suggested for you
             </p>
             <div className="flex gap-2">
@@ -715,12 +708,7 @@ function TopicsSubPage({
                   type="button"
                   data-no-drag
                   onClick={() => handleSuggestion(topic)}
-                  className="rounded-full px-3.5 py-2 text-[13px] font-medium active:opacity-60"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.045)",
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    color: "rgba(161,161,170,1)",
-                  }}
+                  className="rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-3.5 py-2 text-[13px] font-medium text-pocket-muted active:opacity-60"
                 >
                   {topic}
                 </button>
@@ -790,11 +778,11 @@ function LevelUpModal({
           {level}
         </div>
 
-        <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+        <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.18em] text-pocket-muted">
           Level Up
         </p>
         <p className="mt-1.5 text-[22px] font-bold text-white">Level {level}</p>
-        <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">{desc}</p>
+        <p className="mt-2 text-[13px] leading-relaxed text-zinc-300">{desc}</p>
 
         <button
           type="button"
@@ -859,10 +847,10 @@ function AchievementToast({
           <AchievementIcon id={achievement.id} size={20} unlocked />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-pocket-muted">
             Achievement Unlocked
           </p>
-          <p className="text-[14px] font-bold text-white">{achievement.title}</p>
+          <p className="text-[14px] font-bold text-pocket-text">{achievement.title}</p>
         </div>
       </div>
     </div>
