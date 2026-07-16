@@ -115,7 +115,12 @@ export function StockPanel({
   const privateCompany = isPrivateTicker(ticker);
   const marketTheme = isMarketThemeTicker(ticker);
   const privateProfile = privateCompany ? getPrivateCompanyProfile(ticker) : null;
-  const stock = privateCompany || marketTheme ? null : getStockProfile(ticker);
+  // Memoize: getStockProfile() returns a new object every call; putting it in
+  // effect deps previously cancelled the live-quote fetch on every re-render.
+  const stock = useMemo(
+    () => (privateCompany || marketTheme ? null : getStockProfile(ticker)),
+    [ticker, privateCompany, marketTheme]
+  );
   const meta = getTickerMetaBySymbol(ticker);
   const themeConfig = marketTheme ? getMarketThemeConfig(ticker) : null;
   const {
@@ -131,9 +136,13 @@ export function StockPanel({
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
   const [toast, setToast] = useState<string | null>(null);
   const [liveQuote, setLiveQuote] = useState<StockQuote | null>(null);
+  const [quoteFailed, setQuoteFailed] = useState(false);
   const [activeMetric, setActiveMetric] =
     useState<StockMetricExplanation | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const needsLiveQuote =
+    !privateCompany && !marketTheme && isUsListedStockTicker(ticker);
 
   useEffect(() => {
     markFirstStockViewed();
@@ -155,37 +164,52 @@ export function StockPanel({
   }, [activeTab, ticker]);
 
   useEffect(() => {
-    setLiveQuote(null);
-    if (!stock || privateCompany || !isUsListedStockTicker(ticker)) return;
+    if (!needsLiveQuote) {
+      setLiveQuote(null);
+      setQuoteFailed(false);
+      return;
+    }
 
     let cancelled = false;
+    setLiveQuote(null);
+    setQuoteFailed(false);
 
     void fetchStockQuote(ticker).then((data) => {
-        if (!cancelled && data) {
-          setLiveQuote(data);
-        }
-      });
+      if (cancelled) return;
+      if (data) {
+        setLiveQuote(data);
+      } else {
+        setQuoteFailed(true);
+      }
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [ticker, stock, privateCompany]);
+  }, [ticker, needsLiveQuote]);
 
-  const displayPrice = liveQuote?.price ?? stock?.price ?? 0;
-  const displayChange = liveQuote?.change ?? stock?.change ?? 0;
-  const displayChangePercent =
-    liveQuote?.changePercent ?? stock?.changePercent ?? 0;
-  const hasMassiveQuote = liveQuote !== null;
-  const isUp = displayChangePercent >= 0;
+  // Never fall back to static demo prices for US-listed equities.
+  const awaitingLiveQuote = needsLiveQuote && !liveQuote && !quoteFailed;
+  const quoteReady = !needsLiveQuote || liveQuote !== null;
+  const displayPrice = needsLiveQuote
+    ? (liveQuote?.price ?? null)
+    : (stock?.price ?? 0);
+  const displayChange = needsLiveQuote
+    ? (liveQuote?.change ?? null)
+    : (stock?.change ?? 0);
+  const displayChangePercent = needsLiveQuote
+    ? (liveQuote?.changePercent ?? null)
+    : (stock?.changePercent ?? 0);
+  const hasLiveQuote = liveQuote !== null;
+  const isUp = (displayChangePercent ?? 0) >= 0;
   const showMarketData = stock !== null && !isNonStockMarketTicker(ticker);
-  const chartBasePrice = resolveChartBasePrice(
-    displayPrice,
-    stock?.price,
-    ticker
-  );
+  const chartBasePrice =
+    displayPrice != null && displayPrice > 0
+      ? resolveChartBasePrice(displayPrice, stock?.price, ticker)
+      : 0;
   const chartPoints = useMemo(
     () =>
-      stock && showMarketData && chartBasePrice > 0
+      stock && showMarketData && quoteReady && chartBasePrice > 0
         ? getChartPointsForPrice(
             chartBasePrice,
             ticker,
@@ -193,12 +217,14 @@ export function StockPanel({
             stock.price
           )
         : [],
-    [stock, showMarketData, chartBasePrice, ticker, chartRange]
+    [stock, showMarketData, quoteReady, chartBasePrice, ticker, chartRange]
   );
   const statColumns = useMemo(() => {
     if (!stock || isCryptoTicker(ticker)) return null;
+    if (needsLiveQuote && !liveQuote) return null;
+    if (displayPrice == null || displayPrice <= 0) return null;
     return buildCompanyStatColumns(ticker, stock, liveQuote, displayPrice);
-  }, [stock, ticker, liveQuote, displayPrice]);
+  }, [stock, ticker, liveQuote, displayPrice, needsLiveQuote]);
 
   const metrics = stock ? buildMetrics(ticker, stock) : [];
   const relatedTitle =
@@ -362,45 +388,61 @@ export function StockPanel({
             {activeTab === "Overview" && showMarketData ? (
               <>
                 <section className="mt-4 shrink-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[2rem] font-bold leading-none tracking-tight">
-                      {formatAssetPrice(displayPrice)}{" "}
-                      <span className="text-base font-normal text-pocket-muted">
-                        {preferredCurrency}
-                      </span>
-                    </p>
-                    {hasMassiveQuote && (
-                      <div className="flex flex-col gap-0.5">
-                        <span className="w-fit rounded-full bg-[var(--pocket-surface-hover)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pocket-muted">
-                          Delayed
-                        </span>
-                        <span className="text-[10px] text-pocket-muted">
-                          Prices delayed 15min
-                        </span>
+                  {awaitingLiveQuote ? (
+                    <PriceQuoteSkeleton />
+                  ) : displayPrice != null && displayChange != null && displayChangePercent != null ? (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[2rem] font-bold leading-none tracking-tight">
+                          {formatAssetPrice(displayPrice)}{" "}
+                          <span className="text-base font-normal text-pocket-muted">
+                            {preferredCurrency}
+                          </span>
+                        </p>
+                        {hasLiveQuote && (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="w-fit rounded-full bg-[var(--pocket-surface-hover)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pocket-muted">
+                              Delayed
+                            </span>
+                            <span className="text-[10px] text-pocket-muted">
+                              Prices delayed 15min
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <p
-                    className={`mt-2 text-sm font-semibold ${
-                      isUp ? "text-pocket-green" : "text-pocket-red"
-                    }`}
-                  >
-                    {isUp ? "▲" : "▼"} {formatAssetChange(displayChange)} (
-                    {Math.abs(displayChangePercent).toFixed(2)}%) Today
-                  </p>
+                      <p
+                        className={`mt-2 text-sm font-semibold ${
+                          isUp ? "text-pocket-green" : "text-pocket-red"
+                        }`}
+                      >
+                        {isUp ? "▲" : "▼"} {formatAssetChange(displayChange)} (
+                        {Math.abs(displayChangePercent).toFixed(2)}%) Today
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-pocket-muted">
+                      Live price unavailable
+                    </p>
+                  )}
                 </section>
 
                 <div className="mt-7">
-                  <PriceChart
-                    key={`${ticker}-${chartRange}-${chartBasePrice}`}
-                    data={chartPoints}
-                    range={chartRange}
-                    onRangeChange={setChartRange}
-                  />
+                  {awaitingLiveQuote ? (
+                    <ChartSkeleton />
+                  ) : (
+                    <PriceChart
+                      key={`${ticker}-${chartRange}`}
+                      data={chartPoints}
+                      range={chartRange}
+                      onRangeChange={setChartRange}
+                    />
+                  )}
                 </div>
 
                 <div className="mt-6">
-                  {statColumns ? (
+                  {awaitingLiveQuote ? (
+                    <StatsSkeleton />
+                  ) : statColumns ? (
                     <CompanyStatsGrid
                       columns={statColumns}
                       onInfoClick={(key) =>
@@ -742,6 +784,55 @@ function PrivateCompanyNews({ article }: { article: NewsArticle }) {
         </a>
       </article>
     </section>
+  );
+}
+
+function PriceQuoteSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy="true" aria-label="Loading live price">
+      <div className="h-8 w-40 animate-pulse rounded-lg bg-[var(--pocket-surface-hover)]" />
+      <div className="h-4 w-48 animate-pulse rounded bg-[var(--pocket-surface-hover)]" />
+    </div>
+  );
+}
+
+function ChartSkeleton() {
+  return (
+    <div
+      className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-chart-surface)] p-4"
+      aria-busy="true"
+      aria-label="Loading chart"
+    >
+      <div className="mb-3 flex gap-1.5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-7 w-10 animate-pulse rounded-full bg-[var(--pocket-surface-hover)]"
+          />
+        ))}
+      </div>
+      <div className="h-48 w-full animate-pulse rounded-xl bg-[var(--pocket-surface-hover)]" />
+    </div>
+  );
+}
+
+function StatsSkeleton() {
+  return (
+    <div
+      className="grid grid-cols-2 gap-3"
+      aria-busy="true"
+      aria-label="Loading company stats"
+    >
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-3.5"
+        >
+          <div className="h-3 w-16 animate-pulse rounded bg-[var(--pocket-surface-hover)]" />
+          <div className="mt-3 h-5 w-24 animate-pulse rounded bg-[var(--pocket-surface-hover)]" />
+        </div>
+      ))}
+    </div>
   );
 }
 
