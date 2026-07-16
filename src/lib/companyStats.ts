@@ -135,26 +135,39 @@ export function buildCompanyStatColumns(
   // fetch live fundamentals for (non-US-listed, crypto, etc).
   const hasLiveFundamentals = attemptsLiveFundamentals;
 
-  const marketCapText =
-    liveFundamentals?.marketCap != null
-      ? `$${formatCompact(liveFundamentals.marketCap)}`
-      : hasLiveFundamentals
-        ? "—"
-        : stock.marketCap;
-
-  const peRatioText =
-    liveFundamentals?.peRatio != null
-      ? liveFundamentals.peRatio.toFixed(1)
-      : hasLiveFundamentals
-        ? "—"
-        : stock.peRatio;
-
   const epsText =
     liveFundamentals?.eps != null
       ? formatUsd(liveFundamentals.eps)
       : hasLiveFundamentals
         ? "—"
         : stock.eps;
+
+  // Market cap and P/E are DERIVED from price, so Twelve Data's own
+  // pre-calculated values can go stale if their internal cache refreshes
+  // those fields less often than the live quote (confirmed: seen mismatched
+  // by ~60% for a fast-moving ticker). Since we already have a verified-live
+  // price, compute both ourselves from that price + shares outstanding/EPS
+  // instead of trusting Twelve Data's cached ratio — this can only ever be
+  // as stale as the live price itself, which we know is fresh.
+  const marketCapText = (() => {
+    if (liveFundamentals?.sharesOutstanding != null && price > 0) {
+      return `$${formatCompact(price * liveFundamentals.sharesOutstanding)}`;
+    }
+    if (liveFundamentals?.marketCap != null) {
+      return `$${formatCompact(liveFundamentals.marketCap)}`;
+    }
+    return hasLiveFundamentals ? "—" : stock.marketCap;
+  })();
+
+  const peRatioText = (() => {
+    if (liveFundamentals?.eps != null && liveFundamentals.eps > 0 && price > 0) {
+      return (price / liveFundamentals.eps).toFixed(1);
+    }
+    if (liveFundamentals?.peRatio != null) {
+      return liveFundamentals.peRatio.toFixed(1);
+    }
+    return hasLiveFundamentals ? "—" : stock.peRatio;
+  })();
 
   const dividendYieldText =
     liveFundamentals?.dividendYield != null
