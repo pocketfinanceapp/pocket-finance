@@ -10,11 +10,7 @@ import {
   getStockProfile,
   resolveChartBasePrice,
 } from "@/lib/stockData";
-import {
-  getMarketThemeConfig,
-  getRelatedAssetsFromTickers,
-  isMarketThemeTicker,
-} from "@/lib/marketThemes";
+import { getMarketThemeConfig, isMarketThemeTicker } from "@/lib/marketThemes";
 import {
   getPrivateCompanyProfile,
   isPrivateTicker,
@@ -307,6 +303,57 @@ export function StockPanel({
       })
       .filter((c): c is Competitor => c !== null);
   }, [stock, liveCompetitorQuotes]);
+
+  // Market-theme pages (e.g. "Broad Market") previously showed their
+  // "Related assets" (SPY, QQQ, IWM, etc.) with the same hardcoded static
+  // prices the Competitors list used to have — right next to a message
+  // saying live data isn't available for the theme, which made the fake
+  // numbers underneath it look real. Same fix as Competitors: fetch a live
+  // quote per related ticker and drop any we can't get live data for
+  // (some, like QQQ, are themselves theme tickers and stay excluded).
+  const themeRelatedTickers = useMemo(
+    () => themeConfig?.relatedTickers ?? [],
+    [themeConfig]
+  );
+
+  const [liveThemeAssetQuotes, setLiveThemeAssetQuotes] = useState<
+    Record<string, StockQuote | null>
+  >({});
+
+  useEffect(() => {
+    setLiveThemeAssetQuotes({});
+    const eligible = themeRelatedTickers.filter((t) => isUsListedStockTicker(t));
+    if (eligible.length === 0) return;
+
+    let cancelled = false;
+    void Promise.all(
+      eligible.map(async (t) => [t, await fetchStockQuote(t)] as const)
+    ).then((results) => {
+      if (cancelled) return;
+      setLiveThemeAssetQuotes(Object.fromEntries(results));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [themeRelatedTickers]);
+
+  const themeRelatedAssets: Competitor[] = useMemo(() => {
+    return themeRelatedTickers
+      .map((t) => {
+        const live = liveThemeAssetQuotes[t];
+        if (!live) return null;
+        const tickerMeta = getTickerMetaBySymbol(t);
+        return {
+          ticker: t,
+          name: tickerMeta.companyName,
+          price: live.price,
+          changePercent: live.changePercent,
+          color: tickerMeta.logoColor,
+        };
+      })
+      .filter((a): a is Competitor => a !== null);
+  }, [themeRelatedTickers, liveThemeAssetQuotes]);
   const hasFinancialData = false;
 
   // Determine which tabs have real content to show.
@@ -458,7 +505,10 @@ export function StockPanel({
             article={article}
           />
         ) : marketTheme && themeConfig ? (
-          <MarketThemePanelView config={themeConfig} />
+          <MarketThemePanelView
+            config={themeConfig}
+            relatedAssets={themeRelatedAssets}
+          />
         ) : showTabs && stock ? (
           <>
             <StockIdentityHeader title={ticker} subtitle={meta.companyName} />
@@ -610,11 +660,11 @@ function StockIdentityHeader({
 
 function MarketThemePanelView({
   config,
+  relatedAssets,
 }: {
   config: ReturnType<typeof getMarketThemeConfig>;
+  relatedAssets: Competitor[];
 }) {
-  const relatedAssets = getRelatedAssetsFromTickers(config.relatedTickers);
-
   return (
     <div>
       <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-5 py-6 text-center">
