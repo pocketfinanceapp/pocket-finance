@@ -10,6 +10,33 @@ export interface CompanyStatRow {
   explanationKey: keyof typeof STOCK_METRIC_EXPLANATIONS;
 }
 
+// ADR / foreign-incorporated tickers where Twelve Data's shares_outstanding
+// reflects the LOCAL exchange's ordinary share count, not the ADR-equivalent
+// share count. Multiplying our live ADR price by that local share count
+// produces a wildly inflated market cap (confirmed: TSM showed $10.88T vs a
+// real ~$2.1T, ~5x too high — exactly TSM's 5-ordinary-shares-per-ADR
+// ratio). Rather than hand-maintain every company's ADR ratio (error-prone
+// and hard to verify without live data), we just trust Twelve Data's own
+// pre-calculated market cap for these — it's computed for the ADR-listed
+// entity directly and doesn't have this share-count-basis mismatch.
+const FOREIGN_INCORPORATED_TICKERS = new Set([
+  "TSM",
+  "ASML",
+  "SAP",
+  "BABA",
+  "TCEHY",
+  "NVS",
+  "UBS",
+  "VALE",
+  "ITUB",
+  "BBD",
+  "ABEV",
+  "AMX",
+  "INFY",
+  "PDD",
+  "JD",
+]);
+
 const EMPLOYEE_COUNTS: Record<string, string> = {
   AAPL: "166K",
   MSFT: "228K",
@@ -149,7 +176,15 @@ export function buildCompanyStatColumns(
   // price, compute both ourselves from that price + shares outstanding/EPS
   // instead of trusting Twelve Data's cached ratio — this can only ever be
   // as stale as the live price itself, which we know is fresh.
+  const isForeignIncorporated = FOREIGN_INCORPORATED_TICKERS.has(seed);
+
   const marketCapText = (() => {
+    // For ADR/foreign-incorporated tickers, shares_outstanding is on a
+    // different basis than the ADR price — trust Twelve Data's own market
+    // cap instead of self-computing (see FOREIGN_INCORPORATED_TICKERS).
+    if (isForeignIncorporated && liveFundamentals?.marketCap != null) {
+      return `$${formatCompact(liveFundamentals.marketCap)}`;
+    }
     if (liveFundamentals?.sharesOutstanding != null && price > 0) {
       return `$${formatCompact(price * liveFundamentals.sharesOutstanding)}`;
     }
@@ -197,6 +232,12 @@ export function buildCompanyStatColumns(
   })();
 
   const exDividendDateText = (() => {
+    // A ticker with a 0% (or unknown) dividend yield shouldn't show an
+    // ex-dividend date at all — Twelve Data sometimes returns a stale
+    // historical date (e.g. from a one-off spinoff/distribution decades
+    // ago) for companies that don't currently pay a regular dividend,
+    // which reads as confusing/wrong data next to a "0.00%" yield.
+    if (hasLiveFundamentals && !liveFundamentals?.dividendYield) return "—";
     const live = liveFundamentals?.exDividendDate
       ? formatIsoDividendDate(liveFundamentals.exDividendDate)
       : null;

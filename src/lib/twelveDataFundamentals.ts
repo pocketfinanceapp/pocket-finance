@@ -8,6 +8,8 @@
  * views of the same ticker within a day are free.
  */
 
+import { toTwelveDataSymbol } from "./twelveDataSymbolOverrides";
+
 export interface CompanyFundamentals {
   marketCap: number | null;
   peRatio: number | null;
@@ -51,9 +53,11 @@ export async function fetchCompanyFundamentals(
   const symbol = ticker.trim().toUpperCase();
   if (!symbol) return null;
 
+  const requestSymbol = toTwelveDataSymbol(symbol);
+
   try {
     const res = await fetch(
-      `https://api.twelvedata.com/statistics?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`,
+      `https://api.twelvedata.com/statistics?symbol=${encodeURIComponent(requestSymbol)}&apikey=${apiKey}`,
       {
         // Next.js Data Cache: protects the 50-credit-per-symbol cost by
         // reusing the response for 24h across all users/requests.

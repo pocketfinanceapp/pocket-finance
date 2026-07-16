@@ -1,7 +1,8 @@
 import { NEWS_API_BLOCKED_TERMS } from "./articleFilter";
 import { isExcludedArticle } from "./articleText";
 import { filterFinanceArticles } from "./financeRelevance";
-import { mapNewsApiArticle, DEMO_ARTICLES } from "./newsMapper";
+import { mapNewsApiArticle, mapMarketauxArticle, DEMO_ARTICLES } from "./newsMapper";
+import { fetchMarketauxNews } from "./marketauxApi";
 import type { NewsArticle } from "./types";
 
 const FINANCE_QUERY =
@@ -88,7 +89,36 @@ async function fetchPagedNews(
   return merged;
 }
 
+/**
+ * Marketaux is finance-news-only by design, so unlike NewsAPI's "everything"
+ * endpoint it doesn't need the include/exclude keyword filtering above —
+ * that machinery stays in place purely as a fallback for when only
+ * NEWS_API_KEY is configured (no Marketaux key yet, or Marketaux fetch
+ * failed for this request).
+ */
+async function fetchTrendingFromMarketaux(): Promise<NewsArticle[]> {
+  const articles = await fetchMarketauxNews({
+    mustHaveEntities: true,
+    sort: "entity_match_score",
+  });
+  return articles.map(mapMarketauxArticle);
+}
+
+async function fetchMainFeedFromMarketaux(): Promise<NewsArticle[]> {
+  const articles = await fetchMarketauxNews({ mustHaveEntities: true });
+  return filterFinanceArticles(articles.map(mapMarketauxArticle));
+}
+
 export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
+  if (process.env.MARKETAUX_API_KEY) {
+    try {
+      const articles = await fetchTrendingFromMarketaux();
+      if (articles.length > 0) return articles.slice(0, TRENDING_CAP);
+    } catch {
+      // fall through to NewsAPI/demo below
+    }
+  }
+
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
     return DEMO_ARTICLES.slice(0, 10);
@@ -104,6 +134,15 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
 }
 
 export async function fetchNewsArticles(): Promise<NewsArticle[]> {
+  if (process.env.MARKETAUX_API_KEY) {
+    try {
+      const articles = await fetchMainFeedFromMarketaux();
+      if (articles.length > 0) return articles;
+    } catch {
+      // fall through to NewsAPI/demo below
+    }
+  }
+
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {

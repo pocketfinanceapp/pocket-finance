@@ -1,4 +1,5 @@
 import { isUsListedStockTicker } from "./usStockTickers";
+import { toTwelveDataSymbol } from "./twelveDataSymbolOverrides";
 
 export interface StockQuote {
   price: number;
@@ -40,9 +41,11 @@ export async function fetchStockPrice(
   const symbol = ticker.toUpperCase();
   if (!isUsListedStockTicker(symbol)) return null;
 
+  const requestSymbol = toTwelveDataSymbol(symbol);
+
   try {
     const res = await fetch(
-      `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`,
+      `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(requestSymbol)}&apikey=${apiKey}`,
       { cache: "no-store" }
     );
 
