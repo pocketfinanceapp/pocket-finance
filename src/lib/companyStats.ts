@@ -1,4 +1,5 @@
 import type { StockQuote } from "@/lib/twelveDataApi";
+import type { CompanyFundamentals } from "@/lib/twelveDataFundamentals";
 import type { STOCK_METRIC_EXPLANATIONS } from "@/lib/stockMetricExplanations";
 import type { StockProfile } from "@/lib/types";
 import { pseudoRandom } from "@/lib/utils";
@@ -76,6 +77,20 @@ function formatExDividendDate(seed: string): string {
   });
 }
 
+/** Formats a live ISO ex-dividend date (Twelve Data reports the most recent
+ * past ex-div date, not a predicted future one — that's more honest than a
+ * randomly generated future date, even if the label doesn't distinguish
+ * past/future). Returns null if the string can't be parsed. */
+function formatIsoDividendDate(iso: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function deriveDayBar(price: number, seed: string) {
   const open = price * pseudoRandom(`${seed}-open`, 0.985, 1.012);
   const high = Math.max(open, price) * pseudoRandom(`${seed}-high`, 1.002, 1.028);
@@ -90,7 +105,13 @@ export function buildCompanyStatColumns(
   ticker: string,
   stock: StockProfile,
   liveQuote: StockQuote | null,
-  displayPrice: number
+  displayPrice: number,
+  liveFundamentals?: CompanyFundamentals | null,
+  /** True when this ticker is eligible for a live fundamentals fetch
+   * (mirrors StockPanel's `needsLiveQuote`). Used to tell "still
+   * loading/failed" apart from "never attempted" — only the latter should
+   * fall back to static demo data. */
+  attemptsLiveFundamentals = false
 ): [CompanyStatRow[], CompanyStatRow[], CompanyStatRow[]] {
   const seed = ticker.toUpperCase();
   const price = displayPrice > 0 ? displayPrice : stock.price;
@@ -105,21 +126,81 @@ export function buildCompanyStatColumns(
   const week52Low =
     liveQuote?.week52Low ?? price * pseudoRandom(`${seed}-52l`, 0.62, 0.92);
 
-  const dividendPct = parsePercent(stock.dividendYield);
-  const quarterlyDividend =
-    dividendPct && dividendPct > 0
-      ? `$${((price * (dividendPct / 100)) / 4).toFixed(2)}`
-      : "—";
+  // Live fundamentals (market cap, P/E, EPS, dividend, beta, shares
+  // outstanding) come from Twelve Data's /statistics endpoint. If we're
+  // attempting a live fetch for this ticker, show "—" instead of the old
+  // fake/demo numbers whenever a specific field isn't in yet — whether
+  // still loading or the fetch failed. Never display fabricated data as if
+  // real. Static demo data is only used for tickers we never attempt to
+  // fetch live fundamentals for (non-US-listed, crypto, etc).
+  const hasLiveFundamentals = attemptsLiveFundamentals;
 
-  const marketCapValue = parseMarketCapToNumber(stock.marketCap);
-  const sharesOutstanding =
-    marketCapValue && price > 0
+  const marketCapText =
+    liveFundamentals?.marketCap != null
+      ? `$${formatCompact(liveFundamentals.marketCap)}`
+      : hasLiveFundamentals
+        ? "—"
+        : stock.marketCap;
+
+  const peRatioText =
+    liveFundamentals?.peRatio != null
+      ? liveFundamentals.peRatio.toFixed(1)
+      : hasLiveFundamentals
+        ? "—"
+        : stock.peRatio;
+
+  const epsText =
+    liveFundamentals?.eps != null
+      ? formatUsd(liveFundamentals.eps)
+      : hasLiveFundamentals
+        ? "—"
+        : stock.eps;
+
+  const dividendYieldText =
+    liveFundamentals?.dividendYield != null
+      ? `${liveFundamentals.dividendYield.toFixed(2)}%`
+      : hasLiveFundamentals
+        ? "—"
+        : stock.dividendYield;
+
+  const betaText =
+    liveFundamentals?.beta != null
+      ? liveFundamentals.beta.toFixed(2)
+      : hasLiveFundamentals
+        ? "—"
+        : pseudoRandom(`${seed}-beta`, 0.75, 1.45).toFixed(2);
+
+  const sharesOutstandingText = (() => {
+    if (liveFundamentals?.sharesOutstanding != null) {
+      return formatCompact(liveFundamentals.sharesOutstanding);
+    }
+    if (hasLiveFundamentals) return "—";
+    const marketCapValue = parseMarketCapToNumber(stock.marketCap);
+    return marketCapValue && price > 0
       ? formatCompact(marketCapValue / price)
       : formatCompact(
           pseudoRandom(`${seed}-shares`, 500_000_000, 18_000_000_000)
         );
+  })();
 
-  const beta = pseudoRandom(`${seed}-beta`, 0.75, 1.45).toFixed(2);
+  const exDividendDateText = (() => {
+    const live = liveFundamentals?.exDividendDate
+      ? formatIsoDividendDate(liveFundamentals.exDividendDate)
+      : null;
+    if (live) return live;
+    if (hasLiveFundamentals) return "—";
+    return formatExDividendDate(seed);
+  })();
+
+  // Quarterly dividend is derived client-side from the live dividend yield
+  // and current price, so it automatically stays consistent with both.
+  const dividendPctForQuarterly =
+    liveFundamentals?.dividendYield ?? parsePercent(stock.dividendYield);
+  const quarterlyDividend =
+    dividendPctForQuarterly && dividendPctForQuarterly > 0
+      ? `$${((price * (dividendPctForQuarterly / 100)) / 4).toFixed(2)}`
+      : "—";
+
   const employees =
     EMPLOYEE_COUNTS[seed] ??
     `${Math.round(pseudoRandom(`${seed}-emp`, 4, 420))}K`;
@@ -130,7 +211,7 @@ export function buildCompanyStatColumns(
     { label: "Low", value: formatUsd(day.low), explanationKey: "Low" },
     {
       label: "Mkt. cap",
-      value: stock.marketCap,
+      value: marketCapText,
       explanationKey: "Mkt. cap",
     },
     {
@@ -148,7 +229,7 @@ export function buildCompanyStatColumns(
   const columnTwo: CompanyStatRow[] = [
     {
       label: "Dividend",
-      value: stock.dividendYield,
+      value: dividendYieldText,
       explanationKey: "Dividend",
     },
     {
@@ -158,12 +239,12 @@ export function buildCompanyStatColumns(
     },
     {
       label: "Ex-dividend date",
-      value: formatExDividendDate(seed),
+      value: exDividendDateText,
       explanationKey: "Ex-dividend date",
     },
     {
       label: "P/E ratio",
-      value: stock.peRatio,
+      value: peRatioText,
       explanationKey: "P/E ratio",
     },
     {
@@ -179,11 +260,11 @@ export function buildCompanyStatColumns(
   ];
 
   const columnThree: CompanyStatRow[] = [
-    { label: "EPS", value: stock.eps, explanationKey: "EPS" },
-    { label: "Beta", value: beta, explanationKey: "Beta" },
+    { label: "EPS", value: epsText, explanationKey: "EPS" },
+    { label: "Beta", value: betaText, explanationKey: "Beta" },
     {
       label: "Shares outstanding",
-      value: sharesOutstanding,
+      value: sharesOutstandingText,
       explanationKey: "Shares outstanding",
     },
     {

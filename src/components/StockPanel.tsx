@@ -21,7 +21,8 @@ import {
   type PrivateCompanyProfile,
 } from "@/lib/privateTickers";
 import type { StockQuote } from "@/lib/twelveDataApi";
-import { fetchStockQuote } from "@/lib/stockQuoteClient";
+import type { CompanyFundamentals } from "@/lib/twelveDataFundamentals";
+import { fetchStockFundamentals, fetchStockQuote } from "@/lib/stockQuoteClient";
 import {
   isCryptoTicker,
   isNonStockMarketTicker,
@@ -137,6 +138,8 @@ export function StockPanel({
   const [toast, setToast] = useState<string | null>(null);
   const [liveQuote, setLiveQuote] = useState<StockQuote | null>(null);
   const [quoteFailed, setQuoteFailed] = useState(false);
+  const [liveFundamentals, setLiveFundamentals] =
+    useState<CompanyFundamentals | null>(null);
   const [activeMetric, setActiveMetric] =
     useState<StockMetricExplanation | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -188,6 +191,24 @@ export function StockPanel({
     };
   }, [ticker, needsLiveQuote]);
 
+  useEffect(() => {
+    setLiveFundamentals(null);
+    if (!needsLiveQuote) return;
+
+    let cancelled = false;
+
+    void fetchStockFundamentals(ticker).then((data) => {
+      if (cancelled) return;
+      if (data) {
+        setLiveFundamentals(data);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ticker, needsLiveQuote]);
+
   // Never fall back to static demo prices for US-listed equities.
   const awaitingLiveQuote = needsLiveQuote && !liveQuote && !quoteFailed;
   const quoteReady = !needsLiveQuote || liveQuote !== null;
@@ -223,8 +244,22 @@ export function StockPanel({
     if (!stock || isCryptoTicker(ticker)) return null;
     if (needsLiveQuote && !liveQuote) return null;
     if (displayPrice == null || displayPrice <= 0) return null;
-    return buildCompanyStatColumns(ticker, stock, liveQuote, displayPrice);
-  }, [stock, ticker, liveQuote, displayPrice, needsLiveQuote]);
+    return buildCompanyStatColumns(
+      ticker,
+      stock,
+      liveQuote,
+      displayPrice,
+      liveFundamentals,
+      needsLiveQuote
+    );
+  }, [
+    stock,
+    ticker,
+    liveQuote,
+    displayPrice,
+    needsLiveQuote,
+    liveFundamentals,
+  ]);
 
   const metrics = stock ? buildMetrics(ticker, stock) : [];
   const relatedTitle =
