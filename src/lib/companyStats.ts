@@ -68,7 +68,8 @@ const EMPLOYEE_COUNTS: Record<string, string> = {
 };
 
 function formatUsd(value: number): string {
-  return `$${value.toLocaleString("en-US", {
+  const sign = value < 0 ? "-" : "";
+  return `${sign}$${Math.abs(value).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -225,10 +226,18 @@ export function buildCompanyStatColumns(
   })();
 
   const peRatioText = (() => {
+    // P/E is meaningless for a money-losing company — don't show a
+    // positive-looking ratio when EPS is negative. Twelve Data still
+    // returns a raw (and misleading) peRatio in that case: confirmed INTC
+    // showed "P/E 809" and MSTR showed "P/E 5.5" despite both posting
+    // negative TTM EPS, which reads as "cheap and profitable" backwards.
+    if (liveFundamentals?.eps != null && liveFundamentals.eps <= 0) {
+      return hasLiveFundamentals ? "—" : stock.peRatio;
+    }
     if (liveFundamentals?.eps != null && liveFundamentals.eps > 0 && price > 0) {
       return (price / liveFundamentals.eps).toFixed(1);
     }
-    if (liveFundamentals?.peRatio != null) {
+    if (liveFundamentals?.peRatio != null && liveFundamentals.peRatio > 0) {
       return liveFundamentals.peRatio.toFixed(1);
     }
     return hasLiveFundamentals ? "—" : stock.peRatio;
