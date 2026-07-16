@@ -37,6 +37,23 @@ const FOREIGN_INCORPORATED_TICKERS = new Set([
   "JD",
 ]);
 
+// Dual-share-class tickers where Twelve Data's shares_outstanding for the
+// class we request doesn't match the price/EPS we're getting. Confirmed for
+// BRK: we route to BRK.B for a correct price ($488) and EPS ($33.59), but
+// shares_outstanding still comes back as BRK.A's ~1.44M share count instead
+// of BRK.B's ~2.16B — self-computed market cap was off by ~1,500x, exactly
+// the A-to-B share conversion ratio. Same fix as the ADR case: trust Twelve
+// Data's own market cap, and don't show a shares-outstanding figure we know
+// is for the wrong share class.
+const SHARE_CLASS_MISMATCH_TICKERS = new Set(["BRK"]);
+
+function skipsSelfComputedShareMath(seed: string): boolean {
+  return (
+    FOREIGN_INCORPORATED_TICKERS.has(seed) ||
+    SHARE_CLASS_MISMATCH_TICKERS.has(seed)
+  );
+}
+
 const EMPLOYEE_COUNTS: Record<string, string> = {
   AAPL: "166K",
   MSFT: "228K",
@@ -188,13 +205,14 @@ export function buildCompanyStatColumns(
   // price, compute both ourselves from that price + shares outstanding/EPS
   // instead of trusting Twelve Data's cached ratio — this can only ever be
   // as stale as the live price itself, which we know is fresh.
-  const isForeignIncorporated = FOREIGN_INCORPORATED_TICKERS.has(seed);
+  const skipShareMath = skipsSelfComputedShareMath(seed);
 
   const marketCapText = (() => {
-    // For ADR/foreign-incorporated tickers, shares_outstanding is on a
-    // different basis than the ADR price — trust Twelve Data's own market
-    // cap instead of self-computing (see FOREIGN_INCORPORATED_TICKERS).
-    if (isForeignIncorporated && liveFundamentals?.marketCap != null) {
+    // For ADR/foreign-incorporated and dual-share-class tickers,
+    // shares_outstanding is on a different basis than the price we're
+    // showing — trust Twelve Data's own market cap instead of self-computing
+    // (see FOREIGN_INCORPORATED_TICKERS / SHARE_CLASS_MISMATCH_TICKERS).
+    if (skipShareMath && liveFundamentals?.marketCap != null) {
       return `$${formatCompact(liveFundamentals.marketCap)}`;
     }
     if (liveFundamentals?.sharesOutstanding != null && price > 0) {
@@ -231,6 +249,11 @@ export function buildCompanyStatColumns(
         : pseudoRandom(`${seed}-beta`, 0.75, 1.45).toFixed(2);
 
   const sharesOutstandingText = (() => {
+    // For dual-share-class tickers, Twelve Data's shares_outstanding is for
+    // the wrong class entirely (see SHARE_CLASS_MISMATCH_TICKERS) — showing
+    // it would be actively misleading, not just imprecise, so we suppress
+    // it rather than display a number we know is wrong.
+    if (SHARE_CLASS_MISMATCH_TICKERS.has(seed)) return "—";
     if (liveFundamentals?.sharesOutstanding != null) {
       return formatCompact(liveFundamentals.sharesOutstanding);
     }
