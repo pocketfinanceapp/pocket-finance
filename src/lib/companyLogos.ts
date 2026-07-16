@@ -54,6 +54,18 @@ const MANUAL_LOGOS: Record<string, string> = {
   ORCL: "/logos/companies/orcl.png",
 };
 
+/**
+ * Tickers where our internal catalog symbol coincidentally collides with a
+ * completely different real-world company's real ticker. Confirmed: "SAM"
+ * is our invented shorthand for Samsung Electronics (KRX: 005930, no real
+ * US-listed ticker), but "SAM" is also Boston Beer Company's actual NYSE
+ * ticker — the logo CDNs below are keyed on the literal symbol, so they
+ * returned Boston Beer's real logo under the Samsung Electronics label.
+ * Skip the CDN lookup for these so the UI falls back to a generic initials
+ * avatar instead of a wrong company's real logo.
+ */
+const KNOWN_TICKER_COLLISIONS = new Set(["SAM"]);
+
 function isStockSymbol(symbol: string): boolean {
   return /^[A-Z][A-Z0-9.-]{0,9}$/.test(symbol);
 }
@@ -66,6 +78,7 @@ function uniqueUrls(urls: string[]): string[] {
 export function getCompanyLogoUrls(ticker: string): string[] {
   const upper = ticker.trim().toUpperCase();
   if (!upper) return [];
+  if (KNOWN_TICKER_COLLISIONS.has(upper) && !MANUAL_LOGOS[upper]) return [];
 
   const urls: string[] = [];
 
