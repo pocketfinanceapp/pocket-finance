@@ -57,6 +57,18 @@ function formatUsd(value: number): string {
   })}`;
 }
 
+/** "147K" / "1.55M" style — matches the existing static employee-count formatting. */
+function formatEmployeeCount(value: number): string {
+  if (value >= 1_000_000) {
+    const millions = value / 1_000_000;
+    return `${Number.isInteger(millions) ? millions.toFixed(0) : millions.toFixed(2)}M`;
+  }
+  if (value >= 1_000) {
+    return `${Math.round(value / 1_000)}K`;
+  }
+  return String(Math.round(value));
+}
+
 function formatCompact(value: number): string {
   if (value >= 1_000_000_000_000) {
     return `${(value / 1_000_000_000_000).toFixed(2)}T`;
@@ -255,9 +267,16 @@ export function buildCompanyStatColumns(
       ? `$${((price * (dividendPctForQuarterly / 100)) / 4).toFixed(2)}`
       : "—";
 
-  const employees =
-    EMPLOYEE_COUNTS[seed] ??
-    `${Math.round(pseudoRandom(`${seed}-emp`, 4, 420))}K`;
+  const employees = (() => {
+    if (liveFundamentals?.employees != null) {
+      return formatEmployeeCount(liveFundamentals.employees);
+    }
+    if (hasLiveFundamentals) return "—";
+    return (
+      EMPLOYEE_COUNTS[seed] ??
+      `${Math.round(pseudoRandom(`${seed}-emp`, 4, 420))}K`
+    );
+  })();
 
   const columnOne: CompanyStatRow[] = [
     { label: "Open", value: formatUsd(day.open), explanationKey: "Open" },

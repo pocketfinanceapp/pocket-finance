@@ -22,6 +22,7 @@ export interface CompanyFundamentals {
   sharesOutstanding: number | null;
   /** ISO date string (Twelve Data reports the most recent ex-dividend date, not a future one). */
   exDividendDate: string | null;
+  employees: number | null;
   source: "twelvedata";
 }
 
@@ -44,6 +45,30 @@ function normalizeDividendYield(raw: unknown): number | null {
   return null; // implausible either way — don't show garbage
 }
 
+/**
+ * Real employee count from Twelve Data's /profile endpoint (separate from
+ * /statistics). Company headcount changes rarely, so this is cached far
+ * longer (7 days) than the fundamentals below. Failure here is non-fatal —
+ * we still return the rest of the fundamentals if only this call fails.
+ */
+async function fetchEmployeeCount(
+  requestSymbol: string,
+  apiKey: string
+): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/profile?symbol=${encodeURIComponent(requestSymbol)}&apikey=${apiKey}`,
+      { next: { revalidate: 604800 } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || data.status === "error") return null;
+    return num(data.employees);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchCompanyFundamentals(
   ticker: string
 ): Promise<CompanyFundamentals | null> {
@@ -56,14 +81,17 @@ export async function fetchCompanyFundamentals(
   const requestSymbol = toTwelveDataSymbol(symbol);
 
   try {
-    const res = await fetch(
-      `https://api.twelvedata.com/statistics?symbol=${encodeURIComponent(requestSymbol)}&apikey=${apiKey}`,
-      {
-        // Next.js Data Cache: protects the 50-credit-per-symbol cost by
-        // reusing the response for 24h across all users/requests.
-        next: { revalidate: 86400 },
-      }
-    );
+    const [res, employees] = await Promise.all([
+      fetch(
+        `https://api.twelvedata.com/statistics?symbol=${encodeURIComponent(requestSymbol)}&apikey=${apiKey}`,
+        {
+          // Next.js Data Cache: protects the 50-credit-per-symbol cost by
+          // reusing the response for 24h across all users/requests.
+          next: { revalidate: 86400 },
+        }
+      ),
+      fetchEmployeeCount(requestSymbol, apiKey),
+    ]);
 
     if (!res.ok) return null;
 
@@ -108,6 +136,7 @@ export async function fetchCompanyFundamentals(
       beta: num(priceSummary.beta),
       sharesOutstanding: num(stockStatistics.shares_outstanding),
       exDividendDate,
+      employees,
       source: "twelvedata",
     };
   } catch {

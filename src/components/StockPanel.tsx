@@ -209,6 +209,38 @@ export function StockPanel({
     };
   }, [ticker, needsLiveQuote]);
 
+  // The "Competitors" list at the bottom of the page previously showed
+  // hardcoded static prices that didn't match those same tickers' own live
+  // prices elsewhere in the app. Fetch a live quote for each competitor
+  // ticker; a competitor we can't get live data for is dropped from the
+  // list rather than shown with a stale/fake price.
+  const competitorTickers = useMemo(
+    () => (stock?.competitors ?? []).map((c) => c.ticker),
+    [stock]
+  );
+
+  const [liveCompetitorQuotes, setLiveCompetitorQuotes] = useState<
+    Record<string, StockQuote | null>
+  >({});
+
+  useEffect(() => {
+    setLiveCompetitorQuotes({});
+    const eligible = competitorTickers.filter((t) => isUsListedStockTicker(t));
+    if (eligible.length === 0) return;
+
+    let cancelled = false;
+    void Promise.all(
+      eligible.map(async (t) => [t, await fetchStockQuote(t)] as const)
+    ).then((results) => {
+      if (cancelled) return;
+      setLiveCompetitorQuotes(Object.fromEntries(results));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [competitorTickers]);
+
   // Never fall back to static demo prices for US-listed equities.
   const awaitingLiveQuote = needsLiveQuote && !liveQuote && !quoteFailed;
   const quoteReady = !needsLiveQuote || liveQuote !== null;
@@ -264,7 +296,17 @@ export function StockPanel({
   const metrics = stock ? buildMetrics(ticker, stock) : [];
   const relatedTitle =
     isCryptoTicker(ticker) || marketTheme ? "Related assets" : "Competitors";
-  const competitors = stock?.competitors ?? [];
+  const competitors: Competitor[] = useMemo(() => {
+    return (stock?.competitors ?? [])
+      .map((c) => {
+        const live = liveCompetitorQuotes[c.ticker];
+        if (live) {
+          return { ...c, price: live.price, changePercent: live.changePercent };
+        }
+        return null;
+      })
+      .filter((c): c is Competitor => c !== null);
+  }, [stock, liveCompetitorQuotes]);
   const hasFinancialData = false;
 
   // Determine which tabs have real content to show.
