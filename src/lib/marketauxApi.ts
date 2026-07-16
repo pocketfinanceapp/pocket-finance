@@ -135,15 +135,33 @@ export async function fetchMarketauxNews(
       signal: AbortSignal.timeout(8000),
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(
+        `[marketaux] HTTP ${res.status} ${res.statusText}: ${body.slice(0, 500)}`
+      );
+      return [];
+    }
 
     const data = (await res.json()) as RawMarketauxResponse;
-    if (data.error) return [];
+    if (data.error) {
+      console.error(
+        `[marketaux] API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
 
-    return (data.data ?? [])
+    const mapped = (data.data ?? [])
       .map(mapArticle)
       .filter((a): a is MarketauxArticle => a !== null);
-  } catch {
+
+    console.log(
+      `[marketaux] fetched ${mapped.length} articles (found: ${data.meta?.found ?? "?"})`
+    );
+
+    return mapped;
+  } catch (err) {
+    console.error("[marketaux] fetch threw:", err);
     return [];
   }
 }

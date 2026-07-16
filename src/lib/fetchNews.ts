@@ -114,8 +114,11 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
     try {
       const articles = await fetchTrendingFromMarketaux();
       if (articles.length > 0) return articles.slice(0, TRENDING_CAP);
-    } catch {
-      // fall through to NewsAPI/demo below
+      console.error(
+        "[fetchNews] Marketaux trending returned 0 articles, falling back to NewsAPI/demo"
+      );
+    } catch (err) {
+      console.error("[fetchNews] Marketaux trending threw, falling back:", err);
     }
   }
 
@@ -138,8 +141,11 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
     try {
       const articles = await fetchMainFeedFromMarketaux();
       if (articles.length > 0) return articles;
-    } catch {
-      // fall through to NewsAPI/demo below
+      console.error(
+        "[fetchNews] Marketaux main feed returned 0 articles, falling back to NewsAPI/demo"
+      );
+    } catch (err) {
+      console.error("[fetchNews] Marketaux main feed threw, falling back:", err);
     }
   }
 
