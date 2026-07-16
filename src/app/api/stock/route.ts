@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchStockPrice } from "@/lib/massiveApi";
+import { fetchStockPrice } from "@/lib/twelveDataApi";
 import { getPriceOverride } from "@/lib/priceOverrides";
 
 export async function GET(request: Request) {

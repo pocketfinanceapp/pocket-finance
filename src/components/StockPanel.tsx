@@ -20,7 +20,7 @@ import {
   isPrivateTicker,
   type PrivateCompanyProfile,
 } from "@/lib/privateTickers";
-import type { MassiveStockQuote } from "@/lib/massiveApi";
+import type { StockQuote } from "@/lib/twelveDataApi";
 import { fetchStockQuote } from "@/lib/stockQuoteClient";
 import {
   isCryptoTicker,
@@ -130,7 +130,7 @@ export function StockPanel({
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Overview");
   const [chartRange, setChartRange] = useState<ChartRange>("1D");
   const [toast, setToast] = useState<string | null>(null);
-  const [liveQuote, setLiveQuote] = useState<MassiveStockQuote | null>(null);
+  const [liveQuote, setLiveQuote] = useState<StockQuote | null>(null);
   const [activeMetric, setActiveMetric] =
     useState<StockMetricExplanation | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);

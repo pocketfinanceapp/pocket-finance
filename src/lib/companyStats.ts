@@ -1,4 +1,4 @@
-import type { MassiveStockQuote } from "@/lib/massiveApi";
+import type { StockQuote } from "@/lib/twelveDataApi";
 import type { STOCK_METRIC_EXPLANATIONS } from "@/lib/stockMetricExplanations";
 import type { StockProfile } from "@/lib/types";
 import { pseudoRandom } from "@/lib/utils";
@@ -89,7 +89,7 @@ function deriveDayBar(price: number, seed: string) {
 export function buildCompanyStatColumns(
   ticker: string,
   stock: StockProfile,
-  liveQuote: MassiveStockQuote | null,
+  liveQuote: StockQuote | null,
   displayPrice: number
 ): [CompanyStatRow[], CompanyStatRow[], CompanyStatRow[]] {
   const seed = ticker.toUpperCase();

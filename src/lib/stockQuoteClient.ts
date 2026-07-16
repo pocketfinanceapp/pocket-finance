@@ -1,14 +1,14 @@
-import type { MassiveStockQuote } from "./massiveApi";
+import type { StockQuote } from "./twelveDataApi";
 
 export async function fetchStockQuote(
   ticker: string
-): Promise<MassiveStockQuote | null> {
+): Promise<StockQuote | null> {
   try {
     const res = await fetch(`/api/stock?ticker=${encodeURIComponent(ticker)}`);
     if (!res.ok) return null;
 
-    const data = (await res.json()) as MassiveStockQuote | null;
-    if (data?.source === "massive" || data?.source === "override") {
+    const data = (await res.json()) as StockQuote | null;
+    if (data?.source === "twelvedata" || data?.source === "override") {
       return data;
     }
 

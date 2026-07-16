@@ -9,7 +9,7 @@ import {
   type TopMover,
   type TopMoverTab,
 } from "@/lib/topMovers";
-import type { MassiveStockQuote } from "@/lib/massiveApi";
+import type { StockQuote } from "@/lib/twelveDataApi";
 import { fetchStockQuote } from "@/lib/stockQuoteClient";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { CompanyLogo } from "./CompanyLogo";
@@ -24,7 +24,7 @@ export function TopMoversSection({
   const [tab, setTab] = useState<TopMoverTab>("active");
   const movers = useMemo(() => getTopMovers(tab), [tab]);
   const [liveQuotes, setLiveQuotes] = useState<
-    Record<string, MassiveStockQuote>
+    Record<string, StockQuote>
   >({});
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function TopMoversSection({
     ).then((results) => {
       if (cancelled) return;
 
-      const next: Record<string, MassiveStockQuote> = {};
+      const next: Record<string, StockQuote> = {};
       for (const [ticker, quote] of results) {
         if (quote) next[ticker] = quote;
       }
