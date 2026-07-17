@@ -27,6 +27,7 @@ import {
   currencyForRegion,
   filterAppRegions,
   getAppRegion,
+  guessRegionFromLocale,
   type AppCurrency,
   type AppRegionId,
 } from "@/lib/regionPreferences";
@@ -49,8 +50,10 @@ export function OnboardingFlow() {
   const [step, setStep] = useState<Step>(0);
   const [transitioning, setTransitioning] = useState(false);
   const [exiting, setExiting] = useState(false);
-  const [region, setRegion] = useState<AppRegionId>("us");
-  const [currency, setCurrency] = useState<AppCurrency>("USD");
+  const [region, setRegion] = useState<AppRegionId>(() => guessRegionFromLocale());
+  const [currency, setCurrency] = useState<AppCurrency>(() =>
+    currencyForRegion(guessRegionFromLocale())
+  );
   const [markets, setMarkets] = useState<MarketFilter[]>([]);
   const [sectors, setSectors] = useState<SectorFilter[]>([]);
 
@@ -299,7 +302,19 @@ function RegionStep({
   onNext: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const regions = useMemo(() => filterAppRegions(query), [query]);
+  // With no search active, float the pre-selected (locale-guessed) region to
+  // the top of the alphabetical list so the user can confirm it at a glance
+  // instead of scrolling from "Afghanistan" to find where they landed.
+  const regions = useMemo(() => {
+    const filtered = filterAppRegions(query);
+    if (query.trim()) return filtered;
+    const idx = filtered.findIndex((r) => r.id === selected);
+    if (idx <= 0) return filtered;
+    const reordered = [...filtered];
+    const [match] = reordered.splice(idx, 1);
+    reordered.unshift(match);
+    return reordered;
+  }, [query, selected]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">

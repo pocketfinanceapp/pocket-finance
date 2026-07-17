@@ -73,6 +73,11 @@ export function AuthScreen() {
   const [confirmedEmail, setConfirmedEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Email/password sign-in is collapsed behind a link by default — Guest is
+  // the primary path in, matching onboarding, which already works without
+  // an account. Auto-expands when there's a banner to show (e.g. after an
+  // email confirmation link) since that's clearly relevant to surface.
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   const isSignUp = mode === "signUp";
 
@@ -81,6 +86,7 @@ export function AuthScreen() {
       setView("form");
       setMode("signIn");
       setError(null);
+      setShowEmailForm(true);
     }
   }, [authBanner]);
 
@@ -309,40 +315,24 @@ export function AuthScreen() {
           Bold news. Smarter moves.
         </p>
 
-        <div className="mt-3 flex rounded-xl border border-white/10 bg-white/[0.04] p-1">
+        <div className="mt-6 space-y-2">
           <button
             type="button"
             onClick={() => {
-              setMode("signIn");
-              setError(null);
-              clearAuthBanner();
+              continueAsGuest();
+              router.replace(APP_BASE);
             }}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-              mode === "signIn"
-                ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
-                : "text-zinc-400"
-            }`}
+            disabled={submitting}
+            className="w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-opacity active:scale-[0.99] disabled:opacity-50"
           >
-            Log In
+            Continue as Guest
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("signUp");
-              setError(null);
-              clearAuthBanner();
-            }}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-              mode === "signUp"
-                ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
-                : "text-zinc-400"
-            }`}
-          >
-            Sign Up
-          </button>
+          <p className="text-center text-[11px] text-zinc-500">
+            No account needed — jump straight into your feed.
+          </p>
         </div>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-5 space-y-2">
           <OAuthButton
             label="Continue with Apple"
             disabled={submitting}
@@ -378,105 +368,138 @@ export function AuthScreen() {
               </svg>
             }
           />
-          <button
-            type="button"
-            onClick={() => {
-              continueAsGuest();
-              router.replace(APP_BASE);
-            }}
-            disabled={submitting}
-            className="flex w-full items-center justify-center rounded-xl border border-[#333] bg-transparent py-3.5 text-sm font-normal text-white transition-colors active:bg-white/[0.04] disabled:opacity-50"
-          >
-            Continue as Guest
-          </button>
-        </div>
-
-        <div className="mt-4 flex items-center gap-3">
-          <div className="h-px flex-1 bg-white/10" />
-          <span className="text-xs text-zinc-500">or</span>
-          <div className="h-px flex-1 bg-white/10" />
         </div>
 
         {authBanner && (
-          <p className="mt-3 rounded-lg border border-[#00C6C6]/30 bg-[#00C6C6]/10 px-3 py-2.5 text-center text-sm text-[#00C6C6]">
+          <p className="mt-4 rounded-lg border border-[#00C6C6]/30 bg-[#00C6C6]/10 px-3 py-2.5 text-center text-sm text-[#00C6C6]">
             {authBanner}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-          {isSignUp && (
-            <AuthField
-              label="Display name"
-              type="text"
-              value={displayName}
-              onChange={setDisplayName}
-              placeholder="Your name"
-              autoComplete="name"
-              required
-            />
-          )}
-          <AuthField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            placeholder="you@example.com"
-            autoComplete="email"
-            required
-          />
-          <AuthField
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            placeholder="••••••••"
-            autoComplete={isSignUp ? "new-password" : "current-password"}
-            required
-            minLength={6}
-          />
+        {!showEmailForm ? (
+          <button
+            type="button"
+            onClick={() => setShowEmailForm(true)}
+            className="mt-5 w-full text-center text-[13px] font-medium text-zinc-400 active:text-white"
+          >
+            Log in with email
+          </button>
+        ) : (
+          <>
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-xs text-zinc-500">or</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
 
-
-          {!isSignUp && (
-            <div className="flex justify-end">
+            <div className="mt-4 flex rounded-xl border border-white/10 bg-white/[0.04] p-1">
               <button
                 type="button"
                 onClick={() => {
-                  setView("forgotPassword");
+                  setMode("signIn");
                   setError(null);
                   clearAuthBanner();
                 }}
-                className="text-[12px] font-medium text-[#00C6C6] active:opacity-70"
+                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
+                  mode === "signIn"
+                    ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
+                    : "text-zinc-400"
+                }`}
               >
-                Forgot password?
+                Log In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signUp");
+                  setError(null);
+                  clearAuthBanner();
+                }}
+                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
+                  mode === "signUp"
+                    ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white"
+                    : "text-zinc-400"
+                }`}
+              >
+                Sign Up
               </button>
             </div>
-          )}
 
-          {!isSignUp && (
-            <RememberMeToggle
-              checked={rememberMe}
-              onChange={handleRememberMeChange}
-            />
-          )}
+            <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+              {isSignUp && (
+                <AuthField
+                  label="Display name"
+                  type="text"
+                  value={displayName}
+                  onChange={setDisplayName}
+                  placeholder="Your name"
+                  autoComplete="name"
+                  required
+                />
+              )}
+              <AuthField
+                label="Email"
+                type="email"
+                value={email}
+                onChange={setEmail}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
+              <AuthField
+                label="Password"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                placeholder="••••••••"
+                autoComplete={isSignUp ? "new-password" : "current-password"}
+                required
+                minLength={6}
+              />
 
-          {error && (
-            <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-              {error}
-            </p>
-          )}
+              {!isSignUp && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setView("forgotPassword");
+                      setError(null);
+                      clearAuthBanner();
+                    }}
+                    className="text-[12px] font-medium text-[#00C6C6] active:opacity-70"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-opacity active:scale-[0.99] disabled:opacity-50"
-          >
-            {submitting
-              ? "Please wait…"
-              : isSignUp
-                ? "Create account"
-                : "Log in"}
-          </button>
-        </form>
+              {!isSignUp && (
+                <RememberMeToggle
+                  checked={rememberMe}
+                  onChange={handleRememberMeChange}
+                />
+              )}
+
+              {error && (
+                <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-2xl bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] py-4 text-base font-bold text-white shadow-[0_8px_32px_rgba(59,110,245,0.35)] transition-opacity active:scale-[0.99] disabled:opacity-50"
+              >
+                {submitting
+                  ? "Please wait…"
+                  : isSignUp
+                    ? "Create account"
+                    : "Log in"}
+              </button>
+            </form>
+          </>
+        )}
       </FadeInSection>
     </AuthShell>
   );

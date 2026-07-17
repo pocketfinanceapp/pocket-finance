@@ -92,7 +92,12 @@ export function LandingDemoFeedCard({
         <span className="rounded-full border border-white/10 bg-black/50 px-1.5 py-0.5 text-[7px] font-bold text-white backdrop-blur-sm sm:text-[8px]">
           {article.ticker}
         </span>
-        <SentimentBadge score={0.42} size="xs" className="!px-1.5 !py-0.5 !text-[6px] sm:!text-[7px]" />
+        <SentimentBadge
+          score={0.42}
+          size="xs"
+          className="!px-1.5 !py-0.5 !text-[6px] sm:!text-[7px]"
+          explainOnTap={false}
+        />
       </div>
 
       <aside

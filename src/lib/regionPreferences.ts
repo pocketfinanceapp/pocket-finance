@@ -152,6 +152,37 @@ const CURRENCY_SYMBOL: Record<AppCurrency, string> = {
   TRY: "₺",
 };
 
+/**
+ * Best-effort guess at the user's country from the browser locale, used to
+ * pre-select a sensible default on the onboarding "Where are you based?"
+ * step instead of always starting at "United States" (i.e. scrolled to
+ * "Afghanistan" alphabetically with nothing selected). Purely a UX
+ * convenience — the user can always change it, and nothing important is
+ * hidden based on this guess (region only softly re-ranks the feed).
+ */
+export function guessRegionFromLocale(): AppRegionId {
+  if (typeof navigator === "undefined") return DEFAULT_APP_REGION;
+  try {
+    const locales =
+      navigator.languages && navigator.languages.length > 0
+        ? navigator.languages
+        : [navigator.language];
+
+    for (const locale of locales) {
+      if (!locale) continue;
+      // "en-AU" -> "AU", "en-US" -> "US"; locales without a region subtag
+      // (e.g. plain "en") are skipped rather than guessed wrong.
+      const match = locale.match(/-([A-Za-z]{2})$/);
+      if (!match) continue;
+      const code = match[1].toLowerCase();
+      if (isAppRegionId(code)) return code;
+    }
+  } catch {
+    /* ignore — fall through to default */
+  }
+  return DEFAULT_APP_REGION;
+}
+
 export function isAppRegionId(value: string): value is AppRegionId {
   const normalized = LEGACY_REGION_IDS[value] ?? value;
   return APP_REGIONS.some((region) => region.id === normalized);

@@ -632,6 +632,19 @@ const US_MARKETS_DISPLAY_TICKERS = new Set([
   "DJI",
 ]);
 
+/**
+ * True for macro/index/commodity theme tickers (e.g. "Broad Market",
+ * "Crude Oil", "Federal Reserve") rather than an actual exchange-listed
+ * company. These share the ticker-tag mechanism for feed filtering/display
+ * but have no real company — no Wikipedia entity, no founder/HQ/owner facts
+ * — so UI that renders a company profile (BusinessInfoPanel) should treat
+ * them differently rather than showing an empty/broken-looking card.
+ */
+export function isMacroOrCommodityTicker(ticker: string): boolean {
+  const upper = ticker.trim().toUpperCase();
+  return COMMODITY_DISPLAY_TICKERS.has(upper) || US_MARKETS_DISPLAY_TICKERS.has(upper);
+}
+
 function isUsListedEquity(ticker: string): boolean {
   const upper = ticker.toUpperCase();
   if (isPrivateTicker(upper)) return false;

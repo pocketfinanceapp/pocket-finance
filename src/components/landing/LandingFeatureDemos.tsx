@@ -127,6 +127,7 @@ export function ExploreFeatureDemo() {
                   score={SENTIMENT_SCORES[row.sentiment]}
                   size="xs"
                   className="!px-1.5 !py-0.5 !text-[6px]"
+                  explainOnTap={false}
                 />
               </li>
             ))}

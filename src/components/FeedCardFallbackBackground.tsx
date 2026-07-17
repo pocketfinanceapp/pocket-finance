@@ -86,48 +86,69 @@ function VariantArt({
   }
 }
 
+/*
+ * None of these are charts. Earlier versions drew a single bold ascending
+ * zig-zag "trend line" (and, for crypto, small rounded rectangles stacked
+ * like candlesticks) as the centrepiece of every variant — visually
+ * indistinguishable from a real price/candlestick chart at a glance, which
+ * risks implying real price history this app never shows (there is no live
+ * quote feed, by design). Replaced with abstract motifs — rings, nodes,
+ * dots, arcs — that keep the category's visual identity without reading as
+ * market data.
+ */
+
 function CryptoArt({ uid }: { uid: string }) {
+  const nodes = [
+    { x: 90, y: 190 },
+    { x: 210, y: 150 },
+    { x: 310, y: 230 },
+    { x: 150, y: 300 },
+    { x: 280, y: 350 },
+    { x: 110, y: 400 },
+  ];
+  const links: Array<[number, number]> = [
+    [0, 1],
+    [1, 2],
+    [0, 3],
+    [2, 4],
+    [3, 4],
+    [3, 5],
+  ];
   return (
     <>
       <FallbackBase variant="crypto" />
       <svg
         viewBox="0 0 400 600"
-        className="absolute inset-0 h-full w-full opacity-75"
+        className="absolute inset-0 h-full w-full opacity-80"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
       >
         <defs>
           <linearGradient id={`ff-crypto-${uid}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#00C6C6" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#3B6EF5" stopOpacity="0.55" />
+            <stop offset="0%" stopColor="#00C6C6" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#3B6EF5" stopOpacity="0.45" />
           </linearGradient>
         </defs>
-        {[
-          "M80,200 L160,160 L240,220 L320,140",
-          "M60,320 L140,280 L220,340 L300,260 L380,300",
-          "M100,420 L180,380 L260,440 L340,360",
-        ].map((d, i) => (
-          <path
+        {links.map(([a, b], i) => (
+          <line
             key={i}
-            d={d}
-            fill="none"
+            x1={nodes[a].x}
+            y1={nodes[a].y}
+            x2={nodes[b].x}
+            y2={nodes[b].y}
             stroke={`url(#ff-crypto-${uid})`}
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.85"
+            strokeWidth="1.5"
           />
         ))}
-        {[140, 220, 300].map((x, i) => (
-          <rect
-            key={x}
-            x={x - 18}
-            y={100 + i * 28}
-            width="36"
-            height="18"
-            rx="4"
+        {nodes.map((n, i) => (
+          <circle
+            key={i}
+            cx={n.x}
+            cy={n.y}
+            r={i % 2 === 0 ? 9 : 6}
             fill="none"
-            stroke="rgba(0,198,198,0.25)"
-            strokeWidth="1"
+            stroke="rgba(0,198,198,0.5)"
+            strokeWidth="2"
           />
         ))}
       </svg>
@@ -141,14 +162,14 @@ function MiningArt({ uid }: { uid: string }) {
       <FallbackBase variant="mining" />
       <svg
         viewBox="0 0 400 600"
-        className="absolute inset-0 h-full w-full opacity-70"
+        className="absolute inset-0 h-full w-full opacity-78"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
       >
         <defs>
           <linearGradient id={`ff-mining-${uid}`} x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%" stopColor="#8B5A2B" stopOpacity="0.65" />
-            <stop offset="100%" stopColor="#C4A574" stopOpacity="0.45" />
+            <stop offset="0%" stopColor="#C4915A" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#E0B888" stopOpacity="0.35" />
           </linearGradient>
         </defs>
         {[480, 420, 360, 300, 240].map((y) => (
@@ -156,24 +177,18 @@ function MiningArt({ uid }: { uid: string }) {
             key={y}
             d={`M0,${y} Q100,${y - 20} 200,${y} T400,${y}`}
             fill="none"
-            stroke="rgba(139,90,43,0.22)"
+            stroke="rgba(196,145,90,0.28)"
             strokeWidth="1.5"
           />
         ))}
-        <path
-          d="M40,520 L120,380 L200,420 L280,320 L360,360 L400,300"
-          fill="none"
-          stroke={`url(#ff-mining-${uid})`}
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        {[100, 200, 300].map((x) => (
+        {[100, 200, 300].map((x, i) => (
           <path
             key={x}
-            d={`M${x},600 L${x - 30},480 L${x + 30},480 Z`}
-            fill="rgba(139,90,43,0.12)"
-            stroke="rgba(196,165,116,0.2)"
+            d={`M${x},560 L${x - 34},460 L${x + 34},460 Z`}
+            fill={`url(#ff-mining-${uid})`}
+            stroke="rgba(224,184,136,0.3)"
             strokeWidth="1"
+            opacity={0.85 - i * 0.12}
           />
         ))}
       </svg>
@@ -187,27 +202,26 @@ function EnergyArt({ uid }: { uid: string }) {
       <FallbackBase variant="energy" />
       <svg
         viewBox="0 0 400 600"
-        className="absolute inset-0 h-full w-full opacity-72"
+        className="absolute inset-0 h-full w-full opacity-78"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
       >
+        <defs>
+          <radialGradient id={`ff-energy-${uid}`} cx="50%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#FF8C28" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#FF8C28" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <circle cx="200" cy="220" r="180" fill={`url(#ff-energy-${uid})`} />
         {[0, 1, 2, 3].map((i) => (
           <path
             key={i}
-            d={`M0,${420 + i * 18} Q100,${400 + i * 12} 200,${420 + i * 18} T400,${420 + i * 18}`}
+            d={`M0,${420 + i * 20} Q100,${396 + i * 14} 200,${420 + i * 20} T400,${420 + i * 20}`}
             fill="none"
-            stroke={`rgba(255,140,40,${0.18 - i * 0.03})`}
+            stroke={`rgba(255,150,50,${0.32 - i * 0.05})`}
             strokeWidth="2"
           />
         ))}
-        <path
-          d="M0,480 L60,440 L120,470 L180,400 L240,430 L300,360 L360,390 L400,350"
-          fill="none"
-          stroke="#FF8C28"
-          strokeOpacity="0.55"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
       </svg>
     </>
   );
@@ -219,45 +233,40 @@ function FinanceArt({ uid }: { uid: string }) {
       <FallbackBase variant="finance" />
       <svg
         viewBox="0 0 400 600"
-        className="absolute inset-0 h-full w-full opacity-72"
+        className="absolute inset-0 h-full w-full opacity-80"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
       >
         <defs>
-          <linearGradient id={`ff-finance-${uid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#3B6EF5" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#00C6C6" stopOpacity="0.5" />
+          <linearGradient id={`ff-finance-${uid}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#3B6EF5" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#00C6C6" stopOpacity="0.4" />
           </linearGradient>
         </defs>
-        {[120, 200, 280, 360].map((y) => (
-          <line
-            key={y}
-            x1="40"
-            y1={y}
-            x2="360"
-            y2={y}
-            stroke="rgba(255,255,255,0.05)"
-            strokeWidth="1"
+        {[
+          { cx: 130, cy: 210, r: 70 },
+          { cx: 230, cy: 260, r: 52 },
+          { cx: 175, cy: 330, r: 36 },
+        ].map((c, i) => (
+          <circle
+            key={i}
+            cx={c.cx}
+            cy={c.cy}
+            r={c.r}
+            fill="none"
+            stroke={`url(#ff-finance-${uid})`}
+            strokeWidth="3"
           />
         ))}
-        {[100, 180, 260, 340].map((x) => (
-          <line
-            key={x}
-            x1={x}
-            y1="80"
-            x2={x}
-            y2="420"
-            stroke="rgba(255,255,255,0.04)"
-            strokeWidth="1"
+        {[90, 150, 210, 270, 330].map((x, i) => (
+          <circle
+            key={`dot-${x}`}
+            cx={x}
+            cy={460 + (i % 2 === 0 ? 0 : 18)}
+            r={4}
+            fill="rgba(255,255,255,0.18)"
           />
         ))}
-        <path
-          d="M40,400 L40,320 L100,280 L160,300 L220,220 L280,250 L340,180 L360,200"
-          fill="none"
-          stroke={`url(#ff-finance-${uid})`}
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
       </svg>
     </>
   );
@@ -269,14 +278,14 @@ function TechArt({ uid }: { uid: string }) {
       <FallbackBase variant="tech" />
       <svg
         viewBox="0 0 400 600"
-        className="absolute inset-0 h-full w-full opacity-74"
+        className="absolute inset-0 h-full w-full opacity-80"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
       >
         <defs>
           <linearGradient id={`ff-tech-${uid}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#7850FF" stopOpacity="0.65" />
-            <stop offset="100%" stopColor="#00C6C6" stopOpacity="0.5" />
+            <stop offset="0%" stopColor="#8A64FF" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#00C6C6" stopOpacity="0.35" />
           </linearGradient>
         </defs>
         {[100, 170, 240, 310].map((y) =>
@@ -287,20 +296,14 @@ function TechArt({ uid }: { uid: string }) {
               y={y}
               width="52"
               height="36"
-              rx="6"
-              fill="rgba(120,80,255,0.08)"
-              stroke="rgba(120,80,255,0.22)"
+              rx="8"
+              fill="rgba(130,90,255,0.1)"
+              stroke="rgba(130,90,255,0.32)"
               strokeWidth="1"
             />
           ))
         )}
-        <path
-          d="M60,440 L140,360 L220,400 L300,300 L360,340"
-          fill="none"
-          stroke={`url(#ff-tech-${uid})`}
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
+        <circle cx="200" cy="230" r="14" fill={`url(#ff-tech-${uid})`} />
       </svg>
     </>
   );
@@ -312,46 +315,38 @@ function MarketsArt({ uid }: { uid: string }) {
       <FallbackBase variant="markets" />
       <svg
         viewBox="0 0 400 600"
-        className="absolute inset-0 h-full w-full opacity-70"
+        className="absolute inset-0 h-full w-full opacity-78"
         preserveAspectRatio="xMidYMid slice"
         aria-hidden
       >
         <defs>
           <linearGradient id={`ff-markets-${uid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#3B6EF5" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#00C6C6" stopOpacity="0.55" />
+            <stop offset="0%" stopColor="#3B6EF5" stopOpacity="0.42" />
+            <stop offset="100%" stopColor="#00C6C6" stopOpacity="0.42" />
           </linearGradient>
         </defs>
-        {[80, 160, 240, 320, 400, 480].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            y1={y}
-            x2="400"
-            y2={y}
-            stroke="rgba(255,255,255,0.05)"
+        {[80, 130, 180].map((r) => (
+          <circle
+            key={r}
+            cx="80"
+            cy="480"
+            r={r}
+            fill="none"
+            stroke={`url(#ff-markets-${uid})`}
+            strokeWidth="1.5"
+          />
+        ))}
+        {[60, 110, 160].map((r) => (
+          <circle
+            key={`tr-${r}`}
+            cx="340"
+            cy="140"
+            r={r}
+            fill="none"
+            stroke="rgba(0,198,198,0.18)"
             strokeWidth="1"
           />
         ))}
-        {[80, 160, 240, 320].map((x) => (
-          <line
-            key={x}
-            x1={x}
-            y1="0"
-            x2={x}
-            y2="600"
-            stroke="rgba(255,255,255,0.04)"
-            strokeWidth="1"
-          />
-        ))}
-        <path
-          d="M0,420 L0,380 L50,360 L100,390 L150,320 L200,340 L250,280 L300,300 L350,240 L400,260"
-          fill="none"
-          stroke={`url(#ff-markets-${uid})`}
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
       </svg>
     </>
   );

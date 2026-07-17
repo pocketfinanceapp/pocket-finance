@@ -547,57 +547,64 @@ html.app-route[data-theme="light"] .pf-feed-trending-badge {
   inset: 0;
 }
 
+/*
+ * Fallback art gradients — bumped noticeably brighter than the original
+ * 0.14-0.16 top-stop values. At that low an opacity over a near-black feed
+ * background, the art read as an empty black card rather than intentional
+ * placeholder art (reported as a "black background" bug). These values are
+ * tuned so the category tint is unmistakably visible at a glance.
+ */
 .pf-feed-fallback-base--crypto {
   background: linear-gradient(
     180deg,
-    rgba(0, 198, 198, 0.16) 0%,
-    rgba(59, 110, 245, 0.08) 32%,
-    var(--pocket-feed-bg) 68%
+    rgba(0, 198, 198, 0.34) 0%,
+    rgba(59, 110, 245, 0.2) 38%,
+    var(--pocket-feed-bg) 82%
   );
 }
 
 .pf-feed-fallback-base--mining {
   background: linear-gradient(
     180deg,
-    rgba(180, 120, 60, 0.14) 0%,
-    rgba(120, 80, 40, 0.07) 32%,
-    var(--pocket-feed-bg) 68%
+    rgba(200, 140, 70, 0.32) 0%,
+    rgba(120, 80, 40, 0.18) 38%,
+    var(--pocket-feed-bg) 82%
   );
 }
 
 .pf-feed-fallback-base--energy {
   background: linear-gradient(
     180deg,
-    rgba(255, 140, 40, 0.14) 0%,
-    rgba(180, 80, 20, 0.07) 32%,
-    var(--pocket-feed-bg) 68%
+    rgba(255, 150, 50, 0.32) 0%,
+    rgba(180, 80, 20, 0.18) 38%,
+    var(--pocket-feed-bg) 82%
   );
 }
 
 .pf-feed-fallback-base--finance {
   background: linear-gradient(
     180deg,
-    rgba(59, 110, 245, 0.14) 0%,
-    rgba(0, 198, 198, 0.08) 32%,
-    var(--pocket-feed-bg) 68%
+    rgba(59, 110, 245, 0.32) 0%,
+    rgba(0, 198, 198, 0.2) 38%,
+    var(--pocket-feed-bg) 82%
   );
 }
 
 .pf-feed-fallback-base--tech {
   background: linear-gradient(
     180deg,
-    rgba(120, 80, 255, 0.14) 0%,
-    rgba(59, 110, 245, 0.08) 32%,
-    var(--pocket-feed-bg) 68%
+    rgba(130, 90, 255, 0.32) 0%,
+    rgba(59, 110, 245, 0.2) 38%,
+    var(--pocket-feed-bg) 82%
   );
 }
 
 .pf-feed-fallback-base--markets {
   background: linear-gradient(
     180deg,
-    rgba(59, 110, 245, 0.14) 0%,
-    rgba(0, 198, 198, 0.07) 32%,
-    var(--pocket-feed-bg) 68%
+    rgba(59, 110, 245, 0.32) 0%,
+    rgba(0, 198, 198, 0.18) 38%,
+    var(--pocket-feed-bg) 82%
   );
 }
 

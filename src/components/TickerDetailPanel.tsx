@@ -96,6 +96,7 @@ export function TickerDetailPanel({
   const entered = useTabEntered(true);
   const [points, setPoints] = useState<MarketauxSentimentPoint[]>([]);
   const [loadingChart, setLoadingChart] = useState(true);
+  const [followToast, setFollowToast] = useState<string | null>(null);
 
   const meta = getTickerMetaBySymbol(ticker);
   const following = isFollowingTicker(ticker);
@@ -106,6 +107,17 @@ export function TickerDetailPanel({
   const handleBack = () => {
     setExiting(true);
     window.setTimeout(onClose, PANEL_EXIT_MS);
+  };
+
+  const handleFollow = () => {
+    const wasFollowing = following;
+    toggleFollowTicker(ticker);
+    setFollowToast(
+      wasFollowing
+        ? `Unfollowed ${ticker.toUpperCase()}`
+        : `Following ${ticker.toUpperCase()} — more stories like this in your feed`
+    );
+    window.setTimeout(() => setFollowToast(null), 2200);
   };
 
   useEffect(() => {
@@ -171,7 +183,7 @@ export function TickerDetailPanel({
         <button
           type="button"
           data-no-drag
-          onClick={() => toggleFollowTicker(ticker)}
+          onClick={handleFollow}
           className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-colors active:opacity-70 ${
             following
               ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
@@ -186,6 +198,15 @@ export function TickerDetailPanel({
           {following ? "Following" : "Follow"}
         </button>
       </header>
+
+      {followToast && (
+        <p
+          className="mx-4 mt-3 rounded-xl border border-[#00C6C6]/25 bg-[#00C6C6]/10 px-3 py-2 text-center text-[12px] font-medium text-[#00C6C6]"
+          data-no-drag
+        >
+          {followToast}
+        </p>
+      )}
 
       <div
         className="min-h-0 flex-1 overflow-y-auto px-5 pt-5"
@@ -255,7 +276,11 @@ export function TickerDetailPanel({
                         {a.sourceName} · {timeAgo(a.publishedAt)}
                       </p>
                     </div>
-                    <SentimentBadge score={a.sentimentScore} size="xs" />
+                    <SentimentBadge
+                      score={a.sentimentScore}
+                      size="xs"
+                      explainOnTap={false}
+                    />
                   </button>
                 </li>
               ))}
