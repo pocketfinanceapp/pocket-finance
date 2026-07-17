@@ -25,6 +25,7 @@ const NavigationContext = createContext<NavigationContextValue | null>(null);
 
 function shellTabFromPath(pathname: string): ShellTab {
   if (!pathname.startsWith(APP_BASE)) return "home";
+  if (pathname === appPath("explore")) return "explore";
   if (pathname === appPath("saved")) return "saved";
   if (pathname === appPath("profile")) return "profile";
   return "home";
@@ -32,6 +33,8 @@ function shellTabFromPath(pathname: string): ShellTab {
 
 function pathForTab(tab: NavTab): string {
   switch (tab) {
+    case "explore":
+      return appPath("explore");
     case "saved":
       return appPath("saved");
     case "profile":
@@ -61,6 +64,7 @@ export function NavigationProvider({
 
   useEffect(() => {
     router.prefetch(APP_BASE);
+    router.prefetch(appPath("explore"));
     router.prefetch(appPath("saved"));
     router.prefetch(appPath("profile"));
   }, [router]);

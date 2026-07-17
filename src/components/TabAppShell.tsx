@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { NavigationProvider } from "@/context/NavigationContext";
 import { isOnboardingComplete } from "@/lib/onboarding";
 import type { NewsArticle } from "@/lib/types";
+import { ExplorePage } from "./ExplorePage";
 import { FeedErrorBoundary } from "./FeedErrorBoundary";
 import { MobilePageShell } from "./MobilePageShell";
 import { NewsFeed } from "./NewsFeed";
@@ -65,6 +66,10 @@ function TabPanels({
               onSidePanelChange={setSidePanelOpen}
             />
           </FeedErrorBoundary>
+        </TabPanel>
+
+        <TabPanel active={activeTab === "explore"}>
+          <ExplorePage catalogArticles={initialArticles} />
         </TabPanel>
 
         <TabPanel active={activeTab === "saved"}>
