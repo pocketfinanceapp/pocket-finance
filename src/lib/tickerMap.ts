@@ -411,6 +411,35 @@ function inferThemedTicker(text: string): TickerMeta | null {
   return null;
 }
 
+/**
+ * Marketaux identifies entities directly, but on a "markets wrap"-style
+ * story that never actually mentions oil/gold/an index by name in the
+ * headline, a single incidental commodity/index word buried in the
+ * description (e.g. "...Oil declined.") can still win as the top-scored
+ * entity and drag the whole article into the wrong theme (a Kospi/chips
+ * selloff story getting tagged "Crude Oil"). Only trust Marketaux's pick
+ * for a macro/commodity theme ticker when the headline itself genuinely
+ * supports that theme; otherwise fall back to our own text inference.
+ */
+export function macroThemeConfirmedByTitle(symbol: string, title: string): boolean {
+  switch (symbol.trim().toUpperCase()) {
+    case "OIL":
+      return OIL_RE.test(title) && !OIL_COMPANY_RE.test(title);
+    case "GOLD":
+      return GOLD_RE.test(title);
+    case "SPX":
+      return SPX_RE.test(title);
+    case "QQQ":
+      return QQQ_RE.test(title);
+    case "DJI":
+      return DJI_RE.test(title);
+    case "FED":
+      return FED_RE.test(title);
+    default:
+      return true;
+  }
+}
+
 const TITLE_WEIGHT = 3;
 const DESC_WEIGHT = 1;
 
@@ -437,6 +466,7 @@ function addTickerScore(
 function isGeneralMarketTitle(title: string): boolean {
   const lower = title.trim().toLowerCase();
   if (lower.startsWith("stock market today")) return true;
+  if (/:\s*markets?\s+wrap\s*$/i.test(lower)) return true;
 
   const indexAction =
     /(jones|industrial|30|futures?|closes?|opens?|ends?|falls?|rises?|gains?|drops?|slides?|climbs?|jumps?|sinks?|rallies|tumbles?|surges?|plunges?|recovers?|hits?|extends?)/;

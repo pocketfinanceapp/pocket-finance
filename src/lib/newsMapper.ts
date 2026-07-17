@@ -5,6 +5,8 @@ import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
 import {
   getTickerMetaBySymbol,
   inferTickerFromFields,
+  isMacroOrCommodityTicker,
+  macroThemeConfirmedByTitle,
   resolveMarketForArticle,
 } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
@@ -84,10 +86,22 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
   const title = cleanArticleTitle(raw.title);
   const description = cleanArticleDescription(raw.description || raw.snippet || "");
 
-  const bestEntity =
+  const topEntity =
     raw.entities.length > 0
       ? [...raw.entities].sort((a, b) => b.matchScore - a.matchScore)[0]
       : null;
+
+  // Marketaux's top-scored entity is usually right, but a "markets wrap"
+  // style story can mention a commodity/index only in passing (e.g. "...Oil
+  // declined.") and still have that be the single entity Marketaux found —
+  // dragging an Asia/chips-selloff story into a "Crude Oil" theme. Only
+  // trust a macro/commodity pick when the headline itself supports it.
+  const bestEntity =
+    topEntity &&
+    isMacroOrCommodityTicker(topEntity.symbol) &&
+    !macroThemeConfirmedByTitle(topEntity.symbol, title)
+      ? null
+      : topEntity;
 
   // Keep our own curated market/sector/tags for symbols we recognize, but
   // prefer Marketaux's live company name over our generic ticker-as-name
