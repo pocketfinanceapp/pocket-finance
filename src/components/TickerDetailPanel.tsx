@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, Plus } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
@@ -84,7 +84,13 @@ export function TickerDetailPanel({
   catalogArticles,
   onClose,
 }: TickerDetailPanelProps) {
-  const { clearFilters, setSearchQuery, requestFeedJump } = useApp();
+  const {
+    clearFilters,
+    setSearchQuery,
+    requestFeedJump,
+    toggleFollowTicker,
+    isFollowingTicker,
+  } = useApp();
   const { navigate } = useNavigation();
   const [exiting, setExiting] = useState(false);
   const entered = useTabEntered(true);
@@ -92,6 +98,7 @@ export function TickerDetailPanel({
   const [loadingChart, setLoadingChart] = useState(true);
 
   const meta = getTickerMetaBySymbol(ticker);
+  const following = isFollowingTicker(ticker);
   const articles = catalogArticles
     .filter((a) => a.ticker.toUpperCase() === ticker.toUpperCase())
     .slice(0, 8);
@@ -161,6 +168,23 @@ export function TickerDetailPanel({
           </p>
           <p className="text-[12px] text-pocket-muted">{ticker.toUpperCase()}</p>
         </div>
+        <button
+          type="button"
+          data-no-drag
+          onClick={() => toggleFollowTicker(ticker)}
+          className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-colors active:opacity-70 ${
+            following
+              ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
+              : "border-[var(--pocket-border)] text-pocket-text"
+          }`}
+        >
+          {following ? (
+            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+          ) : (
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+          )}
+          {following ? "Following" : "Follow"}
+        </button>
       </header>
 
       <div

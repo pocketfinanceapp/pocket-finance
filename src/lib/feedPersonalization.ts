@@ -40,6 +40,7 @@ export interface FeedPersonalizationInput {
   sectorInterests: SectorFilter[];
   favouriteTopics: ProfileTopic[];
   preferredRegion: AppRegionId | null;
+  followedTickers: Set<string>;
   savedTickers: Set<string>;
   engagedTickers: Set<string>;
   recentlyReadTickers: Set<string>;
@@ -52,6 +53,7 @@ interface BuildPersonalizationOptions {
   sectorInterests: SectorFilter[];
   favouriteTopics: ProfileTopic[];
   preferredRegion?: AppRegionId | null;
+  followedTickers?: string[];
   savedArticles: SavedArticleEntry[];
   articlesById: Map<string, NewsArticle>;
 }
@@ -105,11 +107,16 @@ export function buildFeedPersonalizationInput(
     }
   }
 
+  const followedTickers = new Set(
+    (opts.followedTickers ?? []).map((t) => t.toUpperCase())
+  );
+
   return {
     followedMarkets: opts.followedMarkets,
     sectorInterests: opts.sectorInterests,
     favouriteTopics: opts.favouriteTopics,
     preferredRegion: opts.preferredRegion ?? null,
+    followedTickers,
     savedTickers,
     engagedTickers,
     recentlyReadTickers,
@@ -156,6 +163,7 @@ export function computeForYouScore(
     score += 36;
   }
 
+  if (ticker && input.followedTickers.has(ticker)) score += 65;
   if (ticker && input.savedTickers.has(ticker)) score += 58;
   if (ticker && input.engagedTickers.has(ticker)) score += 38;
   if (ticker && input.recentlyReadTickers.has(ticker)) score += 28;
@@ -192,6 +200,7 @@ export function computeCompanyRelevanceScore(
   let score = 0;
   const ticker = company.ticker.toUpperCase();
 
+  if (input.followedTickers.has(ticker)) score += 140;
   if (input.savedTickers.has(ticker)) score += 120;
   if (input.engagedTickers.has(ticker)) score += 80;
   if (input.recentlyReadTickers.has(ticker)) score += 55;
@@ -256,6 +265,7 @@ export function rankExploreCompanies(
     input.sectorInterests.length > 0 ||
     input.favouriteTopics.length > 0 ||
     Boolean(input.preferredRegion) ||
+    input.followedTickers.size > 0 ||
     input.savedTickers.size > 0 ||
     input.engagedTickers.size > 0 ||
     input.recentlyReadTickers.size > 0;

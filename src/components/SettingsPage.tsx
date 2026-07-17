@@ -11,6 +11,7 @@ import {
   Heart,
   LogOut,
   Newspaper,
+  Star,
   Tag,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
@@ -20,6 +21,7 @@ import {
   fetchLikedArticles,
   fetchSavedArticles,
 } from "@/lib/userInteractions";
+import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import type { LikedArticleEntry, NewsArticle, SavedArticleEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
@@ -39,6 +41,7 @@ type SettingsScreen =
   | "main"
   | "liked"
   | "saved"
+  | "following"
   | "topics"
   | "feedPrefs"
   | "regionCurrency"
@@ -117,7 +120,9 @@ export function SettingsPage({
       ? "Liked Articles"
       : screen === "saved"
         ? "Saved Articles"
-        : screen === "topics"
+        : screen === "following"
+          ? "Following"
+          : screen === "topics"
           ? "My Topics"
           : screen === "feedPrefs"
             ? "Feed Preferences"
@@ -154,6 +159,10 @@ export function SettingsPage({
           ) : screen === "sources" ? (
             <div className="pt-4">
               <NewsSourcesEditor catalogArticles={catalogArticles} />
+            </div>
+          ) : screen === "following" ? (
+            <div className="pt-4">
+              <FollowingEditor />
             </div>
           ) : (
             <ArticleList
@@ -225,6 +234,11 @@ export function SettingsPage({
             icon={<Bookmark className="h-5 w-5 text-[#00C6C6]" />}
             label="Saved Articles"
             onClick={() => setScreen("saved")}
+          />
+          <SettingsRow
+            icon={<Star className="h-5 w-5 text-[#F5A623]" />}
+            label="Following"
+            onClick={() => setScreen("following")}
           />
         </SettingsSection>
 
@@ -521,6 +535,57 @@ function NewsSourcesEditor({
                   {!hidden && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
                 </div>
               </button>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
+/* ── Followed companies — boosts these tickers in the For You feed ──────── */
+
+function FollowingEditor() {
+  const { followedTickers, toggleFollowTicker } = useApp();
+
+  if (followedTickers.length === 0) {
+    return (
+      <p className="pt-6 text-center text-sm text-pocket-muted">
+        You&apos;re not following any companies yet. Swipe right on a story or
+        open a company&apos;s page from Explore to follow it.
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <p className="px-1 text-[13px] leading-relaxed text-pocket-muted">
+        Companies you follow are boosted in your For You feed.
+      </p>
+      <ul className="mt-3 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
+        {followedTickers.map((ticker) => {
+          const meta = getTickerMetaBySymbol(ticker);
+          return (
+            <li key={ticker}>
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="shrink-0 overflow-hidden rounded-lg">
+                  <CompanyLogo ticker={ticker} color={meta.logoColor} size={40} shape="circle" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-semibold text-pocket-text">
+                    {meta.companyName}
+                  </p>
+                  <p className="text-[11px] text-pocket-muted">{ticker}</p>
+                </div>
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={() => toggleFollowTicker(ticker)}
+                  className="shrink-0 rounded-full border border-[var(--pocket-border)] px-3 py-1.5 text-[12px] font-semibold text-pocket-muted active:opacity-60"
+                >
+                  Unfollow
+                </button>
+              </div>
             </li>
           );
         })}

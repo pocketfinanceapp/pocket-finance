@@ -5,9 +5,12 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
+  Check,
   ExternalLink,
   MapPin,
+  Plus,
 } from "lucide-react";
+import { useApp } from "@/context/AppContext";
 import type { CompanyInfo } from "@/lib/companyInfo";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import type { NewsArticle } from "@/lib/types";
@@ -36,6 +39,7 @@ interface Fact {
  * risk showing a wrong name.
  */
 export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
+  const { toggleFollowTicker, isFollowingTicker } = useApp();
   const [info, setInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
@@ -43,6 +47,7 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const ticker = article?.ticker ?? "";
   const meta = ticker ? getTickerMetaBySymbol(ticker) : null;
   const companyName = article?.companyName || meta?.companyName || ticker;
+  const following = ticker ? isFollowingTicker(ticker) : false;
 
   useEffect(() => {
     if (!companyName || loadedFor === companyName) return;
@@ -134,6 +139,24 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
                   </p>
                   <p className="text-[12px] text-pocket-muted">{ticker.toUpperCase()}</p>
                 </div>
+                <button
+                  type="button"
+                  data-no-drag
+                  onPointerDown={stop}
+                  onClick={() => toggleFollowTicker(ticker)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-colors active:opacity-70 ${
+                    following
+                      ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
+                      : "border-[var(--pocket-border)] text-pocket-text"
+                  }`}
+                >
+                  {following ? (
+                    <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  )}
+                  {following ? "Following" : "Follow"}
+                </button>
               </div>
 
               {loading ? (

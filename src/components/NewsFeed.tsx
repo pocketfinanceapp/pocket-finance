@@ -88,6 +88,7 @@ export function NewsFeed({
     clearFeedJump,
     hiddenSources,
     countryFilter,
+    followedTickers,
   } = useApp();
   const navigation = useNavigationOptional();
   const homeEntered = useTabPageEntered("home");
@@ -128,6 +129,7 @@ export function NewsFeed({
       sectorInterests,
       favouriteTopics,
       preferredRegion,
+      followedTickers,
       savedArticles,
       articlesById,
     });
@@ -136,6 +138,7 @@ export function NewsFeed({
       sectorInterests,
       preferredRegion,
       favouriteTopics,
+      followedTickers,
       savedArticles,
       articlesById,
       personalizationTick,

@@ -24,6 +24,10 @@ import {
   saveHiddenSources,
 } from "@/lib/sourcePreferences";
 import {
+  loadFollowedTickers,
+  saveFollowedTickers,
+} from "@/lib/tickerPreferences";
+import {
   currencyForRegion,
   DEFAULT_APP_CURRENCY,
   DEFAULT_APP_REGION,
@@ -106,6 +110,9 @@ interface AppContextValue {
   hiddenSources: string[];
   toggleHiddenSource: (source: string) => void;
   isSourceHidden: (source: string) => boolean;
+  followedTickers: string[];
+  toggleFollowTicker: (ticker: string) => void;
+  isFollowingTicker: (ticker: string) => boolean;
   storiesRead: number;
   likedArticlesCount: number;
   feedIndex: number;
@@ -152,6 +159,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [countryFilter, setCountryFilter] = useState<string | null>(null);
   const [hiddenSources, setHiddenSources] = useState<string[]>([]);
+  const [followedTickers, setFollowedTickers] = useState<string[]>([]);
   const [storiesRead, setStoriesRead] = useState(0);
   const [likedArticlesCount, setLikedArticlesCount] = useState(0);
   const [feedIndex, setFeedIndexState] = useState(0);
@@ -227,6 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPreferredCurrencyState(currency);
     setActiveDisplayCurrency(currency);
     setHiddenSources(loadHiddenSources());
+    setFollowedTickers(loadFollowedTickers());
     if (isOnboardingComplete()) {
       setFollowedMarketsState(loadFollowedMarkets());
       setSectorInterestsState(loadSectorInterests());
@@ -426,6 +435,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [hiddenSources]
   );
 
+  const toggleFollowTicker = useCallback((ticker: string) => {
+    const upper = ticker.trim().toUpperCase();
+    if (!upper) return;
+    setFollowedTickers((prev) => {
+      const next = prev.includes(upper)
+        ? prev.filter((t) => t !== upper)
+        : [...prev, upper];
+      saveFollowedTickers(next);
+      return next;
+    });
+  }, []);
+
+  const isFollowingTicker = useCallback(
+    (ticker: string) => followedTickers.includes(ticker.trim().toUpperCase()),
+    [followedTickers]
+  );
+
   const setPreferredRegion = useCallback((region: AppRegionId) => {
     setPreferredRegionState(region);
     savePreferredRegion(region);
@@ -553,6 +579,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hiddenSources,
       toggleHiddenSource,
       isSourceHidden,
+      followedTickers,
+      toggleFollowTicker,
+      isFollowingTicker,
       storiesRead,
       likedArticlesCount,
       feedIndex,
@@ -603,6 +632,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hiddenSources,
       toggleHiddenSource,
       isSourceHidden,
+      followedTickers,
+      toggleFollowTicker,
+      isFollowingTicker,
       storiesRead,
       likedArticlesCount,
       feedIndex,
