@@ -11,7 +11,7 @@ const TIPS = [
   {
     icon: Hand,
     title: "Navigate the feed",
-    body: "Swipe up for the next story. Left to read.",
+    body: "Swipe up for the next story. Left to read, right for company info.",
   },
   {
     icon: Sparkles,

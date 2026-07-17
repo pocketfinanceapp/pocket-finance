@@ -438,7 +438,7 @@ export function FeedCard({
           data-no-drag
         >
           <span className="pf-feed-toast whitespace-nowrap rounded-full border border-[var(--pocket-border)] px-3 py-1 text-[10px] backdrop-blur-sm">
-            Swipe left to read
+            Swipe left to read · right for company info
           </span>
         </div>
       )}
