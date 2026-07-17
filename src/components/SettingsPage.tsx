@@ -127,7 +127,7 @@ export function SettingsPage({
           : screen === "feedPrefs"
             ? "Feed Preferences"
             : screen === "regionCurrency"
-              ? "Region & Currency"
+              ? "Region"
               : screen === "sources"
                 ? "News Sources"
                 : "Settings";
@@ -251,7 +251,7 @@ export function SettingsPage({
           </div>
           <SettingsRow
             icon={<Globe2 className="h-5 w-5 text-[#00C6C6]" />}
-            label="Region & Currency"
+            label="Region"
             onClick={() => setScreen("regionCurrency")}
           />
           <SettingsRow
