@@ -423,16 +423,30 @@ function addTickerScore(
   scores.set(ticker, (scores.get(ticker) ?? 0) + points);
 }
 
+/**
+ * True only for headlines genuinely ABOUT the broad market/an index itself,
+ * never for a single-company story that merely mentions an index for
+ * context (e.g. "Apple Leads Dow Higher on Strong Earnings" is an Apple
+ * story, not a broad-market one). Bare `/\bdow\b/` and `/\bs&p 500\b/`
+ * checks used to short-circuit here — a headline just containing the word
+ * "Dow" was enough to force the generic "Broad Market" tag ahead of any
+ * per-company scoring, which meant real single-company stories could get
+ * misclassified as a market-theme story with no company profile to show.
+ * These now require an index-level action verb, not just a mention.
+ */
 function isGeneralMarketTitle(title: string): boolean {
   const lower = title.trim().toLowerCase();
   if (lower.startsWith("stock market today")) return true;
+
+  const indexAction =
+    /(jones|industrial|30|futures?|closes?|opens?|ends?|falls?|rises?|gains?|drops?|slides?|climbs?|jumps?|sinks?|rallies|tumbles?|surges?|plunges?|recovers?|hits?|extends?)/;
 
   return (
     lower.includes("leads upside") ||
     lower.includes("market rise") ||
     lower.includes("market rally") ||
-    /\bdow\b/i.test(title) ||
-    /\bs&p\s*500\b/i.test(title) ||
+    new RegExp(`\\bdow\\s+${indexAction.source}\\b`, "i").test(title) ||
+    new RegExp(`\\bs&p\\s*500\\s+${indexAction.source}\\b`, "i").test(title) ||
     lower.includes("nasdaq rise") ||
     lower.includes("wholesale inflation")
   );
