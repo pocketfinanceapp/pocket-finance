@@ -12,10 +12,13 @@ import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { FadeInSection } from "./SubPageShell";
 import { MarketBadge } from "./MarketBadge";
 import { SourceBadge } from "./SourceBadge";
+import { SentimentBadge } from "./SentimentBadge";
+import { RelatedArticles } from "./RelatedArticles";
 
 interface ArticlePanelProps {
   article: NewsArticle;
   onBack: () => void;
+  onOpenArticle?: (article: NewsArticle) => void;
 }
 
 function ArticleHeroImage({ article }: { article: NewsArticle }) {
@@ -46,7 +49,7 @@ function ArticleHeroImage({ article }: { article: NewsArticle }) {
   );
 }
 
-export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
+export function ArticlePanel({ article, onBack, onOpenArticle }: ArticlePanelProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const saved = isArticleSaved(article.id);
   const displaySubheading = getArticleSubheading(article.subheading);
@@ -108,6 +111,7 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
             {article.ticker}
           </span>
           <span className="text-[12px] text-pocket-muted">{article.companyName}</span>
+          <SentimentBadge score={article.sentimentScore} />
         </div>
 
         <h1 className="mt-3 text-[1.75rem] font-bold leading-[1.2] tracking-tight text-pocket-text">
@@ -158,6 +162,8 @@ export function ArticlePanel({ article, onBack }: ArticlePanelProps) {
         >
           Read full article →
         </a>
+
+        <RelatedArticles article={article} onSelect={onOpenArticle} />
       </article>
       </FadeInSection>
     </div>

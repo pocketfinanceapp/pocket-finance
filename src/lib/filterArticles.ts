@@ -108,7 +108,7 @@ export function articleMatchesTopics(
 }
 
 export function buildFeedArticles(
-  articles: NewsArticle[],
+  allArticles: NewsArticle[],
   mode: FeedMode,
   followedMarkets: MarketFilter[],
   marketFilters: MarketFilter[],
@@ -116,9 +116,15 @@ export function buildFeedArticles(
   sectorInterests: SectorFilter[],
   searchQuery: string,
   favouriteTopics: ProfileTopic[] = [],
-  personalization?: FeedPersonalizationInput
+  personalization?: FeedPersonalizationInput,
+  hiddenSources: string[] = []
 ): NewsArticle[] {
   if (mode === "trending") return [];
+
+  const articles =
+    hiddenSources.length > 0
+      ? allArticles.filter((a) => !hiddenSources.includes(a.sourceName))
+      : allArticles;
 
   // Explicit market drill-down from Markets tab
   if (marketFilters.length > 0) {

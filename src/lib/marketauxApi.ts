@@ -165,3 +165,212 @@ export async function fetchMarketauxNews(
     return [];
   }
 }
+
+/**
+ * Real trending entities from Marketaux's own trending endpoint — a
+ * relevance-weighted ranking across their full article volume, not just
+ * whatever happens to be in our locally cached feed pool.
+ */
+export interface MarketauxTrendingEntity {
+  symbol: string;
+  totalDocuments: number;
+  sentimentAvg: number | null;
+  score: number | null;
+}
+
+interface RawTrendingEntity {
+  key?: string;
+  total_documents?: number;
+  sentiment_avg?: number | null;
+  score?: number | null;
+}
+
+interface RawTrendingResponse {
+  meta?: { returned?: number; limit?: number };
+  data?: RawTrendingEntity[];
+  error?: { code?: string; message?: string };
+}
+
+export async function fetchTrendingEntities(
+  options: { limit?: number; minDocCount?: number } = {}
+): Promise<MarketauxTrendingEntity[]> {
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  if (!apiKey) return [];
+
+  const url = new URL("https://api.marketaux.com/v1/entity/trending/aggregation");
+  url.searchParams.set("api_token", apiKey);
+  url.searchParams.set("group_by", "symbol");
+  url.searchParams.set("entity_types", "equity,index,etf,cryptocurrency");
+  if (options.minDocCount) {
+    url.searchParams.set("min_doc_count", String(options.minDocCount));
+  }
+  if (options.limit) {
+    url.searchParams.set("limit", String(options.limit));
+  }
+
+  try {
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) {
+      console.error(`[marketaux] trending HTTP ${res.status} ${res.statusText}`);
+      return [];
+    }
+
+    const data = (await res.json()) as RawTrendingResponse;
+    if (data.error) {
+      console.error(
+        `[marketaux] trending API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
+
+    return (data.data ?? [])
+      .filter((e): e is RawTrendingEntity & { key: string } => Boolean(e.key))
+      .map((e) => ({
+        symbol: e.key,
+        totalDocuments: e.total_documents ?? 0,
+        sentimentAvg:
+          typeof e.sentiment_avg === "number" ? e.sentiment_avg : null,
+        score: typeof e.score === "number" ? e.score : null,
+      }));
+  } catch (err) {
+    console.error("[marketaux] trending fetch threw:", err);
+    return [];
+  }
+}
+
+/**
+ * Day-by-day sentiment history for a single entity — powers the sentiment
+ * trend chart on a ticker's detail page. This is a "market mood over time"
+ * chart derived from news coverage, never a price chart.
+ */
+export interface MarketauxSentimentPoint {
+  date: string;
+  totalDocuments: number;
+  sentimentAvg: number | null;
+}
+
+interface RawIntradayGroup {
+  key?: string;
+  total_documents?: number;
+  sentiment_avg?: number | null;
+}
+
+interface RawIntradayEntry {
+  date?: string;
+  data?: RawIntradayGroup[];
+}
+
+interface RawIntradayResponse {
+  data?: RawIntradayEntry[];
+  error?: { code?: string; message?: string };
+}
+
+export async function fetchEntitySentimentHistory(
+  symbol: string,
+  days = 30
+): Promise<MarketauxSentimentPoint[]> {
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  const cleanSymbol = symbol.trim().toUpperCase();
+  if (!apiKey || !cleanSymbol) return [];
+
+  const url = new URL("https://api.marketaux.com/v1/entity/stats/intraday");
+  url.searchParams.set("api_token", apiKey);
+  url.searchParams.set("symbols", cleanSymbol);
+  url.searchParams.set("interval", "day");
+  url.searchParams.set("group_by", "symbol");
+  const publishedAfter = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  url.searchParams.set("published_after", publishedAfter);
+  url.searchParams.set("date_order", "asc");
+
+  try {
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) {
+      console.error(`[marketaux] entity stats HTTP ${res.status} ${res.statusText}`);
+      return [];
+    }
+
+    const data = (await res.json()) as RawIntradayResponse;
+    if (data.error) {
+      console.error(
+        `[marketaux] entity stats API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
+
+    const points = (data.data ?? [])
+      .map((entry): MarketauxSentimentPoint | null => {
+        if (!entry.date) return null;
+        const group =
+          entry.data?.find((g) => g.key === cleanSymbol) ?? entry.data?.[0];
+        return {
+          date: entry.date.slice(0, 10),
+          totalDocuments: group?.total_documents ?? 0,
+          sentimentAvg:
+            typeof group?.sentiment_avg === "number" ? group.sentiment_avg : null,
+        };
+      })
+      .filter((p): p is MarketauxSentimentPoint => p !== null);
+
+    return points.sort((a, b) => a.date.localeCompare(b.date));
+  } catch (err) {
+    console.error("[marketaux] entity stats fetch threw:", err);
+    return [];
+  }
+}
+
+/**
+ * Articles similar to a given Marketaux article — powers a "more on this
+ * story" carousel at the end of the article detail view.
+ */
+export async function fetchSimilarArticles(
+  uuid: string,
+  limit = 6
+): Promise<MarketauxArticle[]> {
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  if (!apiKey || !uuid) return [];
+
+  const url = new URL(
+    `https://api.marketaux.com/v1/news/similar/${encodeURIComponent(uuid)}`
+  );
+  url.searchParams.set("api_token", apiKey);
+  url.searchParams.set("limit", String(limit));
+
+  try {
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) {
+      if (res.status !== 404) {
+        console.error(`[marketaux] similar HTTP ${res.status} ${res.statusText}`);
+      }
+      return [];
+    }
+
+    const data = (await res.json()) as RawMarketauxResponse;
+    if (data.error) {
+      console.error(
+        `[marketaux] similar API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
+
+    return (data.data ?? [])
+      .map(mapArticle)
+      .filter((a): a is MarketauxArticle => a !== null);
+  } catch (err) {
+    console.error("[marketaux] similar fetch threw:", err);
+    return [];
+  }
+}

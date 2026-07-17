@@ -1,47 +1,34 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
 import { SECTOR_FILTERS, type MarketFilter, type SectorFilter } from "@/lib/filters";
 import { GLOBAL_MARKETS } from "@/lib/markets";
+import type { MarketauxTrendingEntity } from "@/lib/marketauxApi";
+import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import type { NewsArticle } from "@/lib/types";
 import { CompanyLogo } from "./CompanyLogo";
 import { MarketFlag } from "./MarketFlag";
+import { sentimentLabel } from "./SentimentBadge";
+import { TickerDetailPanel } from "./TickerDetailPanel";
 
 interface ExplorePageProps {
   catalogArticles: NewsArticle[];
-}
-
-const TICKER_COLORS: Record<string, string> = {
-  AAPL: "#4a4a4a",
-  MSFT: "#00A4EF",
-  GOOGL: "#4285F4",
-  GOOG: "#4285F4",
-  AMZN: "#FF9900",
-  NVDA: "#76B900",
-  TSLA: "#CC0000",
-  META: "#0866FF",
-  BTC: "#F7931A",
-  ETH: "#627EEA",
-  COIN: "#0052FF",
-  NFLX: "#E50914",
-};
-
-function tickerColor(ticker: string): string {
-  return TICKER_COLORS[ticker.toUpperCase()] ?? "#3B6EF5";
+  /** Called when the ticker detail overlay opens/closes (hides bottom nav) */
+  onSidePanelChange?: (open: boolean) => void;
 }
 
 interface TrendingTicker {
   ticker: string;
   companyName: string;
   count: number;
+  sentimentAvg: number | null;
 }
 
-/** Ranks tickers by how often they're mentioned in the current article pool
- * — a count of news coverage, not a price or market value, so it stays
- * accurate no matter how stale the article cache gets. */
+/** Local fallback: ranks tickers by mentions in the cached article pool —
+ * used only when the live Marketaux trending endpoint is unavailable. */
 function rankTickersByMentions(articles: NewsArticle[]): TrendingTicker[] {
   const counts = new Map<string, TrendingTicker>();
 
@@ -56,6 +43,7 @@ function rankTickersByMentions(articles: NewsArticle[]): TrendingTicker[] {
         ticker,
         companyName: article.companyName || ticker,
         count: 1,
+        sentimentAvg: null,
       });
     }
   }
@@ -65,16 +53,52 @@ function rankTickersByMentions(articles: NewsArticle[]): TrendingTicker[] {
     .slice(0, 12);
 }
 
-export function ExplorePage({ catalogArticles }: ExplorePageProps) {
+export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageProps) {
   const { clearFilters, setMarketFilters, toggleSectorFilter, setSearchQuery } =
     useApp();
   const { navigate } = useNavigation();
   const entered = useTabPageEntered("explore");
 
-  const trendingTickers = useMemo(
+  const [liveTrending, setLiveTrending] = useState<MarketauxTrendingEntity[] | null>(
+    null
+  );
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/marketaux/trending?limit=12")
+      .then((res) => (res.ok ? res.json() : { entities: [] }))
+      .then((data: { entities?: MarketauxTrendingEntity[] }) => {
+        if (!cancelled) setLiveTrending(data.entities ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setLiveTrending([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    onSidePanelChange?.(selectedTicker !== null);
+  }, [selectedTicker, onSidePanelChange]);
+
+  const localTrending = useMemo(
     () => rankTickersByMentions(catalogArticles),
     [catalogArticles]
   );
+
+  const trendingTickers: TrendingTicker[] = useMemo(() => {
+    if (liveTrending && liveTrending.length > 0) {
+      return liveTrending.map((e) => ({
+        ticker: e.symbol,
+        companyName: getTickerMetaBySymbol(e.symbol).companyName,
+        count: e.totalDocuments,
+        sentimentAvg: e.sentimentAvg,
+      }));
+    }
+    return localTrending;
+  }, [liveTrending, localTrending]);
 
   const openSector = (sector: SectorFilter) => {
     clearFilters();
@@ -88,11 +112,15 @@ export function ExplorePage({ catalogArticles }: ExplorePageProps) {
     navigate("home");
   };
 
-  const openTicker = (ticker: string) => {
-    clearFilters();
-    setSearchQuery(ticker);
-    navigate("home");
-  };
+  if (selectedTicker) {
+    return (
+      <TickerDetailPanel
+        ticker={selectedTicker}
+        catalogArticles={catalogArticles}
+        onClose={() => setSelectedTicker(null)}
+      />
+    );
+  }
 
   return (
     <div className="pf-page relative flex h-full flex-col bg-pocket-bg text-pocket-text">
@@ -102,6 +130,9 @@ export function ExplorePage({ catalogArticles }: ExplorePageProps) {
       >
         <div className="pb-3 pt-1.5">
           <h1 className="text-[1.625rem] font-bold tracking-tight">Explore</h1>
+          <p className="mt-0.5 text-[12px] text-pocket-muted">
+            Powered by 5,000+ news sources across 80+ global markets
+          </p>
         </div>
       </header>
 
@@ -117,28 +148,47 @@ export function ExplorePage({ catalogArticles }: ExplorePageProps) {
               </h2>
               <div className="-mx-5 overflow-x-auto px-5">
                 <div className="flex w-max gap-3 pb-1">
-                  {trendingTickers.map((item) => (
-                    <button
-                      key={item.ticker}
-                      type="button"
-                      data-no-drag
-                      onClick={() => openTicker(item.ticker)}
-                      className="flex w-[92px] shrink-0 flex-col items-center gap-2 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-2 py-3 text-center active:opacity-70"
-                    >
-                      <CompanyLogo
-                        ticker={item.ticker}
-                        color={tickerColor(item.ticker)}
-                        size={40}
-                        shape="circle"
-                      />
-                      <span className="text-[12px] font-bold text-pocket-text">
-                        {item.ticker}
-                      </span>
-                      <span className="text-[10px] text-pocket-muted">
-                        {item.count} {item.count === 1 ? "story" : "stories"}
-                      </span>
-                    </button>
-                  ))}
+                  {trendingTickers.map((item) => {
+                    const dotColor =
+                      item.sentimentAvg === null
+                        ? null
+                        : sentimentLabel(item.sentimentAvg) === "bullish"
+                          ? "#00C6C6"
+                          : sentimentLabel(item.sentimentAvg) === "bearish"
+                            ? "#f87171"
+                            : "var(--pocket-muted)";
+                    return (
+                      <button
+                        key={item.ticker}
+                        type="button"
+                        data-no-drag
+                        onClick={() => setSelectedTicker(item.ticker)}
+                        className="flex w-[92px] shrink-0 flex-col items-center gap-2 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-2 py-3 text-center active:opacity-70"
+                      >
+                        <div className="relative">
+                          <CompanyLogo
+                            ticker={item.ticker}
+                            color={getTickerMetaBySymbol(item.ticker).logoColor}
+                            size={40}
+                            shape="circle"
+                          />
+                          {dotColor && (
+                            <span
+                              className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[var(--pocket-card)]"
+                              style={{ backgroundColor: dotColor }}
+                              aria-hidden
+                            />
+                          )}
+                        </div>
+                        <span className="text-[12px] font-bold text-pocket-text">
+                          {item.ticker}
+                        </span>
+                        <span className="text-[10px] text-pocket-muted">
+                          {item.count} {item.count === 1 ? "story" : "stories"}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </section>

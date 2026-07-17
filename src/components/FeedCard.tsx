@@ -30,6 +30,7 @@ import {
 import { resolveFeedChip } from "@/lib/feedChip";
 import { resolveMarketForArticle } from "@/lib/tickerMap";
 import { FireSparkIcon } from "@/components/icons/FireSparkIcon";
+import { SentimentBadge } from "./SentimentBadge";
 
 interface FeedCardProps {
   article: NewsArticle;
@@ -497,7 +498,10 @@ export function FeedCard({
             />
           </div>
 
-          <FeedChip label={feedChip.label} kind={feedChip.kind} />
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <FeedChip label={feedChip.label} kind={feedChip.kind} />
+            <SentimentBadge score={article.sentimentScore} size="xs" />
+          </div>
         </div>
       </div>
       )}
@@ -544,7 +548,7 @@ function FeedChip({
 }) {
   if (kind === "stock") {
     return (
-      <div className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6]">
+      <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6]">
         <svg
           className="h-3 w-3 shrink-0"
           viewBox="0 0 24 24"
@@ -564,7 +568,7 @@ function FeedChip({
   }
 
   return (
-    <div className="pf-feed-topic-chip mt-2.5 inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide">
+    <div className="pf-feed-topic-chip inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide">
       <span className="truncate">{label}</span>
     </div>
   );

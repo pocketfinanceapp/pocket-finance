@@ -20,6 +20,10 @@ import {
   saveSectorInterests,
 } from "@/lib/sectorPreferences";
 import {
+  loadHiddenSources,
+  saveHiddenSources,
+} from "@/lib/sourcePreferences";
+import {
   currencyForRegion,
   DEFAULT_APP_CURRENCY,
   DEFAULT_APP_REGION,
@@ -97,6 +101,9 @@ interface AppContextValue {
   clearFilters: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  hiddenSources: string[];
+  toggleHiddenSource: (source: string) => void;
+  isSourceHidden: (source: string) => boolean;
   storiesRead: number;
   likedArticlesCount: number;
   feedIndex: number;
@@ -141,6 +148,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [marketFilters, setMarketFilters] = useState<MarketFilter[]>([]);
   const [sectorFilters, setSectorFiltersState] = useState<SectorFilter[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [hiddenSources, setHiddenSources] = useState<string[]>([]);
   const [storiesRead, setStoriesRead] = useState(0);
   const [likedArticlesCount, setLikedArticlesCount] = useState(0);
   const [feedIndex, setFeedIndexState] = useState(0);
@@ -215,6 +223,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPreferredRegionState(region);
     setPreferredCurrencyState(currency);
     setActiveDisplayCurrency(currency);
+    setHiddenSources(loadHiddenSources());
     if (isOnboardingComplete()) {
       setFollowedMarketsState(loadFollowedMarkets());
       setSectorInterestsState(loadSectorInterests());
@@ -398,6 +407,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSearchQuery("");
   }, []);
 
+  const toggleHiddenSource = useCallback((source: string) => {
+    setHiddenSources((prev) => {
+      const next = prev.includes(source)
+        ? prev.filter((s) => s !== source)
+        : [...prev, source];
+      saveHiddenSources(next);
+      return next;
+    });
+  }, []);
+
+  const isSourceHidden = useCallback(
+    (source: string) => hiddenSources.includes(source),
+    [hiddenSources]
+  );
+
   const setPreferredRegion = useCallback((region: AppRegionId) => {
     setPreferredRegionState(region);
     savePreferredRegion(region);
@@ -520,6 +544,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       clearFilters,
       searchQuery,
       setSearchQuery,
+      hiddenSources,
+      toggleHiddenSource,
+      isSourceHidden,
       storiesRead,
       likedArticlesCount,
       feedIndex,
@@ -566,6 +593,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toggleSectorFilter,
       clearFilters,
       searchQuery,
+      hiddenSources,
+      toggleHiddenSource,
+      isSourceHidden,
       storiesRead,
       likedArticlesCount,
       feedIndex,

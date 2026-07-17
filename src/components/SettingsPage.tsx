@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Bell,
   Bookmark,
+  Check,
   ChevronRight,
   ExternalLink,
   Globe2,
@@ -12,13 +13,14 @@ import {
   Newspaper,
   Tag,
 } from "lucide-react";
+import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { recordActivityEvent } from "@/lib/progression";
 import {
   fetchLikedArticles,
   fetchSavedArticles,
 } from "@/lib/userInteractions";
-import type { LikedArticleEntry, SavedArticleEntry } from "@/lib/types";
+import type { LikedArticleEntry, NewsArticle, SavedArticleEntry } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { FeedPreferencesEditor } from "./FeedPreferencesEditor";
@@ -39,15 +41,22 @@ type SettingsScreen =
   | "saved"
   | "topics"
   | "feedPrefs"
-  | "regionCurrency";
+  | "regionCurrency"
+  | "sources";
 
 interface SettingsPageProps {
   onBack: () => void;
   /** Open directly to a sub-screen (e.g. "liked", "saved") */
   initialScreen?: SettingsScreen;
+  /** Article pool used to derive the News Sources list */
+  catalogArticles?: NewsArticle[];
 }
 
-export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
+export function SettingsPage({
+  onBack,
+  initialScreen,
+  catalogArticles = [],
+}: SettingsPageProps) {
   const { user, signOut } = useAuth();
   const [screen, setScreen] = useState<SettingsScreen>(initialScreen ?? "main");
   const [exiting, setExiting] = useState(false);
@@ -114,7 +123,9 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
             ? "Feed Preferences"
             : screen === "regionCurrency"
               ? "Region & Currency"
-              : "Settings";
+              : screen === "sources"
+                ? "News Sources"
+                : "Settings";
 
   if (screen !== "main") {
     return (
@@ -139,6 +150,10 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
           ) : screen === "regionCurrency" ? (
             <div className="pt-4">
               <RegionCurrencyEditor />
+            </div>
+          ) : screen === "sources" ? (
+            <div className="pt-4">
+              <NewsSourcesEditor catalogArticles={catalogArticles} />
             </div>
           ) : (
             <ArticleList
@@ -229,6 +244,11 @@ export function SettingsPage({ onBack, initialScreen }: SettingsPageProps) {
             icon={<Newspaper className="h-5 w-5 text-[#3B6EF5]" />}
             label="Feed Preferences"
             onClick={() => setScreen("feedPrefs")}
+          />
+          <SettingsRow
+            icon={<Newspaper className="h-5 w-5 text-[#00C6C6]" />}
+            label="News Sources"
+            onClick={() => setScreen("sources")}
           />
           <SettingsRow
             icon={<Tag className="h-5 w-5 text-pocket-muted" />}
@@ -429,6 +449,81 @@ function ArticleList({
             </a>
           </li>
         ))}
+      </ul>
+    </>
+  );
+}
+
+/* ── News source preferences (Marketaux covers 5,000+ sources — this lets
+   people hide the handful appearing in their feed they don't want) ────── */
+
+function NewsSourcesEditor({
+  catalogArticles,
+}: {
+  catalogArticles: NewsArticle[];
+}) {
+  const { hiddenSources, toggleHiddenSource } = useApp();
+
+  const sources = (() => {
+    const counts = new Map<string, number>();
+    for (const article of catalogArticles) {
+      const name = article.sourceName?.trim();
+      if (!name) continue;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  })();
+
+  if (sources.length === 0) {
+    return (
+      <p className="pt-6 text-center text-sm text-pocket-muted">
+        No sources in your feed yet.
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <p className="px-1 text-[13px] leading-relaxed text-pocket-muted">
+        Hide sources you don&apos;t want to see. Your feed pulls from 5,000+
+        outlets — this only affects sources currently showing up for you.
+      </p>
+      <ul className="mt-3 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
+        {sources.map(([name, count]) => {
+          const hidden = hiddenSources.includes(name);
+          return (
+            <li key={name}>
+              <button
+                type="button"
+                data-no-drag
+                onClick={() => toggleHiddenSource(name)}
+                className="flex w-full items-center justify-between px-4 py-3 text-left active:bg-[var(--pocket-surface-hover)]"
+              >
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-[13px] font-medium ${
+                      hidden ? "text-pocket-muted line-through" : "text-pocket-text"
+                    }`}
+                  >
+                    {name}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-pocket-muted">
+                    {count} {count === 1 ? "story" : "stories"} in your feed
+                  </p>
+                </div>
+                <div
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                    hidden
+                      ? "border-[var(--pocket-border)] bg-transparent"
+                      : "border-[#00C6C6] bg-[#00C6C6]"
+                  }`}
+                >
+                  {!hidden && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+                </div>
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </>
   );

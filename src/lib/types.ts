@@ -53,6 +53,16 @@ export interface NewsArticle {
   likes: number;
   comments: number;
   shares: number;
+  /**
+   * Marketaux's own article UUID (undefined for NewsAPI/demo articles).
+   * Used to look up "similar stories" via the news/similar endpoint.
+   */
+  marketauxUuid?: string | null;
+  /**
+   * Marketaux's NLP-derived sentiment score (-1 to +1) for the article's
+   * best-matched entity. Undefined/null when unavailable — never fabricated.
+   */
+  sentimentScore?: number | null;
 }
 
 export interface Comment {

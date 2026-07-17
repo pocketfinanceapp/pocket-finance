@@ -130,6 +130,8 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
     likes: 0,
     comments: 0,
     shares: Math.floor(pseudoRandom(id + "shares", 200, 5000)),
+    marketauxUuid: raw.uuid || null,
+    sentimentScore: bestEntity ? bestEntity.sentimentScore : null,
   };
 }
 

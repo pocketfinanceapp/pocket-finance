@@ -69,7 +69,10 @@ function TabPanels({
         </TabPanel>
 
         <TabPanel active={activeTab === "explore"}>
-          <ExplorePage catalogArticles={initialArticles} />
+          <ExplorePage
+            catalogArticles={initialArticles}
+            onSidePanelChange={setSidePanelOpen}
+          />
         </TabPanel>
 
         <TabPanel active={activeTab === "saved"}>
@@ -78,6 +81,7 @@ function TabPanels({
 
         <TabPanel active={activeTab === "profile"}>
           <ProfilePage
+            catalogArticles={initialArticles}
             onClose={() => navigate("home")}
             onSubPageChange={setProfileSubPageOpen}
           />

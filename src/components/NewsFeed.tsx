@@ -84,6 +84,7 @@ export function NewsFeed({
     incrementStoriesRead,
     feedJumpArticleId,
     clearFeedJump,
+    hiddenSources,
   } = useApp();
   const navigation = useNavigationOptional();
   const homeEntered = useTabPageEntered("home");
@@ -190,7 +191,8 @@ export function NewsFeed({
         sectorInterests,
         searchQuery,
         favouriteTopics,
-        personalizationInput
+        personalizationInput,
+        hiddenSources
       ),
     [
       allArticles,
@@ -202,6 +204,7 @@ export function NewsFeed({
       searchQuery,
       favouriteTopics,
       personalizationInput,
+      hiddenSources,
     ]
   );
 
@@ -236,10 +239,13 @@ export function NewsFeed({
   feedIndexRef.current = feedIndex;
   feedModeRef.current = feedMode;
 
-  const trendingArticles = useMemo(
-    () => rankTrendingArticles(trendingPool).slice(0, 40),
-    [trendingPool]
-  );
+  const trendingArticles = useMemo(() => {
+    const pool =
+      hiddenSources.length > 0
+        ? trendingPool.filter((a) => !hiddenSources.includes(a.sourceName))
+        : trendingPool;
+    return rankTrendingArticles(pool).slice(0, 40);
+  }, [trendingPool, hiddenSources]);
 
   const verticalFeedArticles =
     displayedFeedMode === "trending" ? trendingArticles : filteredArticles;
@@ -314,7 +320,8 @@ export function NewsFeed({
         sectorInterests,
         "",
         favouriteTopics,
-        personalizationInput
+        personalizationInput,
+        hiddenSources
       );
       const idx = forYouList.findIndex((a) => a.id === selected.id);
       if (idx >= 0) {
@@ -330,6 +337,7 @@ export function NewsFeed({
       sectorInterests,
       favouriteTopics,
       personalizationInput,
+      hiddenSources,
       setFeedIndex,
       goToPanel,
     ]
@@ -671,7 +679,13 @@ export function NewsFeed({
             className="h-full shrink-0 overflow-y-auto overscroll-contain"
             style={{ width: "50%", touchAction: "pan-y" }}
           >
-            {article && <ArticlePanel article={article} onBack={goToFeed} />}
+            {article && (
+              <ArticlePanel
+                article={article}
+                onBack={goToFeed}
+                onOpenArticle={openArticle}
+              />
+            )}
           </div>
         </div>
 

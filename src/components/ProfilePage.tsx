@@ -41,7 +41,7 @@ import {
   type LevelState,
   type WeeklyActivity,
 } from "@/lib/progression";
-import type { LikedArticleEntry, SavedArticleEntry } from "@/lib/types";
+import type { LikedArticleEntry, NewsArticle, SavedArticleEntry } from "@/lib/types";
 import { fetchLikedArticles, fetchSavedArticles } from "@/lib/userInteractions";
 import { buildWatchlistItems } from "@/lib/watchlistUtils";
 import { getDismissedWatchlistTickers } from "@/lib/watchlistStore";
@@ -94,11 +94,17 @@ interface ProfilePageProps {
   onClose: () => void;
   /** Called when a sub-screen opens/closes so parent can hide/show bottom nav */
   onSubPageChange?: (isSubPage: boolean) => void;
+  /** Article pool — used to derive the list of sources for Settings > News Sources */
+  catalogArticles?: NewsArticle[];
 }
 
 type SettingsScreen = "main" | "liked" | "saved" | "topics";
 
-export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
+export function ProfilePage({
+  onClose,
+  onSubPageChange,
+  catalogArticles = [],
+}: ProfilePageProps) {
   const { storiesRead, likedArticlesCount, savedArticles, reloadProfileStats } =
     useApp();
   const { user, isGuest, requestSignIn } = useAuth();
@@ -261,6 +267,7 @@ export function ProfilePage({ onClose, onSubPageChange }: ProfilePageProps) {
             setSettingsScreen("main");
           }}
           initialScreen={settingsScreen}
+          catalogArticles={catalogArticles}
         />
       </div>
     );
