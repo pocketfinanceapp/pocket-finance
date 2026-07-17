@@ -627,6 +627,94 @@ function pickBestTicker(scores: Map<string, number>): TickerMeta | null {
   return TICKER_BY_SYMBOL[bestTicker] ?? getTickerMetaBySymbol(bestTicker);
 }
 
+/**
+ * A hand-maintained alias list can never cover every company that might
+ * appear in the news — there will always be smaller names (a biotech with
+ * a single drug approval, a regional bank, etc.) that aren't in our ~170
+ * entry catalog and that Marketaux itself doesn't tag with an entity. Rather
+ * than let those silently fall into the "Broad Market" bucket (which then
+ * tells the user, incorrectly, "this story is tagged under a market theme
+ * rather than a specific company"), only use that fallback when the text
+ * actually reads like a broad-market/economy piece.
+ */
+const BROAD_MARKET_SIGNAL_RE =
+  /\bwall\s+street\b|\bstock\s+market\b|\bglobal\s+markets?\b|\bfutures\b|\bindices\b|\binflation\b|\bjobs\s+report\b|\bnonfarm\s+payrolls\b|\bunemployment\b|\bgdp\b|\brecession\b|\brate\s+(?:hike|cut|decision)\b|\btreasury\s+yields?\b|\bbond\s+market\b|\beconomic\s+data\b|\bconsumer\s+prices?\b|\btariffs?\b|\btrade\s+war\b|\bcentral\s+banks?\b|\bearnings\s+season\b|\bmarkets?\s+(?:rally|selloff|rout|slide|dip|surge|wrap)\b/i;
+
+function hasBroadMarketSignal(text: string): boolean {
+  return BROAD_MARKET_SIGNAL_RE.test(text);
+}
+
+// Headline words that can lead a sentence but are never themselves the
+// company being reported on — guards the extractor below against capturing
+// junk like "This Biotech Stock" or "The Fed" as a "company name".
+const NON_COMPANY_LEAD_WORDS = new Set([
+  "the", "this", "these", "those", "a", "an", "us", "u.s", "why", "how",
+  "what", "when", "where", "here", "breaking", "watch", "opinion",
+  "analysis", "explainer", "report", "reports", "stock", "stocks",
+  "shares", "market", "markets", "global", "world", "asian", "european",
+  "wall", "fed", "federal",
+]);
+
+function isPlausibleCompanyName(candidate: string): boolean {
+  const trimmed = candidate.trim();
+  if (trimmed.length < 2 || trimmed.length > 40) return false;
+  const firstWord = trimmed.split(/\s+/)[0]?.toLowerCase().replace(/[^a-z.]/g, "");
+  return Boolean(firstWord) && !NON_COMPANY_LEAD_WORDS.has(firstWord);
+}
+
+// "BlackRock Shares Rally After..." / "Acme Corp Stock Jumps on..." — one of
+// the most common single-company headline templates in financial news.
+const SHARES_STOCK_LEAD_RE =
+  /^([A-Z][A-Za-z0-9.&'-]*(?:\s+[A-Z][A-Za-z0-9.&'-]*){0,3})\s+(?:Shares?|Stock)\s+(?:Rall(?:y|ies)|Falls?|Fall|Jumps?|Soars?|Soar|Plunges?|Plunge|Tumbles?|Tumble|Sinks?|Sink|Slides?|Slide|Surges?|Surge|Climbs?|Climb|Drops?|Drop|Gains?|Gain|Rises?|Rise|Sheds?|Slips?|Slip|Rebounds?)\b/;
+
+// "Celcuity just won FDA approval..." / "Acme Corp's CEO said..." — a
+// leading proper noun followed by a reporting verb or possessive, used to
+// recover a company name mentioned only in the description.
+const ATTRIBUTION_LEAD_RE =
+  /^([A-Z][A-Za-z0-9.&'-]*(?:\s+[A-Z][A-Za-z0-9.&'-]*){0,3})(?:'s\b|\s+(?:just|said|reported|announced|posted|plans?|is|was|has|had|will|won|filed|raised|cut|swung|forecasts?)\b)/;
+
+function extractLikelyCompanyName(title: string, description: string): string | null {
+  const titleTrimmed = title.trim();
+  const descTrimmed = description.trim();
+
+  const sharesMatch = titleTrimmed.match(SHARES_STOCK_LEAD_RE);
+  if (sharesMatch && isPlausibleCompanyName(sharesMatch[1])) {
+    return sharesMatch[1].trim();
+  }
+
+  const titleAttrMatch = titleTrimmed.match(ATTRIBUTION_LEAD_RE);
+  if (titleAttrMatch && isPlausibleCompanyName(titleAttrMatch[1])) {
+    return titleAttrMatch[1].trim();
+  }
+
+  const descAttrMatch = descTrimmed.match(ATTRIBUTION_LEAD_RE);
+  if (descAttrMatch && isPlausibleCompanyName(descAttrMatch[1])) {
+    return descAttrMatch[1].trim();
+  }
+
+  return null;
+}
+
+/**
+ * Best-effort placeholder for a company we can't map to a real ticker
+ * symbol — not a macro/commodity ticker, so the swipe-right panel treats it
+ * as a company (attempts a Wikidata lookup by name, and if that comes up
+ * empty, shows the honest "we don't have background info on X yet" state
+ * instead of the misleading "tagged under a market theme" one).
+ */
+function buildUnidentifiedCompanyMeta(name: string): TickerMeta {
+  const pseudoTicker =
+    name.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) || "CO";
+  return {
+    ticker: pseudoTicker,
+    companyName: name,
+    market: "NYSE",
+    sector: "Finance",
+    tags: [pseudoTicker],
+    logoColor: getTickerAccentColor(pseudoTicker),
+  };
+}
+
 /** Scan title + description — highest weighted mention wins */
 export function inferTickerFromFields(
   title: string,
@@ -646,7 +734,19 @@ export function inferTickerFromFields(
     scores.delete("SPACEX");
   }
 
-  return pickBestTicker(scores) ?? THEME_MARKET;
+  const best = pickBestTicker(scores);
+  if (best) return best;
+
+  if (hasBroadMarketSignal(`${title} ${description}`)) {
+    return THEME_MARKET;
+  }
+
+  const guessedName = extractLikelyCompanyName(title, description);
+  if (guessedName) {
+    return buildUnidentifiedCompanyMeta(guessedName);
+  }
+
+  return THEME_MARKET;
 }
 
 /** @deprecated Use inferTickerFromFields */
