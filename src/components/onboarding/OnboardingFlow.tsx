@@ -136,7 +136,6 @@ export function OnboardingFlow() {
         {step === 1 && (
           <RegionStep
             selected={region}
-            currency={currency}
             onSelect={selectRegion}
             onNext={() => goTo(2)}
           />
@@ -158,7 +157,6 @@ export function OnboardingFlow() {
         {step === 4 && !exiting && (
           <ReadyStep
             region={region}
-            currency={currency}
             markets={markets}
             sectors={sectors}
             onFinish={finish}
@@ -293,12 +291,10 @@ function WelcomeCtaButton({
 
 function RegionStep({
   selected,
-  currency,
   onSelect,
   onNext,
 }: {
   selected: AppRegionId;
-  currency: AppCurrency;
   onSelect: (region: AppRegionId) => void;
   onNext: () => void;
 }) {
@@ -352,9 +348,6 @@ function RegionStep({
                 <span className="min-w-0 flex-1 text-[15px] font-semibold text-pocket-text">
                   {item.label}
                 </span>
-                <span className="shrink-0 text-[12px] font-medium tabular-nums text-pocket-muted">
-                  {item.currency}
-                </span>
                 <span
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
                     active
@@ -378,14 +371,7 @@ function RegionStep({
         </div>
       </div>
 
-      <p className="onboarding-enter onboarding-enter-d4 shrink-0 pb-3 text-center text-[12px] text-pocket-muted">
-        Currency set to{" "}
-        <span className="font-semibold text-pocket-text">{currency}</span>
-        {" — "}
-        change anytime in Settings
-      </p>
-
-      <div className="onboarding-enter onboarding-enter-d5 shrink-0">
+      <div className="onboarding-enter onboarding-enter-d5 shrink-0 pt-3">
         <GradientButton onClick={onNext}>Continue</GradientButton>
       </div>
     </div>
@@ -493,13 +479,11 @@ function SectorsStep({
 
 function ReadyStep({
   region,
-  currency,
   markets,
   sectors,
   onFinish,
 }: {
   region: AppRegionId;
-  currency: AppCurrency;
   markets: MarketFilter[];
   sectors: SectorFilter[];
   onFinish: () => void;
@@ -534,7 +518,7 @@ function ReadyStep({
       <div className="onboarding-enter onboarding-enter-d4 mt-6 space-y-3 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4">
         <SummaryBlock
           title="Region"
-          items={[`${getAppRegion(region).label} · ${currency}`]}
+          items={[getAppRegion(region).label]}
         />
         <SummaryBlock
           title="Markets"
