@@ -29,7 +29,6 @@ import { FeedCard } from "./FeedCard";
 import { FilterPanel } from "./FilterPanel";
 import { FeedSearchOverlay } from "./FeedSearchOverlay";
 import { ArticlePanel } from "./ArticlePanel";
-import { StockPanel } from "./StockPanel";
 import { MobilePageShell } from "./MobilePageShell";
 import { AddToHomeScreenBanner } from "./AddToHomeScreenBanner";
 import { FeedHeader } from "./FeedHeader";
@@ -45,9 +44,8 @@ interface NewsFeedProps {
   onSidePanelChange?: (open: boolean) => void;
 }
 
-const PANEL_STOCK = 0;
-const PANEL_FEED = 1;
-const PANEL_ARTICLE = 2;
+const PANEL_FEED = 0;
+const PANEL_ARTICLE = 1;
 const AXIS_LOCK = 6;
 const SWIPE_THRESHOLD_PX = 55;
 const SWIPE_VELOCITY = 0.35;
@@ -284,11 +282,7 @@ export function NewsFeed({
   }, [panelIndex, article]);
 
   useEffect(() => {
-    onSidePanelChange?.(
-      panelIndex === PANEL_STOCK ||
-        panelIndex === PANEL_ARTICLE ||
-        commentsOpen
-    );
+    onSidePanelChange?.(panelIndex === PANEL_ARTICLE || commentsOpen);
   }, [panelIndex, commentsOpen, onSidePanelChange]);
 
   const goToPanel = useCallback((index: number) => {
@@ -475,7 +469,7 @@ export function NewsFeed({
         const velocity = dx / dt;
         let next = panelIndexRef.current;
         if (velocity < -SWIPE_VELOCITY || dx < -SWIPE_THRESHOLD_PX) {
-          next = Math.min(2, next + 1);
+          next = Math.min(1, next + 1);
         } else if (velocity > SWIPE_VELOCITY || dx > SWIPE_THRESHOLD_PX) {
           next = Math.max(0, next - 1);
         }
@@ -576,12 +570,10 @@ export function NewsFeed({
     ? ""
     : "transition-transform duration-300 ease-out";
 
-  const hTransform = `translateX(calc(-${panelIndex} * 33.333% + ${dragX}px))`;
+  const hTransform = `translateX(calc(-${panelIndex} * 50% + ${dragX}px))`;
   const vTransform = `translate3d(0, calc(-${feedIndex} * ${FEED_VIEWPORT_HEIGHT} + ${dragY}px), 0)`;
   const trackHeight =
-    panelIndex === PANEL_STOCK || panelIndex === PANEL_ARTICLE
-      ? APP_VIEWPORT_HEIGHT
-      : FEED_VIEWPORT_HEIGHT;
+    panelIndex === PANEL_ARTICLE ? APP_VIEWPORT_HEIGHT : FEED_VIEWPORT_HEIGHT;
 
   const feedContent = (
     <div
@@ -593,22 +585,15 @@ export function NewsFeed({
           className={`flex touch-none ${trackTransition} ${!gesturesEnabled ? "pointer-events-none" : ""}`}
           style={{
             height: trackHeight,
-            width: "300%",
+            width: "200%",
             transform: hTransform,
           }}
         >
           <div
-            className="h-full shrink-0 overflow-y-auto overscroll-contain"
-            style={{ width: "33.333%", touchAction: "pan-y" }}
-          >
-            {article && <StockPanel article={article} onBack={goToFeed} />}
-          </div>
-
-          <div
             data-feed-column
             className="pf-home-feed relative shrink-0 overflow-hidden bg-pocket-feed-bg"
             style={{
-              width: "33.333%",
+              width: "50%",
               height: FEED_VIEWPORT_HEIGHT,
               touchAction: "none",
             }}
@@ -684,7 +669,7 @@ export function NewsFeed({
 
           <div
             className="h-full shrink-0 overflow-y-auto overscroll-contain"
-            style={{ width: "33.333%", touchAction: "pan-y" }}
+            style={{ width: "50%", touchAction: "pan-y" }}
           >
             {article && <ArticlePanel article={article} onBack={goToFeed} />}
           </div>
@@ -715,11 +700,7 @@ export function NewsFeed({
   return (
     <MobilePageShell
       activeTab="home"
-      hideBottomNav={
-        panelIndex === PANEL_STOCK ||
-        panelIndex === PANEL_ARTICLE ||
-        commentsOpen
-      }
+      hideBottomNav={panelIndex === PANEL_ARTICLE || commentsOpen}
     >
       {feedContent}
     </MobilePageShell>

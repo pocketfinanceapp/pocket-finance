@@ -1,21 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { NavigationProvider } from "@/context/NavigationContext";
-import type { MarketFilter } from "@/lib/filters";
 import { isOnboardingComplete } from "@/lib/onboarding";
 import type { NewsArticle } from "@/lib/types";
 import { FeedErrorBoundary } from "./FeedErrorBoundary";
-import { MarketsPage } from "./MarketsPage";
 import { MobilePageShell } from "./MobilePageShell";
 import { NewsFeed } from "./NewsFeed";
-import { DiscoverPage } from "./DiscoverPage";
-import { WatchlistPage } from "./WatchlistPage";
 import { ProfilePage } from "./ProfilePage";
-import { GlobalCompanyPanel } from "./GlobalCompanyPanel";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
 import { appPath } from "@/lib/appPaths";
@@ -31,8 +26,7 @@ function TabPanels({
 }: TabAppShellProps) {
   const { activeTab, navTab, navigate } = useNavigation();
   const { user, isGuest, passwordRecoveryPending } = useAuth();
-  const { setMarketFilters, ensureWatchlistLoaded, onboardingComplete, companyPanelTicker, requestCompanyPanel } =
-    useApp();
+  const { ensureWatchlistLoaded, onboardingComplete } = useApp();
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [profileSubPageOpen, setProfileSubPageOpen] = useState(false);
 
@@ -40,14 +34,6 @@ function TabPanels({
     ensureWatchlistLoaded();
     recordAppVisit();
   }, [ensureWatchlistLoaded]);
-
-  const openMarketFeed = useCallback(
-    (market: MarketFilter) => {
-      setMarketFilters([market]);
-      navigate("home");
-    },
-    [setMarketFilters, navigate]
-  );
 
   const showAuth = !user && !isGuest;
   const onboardingDone =
@@ -60,18 +46,10 @@ function TabPanels({
 
   const hideBottomNav =
     sidePanelOpen ||
-    Boolean(companyPanelTicker) ||
     (activeTab === "profile" && profileSubPageOpen) ||
     showAuth ||
     passwordRecoveryPending ||
     showOnboarding;
-
-  const openCompanyFromTab = useCallback(
-    (ticker: string) => {
-      requestCompanyPanel(ticker, activeTab);
-    },
-    [requestCompanyPanel, activeTab]
-  );
 
   return (
     <MobilePageShell activeTab={navTab} hideBottomNav={hideBottomNav}>
@@ -88,33 +66,12 @@ function TabPanels({
           </FeedErrorBoundary>
         </TabPanel>
 
-        <TabPanel active={activeTab === "markets"}>
-          <MarketsPage
-            onOpenMarketFeed={openMarketFeed}
-            onOpenCompany={openCompanyFromTab}
-          />
-        </TabPanel>
-
-        <TabPanel active={activeTab === "discover"}>
-          <DiscoverPage
-            articles={initialArticles}
-            onOpenCompany={openCompanyFromTab}
-            onOpenMarketFeed={openMarketFeed}
-          />
-        </TabPanel>
-
-        <TabPanel active={activeTab === "watchlist"}>
-          <WatchlistPage articles={initialArticles} />
-        </TabPanel>
-
         <TabPanel active={activeTab === "profile"}>
           <ProfilePage
             onClose={() => navigate("home")}
             onSubPageChange={setProfileSubPageOpen}
           />
         </TabPanel>
-
-        <GlobalCompanyPanel catalogArticles={initialArticles} />
       </div>
     </MobilePageShell>
   );

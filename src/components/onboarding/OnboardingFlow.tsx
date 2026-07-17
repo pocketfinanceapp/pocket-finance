@@ -459,7 +459,7 @@ function SectorsStep({
         What sectors interest you?
       </h1>
       <p className="onboarding-enter onboarding-enter-d2 mt-2 shrink-0 text-sm text-pocket-muted">
-        Select at least one so we can personalise stories and Browse.
+        Select at least one so we can personalise your stories.
       </p>
       <div className="mt-5 min-h-0 flex-1 overflow-y-auto pb-4">
         <div className="onboarding-pref-grid">
@@ -508,10 +508,6 @@ function ReadyStep({
     {
       title: "Pocket Briefing",
       body: "AI snapshot inside each article",
-    },
-    {
-      title: "Browse",
-      body: "Companies, markets, and crypto",
     },
     {
       title: "Profile",

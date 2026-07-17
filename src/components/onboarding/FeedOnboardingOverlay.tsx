@@ -1,13 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  BookOpenText,
-  Building2,
-  Flame,
-  Hand,
-  Sparkles,
-} from "lucide-react";
+import { BookOpenText, Flame, Hand, Sparkles } from "lucide-react";
 import {
   isFeedOnboardingComplete,
   markFeedOnboardingComplete,
@@ -17,17 +11,12 @@ const TIPS = [
   {
     icon: Hand,
     title: "Navigate the feed",
-    body: "Swipe up for the next story. Left to read. Right for company details.",
+    body: "Swipe up for the next story. Left to read.",
   },
   {
     icon: Sparkles,
     title: "Pocket Briefing",
     body: "Open any article for a short AI summary — what happened, why it matters.",
-  },
-  {
-    icon: Building2,
-    title: "Browse & Markets",
-    body: "Explore companies, markets, and crypto. Save stories to revisit later in Watchlist.",
   },
   {
     icon: Flame,
