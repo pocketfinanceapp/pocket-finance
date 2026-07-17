@@ -1,0 +1,271 @@
+{
+  "generatedAt": "2026-07-16T15:03:03.218Z",
+  "totalChecked": 114,
+  "flaggedCount": 21,
+  "errorCount": 0,
+  "flagged": [
+    {
+      "ticker": "INTC",
+      "requestSymbol": "INTC",
+      "issues": [
+        {
+          "type": "negative_eps_positive_pe",
+          "eps": -0.6,
+          "twelveDataPE": 809.3334
+        }
+      ]
+    },
+    {
+      "ticker": "NKE",
+      "requestSymbol": "NKE",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 44.16,
+          "sharesOutstanding": 1199499281,
+          "selfComputedMarketCap": 52969888249,
+          "twelveDataMarketCap": 63337538401,
+          "ratio": 0.84
+        }
+      ]
+    },
+    {
+      "ticker": "PYPL",
+      "requestSymbol": "PYPL",
+      "issues": [
+        {
+          "type": "pe_mismatch",
+          "price": 57.02,
+          "eps": 5.33,
+          "selfComputedPE": 10.7,
+          "twelveDataPE": 8.887429
+        }
+      ]
+    },
+    {
+      "ticker": "RIVN",
+      "requestSymbol": "RIVN",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 17.235,
+          "sharesOutstanding": 1260000000,
+          "selfComputedMarketCap": 21716100000,
+          "twelveDataMarketCap": 25763160599,
+          "ratio": 0.84
+        }
+      ]
+    },
+    {
+      "ticker": "F",
+      "requestSymbol": "F",
+      "issues": [
+        {
+          "type": "negative_eps_positive_pe",
+          "eps": -1.55,
+          "twelveDataPE": 11.970086
+        }
+      ]
+    },
+    {
+      "ticker": "BRK",
+      "requestSymbol": "BRK.B",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 489.35,
+          "sharesOutstanding": 1437903,
+          "selfComputedMarketCap": 703637833,
+          "twelveDataMarketCap": 1053299573333,
+          "ratio": 0
+        }
+      ]
+    },
+    {
+      "ticker": "MRNA",
+      "requestSymbol": "MRNA",
+      "issues": [
+        {
+          "type": "negative_eps_positive_pe",
+          "eps": -7.99,
+          "twelveDataPE": 24.96875
+        }
+      ]
+    },
+    {
+      "ticker": "TSM",
+      "requestSymbol": "TSM",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 411.39,
+          "sharesOutstanding": 25932370000,
+          "selfComputedMarketCap": 10668317694300,
+          "twelveDataMarketCap": 2175622170837,
+          "ratio": 4.9
+        }
+      ]
+    },
+    {
+      "ticker": "MSTR",
+      "requestSymbol": "MSTR",
+      "issues": [
+        {
+          "type": "negative_eps_positive_pe",
+          "eps": -36,
+          "twelveDataPE": 5.470443
+        }
+      ]
+    },
+    {
+      "ticker": "BABA",
+      "requestSymbol": "BABA",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 118.88,
+          "sharesOutstanding": 18580374278,
+          "selfComputedMarketCap": 2208834894169,
+          "twelveDataMarketCap": 282087892984,
+          "ratio": 7.83
+        }
+      ]
+    },
+    {
+      "ticker": "QQQ",
+      "requestSymbol": "QQQ",
+      "issues": [
+        {
+          "type": "missing_data",
+          "marketCap": 261108809728,
+          "sharesOutstanding": null,
+          "price": 710.2
+        }
+      ]
+    },
+    {
+      "ticker": "DIA",
+      "requestSymbol": "DIA",
+      "issues": [
+        {
+          "type": "missing_data",
+          "marketCap": 39988563968,
+          "sharesOutstanding": null,
+          "price": 527.315
+        }
+      ]
+    },
+    {
+      "ticker": "IWM",
+      "requestSymbol": "IWM",
+      "issues": [
+        {
+          "type": "missing_data",
+          "marketCap": 77890199552,
+          "sharesOutstanding": null,
+          "price": 297.03
+        }
+      ]
+    },
+    {
+      "ticker": "SOXX",
+      "requestSymbol": "SOXX",
+      "issues": [
+        {
+          "type": "missing_data",
+          "marketCap": 3483886592,
+          "sharesOutstanding": null,
+          "price": 536.03
+        }
+      ]
+    },
+    {
+      "ticker": "XLK",
+      "requestSymbol": "XLK",
+      "issues": [
+        {
+          "type": "missing_data",
+          "marketCap": 43684032512,
+          "sharesOutstanding": null,
+          "price": 177.79
+        }
+      ]
+    },
+    {
+      "ticker": "CRWD",
+      "requestSymbol": "CRWD",
+      "issues": [
+        {
+          "type": "negative_eps_positive_pe",
+          "eps": -0.04,
+          "twelveDataPE": 716.549
+        }
+      ]
+    },
+    {
+      "ticker": "RIOT",
+      "requestSymbol": "RIOT",
+      "issues": [
+        {
+          "type": "negative_eps_positive_pe",
+          "eps": -2.4,
+          "twelveDataPE": 27.240385
+        }
+      ]
+    },
+    {
+      "ticker": "MARA",
+      "requestSymbol": "MARA",
+      "issues": [
+        {
+          "type": "negative_eps_positive_pe",
+          "eps": -5.45,
+          "twelveDataPE": 3.44358
+        }
+      ]
+    },
+    {
+      "ticker": "PDD",
+      "requestSymbol": "PDD",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 87.31,
+          "sharesOutstanding": 5693585848,
+          "selfComputedMarketCap": 497106980389,
+          "twelveDataMarketCap": 122042012651,
+          "ratio": 4.07
+        }
+      ]
+    },
+    {
+      "ticker": "JD",
+      "requestSymbol": "JD",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 29.87,
+          "sharesOutstanding": 2701000000,
+          "selfComputedMarketCap": 80678870000,
+          "twelveDataMarketCap": 39542640000,
+          "ratio": 2.04
+        }
+      ]
+    },
+    {
+      "ticker": "AMX",
+      "requestSymbol": "AMX",
+      "issues": [
+        {
+          "type": "market_cap_mismatch",
+          "price": 26.165,
+          "sharesOutstanding": 60195000000,
+          "selfComputedMarketCap": 1575002175000,
+          "twelveDataMarketCap": 78397233250,
+          "ratio": 20.09
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

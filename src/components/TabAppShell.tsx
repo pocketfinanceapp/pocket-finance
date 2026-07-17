@@ -11,6 +11,7 @@ import { FeedErrorBoundary } from "./FeedErrorBoundary";
 import { MobilePageShell } from "./MobilePageShell";
 import { NewsFeed } from "./NewsFeed";
 import { ProfilePage } from "./ProfilePage";
+import { SavedPage } from "./SavedPage";
 import { useNavigation } from "@/context/NavigationContext";
 import { recordAppVisit } from "@/lib/profileStorage";
 import { appPath } from "@/lib/appPaths";
@@ -64,6 +65,10 @@ function TabPanels({
               onSidePanelChange={setSidePanelOpen}
             />
           </FeedErrorBoundary>
+        </TabPanel>
+
+        <TabPanel active={activeTab === "saved"}>
+          <SavedPage catalogArticles={initialArticles} />
         </TabPanel>
 
         <TabPanel active={activeTab === "profile"}>
