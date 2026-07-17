@@ -75,7 +75,13 @@ export function LandingDemoFeedCard({
   const iconClass = compact ? "h-3 w-3" : "h-4 w-4";
   return (
     <div className="relative h-full w-full overflow-hidden bg-pocket-feed-bg">
-      <FeedCardFallbackBackground article={article} category="Tech" />
+      {/*
+        "Finance" gives clean gridlines + a single line-chart stroke — no
+        decorative shapes. The "Tech" variant's chip-motif rectangles read
+        fine at full feed-card size but look like empty/broken placeholder
+        boxes when squeezed into this small marketing preview card.
+      */}
+      <FeedCardFallbackBackground article={article} category="Finance" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/80" />
 
       <div
