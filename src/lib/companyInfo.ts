@@ -1,13 +1,16 @@
 /**
- * Static "who is this company" background info — CEO, headquarters, parent
- * company, industry, founding date, a one-line description, and a link to
- * read more. Sourced entirely from Wikidata + Wikipedia's free, keyless
- * public APIs — deliberately NOT a financial-data vendor, since this
- * replaces the old live stock panel that was removed over liability
- * concerns. Nothing here is a price, a quote, or financial advice; it's the
- * same kind of editorial fact-box any news outlet publishes, and it's
- * allowed to be occasionally stale (an exec change, a small ownership
- * change) without the stakes of a wrong stock price.
+ * Static "who is this company" background info — headquarters, parent
+ * company/owner, industry, founding date, a one-line description, and a
+ * link to read more. Sourced entirely from Wikidata + Wikipedia's free,
+ * keyless public APIs — deliberately NOT a financial-data vendor, since
+ * this replaces the old live stock panel that was removed over liability
+ * concerns. Nothing here is a price, a quote, or financial advice.
+ *
+ * Note: we deliberately don't surface "CEO" — Wikidata's chief-executive
+ * property is frequently stale (shows former CEOs) since claims aren't
+ * reliably ordered by recency and Wikidata often lacks "end date"
+ * qualifiers, so we'd need per-company manual verification to trust it.
+ * Not worth the risk of showing a wrong exec's name.
  *
  * Coverage is uneven — Wikidata has excellent data on large public
  * companies and thin-to-nothing on smaller tickers. When we don't have
@@ -24,7 +27,6 @@ export interface CompanyInfo {
   companyName: string;
   description: string | null;
   imageUrl: string | null;
-  ceo: string | null;
   headquarters: string | null;
   parentOrganization: string | null;
   ownedBy: string | null;
@@ -58,7 +60,6 @@ interface WikidataEntity {
 }
 
 const PROPS = {
-  ceo: "P169",
   parentOrganization: "P749",
   ownedBy: "P127",
   headquarters: "P159",
@@ -130,7 +131,6 @@ export async function fetchCompanyInfo(
 
   const resolvedName = entity.labels?.en?.value ?? cleanName;
 
-  const ceoClaim = extractClaimValue(entity.claims, PROPS.ceo);
   const parentClaim = extractClaimValue(entity.claims, PROPS.parentOrganization);
   const ownedByClaim = extractClaimValue(entity.claims, PROPS.ownedBy);
   const hqClaim = extractClaimValue(entity.claims, PROPS.headquarters);
@@ -138,7 +138,6 @@ export async function fetchCompanyInfo(
   const inceptionClaim = extractClaimValue(entity.claims, PROPS.inception);
 
   const referencedIds = [
-    ceoClaim?.entityId,
     parentClaim?.entityId,
     ownedByClaim?.entityId,
     hqClaim?.entityId,
@@ -179,7 +178,6 @@ export async function fetchCompanyInfo(
     companyName: resolvedName,
     description: summaryData?.extract ?? null,
     imageUrl: summaryData?.thumbnail?.source ?? null,
-    ceo: resolve(ceoClaim?.entityId),
     headquarters: resolve(hqClaim?.entityId),
     parentOrganization: resolve(parentClaim?.entityId),
     ownedBy: resolve(ownedByClaim?.entityId),
@@ -190,7 +188,6 @@ export async function fetchCompanyInfo(
 
   const hasAnyData =
     info.description ||
-    info.ceo ||
     info.headquarters ||
     info.parentOrganization ||
     info.ownedBy ||

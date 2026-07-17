@@ -7,7 +7,6 @@ import {
   Calendar,
   ExternalLink,
   MapPin,
-  User,
 } from "lucide-react";
 import type { CompanyInfo } from "@/lib/companyInfo";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
@@ -21,16 +20,20 @@ interface BusinessInfoPanelProps {
 }
 
 interface Fact {
-  icon: typeof User;
+  icon: typeof Calendar;
   label: string;
   value: string;
 }
 
 /**
- * "Swipe right for business info" — a small, glanceable fact box (CEO,
- * founded date, headquarters, parent company, industry) sourced from
+ * "Swipe right for business info" — a small, glanceable fact box (founded
+ * date, headquarters, parent company, industry) sourced from
  * Wikidata/Wikipedia. This replaces the old live stock panel; it's
  * deliberately not a dashboard and carries no price/financial data.
+ *
+ * CEO is intentionally omitted — Wikidata's chief-executive property is
+ * unreliable (often shows former CEOs), so we don't surface it rather than
+ * risk showing a wrong name.
  */
 export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const [info, setInfo] = useState<CompanyInfo | null>(null);
@@ -70,7 +73,6 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   const facts: Fact[] = [];
-  if (info?.ceo) facts.push({ icon: User, label: "CEO", value: info.ceo });
   if (info?.founded) {
     facts.push({ icon: Calendar, label: "Founded", value: info.founded });
   }
