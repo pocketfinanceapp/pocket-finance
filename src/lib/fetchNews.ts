@@ -1,6 +1,7 @@
 import { NEWS_API_BLOCKED_TERMS } from "./articleFilter";
 import { isExcludedArticle } from "./articleText";
 import { filterFinanceArticles } from "./financeRelevance";
+import { hasUsableFeedImage } from "./feedImage";
 import { mapNewsApiArticle, mapMarketauxArticle, DEMO_ARTICLES } from "./newsMapper";
 import { fetchMarketauxNews } from "./marketauxApi";
 import type { NewsArticle } from "./types";
@@ -115,6 +116,12 @@ async function fetchMainFeedFromMarketaux(): Promise<NewsArticle[]> {
  * a handful of articles per request (3 on Free), so we always top up with
  * NewsAPI/demo rather than treating a small non-empty Marketaux result as a
  * complete feed.
+ *
+ * Articles without a usable hero image are dropped here rather than left to
+ * fall back to generated art client-side: this is a full-screen photo feed,
+ * and NewsAPI/Marketaux both frequently omit an image for a given story
+ * (source just never supplied one), so filtering at merge time keeps the
+ * feed itself photo-complete instead of relying on per-card fallback art.
  */
 function mergeArticlePools(pools: NewsArticle[][], cap: number): NewsArticle[] {
   const seen = new Set<string>();
@@ -122,6 +129,7 @@ function mergeArticlePools(pools: NewsArticle[][], cap: number): NewsArticle[] {
   for (const pool of pools) {
     for (const a of pool) {
       if (seen.has(a.id)) continue;
+      if (!hasUsableFeedImage(a.imageUrl)) continue;
       seen.add(a.id);
       merged.push(a);
       if (merged.length >= cap) return merged;
@@ -142,9 +150,8 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
 
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
-    if (marketauxArticles.length > 0) {
-      return marketauxArticles.slice(0, TRENDING_CAP);
-    }
+    const withImages = mergeArticlePools([marketauxArticles], TRENDING_CAP);
+    if (withImages.length > 0) return withImages;
     return DEMO_ARTICLES.slice(0, 10);
   }
 
@@ -157,9 +164,8 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
     if (merged.length > 0) return merged;
     return DEMO_ARTICLES.slice(0, 10);
   } catch {
-    if (marketauxArticles.length > 0) {
-      return marketauxArticles.slice(0, TRENDING_CAP);
-    }
+    const withImages = mergeArticlePools([marketauxArticles], TRENDING_CAP);
+    if (withImages.length > 0) return withImages;
     return [];
   }
 }
@@ -177,7 +183,8 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
-    if (marketauxArticles.length > 0) return marketauxArticles;
+    const withImages = mergeArticlePools([marketauxArticles], MAIN_FEED_CAP);
+    if (withImages.length > 0) return withImages;
     return filterFinanceArticles(DEMO_ARTICLES);
   }
 
@@ -216,7 +223,8 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       )
     );
   } catch {
-    if (marketauxArticles.length > 0) return marketauxArticles;
+    const withImages = mergeArticlePools([marketauxArticles], MAIN_FEED_CAP);
+    if (withImages.length > 0) return withImages;
     return filterFinanceArticles(DEMO_ARTICLES);
   }
 }
