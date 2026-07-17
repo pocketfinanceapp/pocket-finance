@@ -135,10 +135,7 @@ export function LandingPage() {
         <div className="relative px-5 pt-4 sm:px-8 sm:pt-10">
           <div className="mx-auto grid max-w-6xl items-center gap-5 sm:gap-8 md:grid-cols-2 md:gap-12 lg:gap-16">
             <div className="text-center md:text-left">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#00C6C6]">
-                Pocket Finance
-              </p>
-              <h1 className="mt-2.5 text-[1.85rem] font-bold leading-[1.08] tracking-tight sm:mt-3 sm:text-5xl sm:leading-[1.05]">
+              <h1 className="text-[1.85rem] font-bold leading-[1.08] tracking-tight sm:text-5xl sm:leading-[1.05]">
                 Markets, briefly —{" "}
                 <span className="bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] bg-clip-text text-transparent">
                   built for scrolling.
