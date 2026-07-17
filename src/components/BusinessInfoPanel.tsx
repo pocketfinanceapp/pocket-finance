@@ -6,6 +6,7 @@ import {
   Building2,
   Calendar,
   Check,
+  ChevronDown,
   ExternalLink,
   MapPin,
   Plus,
@@ -36,6 +37,30 @@ interface Fact {
   icon: typeof Calendar;
   label: string;
   value: string;
+}
+
+function buildFacts(info: CompanyInfo | null): Fact[] {
+  const facts: Fact[] = [];
+  if (!info) return facts;
+  if (info.founded) {
+    facts.push({ icon: Calendar, label: "Founded", value: info.founded });
+  }
+  if (info.headquarters) {
+    facts.push({ icon: MapPin, label: "Headquarters", value: info.headquarters });
+  }
+  if (info.parentOrganization) {
+    facts.push({
+      icon: Building2,
+      label: "Parent company",
+      value: info.parentOrganization,
+    });
+  } else if (info.ownedBy) {
+    facts.push({ icon: Building2, label: "Owned by", value: info.ownedBy });
+  }
+  if (info.industry) {
+    facts.push({ icon: Building2, label: "Industry", value: info.industry });
+  }
+  return facts;
 }
 
 function summarizeSentiment(
@@ -91,6 +116,13 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
     []
   );
   const [followToast, setFollowToast] = useState<string | null>(null);
+  const [expandedRelated, setExpandedRelated] = useState<string | null>(null);
+  const [relatedInfo, setRelatedInfo] = useState<Record<string, CompanyInfo | null>>(
+    {}
+  );
+  const [relatedInfoLoading, setRelatedInfoLoading] = useState<
+    Record<string, boolean>
+  >({});
 
   const ticker = article?.ticker ?? "";
   const isMacroTicker = ticker ? isMacroOrCommodityTicker(ticker) : false;
@@ -187,25 +219,7 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
-  const facts: Fact[] = [];
-  if (info?.founded) {
-    facts.push({ icon: Calendar, label: "Founded", value: info.founded });
-  }
-  if (info?.headquarters) {
-    facts.push({ icon: MapPin, label: "Headquarters", value: info.headquarters });
-  }
-  if (info?.parentOrganization) {
-    facts.push({
-      icon: Building2,
-      label: "Parent company",
-      value: info.parentOrganization,
-    });
-  } else if (info?.ownedBy) {
-    facts.push({ icon: Building2, label: "Owned by", value: info.ownedBy });
-  }
-  if (info?.industry) {
-    facts.push({ icon: Building2, label: "Industry", value: info.industry });
-  }
+  const facts = buildFacts(info);
 
   // Sparse Wikidata coverage (e.g. a smaller ASX-listed name with only an
   // "Industry" field) reads as broken rather than expected — call it out
@@ -229,6 +243,32 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const openHeadline = (headline: NewsArticle) => {
     requestFeedJump(headline.id);
     onBack();
+  };
+
+  // Fetch a related company's background info on first expand, then cache
+  // it — collapsing/re-expanding shouldn't re-fetch.
+  const handleToggleRelated = async (related: { ticker: string; companyName: string }) => {
+    if (expandedRelated === related.ticker) {
+      setExpandedRelated(null);
+      return;
+    }
+    setExpandedRelated(related.ticker);
+    if (related.ticker in relatedInfo) return;
+
+    setRelatedInfoLoading((prev) => ({ ...prev, [related.ticker]: true }));
+    try {
+      const res = await fetch(
+        `/api/company-info?company=${encodeURIComponent(related.companyName)}`
+      );
+      const data: { info?: CompanyInfo | null } = res.ok
+        ? await res.json()
+        : { info: null };
+      setRelatedInfo((prev) => ({ ...prev, [related.ticker]: data.info ?? null }));
+    } catch {
+      setRelatedInfo((prev) => ({ ...prev, [related.ticker]: null }));
+    } finally {
+      setRelatedInfoLoading((prev) => ({ ...prev, [related.ticker]: false }));
+    }
   };
 
   return (
@@ -407,43 +447,120 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
                   <ul className="mt-3 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
                     {relatedTickers.map((related) => {
                       const relatedFollowing = isFollowingTicker(related.ticker);
+                      const isExpanded = expandedRelated === related.ticker;
+                      const relatedFacts = buildFacts(relatedInfo[related.ticker] ?? null);
                       return (
-                        <li
-                          key={related.ticker}
-                          className="flex items-center gap-3 px-4 py-3"
-                        >
-                          <CompanyLogo
-                            ticker={related.ticker}
-                            color={related.logoColor}
-                            size={36}
-                            shape="circle"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-semibold text-pocket-text">
-                              {related.companyName}
-                            </p>
-                            <p className="text-[11px] text-pocket-muted">
-                              {related.ticker}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
+                        <li key={related.ticker}>
+                          <div
                             data-no-drag
+                            role="button"
+                            tabIndex={0}
                             onPointerDown={stop}
-                            onClick={() => handleFollow(related.ticker)}
-                            className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors active:opacity-70 ${
-                              relatedFollowing
-                                ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
-                                : "border-[var(--pocket-border)] text-pocket-text"
-                            }`}
+                            onClick={() => void handleToggleRelated(related)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                void handleToggleRelated(related);
+                              }
+                            }}
+                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left active:bg-[var(--pocket-surface-hover)]"
                           >
-                            {relatedFollowing ? (
-                              <Check className="h-3 w-3" strokeWidth={2.5} />
-                            ) : (
-                              <Plus className="h-3 w-3" strokeWidth={2.5} />
-                            )}
-                            {relatedFollowing ? "Following" : "Follow"}
-                          </button>
+                            <CompanyLogo
+                              ticker={related.ticker}
+                              color={related.logoColor}
+                              size={36}
+                              shape="circle"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[13px] font-semibold text-pocket-text">
+                                {related.companyName}
+                              </p>
+                              <p className="text-[11px] text-pocket-muted">
+                                {related.ticker}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              data-no-drag
+                              onPointerDown={stop}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFollow(related.ticker);
+                              }}
+                              className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors active:opacity-70 ${
+                                relatedFollowing
+                                  ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
+                                  : "border-[var(--pocket-border)] text-pocket-text"
+                              }`}
+                            >
+                              {relatedFollowing ? (
+                                <Check className="h-3 w-3" strokeWidth={2.5} />
+                              ) : (
+                                <Plus className="h-3 w-3" strokeWidth={2.5} />
+                              )}
+                              {relatedFollowing ? "Following" : "Follow"}
+                            </button>
+                            <ChevronDown
+                              className={`h-4 w-4 shrink-0 text-pocket-muted transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          </div>
+
+                          {isExpanded && (
+                            <div className="border-t border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)]/40 px-4 py-3">
+                              {relatedInfoLoading[related.ticker] ? (
+                                <p className="text-[12px] text-pocket-muted">
+                                  Loading…
+                                </p>
+                              ) : !relatedInfo[related.ticker] ? (
+                                <p className="text-[12px] text-pocket-muted">
+                                  We don&apos;t have background info on{" "}
+                                  {related.companyName} yet.
+                                </p>
+                              ) : (
+                                <>
+                                  {relatedInfo[related.ticker]?.description && (
+                                    <p className="text-[12px] leading-relaxed text-pocket-text">
+                                      {relatedInfo[related.ticker]?.description}
+                                    </p>
+                                  )}
+                                  {relatedFacts.length > 0 && (
+                                    <div className="mt-3 space-y-2">
+                                      {relatedFacts.map((fact) => (
+                                        <div
+                                          key={fact.label}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <fact.icon className="h-3.5 w-3.5 shrink-0 text-pocket-muted" />
+                                          <p className="text-[12px] text-pocket-muted">
+                                            {fact.label}:{" "}
+                                            <span className="font-semibold text-pocket-text">
+                                              {fact.value}
+                                            </span>
+                                          </p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {relatedInfo[related.ticker]?.wikipediaUrl && (
+                                    <a
+                                      href={relatedInfo[related.ticker]?.wikipediaUrl ?? "#"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      data-no-drag
+                                      onPointerDown={stop}
+                                      onClick={stop}
+                                      className="mt-3 flex items-center justify-center gap-1.5 rounded-xl border border-[var(--pocket-border)] px-3 py-2 text-[12px] font-semibold text-pocket-text active:bg-[var(--pocket-surface-hover)]"
+                                    >
+                                      Read more on Wikipedia
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          )}
                         </li>
                       );
                     })}
