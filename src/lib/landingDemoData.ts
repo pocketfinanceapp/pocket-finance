@@ -76,37 +76,47 @@ export const LANDING_BRIEFING: PocketBriefing = {
     "Watch SOXX for breadth: broad ETF strength usually means the AI hardware cycle still has momentum.",
 };
 
-export const LANDING_STOCK = {
+/**
+ * Demo data for the swipe-right "About this company" panel — mirrors
+ * BusinessInfoPanel's Wikidata/Wikipedia-sourced fields. No price, chart,
+ * or financial data (that feature was retired); this is editorial company
+ * background only.
+ */
+export const LANDING_COMPANY = {
   ticker: "NVDA",
   companyName: "NVIDIA Corporation",
-  price: 131.38,
-  change: 1.84,
-  changePercent: 1.42,
-  marketCap: "3.24T",
-  peRatio: "35.2",
-  revenue: "130.5B",
   color: "#76B900",
-  chartPoints: [118, 121, 119, 124, 122, 127, 125, 129, 128, 131.38],
+  description:
+    "American technology company known for designing graphics processing units and AI computing hardware.",
+  founded: "1993",
+  headquarters: "Santa Clara, California",
+  industry: "Semiconductors",
 } as const;
 
-export const LANDING_BROWSE = {
-  tabs: ["Companies", "Markets", "Crypto"] as const,
-  rows: {
-    Companies: [
-      { ticker: "AAPL", name: "Apple Inc.", color: "#4a4a4a" },
-      { ticker: "MSFT", name: "Microsoft", color: "#00A4EF" },
-      { ticker: "NVDA", name: "NVIDIA", color: "#76B900" },
-      { ticker: "GOOGL", name: "Alphabet", color: "#4285F4" },
-    ],
-    Markets: [
-      { ticker: "NASDAQ", name: "Nasdaq Composite", color: "#3B6EF5" },
-      { ticker: "SPX", name: "S&P 500", color: "#00C6C6" },
-      { ticker: "NIKKEI", name: "Nikkei 225", color: "#7BA3FF" },
-    ],
-    Crypto: [
-      { ticker: "BTC", name: "Bitcoin", color: "#F7931A" },
-      { ticker: "ETH", name: "Ethereum", color: "#627EEA" },
-      { ticker: "SOL", name: "Solana", color: "#9945FF" },
-    ],
-  },
+export const LANDING_SENTIMENT: readonly {
+  ticker: string;
+  name: string;
+  color: string;
+  sentiment: "bullish" | "neutral" | "bearish";
+}[] = [
+  { ticker: "NVDA", name: "NVIDIA", color: "#76B900", sentiment: "bullish" },
+  { ticker: "AAPL", name: "Apple Inc.", color: "#4a4a4a", sentiment: "neutral" },
+  { ticker: "MSFT", name: "Microsoft", color: "#00A4EF", sentiment: "bullish" },
+  { ticker: "BTC", name: "Bitcoin", color: "#F7931A", sentiment: "bullish" },
+] as const;
+
+/**
+ * Demo data for the Explore feature card — real trending tickers (sentiment,
+ * not price) and regions, mirroring ExplorePage. Replaces the old
+ * Companies/Markets/Crypto "Browse" tabs, which showed static fake prices.
+ */
+export const LANDING_EXPLORE = {
+  tabs: ["Trending", "Regions"] as const,
+  trending: LANDING_SENTIMENT,
+  regions: [
+    { code: "us", name: "United States" },
+    { code: "au", name: "Australia" },
+    { code: "gb", name: "United Kingdom" },
+    { code: "jp", name: "Japan" },
+  ],
 } as const;

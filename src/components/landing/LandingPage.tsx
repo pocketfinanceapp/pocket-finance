@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Building2,
-  ChartLine,
+  Compass,
   Flame,
   Globe2,
   MoveVertical,
@@ -15,25 +15,25 @@ import { PocketBrand } from "@/components/PocketLogo";
 import { LOGIN_PATH } from "@/lib/appPaths";
 import {
   ArticleCardPreview,
-  BrowseCardPreview,
+  CompanyCardPreview,
+  ExploreCardPreview,
   FeedCardPreview,
   ProgressCardPreview,
-  StockCardPreview,
 } from "./LandingFeatureDemos";
 import { LandingAppDemo } from "./LandingAppDemo";
 import { SwipeGestureSection } from "./LandingGestureDemo";
 
 const TRUST_CHIPS = [
+  "5,000+ news sources",
+  "80+ global markets",
   "Pocket Briefings",
-  "Personalised feed",
-  "Global markets",
   "Streaks & levels",
 ] as const;
 
 const SWIPE_LABELS = [
   { icon: MoveVertical, label: "Swipe headlines" },
   { icon: Newspaper, label: "Read full story" },
-  { icon: ChartLine, label: "Check the stock" },
+  { icon: Building2, label: "Company info" },
 ] as const;
 
 const FEATURES = [
@@ -52,18 +52,18 @@ const FEATURES = [
     preview: ArticleCardPreview,
   },
   {
-    icon: ChartLine,
-    title: "Company intel",
+    icon: Building2,
+    title: "Company info",
     description:
-      "Live prices, charts, and key stats on every ticker — from headline to panel.",
-    preview: StockCardPreview,
+      "Founded, headquarters, industry, and who owns it — sourced from Wikipedia. Follow a ticker to shape your feed.",
+    preview: CompanyCardPreview,
   },
   {
-    icon: Building2,
-    title: "Browse everything",
+    icon: Compass,
+    title: "Explore trending",
     description:
-      "Companies, markets, and crypto ordered by what actually matters — biggest names first.",
-    preview: BrowseCardPreview,
+      "Tickers and countries ranked by real news activity and sentiment — across 5,000+ sources and 80+ markets.",
+    preview: ExploreCardPreview,
   },
   {
     icon: Flame,
@@ -77,9 +77,9 @@ const FEATURES = [
 const PILLARS = [
   {
     icon: Globe2,
-    title: "Your region, your currency",
+    title: "Your region, your feed",
     description:
-      "Pick your country once — we softly prioritise local markets and display prices your way.",
+      "Pick your country once — we softly prioritise local markets and news from your region.",
   },
   {
     icon: Target,
@@ -144,8 +144,9 @@ export function LandingPage() {
                 </span>
               </h1>
               <p className="mx-auto mt-3 max-w-lg text-[14px] leading-relaxed text-[#9ca3af] sm:mt-4 sm:text-base md:mx-0">
-                Swipe headlines, get AI briefings, browse companies and crypto,
-                and personalise your feed by region — then keep a streak going.
+                Swipe headlines, get AI briefings, check the story behind
+                every company, and personalise your feed by region — then
+                keep a streak going.
               </p>
               <div className="mt-5 flex flex-col gap-2.5 sm:mt-6 sm:flex-row sm:gap-3 md:justify-start">
                 <Link
@@ -314,8 +315,8 @@ export function LandingPage() {
             Ready when you are.
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[#9ca3af] sm:text-base">
-            Jump into a personalised For You feed, explore Browse, and start
-            your streak in under a minute.
+            Jump into a personalised For You feed, explore what&apos;s
+            trending, and start your streak in under a minute.
           </p>
           <Link
             href={LOGIN_PATH}

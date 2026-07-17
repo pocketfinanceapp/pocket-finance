@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
-  BarChart2,
   Bookmark,
   Building2,
+  Calendar,
+  Check,
+  Compass,
   Heart,
+  Home,
+  MapPin,
   MessageCircle,
+  Plus,
   Share2,
 } from "lucide-react";
 import type { NewsArticle } from "@/lib/types";
@@ -15,7 +20,8 @@ import type { PocketBriefing } from "@/lib/briefing";
 import { FeedCardFallbackBackground } from "@/components/FeedCardFallbackBackground";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import { ProfileNavIcon } from "@/components/icons/ProfileNavIcon";
-import { LANDING_STOCK } from "@/lib/landingDemoData";
+import { SentimentBadge } from "@/components/SentimentBadge";
+import { LANDING_COMPANY } from "@/lib/landingDemoData";
 
 export function LandingDemoFeedHeader({
   activeTab = "forYou",
@@ -81,9 +87,7 @@ export function LandingDemoFeedCard({
         <span className="rounded-full border border-white/10 bg-black/50 px-1.5 py-0.5 text-[7px] font-bold text-white backdrop-blur-sm sm:text-[8px]">
           {article.ticker}
         </span>
-        <span className="text-[8px] font-bold text-pocket-green sm:text-[9px]">
-          +2.8%
-        </span>
+        <SentimentBadge score={0.42} size="xs" className="!px-1.5 !py-0.5 !text-[6px] sm:!text-[7px]" />
       </div>
 
       <aside
@@ -191,125 +195,78 @@ export function LandingDemoArticlePanel({
   );
 }
 
-export function LandingDemoStockPanel({
-  chartRange = "1M",
-  infoOpen = false,
+/**
+ * Demo of the swipe-right "About this company" panel — editorial facts
+ * (founded, headquarters, industry) sourced from Wikidata/Wikipedia, not a
+ * stock or price panel. `following` animates the Follow button for the
+ * looping demo.
+ */
+export function LandingDemoBusinessInfoPanel({
+  following = false,
   compact = false,
 }: {
-  chartRange?: string;
-  infoOpen?: boolean;
+  following?: boolean;
   compact?: boolean;
 }) {
-  const stock = LANDING_STOCK;
+  const company = LANDING_COMPANY;
   const text = compact ? "text-[6px]" : "text-[7px] sm:text-[8px]";
-  const price = compact ? "text-[10px]" : "text-[12px] sm:text-[14px]";
-  const ranges = ["1D", "1W", "1M", "3M", "1Y"] as const;
-  const min = Math.min(...stock.chartPoints);
-  const max = Math.max(...stock.chartPoints);
-  const w = 200;
-  const h = 48;
-  const pts = stock.chartPoints
-    .map((p, i) => {
-      const x = (i / (stock.chartPoints.length - 1)) * w;
-      const y = h - ((p - min) / (max - min)) * (h - 8) - 4;
-      return `${x},${y}`;
-    })
-    .join(" ");
+  const facts = [
+    { icon: Calendar, label: "Founded", value: company.founded },
+    { icon: MapPin, label: "Headquarters", value: company.headquarters },
+    { icon: Building2, label: "Industry", value: company.industry },
+  ];
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-pocket-bg">
       <header className="flex shrink-0 items-center gap-2 border-b border-[var(--pocket-border)] px-2 py-1.5">
         <ArrowLeft className={compact ? "h-3 w-3" : "h-4 w-4"} />
-        <CompanyLogo ticker={stock.ticker} color={stock.color} size={compact ? 20 : 24} />
-        <div className="min-w-0 flex-1">
-          <p className={`font-bold text-pocket-text ${compact ? "text-[8px]" : "text-[10px]"}`}>
-            {stock.ticker}
-          </p>
-          <p className={`truncate text-pocket-muted ${text}`}>{stock.companyName}</p>
-        </div>
+        <p className={`font-semibold uppercase tracking-wide text-pocket-muted ${text}`}>
+          About this company
+        </p>
       </header>
       <div className="min-h-0 flex-1 overflow-hidden px-2 py-2">
-        <p className={`font-bold text-pocket-text ${price}`}>
-          ${stock.price.toFixed(2)}
-        </p>
-        <p className={`font-semibold text-pocket-green ${text}`}>
-          +{stock.changePercent.toFixed(2)}% Today
-        </p>
-        <div className="mt-1.5 flex gap-1 overflow-hidden">
-          {ranges.map((r) => (
-            <span
-              key={r}
-              className={`shrink-0 rounded-full px-1.5 py-0.5 font-medium ${text} ${
-                r === chartRange
-                  ? "bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] text-white landing-range-active"
-                  : "bg-[var(--pocket-surface-hover)] text-pocket-muted"
-              }`}
-            >
-              {r}
-            </span>
-          ))}
+        <div className="flex items-center gap-1.5">
+          <CompanyLogo ticker={company.ticker} color={company.color} size={compact ? 20 : 24} />
+          <div className="min-w-0 flex-1">
+            <p className={`font-bold text-pocket-text ${compact ? "text-[8px]" : "text-[10px]"}`}>
+              {company.companyName}
+            </p>
+            <p className={`truncate text-pocket-muted ${text}`}>{company.ticker}</p>
+          </div>
+          <span
+            className={`flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-0.5 font-bold ${text} ${
+              following
+                ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6] landing-info-pulse"
+                : "border-[var(--pocket-border)] text-pocket-text"
+            }`}
+          >
+            {following ? (
+              <Check className="h-2 w-2" strokeWidth={2.5} />
+            ) : (
+              <Plus className="h-2 w-2" strokeWidth={2.5} />
+            )}
+            {following ? "Following" : "Follow"}
+          </span>
         </div>
-        <svg
-          viewBox={`0 0 ${w} ${h}`}
-          className={`mt-1.5 w-full ${compact ? "h-8" : "h-10"}`}
-          preserveAspectRatio="none"
-          aria-hidden
-        >
-          <defs>
-            <linearGradient id="landing-demo-chart" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#3B6EF5" />
-              <stop offset="100%" stopColor="#00C6C6" />
-            </linearGradient>
-          </defs>
-          <polyline
-            points={pts}
-            fill="none"
-            stroke="url(#landing-demo-chart)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="landing-chart-draw"
-          />
-        </svg>
-        <div className={`mt-1.5 grid grid-cols-2 gap-1 ${compact ? "gap-0.5" : ""}`}>
-          {[
-            { label: "Market Cap", value: stock.marketCap },
-            { label: "P/E Ratio", value: stock.peRatio },
-          ].map((m) => (
-            <div
-              key={m.label}
-              className="rounded-md border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-1.5 py-1"
-            >
-              <div className="flex items-center gap-0.5">
+        <p className={`mt-1.5 leading-relaxed text-pocket-text ${text}`}>
+          {company.description}
+        </p>
+        <div className="mt-1.5 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-lg border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
+          {facts.map((fact) => (
+            <div key={fact.label} className="flex items-center gap-1.5 px-1.5 py-1">
+              <fact.icon className="h-2.5 w-2.5 shrink-0 text-pocket-muted" />
+              <div className="min-w-0 flex-1">
                 <p className={`uppercase tracking-wide text-pocket-muted ${text}`}>
-                  {m.label}
+                  {fact.label}
                 </p>
-                <span
-                  className={`inline-flex h-2.5 w-2.5 items-center justify-center rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/12 text-[5px] font-semibold text-[#7EEAEA] ${
-                    infoOpen && m.label === "P/E Ratio" ? "landing-info-pulse" : ""
-                  }`}
-                >
-                  i
-                </span>
+                <p className={`truncate font-semibold text-pocket-text ${compact ? "text-[7px]" : "text-[8px]"}`}>
+                  {fact.value}
+                </p>
               </div>
-              <p className={`font-bold text-pocket-text ${compact ? "text-[7px]" : "text-[8px]"}`}>
-                {m.value}
-              </p>
             </div>
           ))}
         </div>
       </div>
-      {infoOpen && (
-        <div className="landing-info-sheet absolute inset-x-1 bottom-1 z-20 rounded-xl border border-[var(--pocket-border)] bg-pocket-bg p-2 shadow-xl">
-          <p className={`font-bold text-pocket-text ${compact ? "text-[7px]" : "text-[8px]"}`}>
-            P/E Ratio
-          </p>
-          <p className={`mt-0.5 leading-snug text-pocket-muted ${text}`}>
-            Price-to-earnings — how many years of profit you&apos;re paying for at
-            today&apos;s price.
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -318,16 +275,15 @@ export function LandingDemoBottomNav({
   active = "home",
   compact = false,
 }: {
-  active?: "home" | "markets" | "discover" | "watchlist" | "profile";
+  active?: "home" | "explore" | "saved" | "profile";
   compact?: boolean;
 }) {
   const icon = compact ? "h-3 w-3" : "h-3.5 w-3.5";
   const label = compact ? "text-[5px]" : "text-[6px] sm:text-[7px]";
   const tabs = [
-    { id: "home" as const, label: "Home", Icon: BarChart2 },
-    { id: "markets" as const, label: "Markets", Icon: BarChart2 },
-    { id: "watchlist" as const, label: "Saved", Icon: Bookmark },
-    { id: "discover" as const, label: "Browse", Icon: Building2 },
+    { id: "home" as const, label: "Home", Icon: Home },
+    { id: "explore" as const, label: "Explore", Icon: Compass },
+    { id: "saved" as const, label: "Saved", Icon: Bookmark },
     { id: "profile" as const, label: "Profile", Icon: null },
   ];
 

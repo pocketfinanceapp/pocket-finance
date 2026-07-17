@@ -11,9 +11,9 @@ import { LANDING_BRIEFING, LANDING_FEED_ARTICLES } from "@/lib/landingDemoData";
 import { LandingPhoneFrame } from "./LandingPhoneFrame";
 import {
   LandingDemoArticlePanel,
+  LandingDemoBusinessInfoPanel,
   LandingDemoFeedCard,
   LandingDemoFeedHeader,
-  LandingDemoStockPanel,
   LandingGestureFinger,
   useLandingMotion,
 } from "./LandingDemoUI";
@@ -23,7 +23,7 @@ const GESTURES: {
   gesture: string;
   label: string;
   hint: string;
-  scene: "feed" | "article" | "stock";
+  scene: "feed" | "article" | "company";
   finger: "up" | "left" | "right";
 }[] = [
   {
@@ -45,9 +45,9 @@ const GESTURES: {
   {
     icon: ArrowRight,
     gesture: "Swipe right",
-    label: "Company panel",
-    hint: "Prices, charts & stats",
-    scene: "stock",
+    label: "Company info",
+    hint: "Who owns it, HQ & industry",
+    scene: "company",
     finger: "right",
   },
 ];
@@ -120,12 +120,12 @@ export function SwipeGestureSection() {
                 </div>
                 <div
                   className={`absolute inset-0 transition-all duration-500 ${
-                    active.scene === "stock"
+                    active.scene === "company"
                       ? "translate-x-0 opacity-100"
                       : "-translate-x-full opacity-0"
                   }`}
                 >
-                  <LandingDemoStockPanel compact chartRange="1M" />
+                  <LandingDemoBusinessInfoPanel compact />
                 </div>
                 <LandingGestureFinger
                   gesture={active.finger}

@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import {
   LANDING_BRIEFING,
-  LANDING_BROWSE,
+  LANDING_EXPLORE,
   LANDING_FEED_ARTICLES,
-  LANDING_STOCK,
 } from "@/lib/landingDemoData";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { SentimentBadge } from "@/components/SentimentBadge";
 import {
   LandingDemoArticlePanel,
+  LandingDemoBusinessInfoPanel,
   LandingDemoFeedCard,
   LandingDemoFeedHeader,
-  LandingDemoStockPanel,
   useLandingMotion,
 } from "./LandingDemoUI";
+
+const SENTIMENT_SCORES = { bullish: 0.42, neutral: 0, bearish: -0.42 } as const;
 
 function useLoop(length: number, intervalMs: number) {
   const reduced = useLandingMotion();
@@ -71,33 +73,26 @@ export function ArticleFeatureDemo() {
   );
 }
 
-export function StockFeatureDemo() {
+export function CompanyFeatureDemo() {
   const step = useLoop(3, 3000);
-  const chartRange = step >= 1 ? "1W" : "1M";
-  const infoOpen = step >= 2;
+  const following = step >= 2;
 
   return (
     <div className="relative h-[160px] overflow-hidden rounded-xl border border-white/[0.06] bg-pocket-bg sm:h-[180px]">
-      <LandingDemoStockPanel
-        chartRange={chartRange}
-        infoOpen={infoOpen}
-        compact
-      />
+      <LandingDemoBusinessInfoPanel following={following} compact />
     </div>
   );
 }
 
-export function BrowseFeatureDemo() {
-  const step = useLoop(3, 2800);
-  const tabIndex = step % 3;
-  const tab = LANDING_BROWSE.tabs[tabIndex];
-  const rows = LANDING_BROWSE.rows[tab];
-  const scrollOffset = step === 2 ? 24 : 0;
+export function ExploreFeatureDemo() {
+  const step = useLoop(4, 2800);
+  const tabIndex = step % 2;
+  const tab = LANDING_EXPLORE.tabs[tabIndex];
 
   return (
     <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-pocket-bg">
       <div className="flex gap-2 border-b border-[var(--pocket-border)] px-2 py-1.5 text-[8px] font-semibold">
-        {LANDING_BROWSE.tabs.map((t, i) => (
+        {LANDING_EXPLORE.tabs.map((t, i) => (
           <span
             key={t}
             className={`transition-colors duration-500 ${
@@ -112,27 +107,47 @@ export function BrowseFeatureDemo() {
         ))}
       </div>
       <div className="relative h-[120px] overflow-hidden sm:h-[130px]">
-        <ul
-          className="space-y-1 p-1.5 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{ transform: `translateY(-${scrollOffset}px)` }}
-        >
-          {rows.map((row) => (
-            <li
-              key={row.ticker}
-              className="flex items-center gap-2 rounded-lg border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-2 py-1.5"
-            >
-              <CompanyLogo ticker={row.ticker} color={row.color} size={22} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-semibold text-pocket-text">
-                  {row.ticker}
+        {tab === "Trending" ? (
+          <ul className="space-y-1 p-1.5">
+            {LANDING_EXPLORE.trending.map((row) => (
+              <li
+                key={row.ticker}
+                className="flex items-center gap-2 rounded-lg border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-2 py-1.5"
+              >
+                <CompanyLogo ticker={row.ticker} color={row.color} size={22} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] font-semibold text-pocket-text">
+                    {row.ticker}
+                  </p>
+                  <p className="truncate text-[7px] text-pocket-muted">
+                    {row.name}
+                  </p>
+                </div>
+                <SentimentBadge
+                  score={SENTIMENT_SCORES[row.sentiment]}
+                  size="xs"
+                  className="!px-1.5 !py-0.5 !text-[6px]"
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul className="space-y-1 p-1.5">
+            {LANDING_EXPLORE.regions.map((region) => (
+              <li
+                key={region.code}
+                className="flex items-center gap-2 rounded-lg border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-2 py-1.5"
+              >
+                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-[#00C6C6]/12 text-[9px] font-bold text-[#00C6C6]">
+                  {region.code.toUpperCase().slice(0, 2)}
+                </span>
+                <p className="truncate text-[9px] font-semibold text-pocket-text">
+                  {region.name}
                 </p>
-                <p className="truncate text-[7px] text-pocket-muted">
-                  {row.name}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
@@ -180,6 +195,6 @@ export function ProgressFeatureDemo() {
 /** @deprecated use named exports — kept for LandingPage map */
 export const FeedCardPreview = FeedFeatureDemo;
 export const ArticleCardPreview = ArticleFeatureDemo;
-export const StockCardPreview = StockFeatureDemo;
-export const BrowseCardPreview = BrowseFeatureDemo;
+export const CompanyCardPreview = CompanyFeatureDemo;
+export const ExploreCardPreview = ExploreFeatureDemo;
 export const ProgressCardPreview = ProgressFeatureDemo;

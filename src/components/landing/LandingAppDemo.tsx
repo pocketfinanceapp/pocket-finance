@@ -9,9 +9,9 @@ import { LandingPhoneFrame } from "./LandingPhoneFrame";
 import {
   LandingDemoArticlePanel,
   LandingDemoBottomNav,
+  LandingDemoBusinessInfoPanel,
   LandingDemoFeedCard,
   LandingDemoFeedHeader,
-  LandingDemoStockPanel,
   LandingGestureFinger,
   useLandingMotion,
 } from "./LandingDemoUI";
@@ -26,9 +26,8 @@ type Scene =
   | "article-briefing"
   | "back-feed"
   | "swipe-right"
-  | "stock"
-  | "stock-chart"
-  | "stock-info"
+  | "company"
+  | "company-follow"
   | "back-feed-2";
 
 const SCENE_ORDER: Scene[] = [
@@ -41,9 +40,8 @@ const SCENE_ORDER: Scene[] = [
   "article-briefing",
   "back-feed",
   "swipe-right",
-  "stock",
-  "stock-chart",
-  "stock-info",
+  "company",
+  "company-follow",
   "back-feed-2",
 ];
 
@@ -57,9 +55,8 @@ const SCENE_MS: Record<Scene, number> = {
   "article-briefing": 2600,
   "back-feed": 650,
   "swipe-right": 750,
-  stock: 1400,
-  "stock-chart": 1100,
-  "stock-info": 2200,
+  company: 1400,
+  "company-follow": 2400,
   "back-feed-2": 700,
 };
 
@@ -73,8 +70,7 @@ function sceneFinger(scene: Scene): "up" | "left" | "right" | "tap" | "scroll" |
       return "right";
     case "article-scroll":
       return "scroll";
-    case "stock-chart":
-    case "stock-info":
+    case "company-follow":
       return "tap";
     default:
       return null;
@@ -102,23 +98,18 @@ export function LandingAppDemo() {
     scene === "article" ||
     scene === "article-scroll" ||
     scene === "article-briefing";
-  const onStock =
-    scene === "swipe-right" ||
-    scene === "stock" ||
-    scene === "stock-chart" ||
-    scene === "stock-info";
+  const onCompany =
+    scene === "swipe-right" || scene === "company" || scene === "company-follow";
 
   const feedY =
     scene === "feed-1" || scene === "swipe-up" ? "-50%" : "0%";
   const articleX = onArticle ? "0%" : "-100%";
-  const stockX = onStock ? "0%" : "100%";
+  const companyX = onCompany ? "0%" : "100%";
 
   const scrollOffset =
     scene === "article-scroll" || scene === "article-briefing" ? 36 : 0;
   const briefingVisible = scene === "article-briefing";
-  const chartRange =
-    scene === "stock-chart" || scene === "stock-info" ? "1W" : "1M";
-  const infoOpen = scene === "stock-info";
+  const following = scene === "company-follow";
   const finger = sceneFinger(scene);
   const showFinger = !reduced && finger !== null;
 
@@ -161,18 +152,15 @@ export function LandingAppDemo() {
           />
         </div>
 
-        {/* Stock panel */}
+        {/* Company info panel */}
         <div
           className="absolute inset-0 bg-pocket-bg transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{
-            transform: `translateX(${stockX})`,
+            transform: `translateX(${companyX})`,
             transitionDuration: reduced ? "0ms" : undefined,
           }}
         >
-          <LandingDemoStockPanel
-            chartRange={chartRange}
-            infoOpen={infoOpen}
-          />
+          <LandingDemoBusinessInfoPanel following={following} />
         </div>
 
         <LandingGestureFinger gesture={finger} visible={showFinger} />
