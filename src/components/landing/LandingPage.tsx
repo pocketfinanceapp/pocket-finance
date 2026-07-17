@@ -11,6 +11,7 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { LOGIN_PATH } from "@/lib/appPaths";
 import {
@@ -23,12 +24,12 @@ import {
 import { LandingAppDemo } from "./LandingAppDemo";
 import { SwipeGestureSection } from "./LandingGestureDemo";
 
-const TRUST_CHIPS = [
-  "5,000+ news sources",
-  "80+ global markets",
-  "Pocket Briefings",
-  "Streaks & levels",
-] as const;
+const TRUST_CHIPS: { icon: LucideIcon; label: string }[] = [
+  { icon: Newspaper, label: "5,000+ news sources" },
+  { icon: Globe2, label: "80+ global markets" },
+  { icon: Sparkles, label: "Pocket Briefings" },
+  { icon: Flame, label: "Streaks & levels" },
+];
 
 const SWIPE_LABELS = [
   { icon: MoveVertical, label: "Swipe headlines" },
@@ -162,18 +163,23 @@ export function LandingPage() {
                   See what&apos;s inside
                 </a>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:flex sm:flex-wrap sm:gap-2 md:justify-start">
-                {TRUST_CHIPS.map((chip) => (
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:flex-wrap sm:gap-2.5 md:justify-start">
+                {TRUST_CHIPS.map(({ icon: Icon, label }) => (
                   <div
-                    key={chip}
-                    className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#111]/80 px-2.5 py-1.5 text-[10px] backdrop-blur-sm sm:px-3 sm:text-[11px]"
+                    key={label}
+                    className="flex items-center gap-2 rounded-2xl border border-[#00C6C6]/25 bg-gradient-to-br from-white/[0.07] to-white/[0.02] px-3 py-2.5 backdrop-blur-sm sm:px-3.5"
+                    style={{
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+                    }}
                   >
-                    <span
-                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#00C6C6]"
-                      aria-hidden
-                    />
-                    <span className="whitespace-nowrap font-medium text-white/90">
-                      {chip}
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#00C6C6]/15">
+                      <Icon
+                        className="h-3.5 w-3.5 text-[#00C6C6]"
+                        strokeWidth={2.5}
+                      />
+                    </span>
+                    <span className="whitespace-nowrap text-[12px] font-bold text-white sm:text-[13px]">
+                      {label}
                     </span>
                   </div>
                 ))}

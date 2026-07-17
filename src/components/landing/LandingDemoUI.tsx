@@ -38,9 +38,9 @@ export function LandingDemoFeedHeader({
       }`}
     >
       <div
-        className={`grid w-full grid-cols-3 text-center font-semibold leading-none tracking-tight ${text}`}
+        className={`flex w-full items-center justify-center gap-6 text-center font-semibold leading-none tracking-tight sm:gap-8 ${text}`}
       >
-        {(["For You", "Trending"] as const).map((tab, i) => {
+        {(["For You", "Trending"] as const).map((tab) => {
           const active =
             (tab === "For You" && activeTab === "forYou") ||
             (tab === "Trending" && activeTab === "trending");
@@ -58,7 +58,6 @@ export function LandingDemoFeedHeader({
             </span>
           );
         })}
-        <span className="pb-1.5" aria-hidden />
       </div>
     </div>
   );
