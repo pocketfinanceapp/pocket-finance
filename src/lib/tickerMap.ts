@@ -777,6 +777,77 @@ export function macroTopicWikiSearchTerm(ticker: string): string | null {
   return MACRO_TOPIC_WIKI_SEARCH_TERMS[ticker.trim().toUpperCase()] ?? null;
 }
 
+/**
+ * Plain-language, factual explanation of how each macro/commodity/index
+ * theme touches everyday life — deliberately static/hand-written rather
+ * than AI-generated per article. Framed as "here's what this actually
+ * touches" (gas prices, mortgage rates, retirement accounts), never as
+ * "here's what to do about it" — we're not licensed to give investment
+ * advice and don't want AI-generated copy drifting into that territory on
+ * a per-article basis.
+ */
+const MACRO_TOPIC_EVERYDAY_IMPACT: Record<string, string> = {
+  OIL: "Oil prices ripple into what you pay at the gas pump, for flights, and for anything trucked or shipped — they're also one of the bigger drivers of overall inflation.",
+  GOLD: "Gold tends to move independently of stocks and the dollar, which is why it shows up in retirement portfolios and central bank reserves as a hedge during uncertain times.",
+  FED: "The Federal Reserve sets a benchmark rate that ripples into mortgage rates, credit card APRs, savings account yields, and how expensive it is for businesses to borrow.",
+  MARKET: "Broad market swings affect retirement accounts, 401(k)s, and pension funds — even people who never actively trade are often exposed through these accounts.",
+  SPX: "The S&P 500 tracks 500 of the largest U.S. companies and is the benchmark most 401(k)s and index funds are measured against, so its moves reach far beyond active traders.",
+  QQQ: "The Nasdaq-100 is heavily weighted toward technology companies, so its swings often reflect how the tech sector — and funds tracking it — are performing.",
+  DJI: "The Dow tracks 30 large, well-known U.S. companies and is one of the most widely cited (though narrower) gauges of how 'the stock market' is doing on a given day.",
+};
+
+export function macroTopicEverydayImpact(ticker: string): string | null {
+  return MACRO_TOPIC_EVERYDAY_IMPACT[ticker.trim().toUpperCase()] ?? null;
+}
+
+/**
+ * Hand-curated industry clusters for "related companies" suggestions on the
+ * swipe-right panel. Deliberately not derived from Wikidata's broad
+ * "industry" claim or our own catalog-wide Sector field — both are too
+ * coarse (a single "Technology" bucket spans chipmakers, cloud software,
+ * and cybersecurity), which would make suggestions feel generic rather
+ * than genuinely relevant. Each ticker appears in exactly one cluster.
+ */
+const RELATED_TICKER_CLUSTERS: string[][] = [
+  ["AAPL", "MSFT", "GOOGL", "AMZN", "META"],
+  ["NVDA", "AMD", "INTC", "AVGO", "QCOM", "TXN", "AMAT", "LRCX", "ASML", "TSM", "ARM", "SMCI", "MU"],
+  ["CRM", "ORCL", "ADBE", "IBM", "NOW", "INTU", "SNOW", "DDOG"],
+  ["CRWD", "PANW", "ZS", "NET"],
+  ["SNAP", "PINS", "UBER", "ABNB", "SHOP", "PDD", "JD", "BABA", "TCEHY"],
+  ["TSLA", "RIVN", "F", "GM", "TM"],
+  ["JPM", "GS", "BAC", "WFC", "C", "MS", "SCHW", "BLK", "AXP"],
+  ["V", "MA", "PYPL", "SQ", "HOOD"],
+  ["XOM", "CVX", "SHEL", "BP", "COP", "SLB"],
+  ["JNJ", "PFE", "MRNA", "LLY", "ABBV", "MRK", "UNH", "TMO"],
+  ["KO", "PEP", "MCD", "SBUX", "NKE", "PG"],
+  ["COIN", "MSTR", "RIOT", "MARA"],
+  ["DIS", "NFLX", "SPOT", "SONY"],
+  ["BA", "CAT", "DE", "RTX", "LMT"],
+  ["VZ", "CMCSA"],
+  ["BHP", "NEM", "VALE"],
+  ["WMT", "COST", "HD", "TGT"],
+];
+
+const RELATED_TICKER_LOOKUP = new Map<string, string[]>();
+for (const cluster of RELATED_TICKER_CLUSTERS) {
+  for (const ticker of cluster) {
+    if (!RELATED_TICKER_LOOKUP.has(ticker)) {
+      RELATED_TICKER_LOOKUP.set(
+        ticker,
+        cluster.filter((t) => t !== ticker)
+      );
+    }
+  }
+}
+
+/** Up to `limit` companies in the same industry cluster, for "you might also follow" suggestions. */
+export function getRelatedTickers(ticker: string, limit = 3): TickerMeta[] {
+  const upper = ticker.trim().toUpperCase();
+  const siblings = RELATED_TICKER_LOOKUP.get(upper);
+  if (!siblings || siblings.length === 0) return [];
+  return siblings.slice(0, limit).map((sym) => getTickerMetaBySymbol(sym));
+}
+
 /** Resolve ticker from article title + description for display and persistence */
 export function resolveArticleTicker(article: {
   ticker: string;

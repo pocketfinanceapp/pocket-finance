@@ -15,8 +15,10 @@ import { useApp } from "@/context/AppContext";
 import type { CompanyInfo } from "@/lib/companyInfo";
 import type { MarketauxSentimentPoint } from "@/lib/marketauxApi";
 import {
+  getRelatedTickers,
   getTickerMetaBySymbol,
   isMacroOrCommodityTicker,
+  macroTopicEverydayImpact,
   macroTopicWikiSearchTerm,
 } from "@/lib/tickerMap";
 import type { NewsArticle } from "@/lib/types";
@@ -103,6 +105,9 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const infoSearchTerm = isMacroTicker
     ? macroTopicWikiSearchTerm(ticker) ?? companyName
     : companyName;
+
+  const everydayImpact = isMacroTicker ? macroTopicEverydayImpact(ticker) : null;
+  const relatedTickers = isCompanyTicker ? getRelatedTickers(ticker, 3) : [];
 
   useEffect(() => {
     if (!ticker || !infoSearchTerm || loadedFor === infoSearchTerm) return;
@@ -209,14 +214,14 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
 
   const sentimentSummary = summarizeSentiment(sentimentPoints);
 
-  const handleFollow = () => {
-    if (!ticker) return;
-    const wasFollowing = following;
-    toggleFollowTicker(ticker);
+  const handleFollow = (targetTicker: string = ticker) => {
+    if (!targetTicker) return;
+    const wasFollowing = isFollowingTicker(targetTicker);
+    toggleFollowTicker(targetTicker);
     setFollowToast(
       wasFollowing
-        ? `Unfollowed ${ticker.toUpperCase()}`
-        : `Following ${ticker.toUpperCase()} — more stories like this in your feed`
+        ? `Unfollowed ${targetTicker.toUpperCase()}`
+        : `Following ${targetTicker.toUpperCase()} — more stories like this in your feed`
     );
     window.setTimeout(() => setFollowToast(null), 2200);
   };
@@ -281,7 +286,7 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
                     type="button"
                     data-no-drag
                     onPointerDown={stop}
-                    onClick={handleFollow}
+                    onClick={() => handleFollow()}
                     className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-colors active:opacity-70 ${
                       following
                         ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
@@ -304,6 +309,17 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
                   specific company — here&apos;s some background on the topic
                   itself.
                 </p>
+              )}
+
+              {everydayImpact && (
+                <div className="mt-4 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-pocket-muted">
+                    Why this affects you
+                  </p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-pocket-text">
+                    {everydayImpact}
+                  </p>
+                </div>
               )}
 
               {followToast && (
@@ -381,6 +397,58 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
                     Background info from Wikipedia — may not reflect recent changes.
                   </p>
                 </>
+              )}
+
+              {relatedTickers.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-[12px] font-bold uppercase tracking-widest text-pocket-muted">
+                    You might also follow
+                  </h2>
+                  <ul className="mt-3 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
+                    {relatedTickers.map((related) => {
+                      const relatedFollowing = isFollowingTicker(related.ticker);
+                      return (
+                        <li
+                          key={related.ticker}
+                          className="flex items-center gap-3 px-4 py-3"
+                        >
+                          <CompanyLogo
+                            ticker={related.ticker}
+                            color={related.logoColor}
+                            size={36}
+                            shape="circle"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-semibold text-pocket-text">
+                              {related.companyName}
+                            </p>
+                            <p className="text-[11px] text-pocket-muted">
+                              {related.ticker}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            data-no-drag
+                            onPointerDown={stop}
+                            onClick={() => handleFollow(related.ticker)}
+                            className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors active:opacity-70 ${
+                              relatedFollowing
+                                ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
+                                : "border-[var(--pocket-border)] text-pocket-text"
+                            }`}
+                          >
+                            {relatedFollowing ? (
+                              <Check className="h-3 w-3" strokeWidth={2.5} />
+                            ) : (
+                              <Plus className="h-3 w-3" strokeWidth={2.5} />
+                            )}
+                            {relatedFollowing ? "Following" : "Follow"}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               )}
 
               {sentimentSummary && (
