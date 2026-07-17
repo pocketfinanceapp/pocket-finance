@@ -58,7 +58,13 @@ async function fetchFromNewsApi(
     signal: AbortSignal.timeout(8000),
   });
 
-  if (!res.ok) return [];
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(
+      `[fetchNews] NewsAPI HTTP ${res.status} ${res.statusText} (page ${page}): ${body.slice(0, 500)}`
+    );
+    return [];
+  }
 
   const data = await res.json();
   return (data.articles ?? [])
@@ -162,29 +168,32 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
 
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
-    const withImages = mergeArticlePools(
-      [withUsableImage(marketauxArticles)],
+    console.error("[fetchNews] NEWS_API_KEY is not set — trending feed relies on Marketaux + demo only");
+    const merged = mergeArticlePools(
+      [withUsableImage(marketauxArticles), DEMO_ARTICLES],
       TRENDING_CAP
     );
-    if (withImages.length > 0) return withImages;
-    return DEMO_ARTICLES.slice(0, 10);
+    return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
   }
 
   try {
     const newsApiArticles = await fetchPagedNews(apiKey, TRENDING_QUERY, 1);
     const merged = mergeArticlePools(
-      [withUsableImage(marketauxArticles), withUsableImage(newsApiArticles)],
+      [
+        withUsableImage(marketauxArticles),
+        withUsableImage(newsApiArticles),
+        DEMO_ARTICLES,
+      ],
       TRENDING_CAP
     );
-    if (merged.length > 0) return merged;
-    return DEMO_ARTICLES.slice(0, 10);
-  } catch {
-    const withImages = mergeArticlePools(
-      [withUsableImage(marketauxArticles)],
+    return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
+  } catch (err) {
+    console.error("[fetchNews] Trending feed threw:", err);
+    const merged = mergeArticlePools(
+      [withUsableImage(marketauxArticles), DEMO_ARTICLES],
       TRENDING_CAP
     );
-    if (withImages.length > 0) return withImages;
-    return [];
+    return merged.length > 0 ? merged : [];
   }
 }
 
@@ -201,12 +210,13 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
-    const withImages = mergeArticlePools(
-      [withUsableImage(marketauxArticles)],
-      MAIN_FEED_CAP
+    console.error("[fetchNews] NEWS_API_KEY is not set — main feed relies on Marketaux + demo only");
+    return filterFinanceArticles(
+      mergeArticlePools(
+        [withUsableImage(marketauxArticles), DEMO_ARTICLES],
+        MAIN_FEED_CAP
+      )
     );
-    if (withImages.length > 0) return withImages;
-    return filterFinanceArticles(DEMO_ARTICLES);
   }
 
   try {
@@ -247,12 +257,13 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
         MAIN_FEED_CAP
       )
     );
-  } catch {
-    const withImages = mergeArticlePools(
-      [withUsableImage(marketauxArticles)],
-      MAIN_FEED_CAP
+  } catch (err) {
+    console.error("[fetchNews] Main feed NewsAPI path threw:", err);
+    return filterFinanceArticles(
+      mergeArticlePools(
+        [withUsableImage(marketauxArticles), DEMO_ARTICLES],
+        MAIN_FEED_CAP
+      )
     );
-    if (withImages.length > 0) return withImages;
-    return filterFinanceArticles(DEMO_ARTICLES);
   }
 }
