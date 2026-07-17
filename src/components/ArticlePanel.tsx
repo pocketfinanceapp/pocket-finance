@@ -7,6 +7,7 @@ import { useApp } from "@/context/AppContext";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { getArticleSubheading } from "@/lib/articlePreview";
+import { useSimilarArticles } from "@/lib/useSimilarArticles";
 import { ArticleAISummary } from "./ArticleAISummary";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { FadeInSection } from "./SubPageShell";
@@ -74,6 +75,12 @@ export function ArticlePanel({ article, onBack, onOpenArticle }: ArticlePanelPro
   const saved = isArticleSaved(article.id);
   const displaySubheading = getArticleSubheading(article.subheading);
   const scrollRef = useRef<HTMLElement>(null);
+  // Lifted here (rather than fetched separately by ArticleAISummary and
+  // RelatedArticles) so one article view makes one similar-articles
+  // request, feeding both the "More on this story" carousel and the
+  // multi-source Pocket Briefing.
+  const { articles: relatedArticles, loading: relatedLoading } =
+    useSimilarArticles(article.marketauxUuid);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
@@ -170,7 +177,11 @@ export function ArticlePanel({ article, onBack, onOpenArticle }: ArticlePanelPro
           </div>
         )}
 
-        <ArticleAISummary article={article} />
+        <ArticleAISummary
+          article={article}
+          relatedArticles={relatedArticles}
+          relatedLoading={relatedLoading}
+        />
 
         <a
           href={article.sourceUrl}
@@ -183,7 +194,12 @@ export function ArticlePanel({ article, onBack, onOpenArticle }: ArticlePanelPro
           Read full article →
         </a>
 
-        <RelatedArticles article={article} onSelect={onOpenArticle} />
+        <RelatedArticles
+          article={article}
+          items={relatedArticles}
+          loading={relatedLoading}
+          onSelect={onOpenArticle}
+        />
       </article>
       </FadeInSection>
     </div>

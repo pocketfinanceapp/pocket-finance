@@ -12,8 +12,12 @@ export interface PocketBriefing {
   takeaway: string;
 }
 
-const BRIEFING_CACHE_KEY = "pf_briefings_v3";
+// Bumped to v4 when Pocket Briefing became multi-source — old single-source
+// cached briefings shouldn't be served as if they reflect the richer prompt.
+const BRIEFING_CACHE_KEY = "pf_briefings_v4";
 const MAX_BODY_CHARS = 2400;
+const MAX_RELATED_SOURCES = 3;
+const MAX_RELATED_EXCERPT_CHARS = 600;
 
 function stripHtml(text: string): string {
   return text
@@ -53,7 +57,28 @@ export function getBriefingSourceText(article: NewsArticle): string {
   return `${combined.slice(0, MAX_BODY_CHARS).trim()}…`;
 }
 
-export function buildBriefingRequestPayload(article: NewsArticle) {
+/** Short excerpt of a related article's own text, for cross-source synthesis. */
+function getRelatedExcerpt(article: NewsArticle): string {
+  const subheading = getArticleSubheading(article.subheading);
+  const text = cleanParagraph(subheading || article.body || "");
+  if (text.length <= MAX_RELATED_EXCERPT_CHARS) return text;
+  return `${text.slice(0, MAX_RELATED_EXCERPT_CHARS).trim()}…`;
+}
+
+export function buildBriefingRequestPayload(
+  article: NewsArticle,
+  relatedArticles: NewsArticle[] = []
+) {
+  const relatedSources = relatedArticles
+    .filter((a) => a.id !== article.id)
+    .slice(0, MAX_RELATED_SOURCES)
+    .map((a) => ({
+      headline: a.headline,
+      sourceName: a.sourceName,
+      excerpt: getRelatedExcerpt(a),
+    }))
+    .filter((s) => s.excerpt.length > 0);
+
   return {
     headline: article.headline,
     sourceText: getBriefingSourceText(article),
@@ -63,6 +88,7 @@ export function buildBriefingRequestPayload(article: NewsArticle) {
     sector: article.sector,
     tags: article.tags,
     sourceName: article.sourceName,
+    relatedSources,
   };
 }
 

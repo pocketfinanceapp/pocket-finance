@@ -5,6 +5,8 @@ const MODEL = "claude-haiku-4-5-20251001";
 
 const SYSTEM_PROMPT = `You are a senior financial news editor at Pocket Finance. Write a concise Pocket Briefing — short, scannable, and informative for busy investors.
 
+You will usually be given the primary article plus short excerpts from other outlets covering the same story. Synthesize across all of them into one coherent briefing — don't just paraphrase the primary source. Pull in a detail from a related source when it adds something the primary article didn't cover, and note it plainly if outlets disagree or emphasize different angles. If only the primary article is provided, summarize it alone.
+
 Return ONLY valid JSON in this exact shape:
 {
   "lede": "1-2 sentence summary of the core story",
@@ -22,7 +24,14 @@ Rules:
 - Prioritize clarity and signal over length — every word should earn its place
 - No emojis, no bullet points, no markdown, no preamble outside the JSON
 - Do not invent direct quotes, precise statistics, or named sources not implied by the input
+- Do not attribute a claim to a specific outlet by name in the output — synthesize into one voice
 - If source material is thin, add only careful, brief market context without fabricating facts`;
+
+interface RelatedSource {
+  headline?: string;
+  sourceName?: string;
+  excerpt?: string;
+}
 
 interface SummaryRequest {
   headline?: string;
@@ -33,6 +42,7 @@ interface SummaryRequest {
   sector?: string;
   tags?: string[];
   sourceName?: string;
+  relatedSources?: RelatedSource[];
 }
 
 export async function POST(request: Request) {
@@ -62,12 +72,28 @@ export async function POST(request: Request) {
     body.sector ? `Sector: ${body.sector}` : null,
     body.tags?.length ? `Tags: ${body.tags.join(", ")}` : null,
     body.sourceName ? `Publisher: ${body.sourceName}` : null,
-    sourceText ? `Source material:\n${sourceText}` : null,
+    sourceText ? `Primary source material:\n${sourceText}` : null,
   ]
     .filter(Boolean)
     .join("\n");
 
-  const userPrompt = `Write a concise Pocket Briefing for this story:\n\n${contextLines}`;
+  const relatedSources = (body.relatedSources ?? []).filter(
+    (s): s is Required<RelatedSource> =>
+      Boolean(s.headline?.trim() && s.excerpt?.trim())
+  );
+
+  const relatedBlock = relatedSources.length
+    ? `\n\nOther coverage of the same story:\n${relatedSources
+        .map(
+          (s, i) =>
+            `[${i + 1}] "${s.headline.trim()}"${
+              s.sourceName ? ` — ${s.sourceName.trim()}` : ""
+            }\n${s.excerpt.trim()}`
+        )
+        .join("\n\n")}`
+    : "";
+
+  const userPrompt = `Write a concise Pocket Briefing for this story:\n\n${contextLines}${relatedBlock}`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {

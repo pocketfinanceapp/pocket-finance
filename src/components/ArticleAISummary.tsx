@@ -16,6 +16,10 @@ import type { NewsArticle } from "@/lib/types";
 
 interface ArticleAISummaryProps {
   article: NewsArticle;
+  /** Related coverage of the same story, from the shared similar-articles fetch. */
+  relatedArticles?: NewsArticle[];
+  /** True while the related-articles fetch is still in flight. */
+  relatedLoading?: boolean;
 }
 
 function BriefingSkeleton() {
@@ -66,7 +70,11 @@ function BriefingReport({ briefing }: { briefing: PocketBriefing }) {
   );
 }
 
-export function ArticleAISummary({ article }: ArticleAISummaryProps) {
+export function ArticleAISummary({
+  article,
+  relatedArticles = [],
+  relatedLoading = false,
+}: ArticleAISummaryProps) {
   const [loading, setLoading] = useState(true);
   const [briefing, setBriefing] = useState<PocketBriefing | null>(null);
 
@@ -96,12 +104,21 @@ export function ArticleAISummary({ article }: ArticleAISummaryProps) {
       return;
     }
 
+    // Wait for the related-articles fetch to settle before generating, so
+    // the briefing can synthesize across sources on the first request
+    // instead of firing early and missing the enrichment. Articles with no
+    // marketauxUuid never set relatedLoading true, so this is a no-op delay
+    // for them.
+    if (relatedLoading) return;
+
     void (async () => {
       try {
         const res = await fetch("/api/article-summary", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildBriefingRequestPayload(article)),
+          body: JSON.stringify(
+            buildBriefingRequestPayload(article, relatedArticles)
+          ),
         });
 
         if (!res.ok) {
@@ -125,7 +142,11 @@ export function ArticleAISummary({ article }: ArticleAISummaryProps) {
     return () => {
       cancelled = true;
     };
-  }, [article]);
+    // relatedArticles intentionally excluded: by the time relatedLoading
+    // flips to false its value is already current, and including it would
+    // re-fire this effect on every related-articles re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article, relatedLoading]);
 
   useEffect(() => {
     if (loading || !briefing) return;

@@ -1,51 +1,33 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import type { NewsArticle } from "@/lib/types";
 import { hasUsableFeedImage } from "@/lib/feedImage";
 import { cleanArticleTitle } from "@/lib/sourceBranding";
 
 interface RelatedArticlesProps {
   article: NewsArticle;
+  items: NewsArticle[];
+  loading: boolean;
   onSelect?: (article: NewsArticle) => void;
 }
 
 /**
  * "More on this story" — powered by Marketaux's news/similar/{uuid}
- * endpoint. Only renders for articles that came from Marketaux (have a
- * marketauxUuid); NewsAPI/demo articles simply don't show this section
- * rather than fabricating related links.
+ * endpoint. `items`/`loading` come from the shared useSimilarArticles hook
+ * (lifted to ArticlePanel so the same fetch also feeds the multi-source
+ * Pocket Briefing, instead of each component fetching it separately). Only
+ * renders for articles that came from Marketaux (have a marketauxUuid);
+ * NewsAPI/demo articles simply don't show this section rather than
+ * fabricating related links.
  */
-export function RelatedArticles({ article, onSelect }: RelatedArticlesProps) {
+export function RelatedArticles({
+  article,
+  items,
+  loading,
+  onSelect,
+}: RelatedArticlesProps) {
   const uuid = article.marketauxUuid;
-  const [items, setItems] = useState<NewsArticle[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setItems([]);
-    if (!uuid) return;
-
-    let cancelled = false;
-    setLoading(true);
-
-    fetch(`/api/marketaux/similar?uuid=${encodeURIComponent(uuid)}`)
-      .then((res) => (res.ok ? res.json() : { articles: [] }))
-      .then((data: { articles?: NewsArticle[] }) => {
-        if (cancelled) return;
-        setItems(data.articles ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setItems([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [uuid]);
 
   if (!uuid) return null;
   if (!loading && items.length === 0) return null;
