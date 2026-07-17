@@ -89,6 +89,7 @@ export function FeedCard({
   const commentCount = useArticleCommentCount(article.id, commentRefreshKey);
 
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageRetryCount, setImageRetryCount] = useState(0);
   const saved = isArticleSaved(article.id);
   const [toast, setToast] = useState<string | null>(null);
   const [guestPrompt, setGuestPrompt] = useState<string | null>(null);
@@ -117,8 +118,31 @@ export function FeedCard({
     "pf-feed-rail-icon h-[26px] w-[26px] opacity-100";
   useEffect(() => {
     setImageFailed(false);
+    setImageRetryCount(0);
     setIsDarkImage(false);
   }, [article.id, article.imageUrl]);
+
+  /**
+   * A populated, non-blocked imageUrl can still fail to load in the browser
+   * (cold CDN edge, one-off network blip, decode timeout) even though the
+   * URL is perfectly valid. Retry once with a cache-busting param before
+   * giving up and showing the generated fallback art — this meaningfully
+   * cuts down on cards that flash to fallback art for no real reason.
+   */
+  const handleImageError = () => {
+    setImageRetryCount((count) => {
+      if (count >= 1) {
+        setImageFailed(true);
+        return count;
+      }
+      return count + 1;
+    });
+  };
+
+  const heroImageSrc =
+    imageRetryCount > 0
+      ? `${article.imageUrl}${article.imageUrl.includes("?") ? "&" : "?"}_retry=${imageRetryCount}`
+      : article.imageUrl;
 
   useEffect(() => {
     if (!hasUsableFeedImage(article.imageUrl) || !article.imageUrl) return;
@@ -269,7 +293,8 @@ export function FeedCard({
       {hasHeroImage ? (
         <>
           <Image
-            src={article.imageUrl}
+            key={imageRetryCount}
+            src={heroImageSrc}
             alt=""
             fill
             className={`absolute inset-0 h-full w-full object-cover object-top ${
@@ -278,7 +303,7 @@ export function FeedCard({
             sizes="100vw"
             unoptimized
             priority={active}
-            onError={() => setImageFailed(true)}
+            onError={handleImageError}
           />
           <FeedCardOverlays soft={useSoftOverlay} />
         </>

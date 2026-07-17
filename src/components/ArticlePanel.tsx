@@ -23,12 +23,31 @@ interface ArticlePanelProps {
 
 function ArticleHeroImage({ article }: { article: NewsArticle }) {
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageRetryCount, setImageRetryCount] = useState(0);
 
   useEffect(() => {
     setImageFailed(false);
+    setImageRetryCount(0);
   }, [article.imageUrl, article.id]);
 
   const showFallback = !article.imageUrl || imageFailed;
+
+  // Retry once with a cache-busting param before giving up — a valid image
+  // URL can still fail on first load (cold CDN edge, transient blip).
+  const handleImageError = () => {
+    setImageRetryCount((count) => {
+      if (count >= 1) {
+        setImageFailed(true);
+        return count;
+      }
+      return count + 1;
+    });
+  };
+
+  const heroImageSrc =
+    imageRetryCount > 0
+      ? `${article.imageUrl}${article.imageUrl.includes("?") ? "&" : "?"}_retry=${imageRetryCount}`
+      : article.imageUrl;
 
   return (
     <div className="relative mt-3 aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[#0a0a0a]">
@@ -36,13 +55,14 @@ function ArticleHeroImage({ article }: { article: NewsArticle }) {
         <FeedCardFallbackBackground article={article} />
       ) : (
         <Image
-          src={article.imageUrl}
+          key={imageRetryCount}
+          src={heroImageSrc}
           alt=""
           fill
           className="object-cover"
           sizes="(max-width: 430px) 100vw"
           unoptimized
-          onError={() => setImageFailed(true)}
+          onError={handleImageError}
         />
       )}
     </div>
