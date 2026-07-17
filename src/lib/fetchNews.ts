@@ -109,56 +109,82 @@ async function fetchMainFeedFromMarketaux(): Promise<NewsArticle[]> {
   return filterFinanceArticles(articles.map(mapMarketauxArticle));
 }
 
+/**
+ * Merges article pools in priority order (first pool wins on id collisions),
+ * deduping and capping the result. Marketaux's Free/Basic plans return only
+ * a handful of articles per request (3 on Free), so we always top up with
+ * NewsAPI/demo rather than treating a small non-empty Marketaux result as a
+ * complete feed.
+ */
+function mergeArticlePools(pools: NewsArticle[][], cap: number): NewsArticle[] {
+  const seen = new Set<string>();
+  const merged: NewsArticle[] = [];
+  for (const pool of pools) {
+    for (const a of pool) {
+      if (seen.has(a.id)) continue;
+      seen.add(a.id);
+      merged.push(a);
+      if (merged.length >= cap) return merged;
+    }
+  }
+  return merged;
+}
+
 export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
+  let marketauxArticles: NewsArticle[] = [];
   if (process.env.MARKETAUX_API_KEY) {
     try {
-      const articles = await fetchTrendingFromMarketaux();
-      if (articles.length > 0) return articles.slice(0, TRENDING_CAP);
-      console.error(
-        "[fetchNews] Marketaux trending returned 0 articles, falling back to NewsAPI/demo"
-      );
+      marketauxArticles = await fetchTrendingFromMarketaux();
     } catch (err) {
-      console.error("[fetchNews] Marketaux trending threw, falling back:", err);
+      console.error("[fetchNews] Marketaux trending threw:", err);
     }
   }
 
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
+    if (marketauxArticles.length > 0) {
+      return marketauxArticles.slice(0, TRENDING_CAP);
+    }
     return DEMO_ARTICLES.slice(0, 10);
   }
 
   try {
-    const articles = await fetchPagedNews(apiKey, TRENDING_QUERY, 1);
-    if (articles.length === 0) return [];
-    return articles.slice(0, TRENDING_CAP);
+    const newsApiArticles = await fetchPagedNews(apiKey, TRENDING_QUERY, 1);
+    const merged = mergeArticlePools(
+      [marketauxArticles, newsApiArticles],
+      TRENDING_CAP
+    );
+    if (merged.length > 0) return merged;
+    return DEMO_ARTICLES.slice(0, 10);
   } catch {
+    if (marketauxArticles.length > 0) {
+      return marketauxArticles.slice(0, TRENDING_CAP);
+    }
     return [];
   }
 }
 
 export async function fetchNewsArticles(): Promise<NewsArticle[]> {
+  let marketauxArticles: NewsArticle[] = [];
   if (process.env.MARKETAUX_API_KEY) {
     try {
-      const articles = await fetchMainFeedFromMarketaux();
-      if (articles.length > 0) return articles;
-      console.error(
-        "[fetchNews] Marketaux main feed returned 0 articles, falling back to NewsAPI/demo"
-      );
+      marketauxArticles = await fetchMainFeedFromMarketaux();
     } catch (err) {
-      console.error("[fetchNews] Marketaux main feed threw, falling back:", err);
+      console.error("[fetchNews] Marketaux main feed threw:", err);
     }
   }
 
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
+    if (marketauxArticles.length > 0) return marketauxArticles;
     return filterFinanceArticles(DEMO_ARTICLES);
   }
 
   try {
-    let articles = await fetchPagedNews(apiKey, FINANCE_QUERY);
+    let newsApiArticles = await fetchPagedNews(apiKey, FINANCE_QUERY);
 
-    if (articles.length === 0) {
+    if (newsApiArticles.length === 0) {
       const backup = new URL("https://newsapi.org/v2/top-headlines");
       backup.searchParams.set("category", "business");
       backup.searchParams.set("country", "us");
@@ -172,7 +198,7 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
 
       if (res.ok) {
         const data = await res.json();
-        articles = (data.articles ?? [])
+        newsApiArticles = (data.articles ?? [])
           .filter(
             (a: NewsApiArticle) =>
               a.title && a.title !== "[Removed]" && isFinanceArticle(a)
@@ -183,20 +209,14 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       }
     }
 
-    return filterFinanceArticles(mergeWithDemo(articles));
+    return filterFinanceArticles(
+      mergeArticlePools(
+        [marketauxArticles, newsApiArticles, DEMO_ARTICLES],
+        MAIN_FEED_CAP
+      )
+    );
   } catch {
+    if (marketauxArticles.length > 0) return marketauxArticles;
     return filterFinanceArticles(DEMO_ARTICLES);
   }
-}
-
-function mergeWithDemo(articles: NewsArticle[]): NewsArticle[] {
-  const seen = new Set<string>();
-  const merged: NewsArticle[] = [];
-  for (const a of [...articles, ...DEMO_ARTICLES]) {
-    if (seen.has(a.id)) continue;
-    seen.add(a.id);
-    merged.push(a);
-    if (merged.length >= MAIN_FEED_CAP) break;
-  }
-  return merged;
 }
