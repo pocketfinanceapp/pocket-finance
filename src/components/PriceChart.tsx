@@ -55,6 +55,8 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
   const prices = data.map((d) => d.price);
   const min = prices.length > 0 ? Math.min(...prices) * 0.998 : 0;
   const max = prices.length > 0 ? Math.max(...prices) * 1.002 : 1;
+  const tickInterval =
+    data.length > 40 ? Math.ceil(data.length / 6) : data.length > 16 ? Math.ceil(data.length / 5) : 0;
 
   return (
     <div className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-chart-surface)] p-4">
@@ -75,7 +77,7 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
         ))}
       </div>
 
-      <div className="h-48 w-full">
+      <div className="h-56 w-full">
         {prices.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-4 text-center">
             <p className="text-sm font-medium text-pocket-muted">
@@ -111,6 +113,8 @@ export function PriceChart({ data, range, onRangeChange }: PriceChartProps) {
                 tick={{ fill: chartTheme.tick, fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
+                interval={tickInterval > 0 ? tickInterval : "preserveStartEnd"}
+                minTickGap={24}
               />
               <YAxis
                 domain={[min, max]}

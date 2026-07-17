@@ -6,15 +6,16 @@ import { useApp } from "@/context/AppContext";
 import type { MarketFilter } from "@/lib/filters";
 import { fuzzyMatchesQuery } from "@/lib/fuzzySearch";
 import {
-  countMarketMovers,
-  formatIndexValue,
+  getCoveredMarkets,
   getGlobalMarketStatus,
-  getMarketSparkline,
   getMarketsByRegion,
-  GLOBAL_MARKETS,
   type GlobalMarket,
 } from "@/lib/markets";
 import { orderMarketRegionsByPreference } from "@/lib/regionPreferences";
+import {
+  getMarketDelayInfo,
+  type QuoteDelayInfo,
+} from "@/lib/twelveDataDelay";
 import {
   listLayerStyle,
   panelEnterStyle,
@@ -25,11 +26,10 @@ import {
   usePanelTransition,
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
-import { GlobalIndexesSection } from "./GlobalIndexesSection";
-import { SectorPerformanceSection } from "./SectorPerformanceSection";
+import { FinancialTermPopup, type ExplanationContent } from "./FinancialTermPopup";
 import { MarketPanel } from "./MarketPanel";
 import { MarketFlag } from "./MarketFlag";
-import { MarketSparkline } from "./MarketSparkline";
+import { MetricInfoButton } from "./MetricInfoButton";
 import { TopMoversSection } from "./TopMoversSection";
 
 interface MarketsPageProps {
@@ -54,48 +54,23 @@ function filterMarkets(markets: GlobalMarket[], query: string): GlobalMarket[] {
   );
 }
 
-function MarketSummaryBar({
-  movers,
+function MarketSessionBar({
   session,
 }: {
-  movers: { up: number; down: number };
   session: { open: boolean; label: "Markets open" | "Markets closed" };
 }) {
   return (
     <div className="rounded-2xl pf-card-surface px-4 py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-pocket-green" aria-hidden>
-              ▲
-            </span>
-            <span className="text-sm font-bold tabular-nums text-pocket-green">
-              {movers.up}
-            </span>
-            <span className="text-xs text-pocket-muted">up</span>
-          </div>
-          <div className="h-4 w-px bg-[var(--pocket-border)]" aria-hidden />
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-pocket-red" aria-hidden>
-              ▼
-            </span>
-            <span className="text-sm font-bold tabular-nums text-pocket-red">
-              {movers.down}
-            </span>
-            <span className="text-xs text-pocket-muted">down</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              session.open ? "bg-pocket-green" : "bg-pocket-muted"
-            }`}
-            aria-hidden
-          />
-          <span className="text-xs font-medium text-pocket-muted">
-            {session.label}
-          </span>
-        </div>
+      <div className="flex items-center gap-1.5">
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            session.open ? "bg-pocket-green" : "bg-pocket-muted"
+          }`}
+          aria-hidden
+        />
+        <span className="text-xs font-medium text-pocket-muted">
+          {session.label}
+        </span>
       </div>
     </div>
   );
@@ -106,14 +81,15 @@ function MarketListCard({
   index,
   entered,
   onOpen,
+  onDelayInfo,
 }: {
   market: GlobalMarket;
   index: number;
   entered: boolean;
   onOpen: () => void;
+  onDelayInfo: (info: QuoteDelayInfo) => void;
 }) {
-  const up = market.changePercent >= 0;
-  const sparkline = useMemo(() => getMarketSparkline(market), [market]);
+  const delay = getMarketDelayInfo(market.id);
 
   return (
     <button
@@ -137,21 +113,20 @@ function MarketListCard({
         </p>
       </div>
 
-      <MarketSparkline points={sparkline} up={up} />
-
-      <div className="shrink-0 text-right">
-        <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
-          {formatIndexValue(market.value)}
-        </p>
-        <span
-          className={`mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
-            up
-              ? "bg-[#00C6C6]/15 text-[#00C6C6]"
-              : "bg-red-400/15 text-red-400"
-          }`}
-        >
-          {up ? "+" : ""}
-          {market.changePercent.toFixed(2)}%
+      <div
+        className="shrink-0 text-right"
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <span className="inline-flex items-center gap-1">
+          <span className="rounded-md bg-[var(--pocket-surface-hover)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-pocket-muted">
+            {delay.label}
+          </span>
+          <MetricInfoButton
+            label={delay.title}
+            size="sm"
+            onClick={() => onDelayInfo(delay)}
+          />
         </span>
       </div>
     </button>
@@ -163,6 +138,7 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
   const tabEntered = useTabPageEntered("markets");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [delayInfo, setDelayInfo] = useState<ExplanationContent | null>(null);
   const {
     panelItem: panelMarket,
     panelVisible,
@@ -176,22 +152,26 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
     ensureMarketsLoaded();
   }, [ensureMarketsLoaded]);
 
-  const movers = useMemo(() => countMarketMovers(), []);
   const session = useMemo(() => getGlobalMarketStatus(), []);
+
+  const coveredIds = useMemo(
+    () => new Set(getCoveredMarkets().map((m) => m.id)),
+    []
+  );
 
   const regions = useMemo(
     () =>
       orderMarketRegionsByPreference(preferredRegion).map((region) => ({
         ...region,
-        markets: getMarketsByRegion(region).sort((a, b) =>
-          a.name.localeCompare(b.name)
-        ),
-      })),
-    [preferredRegion]
+        markets: getMarketsByRegion(region)
+          .filter((m) => coveredIds.has(m.id))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      })).filter((region) => region.markets.length > 0),
+    [preferredRegion, coveredIds]
   );
 
   const flatMarkets = useMemo(() => {
-    const byId = new Map(GLOBAL_MARKETS.map((market) => [market.id, market]));
+    const byId = new Map(getCoveredMarkets().map((market) => [market.id, market]));
     const ordered: GlobalMarket[] = [];
     for (const region of orderMarketRegionsByPreference(preferredRegion)) {
       for (const id of region.marketIds) {
@@ -207,6 +187,13 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
     () => filterMarkets(flatMarkets, searchQuery),
     [flatMarkets, searchQuery]
   );
+
+  const openDelayInfo = (info: QuoteDelayInfo) => {
+    setDelayInfo({
+      displayName: info.title,
+      explanation: info.explanation,
+    });
+  };
 
   if (panelMarket) {
     return (
@@ -237,7 +224,7 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
           className="mt-0.5 text-[13px] text-pocket-muted"
           style={tabEnterFadeStyle(tabEntered, 40)}
         >
-          Global exchanges, indexes, and movers
+          Covered exchanges and top movers
         </p>
 
         <div className="relative mt-4" style={tabEnterStyle(tabEntered, 80)}>
@@ -278,15 +265,9 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
         {!isSearching && (
           <>
             <div style={tabEnterStyle(tabEntered, 120)}>
-              <MarketSummaryBar movers={movers} session={session} />
+              <MarketSessionBar session={session} />
             </div>
             <div style={tabEnterStyle(tabEntered, 180)}>
-              <GlobalIndexesSection />
-            </div>
-            <div style={tabEnterStyle(tabEntered, 210)}>
-              <SectorPerformanceSection />
-            </div>
-            <div style={tabEnterStyle(tabEntered, 240)}>
               <TopMoversSection onOpenCompany={onOpenCompany} />
             </div>
           </>
@@ -309,6 +290,7 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
                   index={index}
                   entered={tabEntered && listVisible}
                   onOpen={() => openMarket(market.id)}
+                  onDelayInfo={openDelayInfo}
                 />
               ))}
             </div>
@@ -318,7 +300,7 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
             <section
               key={region.id}
               className="mt-5"
-              style={tabEnterStyle(tabEntered, 300 + regionIndex * 60)}
+              style={tabEnterStyle(tabEntered, 240 + regionIndex * 60)}
             >
               <h2 className={SECTION_HEADING}>{region.label}</h2>
               <div className="mt-2 flex flex-col gap-3">
@@ -329,6 +311,7 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
                     index={index}
                     entered={tabEntered && listVisible}
                     onOpen={() => openMarket(market.id)}
+                    onDelayInfo={openDelayInfo}
                   />
                 ))}
               </div>
@@ -341,11 +324,16 @@ export function MarketsPage({ onOpenMarketFeed, onOpenCompany }: MarketsPageProp
             className="mt-6 px-1 pb-1 text-center text-[11px] leading-relaxed text-pocket-muted"
             style={tabEnterStyle(tabEntered, 540)}
           >
-            Market data is provided for informational purposes only and should
-            not be considered investment advice.
+            Exchange index levels are omitted when Twelve Data cannot provide
+            them accurately. Delay badges reflect your data plan coverage.
           </p>
         )}
       </div>
+
+      <FinancialTermPopup
+        term={delayInfo}
+        onClose={() => setDelayInfo(null)}
+      />
     </div>
   );
 }

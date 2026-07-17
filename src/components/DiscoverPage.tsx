@@ -9,7 +9,6 @@ import {
   getExploreCompanies,
   type ExploreCompany,
 } from "@/lib/exploreCompanies";
-import { getCryptoAssets } from "@/lib/cryptoAssets";
 import {
   buildFeedPersonalizationInput,
   rankExploreCompanies,
@@ -17,15 +16,19 @@ import {
 import { fuzzyMatchesQuery } from "@/lib/fuzzySearch";
 import { prefetchCompanyLogos } from "@/lib/logoCache";
 import {
-  formatIndexValue,
-  getMarketSparkline,
-  GLOBAL_MARKETS,
+  getCoveredMarkets,
   type GlobalMarket,
 } from "@/lib/markets";
 import { orderMarketRegionsByPreference } from "@/lib/regionPreferences";
 import { getStockProfile } from "@/lib/stockData";
-import { fetchStockQuote } from "@/lib/stockQuoteClient";
-import { isUsListedStockTicker } from "@/lib/usStockTickers";
+import { fetchQuotes } from "@/lib/stockQuoteClient";
+import type { StockQuote } from "@/lib/twelveDataApi";
+import {
+  getMarketDelayInfo,
+  getTickerDelayInfo,
+  type QuoteDelayInfo,
+} from "@/lib/twelveDataDelay";
+import { isQuoteEligibleTicker } from "@/lib/usStockTickers";
 import { formatAssetPrice } from "@/lib/utils";
 import type { NewsArticle } from "@/lib/types";
 import {
@@ -44,12 +47,13 @@ import {
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
 import { CompanyLogo } from "./CompanyLogo";
+import { FinancialTermPopup, type ExplanationContent } from "./FinancialTermPopup";
 import { MarketFlag } from "./MarketFlag";
 import { MarketPanel } from "./MarketPanel";
-import { MarketSparkline } from "./MarketSparkline";
+import { MetricInfoButton } from "./MetricInfoButton";
 import { SectionTabs } from "./SectionTabs";
 
-type BrowseAssetTab = "companies" | "markets" | "crypto";
+type BrowseAssetTab = "companies" | "markets";
 
 interface DiscoverPageProps {
   articles: NewsArticle[];
@@ -57,53 +61,29 @@ interface DiscoverPageProps {
   onOpenMarketFeed: (market: MarketFilter) => void;
 }
 
-function useLiveQuote(ticker: string) {
-  const profile = useMemo(() => getStockProfile(ticker), [ticker]);
-  const [livePrice, setLivePrice] = useState<number | null>(null);
-  const [liveChangePct, setLiveChangePct] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!isUsListedStockTicker(ticker)) {
-      setLivePrice(null);
-      setLiveChangePct(null);
-      return;
-    }
-
-    void fetchStockQuote(ticker).then((quote) => {
-      if (cancelled || !quote) return;
-      if (typeof quote.price === "number") setLivePrice(quote.price);
-      if (typeof quote.changePercent === "number") {
-        setLiveChangePct(quote.changePercent);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [ticker]);
-
-  return {
-    price: livePrice ?? profile.price,
-    changePercent: liveChangePct ?? profile.changePercent,
-    logoColor: profile.logoColor,
-    name: profile.name,
-  };
-}
-
 function CompanyCard({
   company,
   index,
   entered,
+  quote,
+  quoteReady,
   onOpen,
+  onDelayInfo,
 }: {
   company: ExploreCompany;
   index: number;
   entered: boolean;
+  quote: StockQuote | null;
+  quoteReady: boolean;
   onOpen: () => void;
+  onDelayInfo: (info: QuoteDelayInfo) => void;
 }) {
-  const quote = useLiveQuote(company.ticker);
-  const positive = quote.changePercent >= 0;
+  const profile = useMemo(
+    () => getStockProfile(company.ticker),
+    [company.ticker]
+  );
+  const delay = getTickerDelayInfo(company.meta.market);
+  const positive = (quote?.changePercent ?? 0) >= 0;
 
   return (
     <button
@@ -116,20 +96,24 @@ function CompanyCard({
       <div className="flex items-start justify-between gap-2">
         <CompanyLogo
           ticker={company.ticker}
-          color={quote.logoColor}
+          color={profile.logoColor}
           size={40}
           shape="square"
         />
-        <span
-          className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
-            positive
-              ? "bg-[#00C6C6]/15 text-[#00C6C6]"
-              : "bg-red-400/15 text-red-400"
-          }`}
-        >
-          {positive ? "+" : ""}
-          {quote.changePercent.toFixed(2)}%
-        </span>
+        {!quoteReady ? (
+          <span className="h-5 w-12 animate-pulse rounded-md bg-[var(--pocket-surface-hover)]" />
+        ) : quote ? (
+          <span
+            className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+              positive
+                ? "bg-[#00C6C6]/15 text-[#00C6C6]"
+                : "bg-red-400/15 text-red-400"
+            }`}
+          >
+            {positive ? "+" : ""}
+            {quote.changePercent.toFixed(2)}%
+          </span>
+        ) : null}
       </div>
 
       <div className="mt-3 min-w-0 flex-1">
@@ -141,9 +125,33 @@ function CompanyCard({
         </p>
       </div>
 
-      <p className="mt-2 text-[13px] font-semibold text-pocket-text">
-        {formatAssetPrice(quote.price, true)}
-      </p>
+      <div className="mt-2 flex items-end justify-between gap-2">
+        {!quoteReady ? (
+          <div className="h-4 w-16 animate-pulse rounded bg-[var(--pocket-surface-hover)]" />
+        ) : quote ? (
+          <p className="text-[13px] font-semibold text-pocket-text">
+            {formatAssetPrice(quote.price, true)}
+          </p>
+        ) : (
+          <p className="text-[11px] text-pocket-muted">Unavailable</p>
+        )}
+        {quote && (
+          <span
+            className="inline-flex items-center gap-0.5"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <span className="rounded-md bg-[var(--pocket-surface-hover)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-pocket-muted">
+              {delay.label}
+            </span>
+            <MetricInfoButton
+              label={delay.title}
+              size="sm"
+              onClick={() => onDelayInfo(delay)}
+            />
+          </span>
+        )}
+      </div>
     </button>
   );
 }
@@ -153,14 +161,15 @@ function MarketBrowseCard({
   index,
   entered,
   onOpen,
+  onDelayInfo,
 }: {
   market: GlobalMarket;
   index: number;
   entered: boolean;
   onOpen: () => void;
+  onDelayInfo: (info: QuoteDelayInfo) => void;
 }) {
-  const up = market.changePercent >= 0;
-  const sparkline = useMemo(() => getMarketSparkline(market), [market]);
+  const delay = getMarketDelayInfo(market.id);
 
   return (
     <button
@@ -181,21 +190,20 @@ function MarketBrowseCard({
         </p>
       </div>
 
-      <MarketSparkline points={sparkline} up={up} />
-
-      <div className="shrink-0 text-right">
-        <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
-          {formatIndexValue(market.value)}
-        </p>
-        <span
-          className={`mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
-            up
-              ? "bg-[#00C6C6]/15 text-[#00C6C6]"
-              : "bg-red-400/15 text-red-400"
-          }`}
-        >
-          {up ? "+" : ""}
-          {market.changePercent.toFixed(2)}%
+      <div
+        className="shrink-0 text-right"
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <span className="inline-flex items-center gap-1">
+          <span className="rounded-md bg-[var(--pocket-surface-hover)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-pocket-muted">
+            {delay.label}
+          </span>
+          <MetricInfoButton
+            label={delay.title}
+            size="sm"
+            onClick={() => onDelayInfo(delay)}
+          />
         </span>
       </div>
     </button>
@@ -237,6 +245,9 @@ export function DiscoverPage({
   const [displayedAssetTab, setDisplayedAssetTab] =
     useState<BrowseAssetTab>("companies");
   const [gridVisible, setGridVisible] = useState(true);
+  const [liveQuotes, setLiveQuotes] = useState<Record<string, StockQuote>>({});
+  const [quotesReady, setQuotesReady] = useState(false);
+  const [delayInfo, setDelayInfo] = useState<ExplanationContent | null>(null);
   const {
     panelItem: panelMarket,
     panelVisible,
@@ -245,9 +256,9 @@ export function DiscoverPage({
     closePanel,
   } = usePanelTransition<MarketFilter>();
   const companies = useMemo(() => getExploreCompanies(), []);
-  const cryptoAssets = useMemo(() => getCryptoAssets(), []);
   const markets = useMemo(() => {
-    const byId = new Map(GLOBAL_MARKETS.map((market) => [market.id, market]));
+    const covered = getCoveredMarkets();
+    const byId = new Map(covered.map((market) => [market.id, market]));
     const ordered: GlobalMarket[] = [];
     for (const region of orderMarketRegionsByPreference(preferredRegion)) {
       for (const id of region.marketIds) {
@@ -305,28 +316,42 @@ export function DiscoverPage({
   ]);
 
   const rankedCompanies = useMemo(
-    () => rankExploreCompanies(companies, personalizationInput),
+    () =>
+      rankExploreCompanies(companies, personalizationInput).filter((c) =>
+        isQuoteEligibleTicker(c.ticker)
+      ),
     [companies, personalizationInput]
   );
 
-  const rankedCrypto = useMemo(
-    () => rankExploreCompanies(cryptoAssets, personalizationInput),
-    [cryptoAssets, personalizationInput]
-  );
-
-  const activeCatalog =
-    displayedAssetTab === "crypto" ? rankedCrypto : rankedCompanies;
-
   const displayCompanies = useMemo(() => {
     const q = searchQuery.trim();
-    if (!q) return activeCatalog;
-    return filterExploreCompanies(activeCatalog, q);
-  }, [activeCatalog, searchQuery]);
+    if (!q) return rankedCompanies;
+    return filterExploreCompanies(rankedCompanies, q);
+  }, [rankedCompanies, searchQuery]);
 
   const displayMarkets = useMemo(
     () => filterMarkets(markets, searchQuery),
     [markets, searchQuery]
   );
+
+  useEffect(() => {
+    if (displayedAssetTab !== "companies") return;
+
+    let cancelled = false;
+    setQuotesReady(false);
+    setLiveQuotes({});
+
+    const tickers = displayCompanies.map((c) => c.ticker);
+    void fetchQuotes(tickers).then((quotes) => {
+      if (cancelled) return;
+      setLiveQuotes(quotes);
+      setQuotesReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [displayedAssetTab, displayCompanies]);
 
   useEffect(() => {
     if (assetTab === displayedAssetTab) {
@@ -349,6 +374,13 @@ export function DiscoverPage({
 
   const searchActive = Boolean(searchQuery.trim());
   const showingMarkets = displayedAssetTab === "markets";
+
+  const openDelayInfo = (info: QuoteDelayInfo) => {
+    setDelayInfo({
+      displayName: info.title,
+      explanation: info.explanation,
+    });
+  };
 
   if (panelMarket) {
     return (
@@ -379,7 +411,7 @@ export function DiscoverPage({
           className="mt-0.5 text-[13px] text-pocket-muted"
           style={tabEnterFadeStyle(tabEntered, 40)}
         >
-          Explore companies, markets, and crypto
+          Explore companies and markets
         </p>
 
         <div className="-mx-4 mt-4" style={tabEnterStyle(tabEntered, 60)}>
@@ -387,7 +419,6 @@ export function DiscoverPage({
             tabs={[
               { id: "companies", label: "Companies" },
               { id: "markets", label: "Markets" },
-              { id: "crypto", label: "Crypto" },
             ]}
             active={assetTab}
             onChange={setAssetTab}
@@ -404,11 +435,9 @@ export function DiscoverPage({
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
             placeholder={
-              displayedAssetTab === "crypto"
-                ? "Search crypto symbol…"
-                : displayedAssetTab === "markets"
-                  ? "Search market or exchange…"
-                  : "Search ticker or company…"
+              displayedAssetTab === "markets"
+                ? "Search market or exchange…"
+                : "Search ticker or company…"
             }
             className={`w-full rounded-2xl border bg-[var(--pocket-surface-hover)] py-3 pl-10 pr-10 text-[14px] text-pocket-text outline-none transition-all duration-500 placeholder:text-pocket-muted ${
               searchFocused
@@ -442,12 +471,8 @@ export function DiscoverPage({
             style={tabEnterFadeStyle(tabEntered, 120)}
           >
             No{" "}
-            {displayedAssetTab === "crypto"
-              ? "crypto assets"
-              : displayedAssetTab === "markets"
-                ? "markets"
-                : "companies"}{" "}
-            match &ldquo;{searchQuery.trim()}&rdquo;
+            {displayedAssetTab === "markets" ? "markets" : "companies"} match
+            &ldquo;{searchQuery.trim()}&rdquo;
           </p>
         ) : (
           <div
@@ -475,6 +500,7 @@ export function DiscoverPage({
                     index={index}
                     entered={tabEntered}
                     onOpen={() => openMarket(market.id)}
+                    onDelayInfo={openDelayInfo}
                   />
                 ))
               : displayCompanies.map((company, index) => (
@@ -483,12 +509,20 @@ export function DiscoverPage({
                     company={company}
                     index={index}
                     entered={tabEntered}
+                    quote={liveQuotes[company.ticker] ?? null}
+                    quoteReady={quotesReady}
                     onOpen={() => onOpenCompany(company.ticker)}
+                    onDelayInfo={openDelayInfo}
                   />
                 ))}
           </div>
         )}
       </div>
+
+      <FinancialTermPopup
+        term={delayInfo}
+        onClose={() => setDelayInfo(null)}
+      />
     </div>
   );
 }

@@ -20,11 +20,12 @@ import {
   usePanelTransition,
   useTabPageEntered,
 } from "@/lib/tabEnterAnimation";
-import { getStockProfile } from "@/lib/stockData";
 import { getTickerMetaBySymbol, resolveSavedTicker } from "@/lib/tickerMap";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
 import { formatAssetPrice, timeAgo } from "@/lib/utils";
 import { shouldShowWatchlistPrice } from "@/lib/usStockTickers";
+import { fetchQuotes } from "@/lib/stockQuoteClient";
+import type { StockQuote } from "@/lib/twelveDataApi";
 import {
   articleFromSavedEntry,
   buildWatchlistItems,
@@ -161,17 +162,18 @@ function RowRemoveButton({ label, onClick }: { label: string; onClick: () => voi
 
 function AssetRow({
   item,
+  quote,
   onTap,
   onRemove,
 }: {
   item: WatchlistItem;
+  quote: StockQuote | null;
   onTap: () => void;
   onRemove: () => void;
 }) {
   const meta = getTickerMetaBySymbol(item.ticker);
   const showPrice = shouldShowWatchlistPrice(item.ticker);
-  const stock = showPrice ? getStockProfile(item.ticker) : null;
-  const up = stock ? stock.changePercent >= 0 : false;
+  const up = quote ? quote.changePercent >= 0 : false;
 
   return (
     <div
@@ -206,17 +208,17 @@ function AssetRow({
           </p>
         </div>
 
-        {stock && showPrice && (
+        {showPrice && quote && (
           <div className="shrink-0 text-right">
             <p className="text-[14px] font-semibold tabular-nums text-pocket-text">
-              {formatAssetPrice(stock.price, true)}
+              {formatAssetPrice(quote.price, true)}
             </p>
             <p
               className={`text-[12px] font-medium tabular-nums ${
                 up ? "text-emerald-400" : "text-red-400"
               }`}
             >
-              {up ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
+              {up ? "▲" : "▼"} {Math.abs(quote.changePercent).toFixed(2)}%
             </p>
           </div>
         )}
@@ -408,11 +410,30 @@ export function WatchlistPage({
     [watchlistItems]
   );
 
+  const [liveQuotes, setLiveQuotes] = useState<Record<string, StockQuote>>({});
+
+  useEffect(() => {
+    const tickers = assets
+      .map((a) => a.ticker)
+      .filter((t) => shouldShowWatchlistPrice(t));
+    if (tickers.length === 0) {
+      setLiveQuotes({});
+      return;
+    }
+    let cancelled = false;
+    void fetchQuotes(tickers).then((quotes) => {
+      if (!cancelled) setLiveQuotes(quotes);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [assets]);
+
   const { bestTicker, bestPct, worstTicker, worstPct } = useMemo(() => {
     const movers = assets
       .filter((a) => shouldShowWatchlistPrice(a.ticker))
-      .map((a) => ({ ticker: a.ticker, stock: getStockProfile(a.ticker) }))
-      .filter((x) => x.stock !== null);
+      .map((a) => ({ ticker: a.ticker, quote: liveQuotes[a.ticker] }))
+      .filter((x): x is { ticker: string; quote: StockQuote } => Boolean(x.quote));
 
     if (movers.length === 0) {
       return {
@@ -424,26 +445,22 @@ export function WatchlistPage({
     }
 
     const best = movers.reduce((b, c) =>
-      (c.stock?.changePercent ?? -Infinity) > (b.stock?.changePercent ?? -Infinity)
-        ? c
-        : b
+      c.quote.changePercent > b.quote.changePercent ? c : b
     );
     const worst = movers.reduce((w, c) =>
-      (c.stock?.changePercent ?? Infinity) < (w.stock?.changePercent ?? Infinity)
-        ? c
-        : w
+      c.quote.changePercent < w.quote.changePercent ? c : w
     );
 
     const showWorst =
-      worst.ticker !== best.ticker || (worst.stock?.changePercent ?? 0) < 0;
+      worst.ticker !== best.ticker || worst.quote.changePercent < 0;
 
     return {
       bestTicker: best.ticker,
-      bestPct: best.stock?.changePercent ?? null,
+      bestPct: best.quote.changePercent,
       worstTicker: showWorst ? worst.ticker : null,
-      worstPct: showWorst ? (worst.stock?.changePercent ?? null) : null,
+      worstPct: showWorst ? worst.quote.changePercent : null,
     };
-  }, [assets]);
+  }, [assets, liveQuotes]);
 
   const removeTrackedItem = useCallback(
     async (item: WatchlistItem) => {
@@ -553,6 +570,7 @@ export function WatchlistPage({
                       >
                         <AssetRow
                           item={item}
+                          quote={liveQuotes[item.ticker] ?? null}
                           onTap={() => openTrackedAsset(item.ticker)}
                           onRemove={() => void removeTrackedItem(item)}
                         />

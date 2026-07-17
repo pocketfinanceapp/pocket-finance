@@ -1,6 +1,7 @@
 import { fuzzyMatchesQuery } from "./fuzzySearch";
 import { getBrowsableCompanyTickers } from "./catalogTickers";
 import { getTickerMetaBySymbol, type TickerMeta } from "./tickerMap";
+import { isUnquotableTicker } from "./twelveDataSymbolOverrides";
 
 export interface ExploreCompany {
   ticker: string;
@@ -8,10 +9,12 @@ export interface ExploreCompany {
 }
 
 export function getExploreCompanies(): ExploreCompany[] {
-  return getBrowsableCompanyTickers().map((ticker) => ({
-    ticker,
-    meta: getTickerMetaBySymbol(ticker),
-  }));
+  return getBrowsableCompanyTickers()
+    .filter((ticker) => !isUnquotableTicker(ticker))
+    .map((ticker) => ({
+      ticker,
+      meta: getTickerMetaBySymbol(ticker),
+    }));
 }
 
 export function filterExploreCompanies(

@@ -1,4 +1,5 @@
 import type { MarketFilter } from "./filters";
+import { COVERED_MARKET_IDS } from "./twelveDataDelay";
 
 export type MarketRegionId = "americas" | "europe" | "apac";
 
@@ -251,6 +252,12 @@ export const GLOBAL_MARKETS: GlobalMarket[] = [
 
 export function getMarketById(id: MarketFilter): GlobalMarket | undefined {
   return GLOBAL_MARKETS.find((m) => m.id === id);
+}
+
+/** Venture-covered exchanges only (no markets we cannot truthfully label). */
+export function getCoveredMarkets(): GlobalMarket[] {
+  const allowed = new Set<string>(COVERED_MARKET_IDS);
+  return GLOBAL_MARKETS.filter((m) => allowed.has(m.id));
 }
 
 export function formatIndexValue(value: number): string {

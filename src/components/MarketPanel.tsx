@@ -1,31 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Newspaper } from "lucide-react";
 import type { MarketFilter } from "@/lib/filters";
+import { getMarketDetail, isMarketSessionOpen } from "@/lib/marketProfiles";
+import { fetchQuotes } from "@/lib/stockQuoteClient";
+import type { StockQuote } from "@/lib/twelveDataApi";
 import {
-  formatIndexValue,
-  getMarketSparkline,
-} from "@/lib/markets";
-import {
-  getMarketDetail,
-  isMarketSessionOpen,
-  type MarketDetail,
-} from "@/lib/marketProfiles";
-import { getChartPointsForPrice } from "@/lib/stockData";
-import { getStockProfile } from "@/lib/stockData";
+  getMarketDelayInfo,
+  type QuoteDelayInfo,
+} from "@/lib/twelveDataDelay";
 import {
   STOCK_METRIC_EXPLANATIONS,
   type StockMetricExplanation,
 } from "@/lib/stockMetricExplanations";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
-import type { ChartRange } from "@/lib/types";
+import { isQuoteEligibleTicker } from "@/lib/usStockTickers";
+import { formatAssetPrice } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
-import { FinancialTermPopup } from "./FinancialTermPopup";
+import { FinancialTermPopup, type ExplanationContent } from "./FinancialTermPopup";
 import { MarketFlag } from "./MarketFlag";
 import { MetricInfoButton } from "./MetricInfoButton";
-import { MarketSparkline } from "./MarketSparkline";
-import { PriceChart } from "./PriceChart";
 
 interface MarketPanelProps {
   marketId: MarketFilter;
@@ -39,69 +34,27 @@ type MarketMetricKey = keyof typeof STOCK_METRIC_EXPLANATIONS;
 const MARKET_STATS: {
   label: string;
   explanationKey: MarketMetricKey;
-  getValue: (detail: MarketDetail) => string;
+  getValue: (listedCompanies: number, regionLabel: string, tradingHours: string, timeZone: string) => string;
 }[] = [
-  {
-    label: "Market cap",
-    explanationKey: "Market cap",
-    getValue: (d) => d.profile.marketCap,
-  },
   {
     label: "Listed companies",
     explanationKey: "Listed companies",
-    getValue: (d) => d.profile.listedCompanies.toLocaleString(),
-  },
-  {
-    label: "Avg daily volume",
-    explanationKey: "Avg daily volume",
-    getValue: (d) => d.profile.avgDailyVolume,
+    getValue: (listed) => listed.toLocaleString(),
   },
   {
     label: "Region",
     explanationKey: "Region",
-    getValue: (d) => d.regionLabel,
-  },
-  {
-    label: "52-week high",
-    explanationKey: "52-week high",
-    getValue: (d) => formatIndexValue(d.profile.yearHigh),
-  },
-  {
-    label: "52-week low",
-    explanationKey: "52-week low",
-    getValue: (d) => formatIndexValue(d.profile.yearLow),
+    getValue: (_l, region) => region,
   },
   {
     label: "Trading hours",
     explanationKey: "Trading hours",
-    getValue: (d) => d.profile.tradingHours,
+    getValue: (_l, _r, hours) => hours,
   },
   {
     label: "Time zone",
     explanationKey: "Time zone",
-    getValue: (d) => d.profile.timeZone.replace(/_/g, " "),
-  },
-];
-
-const PERFORMANCE_STATS: {
-  label: string;
-  explanationKey: MarketMetricKey;
-  getValue: (detail: MarketDetail) => number;
-}[] = [
-  {
-    label: "1W",
-    explanationKey: "1W",
-    getValue: (d) => d.profile.weekChange,
-  },
-  {
-    label: "1M",
-    explanationKey: "1M",
-    getValue: (d) => d.profile.monthChange,
-  },
-  {
-    label: "YTD",
-    explanationKey: "YTD",
-    getValue: (d) => d.profile.ytdChange,
+    getValue: (_l, _r, _h, tz) => tz.replace(/_/g, " "),
   },
 ];
 
@@ -122,22 +75,8 @@ function Stat({
         </p>
         <MetricInfoButton label={label} onClick={onInfoClick} />
       </div>
-      <p className="mt-1.5 text-[15px] font-semibold text-pocket-text">{value}</p>
+      <p className="mt-2 text-[15px] font-bold text-pocket-text">{value}</p>
     </div>
-  );
-}
-
-function ChangePill({ value }: { value: number }) {
-  const up = value >= 0;
-  return (
-    <span
-      className={`inline-flex rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
-        up ? "bg-[#00C6C6]/15 text-[#00C6C6]" : "bg-red-400/15 text-red-400"
-      }`}
-    >
-      {up ? "+" : ""}
-      {value.toFixed(2)}%
-    </span>
   );
 }
 
@@ -147,62 +86,57 @@ export function MarketPanel({
   onOpenFeed,
   onOpenCompany,
 }: MarketPanelProps) {
-  const detail = useMemo(() => getMarketDetail(marketId), [marketId]);
-  const [chartRange, setChartRange] = useState<ChartRange>("1M");
+  const detail = getMarketDetail(marketId);
+  const delay = getMarketDelayInfo(marketId);
+  const [activeMetric, setActiveMetric] =
+    useState<StockMetricExplanation | null>(null);
+  const [delayPopup, setDelayPopup] = useState<ExplanationContent | null>(null);
+  const [liveQuotes, setLiveQuotes] = useState<Record<string, StockQuote>>({});
+
+  const eligibleConstituents = useMemo(
+    () =>
+      (detail?.profile.constituents ?? []).filter((t) =>
+        isQuoteEligibleTicker(t)
+      ),
+    [detail]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    setLiveQuotes({});
+    void fetchQuotes(eligibleConstituents).then((quotes) => {
+      if (!cancelled) setLiveQuotes(quotes);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [eligibleConstituents]);
+
+  const openDelayInfo = (info: QuoteDelayInfo) => {
+    setDelayPopup({
+      displayName: info.title,
+      explanation: info.explanation,
+    });
+  };
 
   if (!detail) {
     return (
-      <div className="flex h-full items-center justify-center bg-pocket-bg px-6 text-pocket-muted">
-        Market not found.
+      <div className="pf-page flex h-full flex-col items-center justify-center bg-pocket-bg px-4 text-pocket-muted">
+        <p className="text-sm">Market details unavailable</p>
+        <button
+          type="button"
+          data-no-drag
+          onClick={onBack}
+          className="mt-4 text-sm font-semibold text-[#00C6C6]"
+        >
+          Go back
+        </button>
       </div>
     );
   }
 
-  return (
-    <MarketPanelContent
-      detail={detail}
-      chartRange={chartRange}
-      onChartRangeChange={setChartRange}
-      onBack={onBack}
-      onOpenFeed={onOpenFeed}
-      onOpenCompany={onOpenCompany}
-    />
-  );
-}
-
-function MarketPanelContent({
-  detail,
-  chartRange,
-  onChartRangeChange,
-  onBack,
-  onOpenFeed,
-  onOpenCompany,
-}: {
-  detail: MarketDetail;
-  chartRange: ChartRange;
-  onChartRangeChange: (range: ChartRange) => void;
-  onBack: () => void;
-  onOpenFeed: (market: MarketFilter) => void;
-  onOpenCompany?: (ticker: string) => void;
-}) {
-  const { profile } = detail;
-  const isUp = detail.changePercent >= 0;
-  const sessionOpen = isMarketSessionOpen(detail.id);
-  const sparkline = getMarketSparkline(detail);
-  const [activeMetric, setActiveMetric] = useState<StockMetricExplanation | null>(
-    null
-  );
-  const chartPoints = useMemo(
-    () =>
-      getChartPointsForPrice(
-        detail.value,
-        detail.id,
-        chartRange,
-        detail.value
-      ),
-    [detail.id, detail.value, chartRange]
-  );
-  const changeAbs = (detail.value * detail.changePercent) / 100;
+  const profile = detail.profile;
+  const sessionOpen = isMarketSessionOpen(marketId);
 
   return (
     <div className="pf-page flex h-full min-h-0 flex-col bg-pocket-bg text-pocket-text">
@@ -239,28 +173,15 @@ function MarketPanelContent({
         style={{ paddingBottom: "calc(7rem + env(safe-area-inset-bottom))" }}
       >
         <section className="mt-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
-                {detail.indexName}
-              </p>
-              <p className="mt-1 text-[2rem] font-bold leading-none tracking-tight">
-                {formatIndexValue(detail.value)}
-              </p>
-              <p className="mt-1 text-sm text-pocket-muted">{profile.currency}</p>
-            </div>
-            <MarketSparkline points={sparkline} up={isUp} width={72} height={32} />
-          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-pocket-muted">
+            {detail.indexName}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-pocket-muted">
+            Index levels are hidden when Twelve Data cannot provide an accurate
+            quote for this exchange on your plan.
+          </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <p
-              className={`text-sm font-semibold ${
-                isUp ? "text-pocket-green" : "text-pocket-red"
-              }`}
-            >
-              {isUp ? "▲" : "▼"} {Math.abs(changeAbs).toFixed(2)} (
-              {Math.abs(detail.changePercent).toFixed(2)}%) Today
-            </p>
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                 sessionOpen
@@ -275,46 +196,16 @@ function MarketPanelContent({
               />
               {sessionOpen ? "Session open" : "Session closed"}
             </span>
-          </div>
-        </section>
-
-        <div className="mt-6">
-          <PriceChart
-            data={chartPoints}
-            range={chartRange}
-            onRangeChange={onChartRangeChange}
-          />
-        </div>
-
-        <section className="mt-6">
-          <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
-            Performance
-          </h2>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {PERFORMANCE_STATS.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-3 text-center"
-              >
-                <div className="flex items-center justify-center gap-1">
-                  <p className="text-[10px] font-medium uppercase text-pocket-muted">
-                    {stat.label}
-                  </p>
-                  <MetricInfoButton
-                    label={stat.label}
-                    size="sm"
-                    onClick={() =>
-                      setActiveMetric(
-                        STOCK_METRIC_EXPLANATIONS[stat.explanationKey]
-                      )
-                    }
-                  />
-                </div>
-                <div className="mt-1.5 flex justify-center">
-                  <ChangePill value={stat.getValue(detail)} />
-                </div>
-              </div>
-            ))}
+            <span className="inline-flex items-center gap-1">
+              <span className="rounded-md bg-[var(--pocket-surface-hover)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-pocket-muted">
+                {delay.label}
+              </span>
+              <MetricInfoButton
+                label={delay.title}
+                size="sm"
+                onClick={() => openDelayInfo(delay)}
+              />
+            </span>
           </div>
         </section>
 
@@ -323,7 +214,12 @@ function MarketPanelContent({
             <Stat
               key={stat.label}
               label={stat.label}
-              value={stat.getValue(detail)}
+              value={stat.getValue(
+                profile.listedCompanies,
+                detail.regionLabel,
+                profile.tradingHours,
+                profile.timeZone
+              )}
               onInfoClick={() =>
                 setActiveMetric(STOCK_METRIC_EXPLANATIONS[stat.explanationKey])
               }
@@ -331,72 +227,84 @@ function MarketPanelContent({
           ))}
         </section>
 
-        <section className="mt-6">
-          <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
-            Top constituents
-          </h2>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
-            <ul>
-              {profile.constituents.map((ticker, index) => {
-                const meta = getTickerMetaBySymbol(ticker);
-                const stock = getStockProfile(ticker);
-                const up = stock.changePercent >= 0;
-                const row = (
-                  <>
-                    <CompanyLogo
-                      ticker={ticker}
-                      color={meta.logoColor}
-                      size={36}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-bold text-pocket-text">{ticker}</p>
-                      <p className="truncate text-[11px] text-pocket-muted">
-                        {meta.companyName}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-[13px] font-semibold tabular-nums text-pocket-text">
-                        ${stock.price.toFixed(2)}
-                      </p>
-                      <p
-                        className={`mt-0.5 text-[11px] font-medium tabular-nums ${
-                          up ? "text-pocket-green" : "text-pocket-red"
-                        }`}
-                      >
-                        {up ? "+" : ""}
-                        {stock.changePercent.toFixed(2)}%
-                      </p>
-                    </div>
-                  </>
-                );
+        {eligibleConstituents.length > 0 && (
+          <section className="mt-6">
+            <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
+              Top constituents
+            </h2>
+            <div className="mt-3 overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
+              <ul>
+                {eligibleConstituents.map((ticker, index) => {
+                  const meta = getTickerMetaBySymbol(ticker);
+                  const quote = liveQuotes[ticker];
+                  const up = (quote?.changePercent ?? 0) >= 0;
+                  const row = (
+                    <>
+                      <CompanyLogo
+                        ticker={ticker}
+                        color={meta.logoColor}
+                        size={36}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14px] font-bold text-pocket-text">
+                          {ticker}
+                        </p>
+                        <p className="truncate text-[11px] text-pocket-muted">
+                          {meta.companyName}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        {quote ? (
+                          <>
+                            <p className="text-[13px] font-semibold tabular-nums text-pocket-text">
+                              {formatAssetPrice(quote.price, true)}
+                            </p>
+                            <p
+                              className={`mt-0.5 text-[11px] font-medium tabular-nums ${
+                                up ? "text-pocket-green" : "text-pocket-red"
+                              }`}
+                            >
+                              {up ? "+" : ""}
+                              {quote.changePercent.toFixed(2)}%
+                            </p>
+                          </>
+                        ) : (
+                          <div className="ml-auto h-8 w-14 animate-pulse rounded bg-[var(--pocket-surface-hover)]" />
+                        )}
+                      </div>
+                    </>
+                  );
 
-                return (
-                  <li
-                    key={ticker}
-                    className={
-                      index < profile.constituents.length - 1
-                        ? "border-b border-[var(--pocket-border)]"
-                        : ""
-                    }
-                  >
-                    {onOpenCompany ? (
-                      <button
-                        type="button"
-                        data-no-drag
-                        onClick={() => onOpenCompany(ticker)}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-opacity active:opacity-70"
-                      >
-                        {row}
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-3 px-4 py-3">{row}</div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
+                  return (
+                    <li
+                      key={ticker}
+                      className={
+                        index < eligibleConstituents.length - 1
+                          ? "border-b border-[var(--pocket-border)]"
+                          : ""
+                      }
+                    >
+                      {onOpenCompany ? (
+                        <button
+                          type="button"
+                          data-no-drag
+                          onClick={() => onOpenCompany(ticker)}
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-opacity active:opacity-70"
+                        >
+                          {row}
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-3 px-4 py-3">
+                          {row}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </section>
+        )}
 
         <section className="mt-6">
           <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
@@ -418,13 +326,17 @@ function MarketPanelContent({
         </button>
 
         <p className="mt-4 pb-2 text-center text-[11px] leading-relaxed text-pocket-muted">
-          Market data is for informational purposes only and is not investment advice.
+          Market data is for informational purposes only and is not investment
+          advice.
         </p>
       </div>
 
       <FinancialTermPopup
-        term={activeMetric}
-        onClose={() => setActiveMetric(null)}
+        term={activeMetric ?? delayPopup}
+        onClose={() => {
+          setActiveMetric(null);
+          setDelayPopup(null);
+        }}
       />
     </div>
   );

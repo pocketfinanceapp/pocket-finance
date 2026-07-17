@@ -1,15 +1,32 @@
 /**
- * A handful of tickers in our catalog don't resolve correctly against Twelve
- * Data using the bare symbol we display in the app. Confirmed case: "BRK"
- * alone returns garbage data (market cap off by ~50x) — Twelve Data needs
- * the share-class suffix. This maps our display ticker to the symbol we
- * actually send to Twelve Data's /quote and /statistics endpoints.
+ * Display ticker → Twelve Data request symbol.
+ * Only include mappings verified against /quote on the Venture key.
  */
 const TWELVE_DATA_SYMBOL_OVERRIDES: Record<string, string> = {
   BRK: "BRK.B",
+  BIMBO: "BIMBOA",
+  FEMSA: "FEMSAUBD",
+  LVMH: "MC",
+  SAM: "005930",
+  RJHI: "1120",
 };
+
+/**
+ * Tickers we intentionally exclude because Twelve Data cannot return a
+ * reliable quote for our display symbol (404 / wrong instrument).
+ */
+export const UNQUOTABLE_TICKERS = new Set([
+  "ARAMCO",
+  "MAADEN",
+  "SABIC",
+  "STC",
+]);
 
 export function toTwelveDataSymbol(ticker: string): string {
   const upper = ticker.trim().toUpperCase();
   return TWELVE_DATA_SYMBOL_OVERRIDES[upper] ?? upper;
+}
+
+export function isUnquotableTicker(ticker: string): boolean {
+  return UNQUOTABLE_TICKERS.has(ticker.trim().toUpperCase());
 }

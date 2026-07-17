@@ -59,29 +59,36 @@ export function TopMoversSection({
       <SectionTabs tabs={TOP_MOVER_TABS} active={tab} onChange={setTab} />
       <div className="mx-4 mt-2 overflow-hidden rounded-2xl pf-card-surface">
         <ul>
-          {movers.map((mover, i) => {
-            const quote = liveQuotes[mover.ticker];
-            const displayMover: TopMover = quote
-              ? {
+          {(() => {
+            // Never show the hardcoded seed price/% while a live quote is
+            // loading or failed to fetch — that hardcoded data goes stale
+            // immediately and was exactly the "not synced real-time" bug.
+            // Drop the row instead, same as Competitors/Related assets.
+            const displayMovers = movers
+              .map((mover): TopMover | null => {
+                const quote = liveQuotes[mover.ticker];
+                if (!quote) return null;
+                return {
                   ...mover,
                   price: quote.price,
                   changePercent: quote.changePercent,
-                }
-              : mover;
+                };
+              })
+              .filter((m): m is TopMover => m !== null);
 
-            return (
-            <TopMoverRow
-              key={`${tab}-${mover.ticker}`}
-              mover={displayMover}
-              showDivider={i < movers.length - 1}
-              onOpen={
-                onOpenCompany
-                  ? () => onOpenCompany(mover.ticker)
-                  : undefined
-              }
-            />
-            );
-          })}
+            return displayMovers.map((mover, i) => (
+              <TopMoverRow
+                key={`${tab}-${mover.ticker}`}
+                mover={mover}
+                showDivider={i < displayMovers.length - 1}
+                onOpen={
+                  onOpenCompany
+                    ? () => onOpenCompany(mover.ticker)
+                    : undefined
+                }
+              />
+            ));
+          })()}
         </ul>
       </div>
     </section>

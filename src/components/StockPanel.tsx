@@ -6,9 +6,7 @@ import { ArrowLeft, Bookmark, ExternalLink, Share2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { ChartRange, Competitor, NewsArticle } from "@/lib/types";
 import {
-  getChartPointsForPrice,
   getStockProfile,
-  resolveChartBasePrice,
 } from "@/lib/stockData";
 import { getMarketThemeConfig, isMarketThemeTicker } from "@/lib/marketThemes";
 import {
@@ -18,12 +16,19 @@ import {
 } from "@/lib/privateTickers";
 import type { StockQuote } from "@/lib/twelveDataApi";
 import type { CompanyFundamentals } from "@/lib/twelveDataFundamentals";
-import { fetchStockFundamentals, fetchStockQuote } from "@/lib/stockQuoteClient";
+import {
+  fetchChartPoints,
+  fetchQuotes,
+  fetchStockFundamentals,
+  fetchStockQuote,
+} from "@/lib/stockQuoteClient";
 import {
   isCryptoTicker,
   isNonStockMarketTicker,
-  isUsListedStockTicker,
+  isQuoteEligibleTicker,
 } from "@/lib/usStockTickers";
+import { getTickerDelayInfo } from "@/lib/twelveDataDelay";
+import type { ChartPoint } from "@/lib/types";
 import { getArticleDisplayTicker, getTickerMetaBySymbol } from "@/lib/tickerMap";
 import {
   STOCK_METRIC_EXPLANATIONS,
@@ -35,7 +40,7 @@ import { buildCompanyStatColumns, type CompanyStatRow } from "@/lib/companyStats
 import { formatAssetChange, formatAssetPrice, formatDate, readTime } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
 import { FadeInSection } from "./SubPageShell";
-import { FinancialTermPopup } from "./FinancialTermPopup";
+import { FinancialTermPopup, type ExplanationContent } from "./FinancialTermPopup";
 import { MetricInfoButton } from "./MetricInfoButton";
 import { PriceChart } from "./PriceChart";
 import { SourceBadge } from "./SourceBadge";
@@ -141,7 +146,10 @@ export function StockPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const needsLiveQuote =
-    !privateCompany && !marketTheme && isUsListedStockTicker(ticker);
+    !privateCompany && !marketTheme && isQuoteEligibleTicker(ticker);
+  const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [delayPopup, setDelayPopup] = useState<ExplanationContent | null>(null);
 
   useEffect(() => {
     markFirstStockViewed();
@@ -221,15 +229,15 @@ export function StockPanel({
 
   useEffect(() => {
     setLiveCompetitorQuotes({});
-    const eligible = competitorTickers.filter((t) => isUsListedStockTicker(t));
+    const eligible = competitorTickers.filter((t) => isQuoteEligibleTicker(t));
     if (eligible.length === 0) return;
 
     let cancelled = false;
-    void Promise.all(
-      eligible.map(async (t) => [t, await fetchStockQuote(t)] as const)
-    ).then((results) => {
+    void fetchQuotes(eligible).then((quotes) => {
       if (cancelled) return;
-      setLiveCompetitorQuotes(Object.fromEntries(results));
+      const mapped: Record<string, StockQuote | null> = {};
+      for (const t of eligible) mapped[t] = quotes[t] ?? null;
+      setLiveCompetitorQuotes(mapped);
     });
 
     return () => {
@@ -237,9 +245,8 @@ export function StockPanel({
     };
   }, [competitorTickers]);
 
-  // Never fall back to static demo prices for US-listed equities.
+  // Never fall back to static demo prices for quote-eligible equities.
   const awaitingLiveQuote = needsLiveQuote && !liveQuote && !quoteFailed;
-  const quoteReady = !needsLiveQuote || liveQuote !== null;
   const displayPrice = needsLiveQuote
     ? (liveQuote?.price ?? null)
     : (stock?.price ?? 0);
@@ -252,22 +259,29 @@ export function StockPanel({
   const hasLiveQuote = liveQuote !== null;
   const isUp = (displayChangePercent ?? 0) >= 0;
   const showMarketData = stock !== null && !isNonStockMarketTicker(ticker);
-  const chartBasePrice =
-    displayPrice != null && displayPrice > 0
-      ? resolveChartBasePrice(displayPrice, stock?.price, ticker)
-      : 0;
-  const chartPoints = useMemo(
-    () =>
-      stock && showMarketData && quoteReady && chartBasePrice > 0
-        ? getChartPointsForPrice(
-            chartBasePrice,
-            ticker,
-            chartRange,
-            stock.price
-          )
-        : [],
-    [stock, showMarketData, quoteReady, chartBasePrice, ticker, chartRange]
-  );
+  const quoteDelay = getTickerDelayInfo(meta.market);
+
+  useEffect(() => {
+    if (!needsLiveQuote || !showMarketData) {
+      setChartPoints([]);
+      setChartLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setChartLoading(true);
+    setChartPoints([]);
+
+    void fetchChartPoints(ticker, chartRange).then((points) => {
+      if (cancelled) return;
+      setChartPoints(points ?? []);
+      setChartLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ticker, chartRange, needsLiveQuote, showMarketData]);
   const statColumns = useMemo(() => {
     if (!stock || isCryptoTicker(ticker)) return null;
     if (needsLiveQuote && !liveQuote) return null;
@@ -322,15 +336,15 @@ export function StockPanel({
 
   useEffect(() => {
     setLiveThemeAssetQuotes({});
-    const eligible = themeRelatedTickers.filter((t) => isUsListedStockTicker(t));
+    const eligible = themeRelatedTickers.filter((t) => isQuoteEligibleTicker(t));
     if (eligible.length === 0) return;
 
     let cancelled = false;
-    void Promise.all(
-      eligible.map(async (t) => [t, await fetchStockQuote(t)] as const)
-    ).then((results) => {
+    void fetchQuotes(eligible).then((quotes) => {
       if (cancelled) return;
-      setLiveThemeAssetQuotes(Object.fromEntries(results));
+      const mapped: Record<string, StockQuote | null> = {};
+      for (const t of eligible) mapped[t] = quotes[t] ?? null;
+      setLiveThemeAssetQuotes(mapped);
     });
 
     return () => {
@@ -527,13 +541,20 @@ export function StockPanel({
                           </span>
                         </p>
                         {hasLiveQuote && (
-                          <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1">
                             <span className="w-fit rounded-full bg-[var(--pocket-surface-hover)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pocket-muted">
-                              Delayed
+                              {quoteDelay.label}
                             </span>
-                            <span className="text-[10px] text-pocket-muted">
-                              Prices delayed 15min
-                            </span>
+                            <MetricInfoButton
+                              label={quoteDelay.title}
+                              size="sm"
+                              onClick={() =>
+                                setDelayPopup({
+                                  displayName: quoteDelay.title,
+                                  explanation: quoteDelay.explanation,
+                                })
+                              }
+                            />
                           </div>
                         )}
                       </div>
@@ -554,7 +575,7 @@ export function StockPanel({
                 </section>
 
                 <div className="mt-7">
-                  {awaitingLiveQuote ? (
+                  {awaitingLiveQuote || chartLoading ? (
                     <ChartSkeleton />
                   ) : (
                     <PriceChart
@@ -634,8 +655,11 @@ export function StockPanel({
       )}
 
       <FinancialTermPopup
-        term={activeMetric}
-        onClose={() => setActiveMetric(null)}
+        term={activeMetric ?? delayPopup}
+        onClose={() => {
+          setActiveMetric(null);
+          setDelayPopup(null);
+        }}
       />
     </div>
   );
