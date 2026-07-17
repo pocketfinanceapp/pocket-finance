@@ -754,6 +754,29 @@ export function inferTickerFromText(text: string): TickerMeta {
   return inferTickerFromFields(text, "");
 }
 
+/**
+ * Explicit Wikipedia search terms for macro/commodity/index theme tickers.
+ * Our own internal display labels ("Broad Market") are UI shorthand, not
+ * real-world topic names, so searching Wikidata for them directly wouldn't
+ * reliably resolve — this maps each theme to the actual encyclopedia topic
+ * it represents so the swipe-right panel can show real background info
+ * (what crude oil is, what the Federal Reserve does, etc.) instead of a
+ * static "no profile to show" placeholder.
+ */
+const MACRO_TOPIC_WIKI_SEARCH_TERMS: Record<string, string> = {
+  OIL: "Petroleum",
+  GOLD: "Gold as an investment",
+  FED: "Federal Reserve",
+  MARKET: "Stock market",
+  SPX: "S&P 500",
+  QQQ: "Nasdaq-100",
+  DJI: "Dow Jones Industrial Average",
+};
+
+export function macroTopicWikiSearchTerm(ticker: string): string | null {
+  return MACRO_TOPIC_WIKI_SEARCH_TERMS[ticker.trim().toUpperCase()] ?? null;
+}
+
 /** Resolve ticker from article title + description for display and persistence */
 export function resolveArticleTicker(article: {
   ticker: string;

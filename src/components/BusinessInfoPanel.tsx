@@ -14,7 +14,11 @@ import {
 import { useApp } from "@/context/AppContext";
 import type { CompanyInfo } from "@/lib/companyInfo";
 import type { MarketauxSentimentPoint } from "@/lib/marketauxApi";
-import { getTickerMetaBySymbol, isMacroOrCommodityTicker } from "@/lib/tickerMap";
+import {
+  getTickerMetaBySymbol,
+  isMacroOrCommodityTicker,
+  macroTopicWikiSearchTerm,
+} from "@/lib/tickerMap";
 import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { CompanyLogo } from "./CompanyLogo";
@@ -68,10 +72,11 @@ function summarizeSentiment(
  * risk showing a wrong name.
  *
  * Macro/index/commodity tags (e.g. "Broad Market", "Crude Oil") aren't real
- * companies — there's no Wikidata entity, no founder/HQ/owner facts, and no
- * "Follow this company" relationship that makes sense. Rather than showing
- * the company-profile layout with an empty/broken-looking result, those
- * render a distinct, lightweight "topic" card instead.
+ * companies — there's no "Follow this company" relationship that makes
+ * sense, and Wikidata search on our own internal label (e.g. "Broad
+ * Market") won't resolve to anything. They still get real background info
+ * via Wikipedia (see macroTopicWikiSearchTerm), just under a "Market theme"
+ * label instead of a ticker, and without a Follow button.
  */
 export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const { toggleFollowTicker, isFollowingTicker, requestFeedJump } = useApp();
@@ -92,22 +97,29 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const companyName = article?.companyName || meta?.companyName || ticker;
   const following = ticker ? isFollowingTicker(ticker) : false;
 
+  // For macro/commodity/index themes, our own display label ("Broad
+  // Market") won't resolve well on Wikidata — search using the real-world
+  // topic name instead (e.g. "Stock market", "Petroleum").
+  const infoSearchTerm = isMacroTicker
+    ? macroTopicWikiSearchTerm(ticker) ?? companyName
+    : companyName;
+
   useEffect(() => {
-    if (!isCompanyTicker || !companyName || loadedFor === companyName) return;
+    if (!ticker || !infoSearchTerm || loadedFor === infoSearchTerm) return;
     let cancelled = false;
     setLoading(true);
 
-    fetch(`/api/company-info?company=${encodeURIComponent(companyName)}`)
+    fetch(`/api/company-info?company=${encodeURIComponent(infoSearchTerm)}`)
       .then((res) => (res.ok ? res.json() : { info: null }))
       .then((data: { info?: CompanyInfo | null }) => {
         if (cancelled) return;
         setInfo(data.info ?? null);
-        setLoadedFor(companyName);
+        setLoadedFor(infoSearchTerm);
       })
       .catch(() => {
         if (cancelled) return;
         setInfo(null);
-        setLoadedFor(companyName);
+        setLoadedFor(infoSearchTerm);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -116,12 +128,12 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [isCompanyTicker, companyName, loadedFor]);
+  }, [ticker, infoSearchTerm, loadedFor]);
 
   // Recent Marketaux headlines for this entity — makes the panel feel alive
-  // instead of a Wikipedia dead-end. Only fetched for real company tickers.
+  // instead of a Wikipedia dead-end.
   useEffect(() => {
-    if (!isCompanyTicker || !ticker) {
+    if (!ticker) {
       setHeadlines([]);
       return;
     }
@@ -143,12 +155,12 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [isCompanyTicker, ticker]);
+  }, [ticker]);
 
   // Aggregate sentiment across recent coverage — reuses the same
   // entity-stats endpoint that powers the Explore ticker detail chart.
   useEffect(() => {
-    if (!isCompanyTicker || !ticker) {
+    if (!ticker) {
       setSentimentPoints([]);
       return;
     }
@@ -166,7 +178,7 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [isCompanyTicker, ticker]);
+  }, [ticker]);
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -241,63 +253,58 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
                 No company linked to this story.
               </p>
             </div>
-          ) : isMacroTicker ? (
-            <div className="flex flex-col items-center px-2 pt-10 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
-                <Tag className="h-7 w-7 text-pocket-muted" strokeWidth={1.75} />
-              </div>
-              <p className="mt-4 text-[17px] font-bold text-pocket-text">
-                {companyName}
-              </p>
-              <p className="mt-2 max-w-[26rem] text-[13px] leading-relaxed text-pocket-muted">
-                This story is tagged under a market theme rather than a
-                specific company, so there&apos;s no company profile to show
-                here.
-              </p>
-              <button
-                type="button"
-                data-no-drag
-                onPointerDown={stop}
-                onClick={onBack}
-                className="mt-6 rounded-2xl border border-[var(--pocket-border)] px-5 py-3 text-[13px] font-semibold text-pocket-text active:bg-[var(--pocket-surface-hover)]"
-              >
-                Back to the story
-              </button>
-            </div>
           ) : (
             <>
               <div className="flex items-center gap-3">
-                <CompanyLogo
-                  ticker={ticker}
-                  color={meta?.logoColor ?? "#3B6EF5"}
-                  size={52}
-                  shape="circle"
-                />
+                {isMacroTicker ? (
+                  <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
+                    <Tag className="h-5 w-5 text-pocket-muted" strokeWidth={1.75} />
+                  </div>
+                ) : (
+                  <CompanyLogo
+                    ticker={ticker}
+                    color={meta?.logoColor ?? "#3B6EF5"}
+                    size={52}
+                    shape="circle"
+                  />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[18px] font-bold text-pocket-text">
-                    {info?.companyName ?? companyName}
+                    {isMacroTicker ? companyName : (info?.companyName ?? companyName)}
                   </p>
-                  <p className="text-[12px] text-pocket-muted">{ticker.toUpperCase()}</p>
+                  <p className="text-[12px] text-pocket-muted">
+                    {isMacroTicker ? "Market theme" : ticker.toUpperCase()}
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  data-no-drag
-                  onPointerDown={stop}
-                  onClick={handleFollow}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-colors active:opacity-70 ${
-                    following
-                      ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
-                      : "border-[var(--pocket-border)] text-pocket-text"
-                  }`}
-                >
-                  {following ? (
-                    <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  )}
-                  {following ? "Following" : "Follow"}
-                </button>
+                {isCompanyTicker && (
+                  <button
+                    type="button"
+                    data-no-drag
+                    onPointerDown={stop}
+                    onClick={handleFollow}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-bold transition-colors active:opacity-70 ${
+                      following
+                        ? "border-[#00C6C6]/35 bg-[#00C6C6]/14 text-[#00C6C6]"
+                        : "border-[var(--pocket-border)] text-pocket-text"
+                    }`}
+                  >
+                    {following ? (
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    )}
+                    {following ? "Following" : "Follow"}
+                  </button>
+                )}
               </div>
+
+              {isMacroTicker && (
+                <p className="mt-3 text-[12px] leading-relaxed text-pocket-muted">
+                  This story is tagged under a market theme rather than a
+                  specific company — here&apos;s some background on the topic
+                  itself.
+                </p>
+              )}
 
               {followToast && (
                 <p
@@ -315,7 +322,9 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
               ) : !info ? (
                 <div className="mt-8 rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] p-5 text-center">
                   <p className="text-sm text-pocket-muted">
-                    We don&apos;t have background info on {companyName} yet.
+                    {isMacroTicker
+                      ? `We don't have more background on ${companyName} right now.`
+                      : `We don't have background info on ${companyName} yet.`}
                   </p>
                 </div>
               ) : (
@@ -349,7 +358,9 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
 
                   {isMinimalInfo && (
                     <p className="mt-3 text-center text-[12px] text-pocket-muted">
-                      Limited public info available for this company.
+                      {isMacroTicker
+                        ? "Limited public info available on this topic."
+                        : "Limited public info available for this company."}
                     </p>
                   )}
 
