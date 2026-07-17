@@ -21,9 +21,6 @@ interface NewsApiArticle {
   content?: string | null;
 }
 
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80";
-
 function assignSector(metaSector: Sector, _index: number): Sector {
   return metaSector;
 }
@@ -267,7 +264,12 @@ const DEMO_SEEDS: Omit<NewsArticle, "id" | "likes" | "comments" | "shares" | "pu
     headline: "TSX Gains as Bank Earnings Impress",
     subheading: "Canadian lenders post solid loan growth.",
     body: "Toronto stocks advanced as major banks reported resilient credit quality and net interest income.",
-    imageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80",
+    // No image: the stock photo previously here (a declining candlestick
+    // chart) contradicted a "gains" headline and looked like a real price
+    // chart — exactly the kind of misleading financial imagery this app
+    // avoids. Renders via the generated finance-category fallback art
+    // instead, which is honest since this is placeholder content anyway.
+    imageUrl: "",
     market: "TSX",
     sector: "Finance",
     ticker: "RY",

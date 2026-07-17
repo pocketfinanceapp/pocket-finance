@@ -116,12 +116,6 @@ async function fetchMainFeedFromMarketaux(): Promise<NewsArticle[]> {
  * a handful of articles per request (3 on Free), so we always top up with
  * NewsAPI/demo rather than treating a small non-empty Marketaux result as a
  * complete feed.
- *
- * Articles without a usable hero image are dropped here rather than left to
- * fall back to generated art client-side: this is a full-screen photo feed,
- * and NewsAPI/Marketaux both frequently omit an image for a given story
- * (source just never supplied one), so filtering at merge time keeps the
- * feed itself photo-complete instead of relying on per-card fallback art.
  */
 function mergeArticlePools(pools: NewsArticle[][], cap: number): NewsArticle[] {
   const seen = new Set<string>();
@@ -129,13 +123,31 @@ function mergeArticlePools(pools: NewsArticle[][], cap: number): NewsArticle[] {
   for (const pool of pools) {
     for (const a of pool) {
       if (seen.has(a.id)) continue;
-      if (!hasUsableFeedImage(a.imageUrl)) continue;
       seen.add(a.id);
       merged.push(a);
       if (merged.length >= cap) return merged;
     }
   }
   return merged;
+}
+
+/**
+ * Drops articles without a usable hero image. Applied to Marketaux/NewsAPI
+ * pools before merging — those sources frequently omit an image for a given
+ * story (the source just never supplied one), and this is a full-screen
+ * photo feed, so we'd rather not surface those rather than lean on
+ * per-card fallback art for real news.
+ *
+ * Deliberately NOT applied to DEMO_ARTICLES: that's a small, fixed pool of
+ * placeholder content used only to top up a thin feed, and its generated
+ * fallback art (FeedCardFallbackBackground) is an intentional, polished
+ * design for exactly that case — not a defect to filter around. Demo
+ * articles also shouldn't lean on more external stock-photo hotlinks than
+ * necessary, since a mismatched photo (e.g. a declining price chart on a
+ * "gains" headline) is worse than honest generated art.
+ */
+function withUsableImage(articles: NewsArticle[]): NewsArticle[] {
+  return articles.filter((a) => hasUsableFeedImage(a.imageUrl));
 }
 
 export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
@@ -150,7 +162,10 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
 
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
-    const withImages = mergeArticlePools([marketauxArticles], TRENDING_CAP);
+    const withImages = mergeArticlePools(
+      [withUsableImage(marketauxArticles)],
+      TRENDING_CAP
+    );
     if (withImages.length > 0) return withImages;
     return DEMO_ARTICLES.slice(0, 10);
   }
@@ -158,13 +173,16 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
   try {
     const newsApiArticles = await fetchPagedNews(apiKey, TRENDING_QUERY, 1);
     const merged = mergeArticlePools(
-      [marketauxArticles, newsApiArticles],
+      [withUsableImage(marketauxArticles), withUsableImage(newsApiArticles)],
       TRENDING_CAP
     );
     if (merged.length > 0) return merged;
     return DEMO_ARTICLES.slice(0, 10);
   } catch {
-    const withImages = mergeArticlePools([marketauxArticles], TRENDING_CAP);
+    const withImages = mergeArticlePools(
+      [withUsableImage(marketauxArticles)],
+      TRENDING_CAP
+    );
     if (withImages.length > 0) return withImages;
     return [];
   }
@@ -183,7 +201,10 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
-    const withImages = mergeArticlePools([marketauxArticles], MAIN_FEED_CAP);
+    const withImages = mergeArticlePools(
+      [withUsableImage(marketauxArticles)],
+      MAIN_FEED_CAP
+    );
     if (withImages.length > 0) return withImages;
     return filterFinanceArticles(DEMO_ARTICLES);
   }
@@ -218,12 +239,19 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
 
     return filterFinanceArticles(
       mergeArticlePools(
-        [marketauxArticles, newsApiArticles, DEMO_ARTICLES],
+        [
+          withUsableImage(marketauxArticles),
+          withUsableImage(newsApiArticles),
+          DEMO_ARTICLES,
+        ],
         MAIN_FEED_CAP
       )
     );
   } catch {
-    const withImages = mergeArticlePools([marketauxArticles], MAIN_FEED_CAP);
+    const withImages = mergeArticlePools(
+      [withUsableImage(marketauxArticles)],
+      MAIN_FEED_CAP
+    );
     if (withImages.length > 0) return withImages;
     return filterFinanceArticles(DEMO_ARTICLES);
   }
