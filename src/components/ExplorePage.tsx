@@ -5,7 +5,11 @@ import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
 import { SECTOR_FILTERS, type MarketFilter, type SectorFilter } from "@/lib/filters";
 import { GLOBAL_MARKETS } from "@/lib/markets";
-import type { MarketauxTrendingEntity } from "@/lib/marketauxApi";
+import type {
+  MarketauxTrendingCountry,
+  MarketauxTrendingEntity,
+} from "@/lib/marketauxApi";
+import { countryName } from "@/lib/countryNames";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import type { NewsArticle } from "@/lib/types";
@@ -54,14 +58,22 @@ function rankTickersByMentions(articles: NewsArticle[]): TrendingTicker[] {
 }
 
 export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageProps) {
-  const { clearFilters, setMarketFilters, toggleSectorFilter, setSearchQuery } =
-    useApp();
+  const {
+    clearFilters,
+    setMarketFilters,
+    toggleSectorFilter,
+    setSearchQuery,
+    setCountryFilter,
+  } = useApp();
   const { navigate } = useNavigation();
   const entered = useTabPageEntered("explore");
 
   const [liveTrending, setLiveTrending] = useState<MarketauxTrendingEntity[] | null>(
     null
   );
+  const [liveCountries, setLiveCountries] = useState<
+    MarketauxTrendingCountry[] | null
+  >(null);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
 
   useEffect(() => {
@@ -73,6 +85,21 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
       })
       .catch(() => {
         if (!cancelled) setLiveTrending([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/marketaux/trending-countries?limit=20")
+      .then((res) => (res.ok ? res.json() : { countries: [] }))
+      .then((data: { countries?: MarketauxTrendingCountry[] }) => {
+        if (!cancelled) setLiveCountries(data.countries ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setLiveCountries([]);
       });
     return () => {
       cancelled = true;
@@ -111,6 +138,36 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
     setMarketFilters([market]);
     navigate("home");
   };
+
+  const openCountry = (countryCode: string) => {
+    clearFilters();
+    setCountryFilter(countryCode);
+    navigate("home");
+  };
+
+  /** Real country coverage from Marketaux when available; falls back to the
+   * curated exchange list only if the live endpoint is unavailable. */
+  const regionItems = useMemo(() => {
+    if (liveCountries && liveCountries.length > 0) {
+      return liveCountries.map((c) => ({
+        key: c.countryCode,
+        countryCode: c.countryCode,
+        title: countryName(c.countryCode),
+        subtitle: `${c.totalDocuments} ${c.totalDocuments === 1 ? "story" : "stories"} today`,
+        sentimentAvg: c.sentimentAvg,
+        onSelect: () => openCountry(c.countryCode),
+      }));
+    }
+    return GLOBAL_MARKETS.map((market) => ({
+      key: market.id,
+      countryCode: market.countryCode,
+      title: market.fullName,
+      subtitle: market.country,
+      sentimentAvg: null as number | null,
+      onSelect: () => openMarket(market.id),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveCountries]);
 
   if (selectedTicker) {
     return (
@@ -220,26 +277,43 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
               Browse by region
             </h2>
             <ul className="divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
-              {GLOBAL_MARKETS.map((market) => (
-                <li key={market.id}>
-                  <button
-                    type="button"
-                    data-no-drag
-                    onClick={() => openMarket(market.id)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[var(--pocket-surface-hover)]"
-                  >
-                    <MarketFlag countryCode={market.countryCode} size={32} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-semibold text-pocket-text">
-                        {market.fullName}
-                      </p>
-                      <p className="text-[11px] text-pocket-muted">
-                        {market.country}
-                      </p>
-                    </div>
-                  </button>
-                </li>
-              ))}
+              {regionItems.map((item) => {
+                const dotColor =
+                  item.sentimentAvg === null
+                    ? null
+                    : sentimentLabel(item.sentimentAvg) === "bullish"
+                      ? "#00C6C6"
+                      : sentimentLabel(item.sentimentAvg) === "bearish"
+                        ? "#f87171"
+                        : "var(--pocket-muted)";
+                return (
+                  <li key={item.key}>
+                    <button
+                      type="button"
+                      data-no-drag
+                      onClick={item.onSelect}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[var(--pocket-surface-hover)]"
+                    >
+                      <MarketFlag countryCode={item.countryCode} size={32} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-semibold text-pocket-text">
+                          {item.title}
+                        </p>
+                        <p className="text-[11px] text-pocket-muted">
+                          {item.subtitle}
+                        </p>
+                      </div>
+                      {dotColor && (
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: dotColor }}
+                          aria-hidden
+                        />
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         </div>

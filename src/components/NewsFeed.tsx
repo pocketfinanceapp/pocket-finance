@@ -85,6 +85,7 @@ export function NewsFeed({
     feedJumpArticleId,
     clearFeedJump,
     hiddenSources,
+    countryFilter,
   } = useApp();
   const navigation = useNavigationOptional();
   const homeEntered = useTabPageEntered("home");
@@ -192,7 +193,8 @@ export function NewsFeed({
         searchQuery,
         favouriteTopics,
         personalizationInput,
-        hiddenSources
+        hiddenSources,
+        countryFilter
       ),
     [
       allArticles,
@@ -205,6 +207,7 @@ export function NewsFeed({
       favouriteTopics,
       personalizationInput,
       hiddenSources,
+      countryFilter,
     ]
   );
 

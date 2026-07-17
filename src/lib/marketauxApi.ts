@@ -243,6 +243,73 @@ export async function fetchTrendingEntities(
 }
 
 /**
+ * Real country coverage from Marketaux's trending endpoint, grouped by the
+ * exchange country of identified entities — powers "Browse by region" with
+ * actual current coverage instead of a fixed curated exchange list.
+ */
+export interface MarketauxTrendingCountry {
+  countryCode: string;
+  totalDocuments: number;
+  sentimentAvg: number | null;
+  score: number | null;
+}
+
+export async function fetchTrendingCountries(
+  options: { limit?: number; minDocCount?: number } = {}
+): Promise<MarketauxTrendingCountry[]> {
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  if (!apiKey) return [];
+
+  const url = new URL("https://api.marketaux.com/v1/entity/trending/aggregation");
+  url.searchParams.set("api_token", apiKey);
+  url.searchParams.set("group_by", "country");
+  if (options.minDocCount) {
+    url.searchParams.set("min_doc_count", String(options.minDocCount));
+  }
+  if (options.limit) {
+    url.searchParams.set("limit", String(options.limit));
+  }
+
+  try {
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) {
+      console.error(
+        `[marketaux] trending countries HTTP ${res.status} ${res.statusText}`
+      );
+      return [];
+    }
+
+    const data = (await res.json()) as RawTrendingResponse;
+    if (data.error) {
+      console.error(
+        `[marketaux] trending countries API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
+
+    return (data.data ?? [])
+      .filter(
+        (e): e is RawTrendingEntity & { key: string } =>
+          Boolean(e.key) && e.key !== "global"
+      )
+      .map((e) => ({
+        countryCode: e.key.toLowerCase(),
+        totalDocuments: e.total_documents ?? 0,
+        sentimentAvg:
+          typeof e.sentiment_avg === "number" ? e.sentiment_avg : null,
+        score: typeof e.score === "number" ? e.score : null,
+      }));
+  } catch (err) {
+    console.error("[marketaux] trending countries fetch threw:", err);
+    return [];
+  }
+}
+
+/**
  * Day-by-day sentiment history for a single entity — powers the sentiment
  * trend chart on a ticker's detail page. This is a "market mood over time"
  * chart derived from news coverage, never a price chart.

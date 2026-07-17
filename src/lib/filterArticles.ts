@@ -117,14 +117,19 @@ export function buildFeedArticles(
   searchQuery: string,
   favouriteTopics: ProfileTopic[] = [],
   personalization?: FeedPersonalizationInput,
-  hiddenSources: string[] = []
+  hiddenSources: string[] = [],
+  countryFilter: string | null = null
 ): NewsArticle[] {
   if (mode === "trending") return [];
 
-  const articles =
+  let articles =
     hiddenSources.length > 0
       ? allArticles.filter((a) => !hiddenSources.includes(a.sourceName))
       : allArticles;
+
+  if (countryFilter) {
+    articles = articles.filter((a) => a.entityCountry === countryFilter);
+  }
 
   // Explicit market drill-down from Markets tab
   if (marketFilters.length > 0) {

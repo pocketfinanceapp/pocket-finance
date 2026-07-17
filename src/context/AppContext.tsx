@@ -101,6 +101,8 @@ interface AppContextValue {
   clearFilters: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  countryFilter: string | null;
+  setCountryFilter: (code: string | null) => void;
   hiddenSources: string[];
   toggleHiddenSource: (source: string) => void;
   isSourceHidden: (source: string) => boolean;
@@ -148,6 +150,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [marketFilters, setMarketFilters] = useState<MarketFilter[]>([]);
   const [sectorFilters, setSectorFiltersState] = useState<SectorFilter[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [countryFilter, setCountryFilter] = useState<string | null>(null);
   const [hiddenSources, setHiddenSources] = useState<string[]>([]);
   const [storiesRead, setStoriesRead] = useState(0);
   const [likedArticlesCount, setLikedArticlesCount] = useState(0);
@@ -405,6 +408,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMarketFilters([]);
     setSectorFiltersState([]);
     setSearchQuery("");
+    setCountryFilter(null);
   }, []);
 
   const toggleHiddenSource = useCallback((source: string) => {
@@ -544,6 +548,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       clearFilters,
       searchQuery,
       setSearchQuery,
+      countryFilter,
+      setCountryFilter,
       hiddenSources,
       toggleHiddenSource,
       isSourceHidden,
@@ -593,6 +599,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toggleSectorFilter,
       clearFilters,
       searchQuery,
+      countryFilter,
       hiddenSources,
       toggleHiddenSource,
       isSourceHidden,

@@ -132,6 +132,7 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
     shares: Math.floor(pseudoRandom(id + "shares", 200, 5000)),
     marketauxUuid: raw.uuid || null,
     sentimentScore: bestEntity ? bestEntity.sentimentScore : null,
+    entityCountry: bestEntity?.country ? bestEntity.country.toLowerCase() : null,
   };
 }
 

@@ -63,6 +63,13 @@ export interface NewsArticle {
    * best-matched entity. Undefined/null when unavailable — never fabricated.
    */
   sentimentScore?: number | null;
+  /**
+   * ISO 3166-1 alpha-2 country code (lowercase) of the article's
+   * best-matched entity's exchange, as reported by Marketaux — e.g. "us",
+   * "au", "eu". Powers country-based Explore filtering. Undefined for
+   * NewsAPI/demo articles.
+   */
+  entityCountry?: string | null;
 }
 
 export interface Comment {
