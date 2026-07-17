@@ -269,17 +269,53 @@ export function NewsFeed({
 
   const verticalFeedArticles =
     displayedFeedMode === "trending" ? trendingArticles : filteredArticles;
+
+  // `verticalFeedArticles` can silently reorder mid-session — most notably,
+  // opening an article dings its "For You" score (see openedArticleIds in
+  // feedPersonalization.ts), which bumps personalizationTick, which
+  // re-sorts filteredArticles. feedIndex is a plain array position, so
+  // without correction it would keep pointing at whatever now sits at that
+  // slot instead of the article the user actually has open — the classic
+  // "swipe left and it jumps to a different article" glitch. To fix this we
+  // track the article the user is currently anchored to by id and, whenever
+  // the array reference changes (reorder/filter/mode switch), re-derive the
+  // index for THAT article synchronously during render so the visible
+  // article never flashes to the wrong one for a frame.
+  const anchorArticleIdRef = useRef<string | null>(null);
+  const prevVerticalArticlesRef = useRef<NewsArticle[] | null>(null);
+
+  let effectiveFeedIndex = feedIndex;
+  if (
+    prevVerticalArticlesRef.current !== null &&
+    prevVerticalArticlesRef.current !== verticalFeedArticles &&
+    anchorArticleIdRef.current
+  ) {
+    const anchoredIndex = verticalFeedArticles.findIndex(
+      (a) => a.id === anchorArticleIdRef.current
+    );
+    if (anchoredIndex !== -1) {
+      effectiveFeedIndex = anchoredIndex;
+    }
+  }
+  prevVerticalArticlesRef.current = verticalFeedArticles;
+
   const swipeArticle =
-    verticalFeedArticles[feedIndex] ?? verticalFeedArticles[0];
+    verticalFeedArticles[effectiveFeedIndex] ?? verticalFeedArticles[0];
   const article = articleOverride ?? swipeArticle;
+  anchorArticleIdRef.current = swipeArticle?.id ?? null;
+
   const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
   const verticalFeedLengthRef = useRef(verticalFeedArticles.length);
   verticalFeedLengthRef.current = verticalFeedArticles.length;
 
   useEffect(() => {
+    if (effectiveFeedIndex !== feedIndex) {
+      setFeedIndex(effectiveFeedIndex);
+      return;
+    }
     const max = Math.max(0, verticalFeedArticles.length - 1);
     if (feedIndex > max) setFeedIndex(max);
-  }, [verticalFeedArticles.length, feedIndex, setFeedIndex]);
+  }, [effectiveFeedIndex, verticalFeedArticles.length, feedIndex, setFeedIndex]);
 
   useEffect(() => {
     if (
