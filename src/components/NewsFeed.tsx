@@ -52,6 +52,8 @@ const AXIS_LOCK = 6;
 const SWIPE_THRESHOLD_PX = 55;
 const SWIPE_VELOCITY = 0.35;
 const PULL_REFRESH_PX = 72;
+/** Matches the "duration-300" snap-transition class below. */
+const TRACK_TRANSITION_MS = 300;
 
 type LockedAxis = "x" | "y" | null;
 
@@ -242,6 +244,16 @@ export function NewsFeed({
   const feedModeRef = useRef(feedMode);
   const prevFeedIndex = useRef(feedIndex);
   const prevPanelIndex = useRef(panelIndex);
+  // Blocks a new gesture from starting for the duration of the snap
+  // transition (see trackTransition/TRACK_TRANSITION_MS below). Without
+  // this, a fast follow-up swipe — e.g. scroll to the next card, then
+  // immediately swipe left to read — can begin and finish before the CSS
+  // transition has visually caught up: feedIndex has already committed to
+  // the new card, so the article panel opens whatever card is now "current"
+  // in state, not the one still visually centered on screen. Feels like the
+  // feed randomly jumps to a different article mid-swipe.
+  const settling = useRef(false);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   panelIndexRef.current = panelIndex;
   feedIndexRef.current = feedIndex;
@@ -394,13 +406,33 @@ export function NewsFeed({
     const passiveFalse = { passive: false } as AddEventListenerOptions;
     let touchGestureActive = false;
 
+    /**
+     * Called whenever a committed index change (feed or panel) kicks off
+     * the CSS snap transition. Blocks new gestures until that transition
+     * has had time to visually finish, so state (feedIndex/panelIndex) and
+     * what's on screen never get out of sync.
+     */
+    const lockDuringSettle = () => {
+      settling.current = true;
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+      settleTimer.current = setTimeout(() => {
+        settling.current = false;
+        settleTimer.current = null;
+      }, TRACK_TRANSITION_MS);
+    };
+
     const beginGesture = (
       clientX: number,
       clientY: number,
       pointerId: number,
       target: EventTarget | null
     ) => {
-      if (!gesturesEnabledRef.current || isInteractiveTarget(target)) return;
+      if (
+        !gesturesEnabledRef.current ||
+        isInteractiveTarget(target) ||
+        settling.current
+      )
+        return;
 
       dragging.current = true;
       setIsDragging(true);
@@ -489,6 +521,7 @@ export function NewsFeed({
         } else if (velocity > SWIPE_VELOCITY || dx > SWIPE_THRESHOLD_PX) {
           next = Math.max(0, next - 1);
         }
+        if (next !== panelIndexRef.current) lockDuringSettle();
         setPanelIndex(next);
         setDragX(0);
       } else if (locked === "y") {
@@ -506,9 +539,11 @@ export function NewsFeed({
           if (maxIdx > 0) {
             next = next >= maxIdx ? 0 : next + 1;
           }
+          if (next !== feedIndexRef.current) lockDuringSettle();
           setFeedIndex(next);
         } else if (velocity > SWIPE_VELOCITY || dy > SWIPE_THRESHOLD_PX) {
           next = Math.max(0, next - 1);
+          if (next !== feedIndexRef.current) lockDuringSettle();
           setFeedIndex(next);
         }
         setDragY(0);
@@ -574,6 +609,11 @@ export function NewsFeed({
       el.removeEventListener("pointermove", onPointerMove);
       el.removeEventListener("pointerup", onPointerUp);
       el.removeEventListener("pointercancel", onPointerUp);
+      if (settleTimer.current) {
+        clearTimeout(settleTimer.current);
+        settleTimer.current = null;
+      }
+      settling.current = false;
     };
   }, [
     gesturesEnabled,
