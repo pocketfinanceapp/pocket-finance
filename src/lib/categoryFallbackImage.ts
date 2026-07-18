@@ -26,7 +26,7 @@ const CATEGORY_WIKI_TITLES: Record<FeedFallbackVariant, string> = {
   energy: "Oil platform",
   finance: "Wall Street",
   tech: "Data center",
-  markets: "Stock market",
+  markets: "New York Stock Exchange",
 };
 
 interface PageImagesResponse {
