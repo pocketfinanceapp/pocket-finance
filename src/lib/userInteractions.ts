@@ -373,15 +373,9 @@ export async function postComment(
 
     if (error || !data) {
       console.error("postComment:", error?.message, error?.details, error?.hint);
-      // TEMPORARY: surfacing the raw error on-screen to diagnose a live
-      // posting failure without needing device devtools access. Revert to a
-      // generic message once root-caused.
-      const debugDetail = error
-        ? `${error.message || "unknown"}${error.code ? ` (code ${error.code})` : ""}`
-        : "no data returned";
       return {
         comment: null,
-        blockedReason: `Debug: ${debugDetail}`,
+        blockedReason: "Couldn't post your comment. Please try again.",
       };
     }
 
