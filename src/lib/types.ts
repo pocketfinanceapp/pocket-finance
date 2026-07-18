@@ -82,6 +82,9 @@ export interface Comment {
   text: string;
   timeAgo: string;
   parentId?: string | null;
+  /** True when the author has deleted this comment — text is replaced with
+   * a placeholder but the row stays so replies aren't orphaned. */
+  isDeleted?: boolean;
 }
 
 /** @deprecated Use SavedArticleEntry — kept for stock panel helpers */

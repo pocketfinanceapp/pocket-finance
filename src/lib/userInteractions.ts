@@ -290,7 +290,7 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("comments")
-    .select("id, user_id, display_name, comment_text, created_at, parent_id")
+    .select("id, user_id, display_name, comment_text, created_at, parent_id, deleted_at")
     .eq("article_id", articleId)
     .order("created_at", { ascending: false });
 
@@ -304,17 +304,42 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
 
   return rows
     .filter((row) => (reportCounts.get(row.id) ?? 0) < AUTO_HIDE_REPORT_THRESHOLD)
-    .map((row) => ({
-      id: row.id,
-      userId: row.user_id,
-      username: row.display_name,
-      avatar: initials(row.display_name),
-      avatarColor: avatarColor(row.display_name),
-      avatarUrl: row.user_id ? loadProfileAvatar(row.user_id) : null,
-      text: row.comment_text,
-      timeAgo: timeAgo(row.created_at),
-      parentId: row.parent_id ?? null,
-    }));
+    .map((row) => {
+      const isDeleted = Boolean(row.deleted_at);
+      return {
+        id: row.id,
+        userId: row.user_id,
+        username: row.display_name,
+        avatar: initials(row.display_name),
+        avatarColor: avatarColor(row.display_name),
+        avatarUrl: row.user_id ? loadProfileAvatar(row.user_id) : null,
+        text: isDeleted ? "This comment was deleted" : row.comment_text,
+        timeAgo: timeAgo(row.created_at),
+        parentId: row.parent_id ?? null,
+        isDeleted,
+      };
+    });
+}
+
+/** Soft-delete — replaces the text with a placeholder rather than removing
+ * the row, so replies underneath don't get orphaned. Only the author can
+ * do this (enforced by RLS via auth.uid() = user_id). */
+export async function deleteComment(
+  userId: string,
+  commentId: string
+): Promise<boolean> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("comments")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", commentId)
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("deleteComment:", error.message);
+    return false;
+  }
+  return true;
 }
 
 function parseCommentCount(count: number | null | undefined): number {
@@ -401,104 +426,103 @@ export async function postComment(
   }
 }
 
-export async function fetchCommentLikeCounts(
+// ---------------------------------------------------------------------------
+// Comment reactions (emoji picker — replaces the old plain heart like)
+// ---------------------------------------------------------------------------
+
+export async function fetchCommentReactionCounts(
   commentIds: string[]
-): Promise<Map<string, number>> {
-  const counts = new Map<string, number>();
+): Promise<Map<string, Record<string, number>>> {
+  const counts = new Map<string, Record<string, number>>();
   if (commentIds.length === 0) return counts;
 
   const supabase = getSupabase();
   const { data, error } = await supabase
-    .from("comment_likes")
-    .select("comment_id")
+    .from("comment_reactions")
+    .select("comment_id, emoji")
     .in("comment_id", commentIds);
 
   if (error) {
-    console.error("fetchCommentLikeCounts:", error.message);
+    console.error("fetchCommentReactionCounts:", error.message);
     return counts;
   }
 
   for (const row of data ?? []) {
-    counts.set(row.comment_id, (counts.get(row.comment_id) ?? 0) + 1);
+    const perComment = counts.get(row.comment_id) ?? {};
+    perComment[row.emoji] = (perComment[row.emoji] ?? 0) + 1;
+    counts.set(row.comment_id, perComment);
   }
   return counts;
 }
 
-export async function fetchUserCommentLikes(
+export async function fetchUserCommentReactions(
   userId: string,
   commentIds: string[]
-): Promise<Set<string>> {
-  if (commentIds.length === 0) return new Set();
+): Promise<Map<string, string>> {
+  if (commentIds.length === 0) return new Map();
 
   const supabase = getSupabase();
   const { data, error } = await supabase
-    .from("comment_likes")
-    .select("comment_id")
+    .from("comment_reactions")
+    .select("comment_id, emoji")
     .eq("user_id", userId)
     .in("comment_id", commentIds);
 
   if (error) {
-    console.error("fetchUserCommentLikes:", error.message);
-    return new Set();
+    console.error("fetchUserCommentReactions:", error.message);
+    return new Map();
   }
 
-  return new Set((data ?? []).map((row) => row.comment_id));
+  return new Map((data ?? []).map((row) => [row.comment_id, row.emoji]));
 }
 
-export async function toggleCommentLike(
+/**
+ * Sets, swaps, or clears a user's reaction on a comment. Passing the emoji
+ * they already picked removes it (toggle off). Returns the resulting emoji
+ * (or null if cleared), or null on failure.
+ */
+export async function setCommentReaction(
   userId: string,
-  commentId: string
-): Promise<{ liked: boolean; count: number } | null> {
+  commentId: string,
+  emoji: string
+): Promise<{ emoji: string | null } | null> {
   const supabase = getSupabase();
   const { data: existing, error: readError } = await supabase
-    .from("comment_likes")
-    .select("id")
+    .from("comment_reactions")
+    .select("id, emoji")
     .eq("user_id", userId)
     .eq("comment_id", commentId)
     .maybeSingle();
 
   if (readError) {
-    console.error("toggleCommentLike:", readError.message);
+    console.error("setCommentReaction:", readError.message);
     return null;
   }
 
-  if (existing) {
+  if (existing && existing.emoji === emoji) {
     const { error } = await supabase
-      .from("comment_likes")
+      .from("comment_reactions")
       .delete()
       .eq("user_id", userId)
       .eq("comment_id", commentId);
 
     if (error) {
-      console.error("toggleCommentLike:", error.message);
+      console.error("setCommentReaction:", error.message);
       return null;
     }
-  } else {
-    const { error } = await supabase.from("comment_likes").insert({
-      user_id: userId,
-      comment_id: commentId,
-    });
-
-    if (error) {
-      console.error("toggleCommentLike:", error.message);
-      return null;
-    }
+    return { emoji: null };
   }
 
-  const { count, error: countError } = await supabase
-    .from("comment_likes")
-    .select("*", { count: "exact", head: true })
-    .eq("comment_id", commentId);
+  const { error } = await supabase.from("comment_reactions").upsert(
+    { user_id: userId, comment_id: commentId, emoji },
+    { onConflict: "user_id,comment_id" }
+  );
 
-  if (countError) {
-    console.error("toggleCommentLike:", countError.message);
+  if (error) {
+    console.error("setCommentReaction:", error.message);
     return null;
   }
-
-  return {
-    liked: !existing,
-    count: count ?? 0,
-  };
+  return { emoji };
 }
 
 // ---------------------------------------------------------------------------

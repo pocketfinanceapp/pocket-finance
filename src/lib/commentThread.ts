@@ -1,8 +1,14 @@
 import type { Comment } from "@/lib/types";
 
+/** Fixed reaction set shown in the emoji picker — kept small and familiar
+ * (mirrors the reaction sets in Instagram/Messenger-style pickers). */
+export const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "😡", "👍"] as const;
+
 export type ThreadComment = Comment & {
-  likes: number;
-  likedByMe: boolean;
+  /** emoji -> count, e.g. { "❤️": 3, "😂": 1 } */
+  reactions: Record<string, number>;
+  /** The emoji the current user picked, or null if they haven't reacted. */
+  myReaction: string | null;
   reportedByMe: boolean;
   replies: ThreadComment[];
   isPlaceholder?: boolean;
@@ -10,8 +16,8 @@ export type ThreadComment = Comment & {
 
 export function buildDiscussionThread(
   apiComments: Comment[],
-  likeCounts: Map<string, number>,
-  likedByUser: Set<string>,
+  reactionCounts: Map<string, Record<string, number>>,
+  myReactions: Map<string, string>,
   reportedByUser: Set<string> = new Set()
 ): ThreadComment[] {
   const byId = new Map<string, ThreadComment>();
@@ -19,8 +25,8 @@ export function buildDiscussionThread(
   for (const comment of apiComments) {
     byId.set(comment.id, {
       ...comment,
-      likes: likeCounts.get(comment.id) ?? 0,
-      likedByMe: likedByUser.has(comment.id),
+      reactions: reactionCounts.get(comment.id) ?? {},
+      myReaction: myReactions.get(comment.id) ?? null,
       reportedByMe: reportedByUser.has(comment.id),
       replies: [],
       isPlaceholder: false,
@@ -48,33 +54,58 @@ export function countThreadComments(comments: ThreadComment[]): number {
   );
 }
 
-export function updateCommentLikeInTree(
+/**
+ * Applies a reaction change to a comment: switching to a new emoji,
+ * or clearing (nextEmoji = null) to remove the user's reaction entirely.
+ */
+export function updateCommentReactionInTree(
   comments: ThreadComment[],
   commentId: string,
-  liked: boolean,
-  likeCount?: number
+  nextEmoji: string | null
 ): ThreadComment[] {
   return comments.map((comment) => {
     if (comment.id === commentId) {
-      const nextCount =
-        likeCount ??
-        Math.max(0, comment.likes + (liked ? (comment.likedByMe ? 0 : 1) : comment.likedByMe ? -1 : 0));
-      return {
-        ...comment,
-        likedByMe: liked,
-        likes: nextCount,
-      };
+      const reactions = { ...comment.reactions };
+      const prevEmoji = comment.myReaction;
+
+      if (prevEmoji) {
+        const prevCount = (reactions[prevEmoji] ?? 1) - 1;
+        if (prevCount <= 0) delete reactions[prevEmoji];
+        else reactions[prevEmoji] = prevCount;
+      }
+      if (nextEmoji) {
+        reactions[nextEmoji] = (reactions[nextEmoji] ?? 0) + 1;
+      }
+
+      return { ...comment, reactions, myReaction: nextEmoji };
     }
 
     if (comment.replies.length > 0) {
       return {
         ...comment,
-        replies: updateCommentLikeInTree(
-          comment.replies,
-          commentId,
-          liked,
-          likeCount
-        ),
+        replies: updateCommentReactionInTree(comment.replies, commentId, nextEmoji),
+      };
+    }
+
+    return comment;
+  });
+}
+
+export const DELETED_COMMENT_TEXT = "This comment was deleted";
+
+export function markCommentDeletedInTree(
+  comments: ThreadComment[],
+  commentId: string
+): ThreadComment[] {
+  return comments.map((comment) => {
+    if (comment.id === commentId) {
+      return { ...comment, isDeleted: true, text: DELETED_COMMENT_TEXT };
+    }
+
+    if (comment.replies.length > 0) {
+      return {
+        ...comment,
+        replies: markCommentDeletedInTree(comment.replies, commentId),
       };
     }
 

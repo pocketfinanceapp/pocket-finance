@@ -16,7 +16,8 @@ import {
   collectCommentIds,
   countThreadComments,
   getAncestorIds,
-  updateCommentLikeInTree,
+  markCommentDeletedInTree,
+  updateCommentReactionInTree,
   updateCommentReportInTree,
   type ThreadComment,
 } from "@/lib/commentThread";
@@ -32,14 +33,15 @@ import {
   TAB_EXIT_EASE,
 } from "@/lib/tabEnterAnimation";
 import {
-  fetchCommentLikeCounts,
+  deleteComment,
+  fetchCommentReactionCounts,
   fetchComments,
   fetchCommentCount,
-  fetchUserCommentLikes,
+  fetchUserCommentReactions,
   fetchUserCommentReports,
   postComment,
   reportComment,
-  toggleCommentLike,
+  setCommentReaction,
 } from "@/lib/userInteractions";
 
 interface CommentSheetProps {
@@ -80,12 +82,12 @@ export function CommentSheet({
     setLoading(true);
     const rows = await fetchComments(article.id);
     const commentIds = collectCommentIds(rows);
-    const [likeCounts, likedByUser, reportedByUser] = await Promise.all([
-      fetchCommentLikeCounts(commentIds),
-      user ? fetchUserCommentLikes(user.id, commentIds) : Promise.resolve(new Set<string>()),
+    const [reactionCounts, myReactions, reportedByUser] = await Promise.all([
+      fetchCommentReactionCounts(commentIds),
+      user ? fetchUserCommentReactions(user.id, commentIds) : Promise.resolve(new Map<string, string>()),
       user ? fetchUserCommentReports(user.id, commentIds) : Promise.resolve(new Set<string>()),
     ]);
-    setComments(buildDiscussionThread(rows, likeCounts, likedByUser, reportedByUser));
+    setComments(buildDiscussionThread(rows, reactionCounts, myReactions, reportedByUser));
     const count = await fetchCommentCount(article.id);
     emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
     setLoading(false);
@@ -168,19 +170,27 @@ export function CommentSheet({
     [comments]
   );
 
-  const handleLike = async (commentId: string) => {
+  const handleReact = async (commentId: string, emoji: string) => {
     if (!user) return;
-    const result = await toggleCommentLike(user.id, commentId);
+    const result = await setCommentReaction(user.id, commentId, emoji);
     if (!result) return;
-    setComments((prev) =>
-      updateCommentLikeInTree(prev, commentId, result.liked, result.count)
-    );
+    setComments((prev) => updateCommentReactionInTree(prev, commentId, result.emoji));
   };
 
   const handleReport = async (commentId: string) => {
     if (!user) return;
     setComments((prev) => updateCommentReportInTree(prev, commentId));
     await reportComment(user.id, commentId);
+  };
+
+  const handleDelete = async (commentId: string) => {
+    if (!user) return;
+    const confirmed = window.confirm(
+      "Delete this comment? This can't be undone."
+    );
+    if (!confirmed) return;
+    setComments((prev) => markCommentDeletedInTree(prev, commentId));
+    await deleteComment(user.id, commentId);
   };
 
   const submit = async () => {
@@ -208,8 +218,8 @@ export function CommentSheet({
         if (comment) {
           const reply: ThreadComment = {
             ...comment,
-            likes: 0,
-            likedByMe: false,
+            reactions: {},
+            myReaction: null,
             reportedByMe: false,
             replies: [],
             isPlaceholder: false,
@@ -249,8 +259,8 @@ export function CommentSheet({
         setComments((prev) => [
           {
             ...comment,
-            likes: 0,
-            likedByMe: false,
+            reactions: {},
+            myReaction: null,
             reportedByMe: false,
             replies: [],
             isPlaceholder: false,
@@ -393,8 +403,10 @@ export function CommentSheet({
                   key={comment.id}
                   comment={comment}
                   depth={0}
-                  onLike={handleLike}
+                  currentUserId={user?.id ?? null}
+                  onReact={handleReact}
                   onReport={handleReport}
+                  onDelete={handleDelete}
                   onReply={(c) => {
                     ensureThreadExpanded(c.id);
                     setReplyTo(c);

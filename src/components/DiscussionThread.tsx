@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, Heart } from "lucide-react";
-import { PopReaction } from "@/components/PopReaction";
+import { ChevronDown, ChevronUp, SmilePlus, Trash2 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
-import type { ThreadComment } from "@/lib/commentThread";
+import { REACTION_EMOJIS, type ThreadComment } from "@/lib/commentThread";
 
 const REPLY_INDENT = "ml-8";
 
 export interface DiscussionThreadProps {
   comment: ThreadComment;
   depth: number;
-  onLike: (id: string) => void;
+  currentUserId: string | null;
+  onReact: (id: string, emoji: string) => void;
   onReply: (comment: ThreadComment) => void;
   onReport: (id: string) => void;
+  onDelete: (id: string) => void;
   replyTargetId: string | null;
   expandedIds: Set<string>;
   onToggleExpanded: (id: string, open: boolean) => void;
@@ -24,9 +25,11 @@ export interface DiscussionThreadProps {
 export function DiscussionThread({
   comment,
   depth,
-  onLike,
+  currentUserId,
+  onReact,
   onReply,
   onReport,
+  onDelete,
   replyTargetId,
   expandedIds,
   onToggleExpanded,
@@ -34,14 +37,26 @@ export function DiscussionThread({
   renderText,
 }: DiscussionThreadProps) {
   const [localExpanded, setLocalExpanded] = useState(depth === 0);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const hasReplies = comment.replies.length > 0;
   const expanded = expandedIds.has(comment.id) || localExpanded;
   const isReplyTarget = replyTargetId === comment.id;
+  const isOwn = Boolean(currentUserId && comment.userId === currentUserId);
+  const reactionEntries = Object.entries(comment.reactions).filter(([, count]) => count > 0);
+
+  useEffect(() => {
+    setPickerOpen(false);
+  }, [resetKey]);
 
   const toggleExpanded = () => {
     const next = !expanded;
     setLocalExpanded(next);
     onToggleExpanded(comment.id, next);
+  };
+
+  const pickEmoji = (emoji: string) => {
+    onReact(comment.id, emoji);
+    setPickerOpen(false);
   };
 
   return (
@@ -71,60 +86,120 @@ export function DiscussionThread({
               </span>
               <span className="text-[10px] text-pocket-muted">{comment.timeAgo}</span>
             </div>
-            <CommentBody
-              text={comment.text}
-              resetKey={resetKey}
-              renderText={renderText}
-            />
-          </div>
-
-          <div className="mt-1.5 flex items-center gap-1">
-            <PopReaction
-              aria-label={comment.likedByMe ? "Unlike comment" : "Like comment"}
-              burst={!comment.likedByMe}
-              onClick={() => onLike(comment.id)}
-              className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
-                comment.likedByMe
-                  ? "text-[#00C6C6]"
-                  : "text-pocket-muted hover:text-pocket-text"
-              }`}
-            >
-              <Heart
-                className={`h-3.5 w-3.5 ${comment.likedByMe ? "fill-[#00C6C6] text-[#00C6C6]" : ""}`}
-                strokeWidth={2.25}
+            {comment.isDeleted ? (
+              <p className="mt-1 text-[14px] italic leading-relaxed text-pocket-muted">
+                {comment.text}
+              </p>
+            ) : (
+              <CommentBody
+                text={comment.text}
+                resetKey={resetKey}
+                renderText={renderText}
               />
-              {comment.likes > 0 && (
-                <span className="tabular-nums">{comment.likes}</span>
-              )}
-            </PopReaction>
-
-            <button
-              type="button"
-              data-no-drag
-              onClick={() => onReply(comment)}
-              className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
-                isReplyTarget
-                  ? "text-[#00C6C6]"
-                  : "text-pocket-muted hover:text-pocket-text"
-              }`}
-            >
-              Reply
-            </button>
-
-            <button
-              type="button"
-              data-no-drag
-              disabled={comment.reportedByMe}
-              onClick={() => onReport(comment.id)}
-              className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
-                comment.reportedByMe
-                  ? "text-pocket-muted/60"
-                  : "text-pocket-muted hover:text-pocket-text"
-              }`}
-            >
-              {comment.reportedByMe ? "Reported" : "Report"}
-            </button>
+            )}
           </div>
+
+          {!comment.isDeleted && (
+            <>
+              {reactionEntries.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                  {reactionEntries.map(([emoji, count]) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      data-no-drag
+                      onClick={() => pickEmoji(emoji)}
+                      className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                        comment.myReaction === emoji
+                          ? "border-[#00C6C6]/45 bg-[#00C6C6]/[0.1] text-[#00C6C6]"
+                          : "border-[var(--pocket-border)] text-pocket-muted hover:text-pocket-text"
+                      }`}
+                    >
+                      <span>{emoji}</span>
+                      <span className="tabular-nums">{count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="relative mt-1.5 flex items-center gap-1">
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={() => setPickerOpen((v) => !v)}
+                  className={`flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
+                    comment.myReaction
+                      ? "text-[#00C6C6]"
+                      : "text-pocket-muted hover:text-pocket-text"
+                  }`}
+                >
+                  {comment.myReaction ? (
+                    <span>{comment.myReaction}</span>
+                  ) : (
+                    <SmilePlus className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  )}
+                  React
+                </button>
+
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={() => onReply(comment)}
+                  className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
+                    isReplyTarget
+                      ? "text-[#00C6C6]"
+                      : "text-pocket-muted hover:text-pocket-text"
+                  }`}
+                >
+                  Reply
+                </button>
+
+                <button
+                  type="button"
+                  data-no-drag
+                  disabled={comment.reportedByMe}
+                  onClick={() => onReport(comment.id)}
+                  className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
+                    comment.reportedByMe
+                      ? "text-pocket-muted/60"
+                      : "text-pocket-muted hover:text-pocket-text"
+                  }`}
+                >
+                  {comment.reportedByMe ? "Reported" : "Report"}
+                </button>
+
+                {isOwn && (
+                  <button
+                    type="button"
+                    data-no-drag
+                    onClick={() => onDelete(comment.id)}
+                    className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-pocket-muted transition-colors hover:text-red-400"
+                    aria-label="Delete comment"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  </button>
+                )}
+
+                {pickerOpen && (
+                  <div className="absolute left-0 top-full z-10 mt-1.5 flex items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-sheet)] px-2 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+                    {REACTION_EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        data-no-drag
+                        onClick={() => pickEmoji(emoji)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-[17px] leading-none transition-transform active:scale-90 ${
+                          comment.myReaction === emoji ? "bg-[#00C6C6]/15" : "hover:bg-[var(--pocket-surface-hover)]"
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {hasReplies && (
             <button
@@ -156,9 +231,11 @@ export function DiscussionThread({
                   key={reply.id}
                   comment={reply}
                   depth={depth + 1}
-                  onLike={onLike}
+                  currentUserId={currentUserId}
+                  onReact={onReact}
                   onReply={onReply}
                   onReport={onReport}
+                  onDelete={onDelete}
                   replyTargetId={replyTargetId}
                   expandedIds={expandedIds}
                   onToggleExpanded={onToggleExpanded}
