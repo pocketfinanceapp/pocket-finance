@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import type { NewsArticle } from "@/lib/types";
 import {
   resolveFeedFallbackVariant,
@@ -7,6 +11,37 @@ import {
 interface FeedCardFallbackBackgroundProps {
   article: NewsArticle;
   category?: string;
+}
+
+// Shared across every card in the feed — there are only 6 categories, so
+// this caps us at 6 network requests per session no matter how many cards
+// scroll past, and instant reuse after the first hit per category.
+const categoryImageCache = new Map<FeedFallbackVariant, string | null>();
+const inFlightRequests = new Map<FeedFallbackVariant, Promise<string | null>>();
+
+function loadCategoryImage(variant: FeedFallbackVariant): Promise<string | null> {
+  if (categoryImageCache.has(variant)) {
+    return Promise.resolve(categoryImageCache.get(variant) ?? null);
+  }
+  const existing = inFlightRequests.get(variant);
+  if (existing) return existing;
+
+  const request = fetch(`/api/fallback-image?category=${variant}`)
+    .then((res) => (res.ok ? res.json() : { imageUrl: null }))
+    .then((data: { imageUrl: string | null }) => {
+      categoryImageCache.set(variant, data.imageUrl ?? null);
+      return data.imageUrl ?? null;
+    })
+    .catch(() => {
+      categoryImageCache.set(variant, null);
+      return null;
+    })
+    .finally(() => {
+      inFlightRequests.delete(variant);
+    });
+
+  inFlightRequests.set(variant, request);
+  return request;
 }
 
 function resolveVariantFromCategory(
@@ -37,7 +72,10 @@ function resolveVariantFromCategory(
   return resolveFeedFallbackVariant(article);
 }
 
-/** Premium category-specific fallback when an article has no usable image */
+/** Category-specific fallback when an article has no usable image of its
+ * own — a real, topic-relevant photo (e.g. a trading floor for finance
+ * news) with the abstract art kept as an instant-render placeholder while
+ * the photo loads, and as the permanent fallback if no photo is found. */
 export function FeedCardFallbackBackground({
   article,
   category,
@@ -46,12 +84,35 @@ export function FeedCardFallbackBackground({
     ? resolveVariantFromCategory(category, article)
     : resolveFeedFallbackVariant(article);
   const uid = article.id.replace(/[^a-zA-Z0-9_-]/g, "");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(
+    () => categoryImageCache.get(variant) ?? null
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadCategoryImage(variant).then((url) => {
+      if (!cancelled) setPhotoUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [variant]);
 
   return (
     <div className="absolute inset-0 z-0 overflow-hidden bg-pocket-feed-bg">
       <div className="pf-feed-fallback-art relative h-full w-full">
         <VariantArt variant={variant} uid={uid} />
       </div>
+      {photoUrl && (
+        <Image
+          src={photoUrl}
+          alt=""
+          fill
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-90"
+          sizes="100vw"
+          unoptimized
+        />
+      )}
       <div className="pf-feed-fallback-scrim absolute inset-0" />
     </div>
   );
