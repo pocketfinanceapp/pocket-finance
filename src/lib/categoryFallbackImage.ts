@@ -26,7 +26,7 @@ const CATEGORY_WIKI_TITLES: Record<FeedFallbackVariant, string> = {
   energy: "Oil platform",
   finance: "Wall Street",
   tech: "Data center",
-  markets: "New York Stock Exchange",
+  markets: "Nasdaq",
 };
 
 interface PageImagesResponse {
@@ -40,11 +40,8 @@ interface PageImagesResponse {
   };
 }
 
-export async function fetchCategoryFallbackImage(
-  variant: FeedFallbackVariant
-): Promise<string | null> {
-  const title = CATEGORY_WIKI_TITLES[variant];
-  if (!title) return null;
+export async function fetchWikipediaPageImage(title: string): Promise<string | null> {
+  if (!title.trim()) return null;
 
   const url = `${WIKIPEDIA_ACTION_API}?action=query&titles=${encodeURIComponent(
     title
@@ -65,7 +62,15 @@ export async function fetchCategoryFallbackImage(
     const page = Object.values(pages)[0];
     return page?.thumbnail?.source ?? null;
   } catch (err) {
-    console.error(`[categoryFallbackImage] fetch threw for ${variant}:`, err);
+    console.error(`[categoryFallbackImage] fetch threw for "${title}":`, err);
     return null;
   }
+}
+
+export async function fetchCategoryFallbackImage(
+  variant: FeedFallbackVariant
+): Promise<string | null> {
+  const title = CATEGORY_WIKI_TITLES[variant];
+  if (!title) return null;
+  return fetchWikipediaPageImage(title);
 }
