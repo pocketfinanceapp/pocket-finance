@@ -122,7 +122,7 @@ export function DiscussionThread({
                 </div>
               )}
 
-              <div className="relative mt-1.5 flex items-center gap-1">
+              <div className="mt-1.5 flex items-center gap-1">
                 <button
                   type="button"
                   data-no-drag
@@ -179,25 +179,25 @@ export function DiscussionThread({
                     <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
                   </button>
                 )}
-
-                {pickerOpen && (
-                  <div className="absolute left-0 top-full z-10 mt-1.5 flex items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-sheet)] px-2 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
-                    {REACTION_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        data-no-drag
-                        onClick={() => pickEmoji(emoji)}
-                        className={`flex h-8 w-8 items-center justify-center rounded-full text-[17px] leading-none transition-transform active:scale-90 ${
-                          comment.myReaction === emoji ? "bg-[#00C6C6]/15" : "hover:bg-[var(--pocket-surface-hover)]"
-                        }`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {pickerOpen && (
+                <div className="mt-1.5 flex w-fit items-center gap-1 rounded-full border border-[var(--pocket-border)] bg-[var(--pocket-sheet)] px-2 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+                  {REACTION_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      data-no-drag
+                      onClick={() => pickEmoji(emoji)}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-[17px] leading-none transition-transform active:scale-90 ${
+                        comment.myReaction === emoji ? "bg-[#00C6C6]/15" : "hover:bg-[var(--pocket-surface-hover)]"
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
             </>
           )}
 
