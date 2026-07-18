@@ -150,8 +150,13 @@ export function FeedCard({
     let cancelled = false;
     void estimateImageIsDark(article.imageUrl).then((dark) => {
       if (cancelled) return;
+      // Dark photos (e.g. trading-floor shots) are real, usable images —
+      // they just need a softer text overlay for contrast (see
+      // useSoftOverlay below). Previously this also forced imageFailed,
+      // which discarded the real image entirely in favor of the generated
+      // fallback pattern, even though the image loaded fine and displays
+      // correctly on the article detail page.
       setIsDarkImage(dark);
-      if (dark) setImageFailed(true);
     });
 
     return () => {
