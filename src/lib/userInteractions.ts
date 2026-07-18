@@ -355,39 +355,50 @@ export async function postComment(
     return { comment: null, blockedReason: filterResult.reason };
   }
 
-  const supabase = getSupabase();
-  const payload: Record<string, string | null> = {
-    user_id: userId,
-    article_id: articleId,
-    comment_text: commentText.trim(),
-    display_name: displayName.trim(),
-  };
-  if (parentId) payload.parent_id = parentId;
+  try {
+    const supabase = getSupabase();
+    const payload: Record<string, string | null> = {
+      user_id: userId,
+      article_id: articleId,
+      comment_text: commentText.trim(),
+      display_name: displayName.trim(),
+    };
+    if (parentId) payload.parent_id = parentId;
 
-  const { data, error } = await supabase
-    .from("comments")
-    .insert(payload)
-    .select("id, user_id, display_name, comment_text, created_at, parent_id")
-    .single();
+    const { data, error } = await supabase
+      .from("comments")
+      .insert(payload)
+      .select("id, user_id, display_name, comment_text, created_at, parent_id")
+      .single();
 
-  if (error || !data) {
-    console.error("postComment:", error?.message);
-    return { comment: null };
+    if (error || !data) {
+      console.error("postComment:", error?.message, error?.details, error?.hint);
+      return {
+        comment: null,
+        blockedReason: "Couldn't post your comment. Please try again.",
+      };
+    }
+
+    return {
+      comment: {
+        id: data.id,
+        userId: data.user_id,
+        username: data.display_name,
+        avatar: initials(data.display_name),
+        avatarColor: avatarColor(data.display_name),
+        avatarUrl: loadProfileAvatar(userId),
+        text: data.comment_text,
+        timeAgo: "Just now",
+        parentId: data.parent_id ?? null,
+      },
+    };
+  } catch (err) {
+    console.error("postComment: threw", err);
+    return {
+      comment: null,
+      blockedReason: "Couldn't post your comment. Please try again.",
+    };
   }
-
-  return {
-    comment: {
-      id: data.id,
-      userId: data.user_id,
-      username: data.display_name,
-      avatar: initials(data.display_name),
-      avatarColor: avatarColor(data.display_name),
-      avatarUrl: loadProfileAvatar(userId),
-      text: data.comment_text,
-      timeAgo: "Just now",
-      parentId: data.parent_id ?? null,
-    },
-  };
 }
 
 export async function fetchCommentLikeCounts(

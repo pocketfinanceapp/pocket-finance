@@ -190,15 +190,55 @@ export function CommentSheet({
     setSubmitting(true);
     setPostError(null);
 
-    if (replyTo) {
+    try {
+      if (replyTo) {
+        const { comment, blockedReason } = await postComment(
+          user.id,
+          article.id,
+          text,
+          displayName,
+          replyTo.id
+        );
+
+        if (blockedReason) {
+          setPostError(blockedReason);
+          return;
+        }
+
+        if (comment) {
+          const reply: ThreadComment = {
+            ...comment,
+            likes: 0,
+            likedByMe: false,
+            reportedByMe: false,
+            replies: [],
+            isPlaceholder: false,
+          };
+          setComments((prev) => appendReplyToTree(prev, replyTo.id, reply));
+          ensureThreadExpanded(replyTo.id);
+          setInput("");
+          setReplyTo(null);
+          onCommentPosted?.();
+          const count = await fetchCommentCount(article.id);
+          emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
+          requestAnimationFrame(() => {
+            document.getElementById(`comment-${comment.id}`)?.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            });
+          });
+        } else {
+          setPostError("Couldn't post your comment. Please try again.");
+        }
+        return;
+      }
+
       const { comment, blockedReason } = await postComment(
         user.id,
         article.id,
         text,
-        displayName,
-        replyTo.id
+        displayName
       );
-      setSubmitting(false);
 
       if (blockedReason) {
         setPostError(blockedReason);
@@ -206,61 +246,30 @@ export function CommentSheet({
       }
 
       if (comment) {
-        const reply: ThreadComment = {
-          ...comment,
-          likes: 0,
-          likedByMe: false,
-          reportedByMe: false,
-          replies: [],
-          isPlaceholder: false,
-        };
-        setComments((prev) => appendReplyToTree(prev, replyTo.id, reply));
-        ensureThreadExpanded(replyTo.id);
+        setComments((prev) => [
+          {
+            ...comment,
+            likes: 0,
+            likedByMe: false,
+            reportedByMe: false,
+            replies: [],
+            isPlaceholder: false,
+          },
+          ...prev,
+        ]);
         setInput("");
-        setReplyTo(null);
         onCommentPosted?.();
         const count = await fetchCommentCount(article.id);
         emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
-        requestAnimationFrame(() => {
-          document.getElementById(`comment-${comment.id}`)?.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-          });
-        });
+        listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        setPostError("Couldn't post your comment. Please try again.");
       }
-      return;
-    }
-
-    const { comment, blockedReason } = await postComment(
-      user.id,
-      article.id,
-      text,
-      displayName
-    );
-    setSubmitting(false);
-
-    if (blockedReason) {
-      setPostError(blockedReason);
-      return;
-    }
-
-    if (comment) {
-      setComments((prev) => [
-        {
-          ...comment,
-          likes: 0,
-          likedByMe: false,
-          reportedByMe: false,
-          replies: [],
-          isPlaceholder: false,
-        },
-        ...prev,
-      ]);
-      setInput("");
-      onCommentPosted?.();
-      const count = await fetchCommentCount(article.id);
-      emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
-      listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error("submit comment: threw", err);
+      setPostError("Couldn't post your comment. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
