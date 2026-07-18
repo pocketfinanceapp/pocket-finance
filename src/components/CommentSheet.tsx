@@ -17,6 +17,7 @@ import {
   countThreadComments,
   getAncestorIds,
   updateCommentLikeInTree,
+  updateCommentReportInTree,
   type ThreadComment,
 } from "@/lib/commentThread";
 import type { NewsArticle } from "@/lib/types";
@@ -35,7 +36,9 @@ import {
   fetchComments,
   fetchCommentCount,
   fetchUserCommentLikes,
+  fetchUserCommentReports,
   postComment,
+  reportComment,
   toggleCommentLike,
 } from "@/lib/userInteractions";
 
@@ -63,6 +66,7 @@ export function CommentSheet({
   const [replyTo, setReplyTo] = useState<ThreadComment | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
   const [sheetCycle, setSheetCycle] = useState(0);
+  const [postError, setPostError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -76,11 +80,12 @@ export function CommentSheet({
     setLoading(true);
     const rows = await fetchComments(article.id);
     const commentIds = collectCommentIds(rows);
-    const [likeCounts, likedByUser] = await Promise.all([
+    const [likeCounts, likedByUser, reportedByUser] = await Promise.all([
       fetchCommentLikeCounts(commentIds),
       user ? fetchUserCommentLikes(user.id, commentIds) : Promise.resolve(new Set<string>()),
+      user ? fetchUserCommentReports(user.id, commentIds) : Promise.resolve(new Set<string>()),
     ]);
-    setComments(buildDiscussionThread(rows, likeCounts, likedByUser));
+    setComments(buildDiscussionThread(rows, likeCounts, likedByUser, reportedByUser));
     const count = await fetchCommentCount(article.id);
     emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
     setLoading(false);
@@ -172,14 +177,21 @@ export function CommentSheet({
     );
   };
 
+  const handleReport = async (commentId: string) => {
+    if (!user) return;
+    setComments((prev) => updateCommentReportInTree(prev, commentId));
+    await reportComment(user.id, commentId);
+  };
+
   const submit = async () => {
     const text = input.trim();
     if (!text || !article || !user || submitting) return;
 
     setSubmitting(true);
+    setPostError(null);
 
     if (replyTo) {
-      const created = await postComment(
+      const { comment, blockedReason } = await postComment(
         user.id,
         article.id,
         text,
@@ -188,11 +200,17 @@ export function CommentSheet({
       );
       setSubmitting(false);
 
-      if (created) {
+      if (blockedReason) {
+        setPostError(blockedReason);
+        return;
+      }
+
+      if (comment) {
         const reply: ThreadComment = {
-          ...created,
+          ...comment,
           likes: 0,
           likedByMe: false,
+          reportedByMe: false,
           replies: [],
           isPlaceholder: false,
         };
@@ -204,7 +222,7 @@ export function CommentSheet({
         const count = await fetchCommentCount(article.id);
         emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
         requestAnimationFrame(() => {
-          document.getElementById(`comment-${created.id}`)?.scrollIntoView({
+          document.getElementById(`comment-${comment.id}`)?.scrollIntoView({
             behavior: "smooth",
             block: "nearest",
           });
@@ -213,15 +231,26 @@ export function CommentSheet({
       return;
     }
 
-    const created = await postComment(user.id, article.id, text, displayName);
+    const { comment, blockedReason } = await postComment(
+      user.id,
+      article.id,
+      text,
+      displayName
+    );
     setSubmitting(false);
 
-    if (created) {
+    if (blockedReason) {
+      setPostError(blockedReason);
+      return;
+    }
+
+    if (comment) {
       setComments((prev) => [
         {
-          ...created,
+          ...comment,
           likes: 0,
           likedByMe: false,
+          reportedByMe: false,
           replies: [],
           isPlaceholder: false,
         },
@@ -356,6 +385,7 @@ export function CommentSheet({
                   comment={comment}
                   depth={0}
                   onLike={handleLike}
+                  onReport={handleReport}
                   onReply={(c) => {
                     ensureThreadExpanded(c.id);
                     setReplyTo(c);
@@ -386,6 +416,12 @@ export function CommentSheet({
             backdropFilter: "blur(14px)",
           }}
         >
+          {postError && (
+            <p className="mb-2.5 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-[12px] text-red-400">
+              {postError}
+            </p>
+          )}
+
           {replyTo && (
             <div className="mb-2.5 flex items-center justify-between rounded-xl border border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] px-3 py-2">
               <p className="min-w-0 truncate text-[12px] text-pocket-muted">
@@ -422,7 +458,10 @@ export function CommentSheet({
                 <textarea
                   ref={inputRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    if (postError) setPostError(null);
+                  }}
                   placeholder={
                     replyTo ? `Reply to ${replyTo.username}…` : "Add to the discussion…"
                   }

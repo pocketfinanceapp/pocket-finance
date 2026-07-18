@@ -13,6 +13,7 @@ export interface DiscussionThreadProps {
   depth: number;
   onLike: (id: string) => void;
   onReply: (comment: ThreadComment) => void;
+  onReport: (id: string) => void;
   replyTargetId: string | null;
   expandedIds: Set<string>;
   onToggleExpanded: (id: string, open: boolean) => void;
@@ -25,6 +26,7 @@ export function DiscussionThread({
   depth,
   onLike,
   onReply,
+  onReport,
   replyTargetId,
   expandedIds,
   onToggleExpanded,
@@ -108,6 +110,20 @@ export function DiscussionThread({
             >
               Reply
             </button>
+
+            <button
+              type="button"
+              data-no-drag
+              disabled={comment.reportedByMe}
+              onClick={() => onReport(comment.id)}
+              className={`rounded-full px-2 py-1 text-[11px] font-medium transition-colors ${
+                comment.reportedByMe
+                  ? "text-pocket-muted/60"
+                  : "text-pocket-muted hover:text-pocket-text"
+              }`}
+            >
+              {comment.reportedByMe ? "Reported" : "Report"}
+            </button>
           </div>
 
           {hasReplies && (
@@ -142,6 +158,7 @@ export function DiscussionThread({
                   depth={depth + 1}
                   onLike={onLike}
                   onReply={onReply}
+                  onReport={onReport}
                   replyTargetId={replyTargetId}
                   expandedIds={expandedIds}
                   onToggleExpanded={onToggleExpanded}

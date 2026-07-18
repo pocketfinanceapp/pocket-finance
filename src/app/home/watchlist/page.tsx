@@ -1,4 +1,10 @@
-/** Watchlist content is rendered by TabAppShell in the app layout */
+import { redirect } from "next/navigation";
+
+/**
+ * The Watchlist tab was removed (see task #17) but this route can still be
+ * reached via an old bookmark or indexed link — redirect to the home feed
+ * instead of rendering a blank screen.
+ */
 export default function WatchlistRoute() {
-  return null;
+  redirect("/home");
 }

@@ -3,6 +3,7 @@ import type { Comment } from "@/lib/types";
 export type ThreadComment = Comment & {
   likes: number;
   likedByMe: boolean;
+  reportedByMe: boolean;
   replies: ThreadComment[];
   isPlaceholder?: boolean;
 };
@@ -10,7 +11,8 @@ export type ThreadComment = Comment & {
 export function buildDiscussionThread(
   apiComments: Comment[],
   likeCounts: Map<string, number>,
-  likedByUser: Set<string>
+  likedByUser: Set<string>,
+  reportedByUser: Set<string> = new Set()
 ): ThreadComment[] {
   const byId = new Map<string, ThreadComment>();
 
@@ -19,6 +21,7 @@ export function buildDiscussionThread(
       ...comment,
       likes: likeCounts.get(comment.id) ?? 0,
       likedByMe: likedByUser.has(comment.id),
+      reportedByMe: reportedByUser.has(comment.id),
       replies: [],
       isPlaceholder: false,
     });
@@ -72,6 +75,26 @@ export function updateCommentLikeInTree(
           liked,
           likeCount
         ),
+      };
+    }
+
+    return comment;
+  });
+}
+
+export function updateCommentReportInTree(
+  comments: ThreadComment[],
+  commentId: string
+): ThreadComment[] {
+  return comments.map((comment) => {
+    if (comment.id === commentId) {
+      return { ...comment, reportedByMe: true };
+    }
+
+    if (comment.replies.length > 0) {
+      return {
+        ...comment,
+        replies: updateCommentReportInTree(comment.replies, commentId),
       };
     }
 

@@ -1,4 +1,5 @@
 import { getSupabase } from "@/lib/supabase";
+import { isDisallowedComment } from "@/lib/commentFilter";
 import { loadProfileAvatar } from "@/lib/profileStorage";
 import { resolveArticleTicker } from "@/lib/tickerMap";
 import type {
@@ -279,6 +280,12 @@ export async function unsaveArticle(
 // Comments
 // ---------------------------------------------------------------------------
 
+// Basic moderation: a comment that collects this many reports is filtered
+// out of fetchComments() automatically — no human review needed to hide
+// the obvious cases. Its replies (if not themselves reported) stay visible
+// as top-level comments rather than disappearing with it.
+const AUTO_HIDE_REPORT_THRESHOLD = 3;
+
 export async function fetchComments(articleId: string): Promise<Comment[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -292,17 +299,22 @@ export async function fetchComments(articleId: string): Promise<Comment[]> {
     return [];
   }
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    username: row.display_name,
-    avatar: initials(row.display_name),
-    avatarColor: avatarColor(row.display_name),
-    avatarUrl: row.user_id ? loadProfileAvatar(row.user_id) : null,
-    text: row.comment_text,
-    timeAgo: timeAgo(row.created_at),
-    parentId: row.parent_id ?? null,
-  }));
+  const rows = data ?? [];
+  const reportCounts = await fetchCommentReportCounts(rows.map((row) => row.id));
+
+  return rows
+    .filter((row) => (reportCounts.get(row.id) ?? 0) < AUTO_HIDE_REPORT_THRESHOLD)
+    .map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      username: row.display_name,
+      avatar: initials(row.display_name),
+      avatarColor: avatarColor(row.display_name),
+      avatarUrl: row.user_id ? loadProfileAvatar(row.user_id) : null,
+      text: row.comment_text,
+      timeAgo: timeAgo(row.created_at),
+      parentId: row.parent_id ?? null,
+    }));
 }
 
 function parseCommentCount(count: number | null | undefined): number {
@@ -324,13 +336,25 @@ export async function fetchCommentCount(articleId: string): Promise<number> {
   return parseCommentCount(count);
 }
 
+export interface PostCommentResult {
+  comment: Comment | null;
+  /** Set when the comment was rejected by the client-side content filter — a
+   * user-facing reason to show, distinct from a generic network/DB error. */
+  blockedReason?: string;
+}
+
 export async function postComment(
   userId: string,
   articleId: string,
   commentText: string,
   displayName: string,
   parentId?: string | null
-): Promise<Comment | null> {
+): Promise<PostCommentResult> {
+  const filterResult = isDisallowedComment(commentText);
+  if (filterResult.blocked) {
+    return { comment: null, blockedReason: filterResult.reason };
+  }
+
   const supabase = getSupabase();
   const payload: Record<string, string | null> = {
     user_id: userId,
@@ -348,19 +372,21 @@ export async function postComment(
 
   if (error || !data) {
     console.error("postComment:", error?.message);
-    return null;
+    return { comment: null };
   }
 
   return {
-    id: data.id,
-    userId: data.user_id,
-    username: data.display_name,
-    avatar: initials(data.display_name),
-    avatarColor: avatarColor(data.display_name),
-    avatarUrl: loadProfileAvatar(userId),
-    text: data.comment_text,
-    timeAgo: "Just now",
-    parentId: data.parent_id ?? null,
+    comment: {
+      id: data.id,
+      userId: data.user_id,
+      username: data.display_name,
+      avatar: initials(data.display_name),
+      avatarColor: avatarColor(data.display_name),
+      avatarUrl: loadProfileAvatar(userId),
+      text: data.comment_text,
+      timeAgo: "Just now",
+      parentId: data.parent_id ?? null,
+    },
   };
 }
 
@@ -462,4 +488,70 @@ export async function toggleCommentLike(
     liked: !existing,
     count: count ?? 0,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Comment reports (basic moderation — see AUTO_HIDE_REPORT_THRESHOLD above)
+// ---------------------------------------------------------------------------
+
+export async function fetchCommentReportCounts(
+  commentIds: string[]
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (commentIds.length === 0) return counts;
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("comment_reports")
+    .select("comment_id")
+    .in("comment_id", commentIds);
+
+  if (error) {
+    console.error("fetchCommentReportCounts:", error.message);
+    return counts;
+  }
+
+  for (const row of data ?? []) {
+    counts.set(row.comment_id, (counts.get(row.comment_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export async function fetchUserCommentReports(
+  userId: string,
+  commentIds: string[]
+): Promise<Set<string>> {
+  if (commentIds.length === 0) return new Set();
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("comment_reports")
+    .select("comment_id")
+    .eq("user_id", userId)
+    .in("comment_id", commentIds);
+
+  if (error) {
+    console.error("fetchUserCommentReports:", error.message);
+    return new Set();
+  }
+
+  return new Set((data ?? []).map((row) => row.comment_id));
+}
+
+/** Idempotent — reporting the same comment twice is treated as success. */
+export async function reportComment(
+  userId: string,
+  commentId: string
+): Promise<boolean> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from("comment_reports").insert({
+    user_id: userId,
+    comment_id: commentId,
+  });
+
+  if (error && error.code !== "23505") {
+    console.error("reportComment:", error.message);
+    return false;
+  }
+  return true;
 }
