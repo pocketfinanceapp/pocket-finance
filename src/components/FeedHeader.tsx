@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { UserRoundCheck } from "lucide-react";
 import type { FeedMode } from "@/lib/filterArticles";
 import { useApp } from "@/context/AppContext";
 import {
@@ -14,6 +15,8 @@ interface FeedHeaderProps {
   onFeedModeChange: (mode: FeedMode) => void;
   onOpenSearch: () => void;
   searchOpen?: boolean;
+  followingOnly?: boolean;
+  onToggleFollowingOnly?: () => void;
   className?: string;
 }
 
@@ -30,6 +33,8 @@ export function FeedHeader({
   onFeedModeChange,
   onOpenSearch,
   searchOpen = false,
+  followingOnly = false,
+  onToggleFollowingOnly,
   className = "",
 }: FeedHeaderProps) {
   const { marketFilters, sectorFilters, searchQuery, clearFilters } = useApp();
@@ -132,7 +137,38 @@ export function FeedHeader({
         className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-1 px-3 sm:px-4"
         style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
       >
-        <div className="h-11 w-11 shrink-0" aria-hidden />
+        {onToggleFollowingOnly ? (
+          <button
+            type="button"
+            data-no-drag
+            onPointerDown={stop}
+            onClick={onToggleFollowingOnly}
+            className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 active:scale-95 ${TAB_SHADOW}`}
+            aria-label={
+              followingOnly
+                ? "Showing companies you follow — tap to show everyone"
+                : "Show only companies you follow"
+            }
+            aria-pressed={followingOnly}
+          >
+            <span
+              aria-hidden
+              className={`absolute inset-0 rounded-full border transition-all duration-300 ${
+                followingOnly
+                  ? "scale-100 border-pocket-teal/40 bg-pocket-teal/10 opacity-100"
+                  : "scale-90 border-[var(--pocket-border)] bg-[var(--pocket-surface-hover)] opacity-100"
+              }`}
+            />
+            <UserRoundCheck
+              className={`relative z-[1] h-[18px] w-[18px] transition-transform duration-300 ${
+                followingOnly ? "scale-110 text-pocket-teal" : "scale-100 text-pocket-text"
+              }`}
+              strokeWidth={2.25}
+            />
+          </button>
+        ) : (
+          <div className="h-11 w-11 shrink-0" aria-hidden />
+        )}
         <nav
           ref={navRef}
           className="pf-feed-tab-bar relative flex items-end justify-center gap-6 px-2 pb-0.5 pt-1"

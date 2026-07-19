@@ -23,6 +23,7 @@ import {
 import { recordActivityEvent } from "@/lib/progression";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import { rankTrendingArticles } from "@/lib/trendingArticles";
+import { resolveArticleTicker } from "@/lib/tickerMap";
 import type { NewsArticle } from "@/lib/types";
 import { CommentSheet } from "./CommentSheet";
 import { FeedCard } from "./FeedCard";
@@ -103,6 +104,10 @@ export function NewsFeed({
   const [favouriteTopics, setFavouriteTopics] = useState<ProfileTopic[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [personalizationTick, setPersonalizationTick] = useState(0);
+  // Session-only by design — resets on reload rather than persisting, so a
+  // forgotten toggle can never make the feed look permanently empty on a
+  // later visit.
+  const [followingOnly, setFollowingOnly] = useState(false);
 
   const refreshTopics = useCallback(() => {
     const topics = loadFavouriteTopics();
@@ -267,8 +272,14 @@ export function NewsFeed({
     return rankTrendingArticles(pool).slice(0, 40);
   }, [trendingPool, hiddenSources]);
 
-  const verticalFeedArticles =
-    displayedFeedMode === "trending" ? trendingArticles : filteredArticles;
+  const verticalFeedArticles = useMemo(() => {
+    const base =
+      displayedFeedMode === "trending" ? trendingArticles : filteredArticles;
+    if (!followingOnly) return base;
+    return base.filter((a) =>
+      followedTickers.includes(resolveArticleTicker(a))
+    );
+  }, [displayedFeedMode, trendingArticles, filteredArticles, followingOnly, followedTickers]);
 
   // `verticalFeedArticles` can silently reorder mid-session — most notably,
   // opening an article dings its "For You" score (see openedArticleIds in
@@ -706,6 +717,8 @@ export function NewsFeed({
                 onFeedModeChange={setFeedMode}
                 onOpenSearch={() => setSearchOpen(true)}
                 searchOpen={searchOpen}
+                followingOnly={followingOnly}
+                onToggleFollowingOnly={() => setFollowingOnly((v) => !v)}
               />
             </div>
 
@@ -717,18 +730,40 @@ export function NewsFeed({
                 }`}
                 style={tabEnterStyle(homeEntered, 120)}
               >
-                <p className="text-lg font-bold text-pocket-text">No stories match</p>
-                <p className="mt-2 text-sm font-medium text-pocket-muted">
-                  Adjust filters or search to see more news.
-                </p>
-                <button
-                  type="button"
-                  data-no-drag
-                  onClick={() => setFilterOpen(true)}
-                  className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
-                >
-                  Open filters
-                </button>
+                {followingOnly ? (
+                  <>
+                    <p className="text-lg font-bold text-pocket-text">
+                      No stories from companies you follow
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-pocket-muted">
+                      Follow a few companies from an article&apos;s swipe-right panel,
+                      or switch back to see everyone.
+                    </p>
+                    <button
+                      type="button"
+                      data-no-drag
+                      onClick={() => setFollowingOnly(false)}
+                      className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
+                    >
+                      Show everyone
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold text-pocket-text">No stories match</p>
+                    <p className="mt-2 text-sm font-medium text-pocket-muted">
+                      Adjust filters or search to see more news.
+                    </p>
+                    <button
+                      type="button"
+                      data-no-drag
+                      onClick={() => setFilterOpen(true)}
+                      className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
+                    >
+                      Open filters
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <div className="feed-column-viewport z-0">
