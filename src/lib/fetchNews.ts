@@ -2,7 +2,7 @@ import { NEWS_API_BLOCKED_TERMS } from "./articleFilter";
 import { isExcludedArticle } from "./articleText";
 import { filterFinanceArticles } from "./financeRelevance";
 import { hasUsableFeedImage } from "./feedImage";
-import { mapNewsApiArticle, mapMarketauxArticle, DEMO_ARTICLES } from "./newsMapper";
+import { mapNewsApiArticle, mapMarketauxArticle } from "./newsMapper";
 import { fetchMarketauxNews } from "./marketauxApi";
 import type { NewsArticle } from "./types";
 
@@ -144,28 +144,16 @@ function mergeArticlePools(pools: NewsArticle[][], cap: number): NewsArticle[] {
  * photo feed, so we'd rather not surface those rather than lean on
  * per-card fallback art for real news.
  *
- * Deliberately NOT applied to DEMO_ARTICLES: that's a small, fixed pool of
- * placeholder content used only to top up a thin feed, and its generated
- * fallback art (FeedCardFallbackBackground) is an intentional, polished
- * design for exactly that case — not a defect to filter around. Demo
- * articles also shouldn't lean on more external stock-photo hotlinks than
- * necessary, since a mismatched photo (e.g. a declining price chart on a
- * "gains" headline) is worse than honest generated art.
  */
 function withUsableImage(articles: NewsArticle[]): NewsArticle[] {
   return articles.filter((a) => hasUsableFeedImage(a.imageUrl));
 }
 
 /**
- * DEMO_ARTICLES is placeholder copy (fabricated headlines attributed to
- * real outlets like Reuters/CNBC/WSJ, with fake publish times) — it exists
- * only for the landing-page marketing preview and as a genuine last-resort
- * so the app isn't a blank screen if every real source is unreachable. It
- * must NEVER be blended into a normal response merely to "top up" a thin
- * but real feed: showing fabricated stories mixed in with real news,
- * misattributed to real publishers, is exactly the kind of misleading
- * content this app can't afford to ship. Only reached when the combined
- * real-source pool is truly empty.
+ * No placeholder/demo content exists in this app anymore — if every real
+ * source comes back empty, these functions return an empty array and the
+ * UI's existing "No stories match" empty state handles it. We never want
+ * to show fabricated stories misattributed to real publishers.
  */
 export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
   let marketauxArticles: NewsArticle[] = [];
@@ -180,21 +168,18 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
     console.error("[fetchNews] NEWS_API_KEY is not set — trending feed relies on Marketaux only");
-    const merged = mergeArticlePools([withUsableImage(marketauxArticles)], TRENDING_CAP);
-    return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
+    return mergeArticlePools([withUsableImage(marketauxArticles)], TRENDING_CAP);
   }
 
   try {
     const newsApiArticles = await fetchPagedNews(apiKey, TRENDING_QUERY, 1);
-    const merged = mergeArticlePools(
+    return mergeArticlePools(
       [withUsableImage(marketauxArticles), withUsableImage(newsApiArticles)],
       TRENDING_CAP
     );
-    return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
   } catch (err) {
     console.error("[fetchNews] Trending feed threw:", err);
-    const merged = mergeArticlePools([withUsableImage(marketauxArticles)], TRENDING_CAP);
-    return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
+    return mergeArticlePools([withUsableImage(marketauxArticles)], TRENDING_CAP);
   }
 }
 
@@ -212,10 +197,9 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
 
   if (!apiKey) {
     console.error("[fetchNews] NEWS_API_KEY is not set — main feed relies on Marketaux only");
-    const real = filterFinanceArticles(
+    return filterFinanceArticles(
       mergeArticlePools([withUsableImage(marketauxArticles)], MAIN_FEED_CAP)
     );
-    return real.length > 0 ? real : DEMO_ARTICLES.slice(0, 10);
   }
 
   try {
@@ -246,18 +230,16 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       }
     }
 
-    const real = filterFinanceArticles(
+    return filterFinanceArticles(
       mergeArticlePools(
         [withUsableImage(marketauxArticles), withUsableImage(newsApiArticles)],
         MAIN_FEED_CAP
       )
     );
-    return real.length > 0 ? real : DEMO_ARTICLES.slice(0, 10);
   } catch (err) {
     console.error("[fetchNews] Main feed NewsAPI path threw:", err);
-    const real = filterFinanceArticles(
+    return filterFinanceArticles(
       mergeArticlePools([withUsableImage(marketauxArticles)], MAIN_FEED_CAP)
     );
-    return real.length > 0 ? real : DEMO_ARTICLES.slice(0, 10);
   }
 }

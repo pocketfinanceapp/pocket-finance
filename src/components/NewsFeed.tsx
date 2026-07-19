@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DEMO_ARTICLES } from "@/lib/newsMapper";
 import { useApp } from "@/context/AppContext";
 import { useNavigationOptional } from "@/context/NavigationContext";
 import {
@@ -66,15 +65,9 @@ export function NewsFeed({
   showAddToHomeBanner = true,
   onSidePanelChange,
 }: NewsFeedProps) {
-  const [allArticles] = useState(
-    initialArticles.length > 0 ? initialArticles : DEMO_ARTICLES
-  );
+  const [allArticles] = useState(initialArticles);
   const [trendingPool] = useState(() =>
-    initialTrendingArticles.length > 0
-      ? initialTrendingArticles
-      : initialArticles.length > 0
-        ? initialArticles
-        : DEMO_ARTICLES
+    initialTrendingArticles.length > 0 ? initialTrendingArticles : initialArticles
   );
   const {
     followedMarkets,
