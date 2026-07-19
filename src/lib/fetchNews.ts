@@ -156,6 +156,17 @@ function withUsableImage(articles: NewsArticle[]): NewsArticle[] {
   return articles.filter((a) => hasUsableFeedImage(a.imageUrl));
 }
 
+/**
+ * DEMO_ARTICLES is placeholder copy (fabricated headlines attributed to
+ * real outlets like Reuters/CNBC/WSJ, with fake publish times) — it exists
+ * only for the landing-page marketing preview and as a genuine last-resort
+ * so the app isn't a blank screen if every real source is unreachable. It
+ * must NEVER be blended into a normal response merely to "top up" a thin
+ * but real feed: showing fabricated stories mixed in with real news,
+ * misattributed to real publishers, is exactly the kind of misleading
+ * content this app can't afford to ship. Only reached when the combined
+ * real-source pool is truly empty.
+ */
 export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
   let marketauxArticles: NewsArticle[] = [];
   if (process.env.MARKETAUX_API_KEY) {
@@ -168,32 +179,22 @@ export async function fetchTrendingNewsArticles(): Promise<NewsArticle[]> {
 
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
-    console.error("[fetchNews] NEWS_API_KEY is not set — trending feed relies on Marketaux + demo only");
-    const merged = mergeArticlePools(
-      [withUsableImage(marketauxArticles), DEMO_ARTICLES],
-      TRENDING_CAP
-    );
+    console.error("[fetchNews] NEWS_API_KEY is not set — trending feed relies on Marketaux only");
+    const merged = mergeArticlePools([withUsableImage(marketauxArticles)], TRENDING_CAP);
     return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
   }
 
   try {
     const newsApiArticles = await fetchPagedNews(apiKey, TRENDING_QUERY, 1);
     const merged = mergeArticlePools(
-      [
-        withUsableImage(marketauxArticles),
-        withUsableImage(newsApiArticles),
-        DEMO_ARTICLES,
-      ],
+      [withUsableImage(marketauxArticles), withUsableImage(newsApiArticles)],
       TRENDING_CAP
     );
     return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
   } catch (err) {
     console.error("[fetchNews] Trending feed threw:", err);
-    const merged = mergeArticlePools(
-      [withUsableImage(marketauxArticles), DEMO_ARTICLES],
-      TRENDING_CAP
-    );
-    return merged.length > 0 ? merged : [];
+    const merged = mergeArticlePools([withUsableImage(marketauxArticles)], TRENDING_CAP);
+    return merged.length > 0 ? merged : DEMO_ARTICLES.slice(0, 10);
   }
 }
 
@@ -210,13 +211,11 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
 
   if (!apiKey) {
-    console.error("[fetchNews] NEWS_API_KEY is not set — main feed relies on Marketaux + demo only");
-    return filterFinanceArticles(
-      mergeArticlePools(
-        [withUsableImage(marketauxArticles), DEMO_ARTICLES],
-        MAIN_FEED_CAP
-      )
+    console.error("[fetchNews] NEWS_API_KEY is not set — main feed relies on Marketaux only");
+    const real = filterFinanceArticles(
+      mergeArticlePools([withUsableImage(marketauxArticles)], MAIN_FEED_CAP)
     );
+    return real.length > 0 ? real : DEMO_ARTICLES.slice(0, 10);
   }
 
   try {
@@ -247,23 +246,18 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       }
     }
 
-    return filterFinanceArticles(
+    const real = filterFinanceArticles(
       mergeArticlePools(
-        [
-          withUsableImage(marketauxArticles),
-          withUsableImage(newsApiArticles),
-          DEMO_ARTICLES,
-        ],
+        [withUsableImage(marketauxArticles), withUsableImage(newsApiArticles)],
         MAIN_FEED_CAP
       )
     );
+    return real.length > 0 ? real : DEMO_ARTICLES.slice(0, 10);
   } catch (err) {
     console.error("[fetchNews] Main feed NewsAPI path threw:", err);
-    return filterFinanceArticles(
-      mergeArticlePools(
-        [withUsableImage(marketauxArticles), DEMO_ARTICLES],
-        MAIN_FEED_CAP
-      )
+    const real = filterFinanceArticles(
+      mergeArticlePools([withUsableImage(marketauxArticles)], MAIN_FEED_CAP)
     );
+    return real.length > 0 ? real : DEMO_ARTICLES.slice(0, 10);
   }
 }
