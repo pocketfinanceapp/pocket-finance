@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
-import { SECTOR_FILTERS, type MarketFilter, type SectorFilter } from "@/lib/filters";
-import { GLOBAL_MARKETS } from "@/lib/markets";
+import { SECTOR_FILTERS, type SectorFilter } from "@/lib/filters";
+import { getCoveredCountryItems } from "@/lib/coveredCountries";
 import type {
   MarketauxTrendingCountry,
   MarketauxTrendingEntity,
@@ -60,7 +60,6 @@ function rankTickersByMentions(articles: NewsArticle[]): TrendingTicker[] {
 export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageProps) {
   const {
     clearFilters,
-    setMarketFilters,
     toggleSectorFilter,
     setSearchQuery,
     setCountryFilter,
@@ -133,20 +132,15 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
     navigate("home");
   };
 
-  const openMarket = (market: MarketFilter) => {
-    clearFilters();
-    setMarketFilters([market]);
-    navigate("home");
-  };
-
   const openCountry = (countryCode: string) => {
     clearFilters();
     setCountryFilter(countryCode);
     navigate("home");
   };
 
-  /** Real country coverage from Marketaux when available; falls back to the
-   * curated exchange list only if the live endpoint is unavailable. */
+  /** Real country coverage from Marketaux when available; falls back to a
+   * curated list of countries confirmed in Marketaux's actual supported-
+   * country set only if the live endpoint is unavailable. */
   const regionItems = useMemo(() => {
     if (liveCountries && liveCountries.length > 0) {
       return liveCountries.map((c) => ({
@@ -158,13 +152,13 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
         onSelect: () => openCountry(c.countryCode),
       }));
     }
-    return GLOBAL_MARKETS.map((market) => ({
-      key: market.id,
-      countryCode: market.countryCode,
-      title: market.fullName,
-      subtitle: market.country,
+    return getCoveredCountryItems().map((item) => ({
+      key: item.countryCode,
+      countryCode: item.countryCode,
+      title: item.title,
+      subtitle: item.subtitle,
       sentimentAvg: null as number | null,
-      onSelect: () => openMarket(market.id),
+      onSelect: () => openCountry(item.countryCode),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveCountries]);
