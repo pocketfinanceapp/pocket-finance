@@ -20,6 +20,24 @@ const EXCHANGE_TAGS = new Set([
   "HKEX",
   "TSX",
   "Euronext",
+  // Added alongside the suffix/index-ticker market resolution fix — without
+  // these, any article resolving to one of these (correct) exchanges just
+  // silently fell back to a generic sector tag ("FINANCE", "TECH", etc.)
+  // instead of showing the real market on the feed card.
+  "SGX",
+  "BSE",
+  "SSE",
+  "KRX",
+  "TWSE",
+  "XETRA",
+  "SIX",
+  "B3",
+  "BMV",
+  "TADAWUL",
+  "JAPAN",
+  "HONG KONG",
+  "AUSTRALIA",
+  "EUROPE",
 ]);
 
 const CRYPTO_TICKERS = new Set(["BTC", "ETH", "COIN"]);
