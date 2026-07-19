@@ -1,11 +1,12 @@
 export type AppTheme = "dark" | "light";
-export type ThemePreference = "system" | AppTheme;
+/** @deprecated Preference is now always a concrete theme — use AppTheme. */
+export type ThemePreference = AppTheme;
 
 export const THEME_STORAGE_KEY = "pf_theme_v1";
 
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = "dark";
 
-export const THEME_ORDER: ThemePreference[] = ["dark", "light", "system"];
+export const THEME_ORDER: ThemePreference[] = ["dark", "light"];
 
 export interface ThemeDefinition {
   id: ThemePreference;
@@ -16,12 +17,6 @@ export interface ThemeDefinition {
 }
 
 export const THEMES: Record<ThemePreference, ThemeDefinition> = {
-  system: {
-    id: "system",
-    label: "System default",
-    shortLabel: "System",
-    description: "Match your device appearance",
-  },
   dark: {
     id: "dark",
     label: "Dark",
@@ -45,7 +40,7 @@ export function isAppTheme(value: string | null | undefined): value is AppTheme 
 export function isThemePreference(
   value: string | null | undefined
 ): value is ThemePreference {
-  return value === "system" || isAppTheme(value);
+  return isAppTheme(value);
 }
 
 export function resolveSystemTheme(): AppTheme {
@@ -56,7 +51,6 @@ export function resolveSystemTheme(): AppTheme {
 }
 
 export function resolveThemePreference(preference: ThemePreference): AppTheme {
-  if (preference === "system") return resolveSystemTheme();
   return preference;
 }
 
@@ -65,6 +59,8 @@ export function loadStoredThemePreference(): ThemePreference {
   try {
     const raw = localStorage.getItem(THEME_STORAGE_KEY);
     if (raw === "modern-light") return "light";
+    // Legacy "system" preference (removed) — migrate to whatever it resolved to.
+    if (raw === "system") return resolveSystemTheme();
     return isThemePreference(raw) ? raw : DEFAULT_THEME_PREFERENCE;
   } catch {
     return DEFAULT_THEME_PREFERENCE;

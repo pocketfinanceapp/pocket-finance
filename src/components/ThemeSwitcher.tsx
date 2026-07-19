@@ -1,11 +1,10 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { THEME_ORDER, THEMES, type ThemePreference } from "@/lib/theme";
 
 const THEME_ICONS: Record<ThemePreference, typeof Moon> = {
-  system: Monitor,
   dark: Moon,
   light: Sun,
 };
@@ -14,15 +13,15 @@ interface ThemeSwitcherProps {
   variant?: "icon" | "picker";
 }
 
-/** Compact icon button or System / Dark / Light picker (Settings). */
+/** Compact icon button or Dark / Light picker (Settings). */
 export function ThemeSwitcher({ variant = "icon" }: ThemeSwitcherProps) {
   const { theme, preference, setPreference, cycleTheme } = useTheme();
-  const Icon = THEME_ICONS[preference === "system" ? "system" : theme];
+  const Icon = THEME_ICONS[theme];
   const meta = THEMES[preference];
 
   if (variant === "picker") {
     return (
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {THEME_ORDER.map((id) => {
           const def = THEMES[id];
           const active = preference === id;

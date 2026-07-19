@@ -48,14 +48,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyPreference(loadStoredThemePreference());
   }, [applyPreference]);
 
-  useEffect(() => {
-    if (preference !== "system") return;
-    const media = window.matchMedia("(prefers-color-scheme: light)");
-    const sync = () => applyPreference("system");
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, [preference, applyPreference]);
-
   const setTheme = useCallback(
     (next: AppTheme) => {
       applyPreference(next);
