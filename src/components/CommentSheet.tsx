@@ -10,6 +10,7 @@ import {
 import { DiscussionThread } from "@/components/DiscussionThread";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useAuth } from "@/context/AuthContext";
+import { trackEvent } from "@/lib/analytics";
 import {
   appendReplyToTree,
   buildDiscussionThread,
@@ -175,12 +176,16 @@ export function CommentSheet({
     const result = await setCommentReaction(user.id, commentId, emoji);
     if (!result) return;
     setComments((prev) => updateCommentReactionInTree(prev, commentId, result.emoji));
+    if (result.emoji) {
+      trackEvent(user.id, "comment_reacted", commentId, { emoji: result.emoji });
+    }
   };
 
   const handleReport = async (commentId: string) => {
     if (!user) return;
     setComments((prev) => updateCommentReportInTree(prev, commentId));
     await reportComment(user.id, commentId);
+    trackEvent(user.id, "comment_reported", commentId);
   };
 
   const handleDelete = async (commentId: string) => {
@@ -191,6 +196,7 @@ export function CommentSheet({
     if (!confirmed) return;
     setComments((prev) => markCommentDeletedInTree(prev, commentId));
     await deleteComment(user.id, commentId);
+    trackEvent(user.id, "comment_deleted", commentId);
   };
 
   const submit = async () => {
@@ -229,6 +235,7 @@ export function CommentSheet({
           setInput("");
           setReplyTo(null);
           onCommentPosted?.();
+          trackEvent(user.id, "comment_posted", comment.id, { isReply: true });
           const count = await fetchCommentCount(article.id);
           emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
           requestAnimationFrame(() => {
@@ -269,6 +276,7 @@ export function CommentSheet({
         ]);
         setInput("");
         onCommentPosted?.();
+        trackEvent(user.id, "comment_posted", comment.id, { isReply: false });
         const count = await fetchCommentCount(article.id);
         emitArticleCommentUpdated({ articleId: article.id, commentCount: count });
         listRef.current?.scrollTo({ top: 0, behavior: "smooth" });

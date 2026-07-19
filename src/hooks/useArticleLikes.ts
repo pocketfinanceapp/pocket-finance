@@ -15,6 +15,7 @@ import {
   unlikeArticle,
 } from "@/lib/userInteractions";
 import { markArticleLiked } from "@/lib/progression";
+import { trackEvent } from "@/lib/analytics";
 import type { NewsArticle } from "@/lib/types";
 
 export function useArticleLikes(article: NewsArticle) {
@@ -68,7 +69,10 @@ export function useArticleLikes(article: NewsArticle) {
       setLiked(wasLiked);
       setLikeCount((c) => (wasLiked ? c + 1 : Math.max(0, c - 1)));
     } else {
-      if (!wasLiked) markArticleLiked(article.id);
+      if (!wasLiked) {
+        markArticleLiked(article.id);
+        trackEvent(user.id, "article_liked", article.id);
+      }
       void reloadProfileStats();
       const count = await fetchLikeCount(article.id);
       setLikeCount(count);
@@ -94,6 +98,7 @@ export function useArticleLikes(article: NewsArticle) {
       setLikeCount((c) => Math.max(0, c - 1));
     } else {
       markArticleLiked(article.id);
+      trackEvent(user.id, "article_liked", article.id);
       void reloadProfileStats();
       const count = await fetchLikeCount(article.id);
       setLikeCount(count);

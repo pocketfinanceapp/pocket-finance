@@ -57,6 +57,7 @@ import {
   GLOBAL_MARKETS,
 } from "@/lib/markets";
 import { resolveArticleTicker } from "@/lib/tickerMap";
+import { trackEvent } from "@/lib/analytics";
 import type { NewsArticle, SavedArticleEntry } from "@/lib/types";
 import {
   grantAchievementRewards,
@@ -345,6 +346,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         recordActivityEvent("article_saved", article.id, {
           articleId: article.id,
         });
+        trackEvent(appUserId, "article_saved", article.id);
       }
       return ok;
     },
@@ -435,17 +437,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [hiddenSources]
   );
 
-  const toggleFollowTicker = useCallback((ticker: string) => {
-    const upper = ticker.trim().toUpperCase();
-    if (!upper) return;
-    setFollowedTickers((prev) => {
-      const next = prev.includes(upper)
-        ? prev.filter((t) => t !== upper)
-        : [...prev, upper];
-      saveFollowedTickers(next);
-      return next;
-    });
-  }, []);
+  const toggleFollowTicker = useCallback(
+    (ticker: string) => {
+      const upper = ticker.trim().toUpperCase();
+      if (!upper) return;
+      setFollowedTickers((prev) => {
+        const wasFollowing = prev.includes(upper);
+        const next = wasFollowing
+          ? prev.filter((t) => t !== upper)
+          : [...prev, upper];
+        saveFollowedTickers(next);
+        trackEvent(
+          appUserId,
+          wasFollowing ? "ticker_unfollowed" : "ticker_followed",
+          upper
+        );
+        return next;
+      });
+    },
+    [appUserId]
+  );
 
   const isFollowingTicker = useCallback(
     (ticker: string) => followedTickers.includes(ticker.trim().toUpperCase()),
