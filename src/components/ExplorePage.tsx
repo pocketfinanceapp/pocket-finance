@@ -182,7 +182,11 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
         <div className="pb-3 pt-1.5">
           <h1 className="text-[1.625rem] font-bold tracking-tight">Explore</h1>
           <p className="mt-0.5 text-[12px] text-pocket-muted">
-            Powered by 5,000+ news sources across 80+ global markets
+            Powered by{" "}
+            <span className="font-semibold text-pocket-text">5,000+</span>{" "}
+            news sources across{" "}
+            <span className="font-semibold text-pocket-text">80+</span>{" "}
+            global markets
           </p>
         </div>
       </header>
