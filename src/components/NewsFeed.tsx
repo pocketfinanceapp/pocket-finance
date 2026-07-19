@@ -24,6 +24,7 @@ import { recordActivityEvent } from "@/lib/progression";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import { rankTrendingArticles } from "@/lib/trendingArticles";
 import { resolveArticleTicker } from "@/lib/tickerMap";
+import { countryName } from "@/lib/countryNames";
 import type { NewsArticle } from "@/lib/types";
 import { CommentSheet } from "./CommentSheet";
 import { FeedCard } from "./FeedCard";
@@ -91,6 +92,7 @@ export function NewsFeed({
     clearFeedJump,
     hiddenSources,
     countryFilter,
+    setCountryFilter,
     followedTickers,
   } = useApp();
   const navigation = useNavigationOptional();
@@ -108,6 +110,41 @@ export function NewsFeed({
   // forgotten toggle can never make the feed look permanently empty on a
   // later visit.
   const [followingOnly, setFollowingOnly] = useState(false);
+
+  // Real, country-scoped articles for "Browse by region" (Explore → tap a
+  // country). Filtering the existing ~100-article general feed pool by its
+  // inferred entity country was the old approach — it returns almost
+  // nothing for any country that isn't already dominant in that pool, since
+  // none of it was fetched with a country in mind. This fetches the real
+  // thing instead.
+  const [countryArticles, setCountryArticles] = useState<NewsArticle[]>([]);
+  const [countryArticlesLoading, setCountryArticlesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!countryFilter) {
+      setCountryArticles([]);
+      setCountryArticlesLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setCountryArticlesLoading(true);
+    fetch(`/api/marketaux/country-news?country=${countryFilter}&limit=40`)
+      .then((res) => (res.ok ? res.json() : { articles: [] }))
+      .then((data: { articles?: NewsArticle[] }) => {
+        if (!cancelled) setCountryArticles(data.articles ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setCountryArticles([]);
+      })
+      .finally(() => {
+        if (!cancelled) setCountryArticlesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [countryFilter]);
 
   const refreshTopics = useCallback(() => {
     const topics = loadFavouriteTopics();
@@ -196,7 +233,7 @@ export function NewsFeed({
   const filteredArticles = useMemo(
     () =>
       buildFeedArticles(
-        allArticles,
+        countryFilter ? countryArticles : allArticles,
         displayedFeedMode,
         followedMarkets,
         marketFilters,
@@ -206,10 +243,14 @@ export function NewsFeed({
         favouriteTopics,
         personalizationInput,
         hiddenSources,
-        countryFilter
+        // Already scoped server-side by fetchCountryNews when active — no
+        // need to re-filter by each article's inferred entity country too.
+        null
       ),
     [
       allArticles,
+      countryArticles,
+      countryFilter,
       displayedFeedMode,
       followedMarkets,
       marketFilters,
@@ -219,7 +260,6 @@ export function NewsFeed({
       favouriteTopics,
       personalizationInput,
       hiddenSources,
-      countryFilter,
     ]
   );
 
@@ -723,7 +763,16 @@ export function NewsFeed({
             </div>
 
             <div className="h-full">
-            {verticalFeedArticles.length === 0 ? (
+            {countryFilter && countryArticlesLoading ? (
+              <div
+                className="pf-feed-empty flex h-full flex-col items-center justify-center px-8 text-center"
+                style={tabEnterStyle(homeEntered, 120)}
+              >
+                <p className="text-sm font-medium text-pocket-muted">
+                  Loading stories from {countryName(countryFilter)}…
+                </p>
+              </div>
+            ) : verticalFeedArticles.length === 0 ? (
               <div
                 className={`pf-feed-empty flex h-full flex-col items-center justify-center px-8 text-center transition-opacity duration-200 ease-out ${
                   tabContentVisible ? "opacity-100" : "opacity-0"
@@ -743,6 +792,24 @@ export function NewsFeed({
                       type="button"
                       data-no-drag
                       onClick={() => setFollowingOnly(false)}
+                      className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
+                    >
+                      Show everyone
+                    </button>
+                  </>
+                ) : countryFilter ? (
+                  <>
+                    <p className="text-lg font-bold text-pocket-text">
+                      No stories from {countryName(countryFilter)} right now
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-pocket-muted">
+                      Marketaux hasn&apos;t indexed anything from here today —
+                      check back later, or browse everyone&apos;s feed.
+                    </p>
+                    <button
+                      type="button"
+                      data-no-drag
+                      onClick={() => setCountryFilter(null)}
                       className="mt-6 rounded-full bg-gradient-to-r from-[#3B6EF5] to-[#00C6C6] px-6 py-2.5 text-sm font-bold text-white"
                     >
                       Show everyone

@@ -6,11 +6,17 @@
  * entities mentioned in each article — no need to guess the ticker from the
  * headline text the way we did for NewsAPI.
  *
- * QUOTA NOTE: the Free plan is 100 requests/day. We cache responses for 30
- * minutes via Next.js's fetch cache, which caps us at ~96 requests/day even
- * under constant traffic (two feeds × 48 refreshes/day) — comfortably under
- * the daily limit.
+ * QUOTA NOTE: on the Standard plan (10,000 requests/day). Every fetch below
+ * uses Next.js's fetch cache (`next: { revalidate }`), shared across all
+ * users hitting the same query within that window — request volume scales
+ * with distinct content requested (tickers/countries/articles looked up),
+ * not with visitor count.
  */
+
+/** UTC calendar date in Y-m-d, for Marketaux's `published_on` param. */
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export interface MarketauxEntity {
   symbol: string;
@@ -201,6 +207,9 @@ export async function fetchTrendingEntities(
   url.searchParams.set("api_token", apiKey);
   url.searchParams.set("group_by", "symbol");
   url.searchParams.set("entity_types", "equity,index,etf,cryptocurrency");
+  // Without a date filter this aggregates over Marketaux's entire archive,
+  // not "today" — scope it so the displayed counts are honest.
+  url.searchParams.set("published_on", todayIsoDate());
   if (options.minDocCount) {
     url.searchParams.set("min_doc_count", String(options.minDocCount));
   }
@@ -263,6 +272,9 @@ export async function fetchTrendingCountries(
   const url = new URL("https://api.marketaux.com/v1/entity/trending/aggregation");
   url.searchParams.set("api_token", apiKey);
   url.searchParams.set("group_by", "country");
+  // Same as fetchTrendingEntities — scope to today so "N stories today" in
+  // the UI is actually true, instead of an all-time archive total.
+  url.searchParams.set("published_on", todayIsoDate());
   if (options.minDocCount) {
     url.searchParams.set("min_doc_count", String(options.minDocCount));
   }
@@ -305,6 +317,61 @@ export async function fetchTrendingCountries(
       }));
   } catch (err) {
     console.error("[marketaux] trending countries fetch threw:", err);
+    return [];
+  }
+}
+
+/**
+ * Real articles for a single country — powers "Browse by region" actually
+ * showing something when a country is tapped. Distinct from the main feed
+ * (no country scope) and from client-side filtering by an article's
+ * inferred entity country (too sparse a signal — most of the ~100-article
+ * local feed pool was never fetched with any given country in mind, so
+ * filtering it after the fact returns almost nothing for anywhere outside
+ * whichever country dominates the general feed).
+ */
+export async function fetchCountryNews(
+  countryCode: string,
+  limit = 40
+): Promise<MarketauxArticle[]> {
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  const cleanCountry = countryCode.trim().toLowerCase();
+  if (!apiKey || !cleanCountry) return [];
+
+  const url = new URL("https://api.marketaux.com/v1/news/all");
+  url.searchParams.set("api_token", apiKey);
+  url.searchParams.set("language", "en");
+  url.searchParams.set("filter_entities", "true");
+  url.searchParams.set("must_have_entities", "true");
+  url.searchParams.set("countries", cleanCountry);
+  url.searchParams.set("limit", String(limit));
+
+  try {
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) {
+      console.error(
+        `[marketaux] country news HTTP ${res.status} ${res.statusText} (${cleanCountry})`
+      );
+      return [];
+    }
+
+    const data = (await res.json()) as RawMarketauxResponse;
+    if (data.error) {
+      console.error(
+        `[marketaux] country news API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
+
+    return (data.data ?? [])
+      .map(mapArticle)
+      .filter((a): a is MarketauxArticle => a !== null);
+  } catch (err) {
+    console.error("[marketaux] country news fetch threw:", err);
     return [];
   }
 }
