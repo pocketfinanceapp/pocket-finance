@@ -952,6 +952,50 @@ function marketFromTickerSuffix(upper: string): MarketExchange | null {
   return "EUROPE";
 }
 
+/**
+ * Global index tickers (Yahoo-style "^XXXX" symbols, e.g. "^AXJO" for the
+ * ASX 200 or "^N225" for the Nikkei 225) carry no exchange suffix at all,
+ * so marketFromTickerSuffix can't catch them — they'd otherwise fall
+ * straight through to the NYSE default despite representing a specific
+ * foreign market. US indices are handled separately via
+ * US_MARKETS_DISPLAY_TICKERS/isMacroOrCommodityTicker.
+ */
+const INDEX_TICKER_MARKET: Record<string, MarketExchange> = {
+  // US indices — kept explicit so they don't fall into the non-US EUROPE
+  // catch-all below just because they start with "^".
+  "^GSPC": "US MARKETS", // S&P 500
+  "^DJI": "US MARKETS", // Dow Jones
+  "^IXIC": "US MARKETS", // Nasdaq Composite
+  "^RUT": "US MARKETS", // Russell 2000
+  "^VIX": "US MARKETS",
+  "^NDX": "US MARKETS", // Nasdaq 100
+
+  "^AXJO": "ASX", // Australia — S&P/ASX 200
+  "^AORD": "ASX",
+  "^N225": "Nikkei", // Japan — Nikkei 225
+  "^HSI": "HKEX", // Hong Kong — Hang Seng
+  "^FTSE": "LSE", // UK — FTSE 100
+  "^GDAXI": "XETRA", // Germany — DAX
+  "^FCHI": "Euronext", // France — CAC 40
+  "^STOXX50E": "Euronext",
+  "^BSESN": "BSE", // India — Sensex
+  "^NSEI": "BSE", // India — Nifty 50
+  "^KS11": "KRX", // South Korea — KOSPI
+  "^TWII": "TWSE", // Taiwan
+  "^BVSP": "B3", // Brazil — Bovespa
+  "^MXX": "BMV", // Mexico — IPC
+  "^STI": "SGX", // Singapore
+  "^SSEC": "SSE", // China — Shanghai Composite
+  "^SZSC": "SSE", // China — Shenzhen Component
+  "^TASI": "TADAWUL", // Saudi Arabia — Tadawul All Share
+  "^SSMI": "SIX", // Switzerland — SMI
+};
+
+function marketFromIndexTicker(upper: string): MarketExchange | null {
+  if (!upper.startsWith("^")) return null;
+  return INDEX_TICKER_MARKET[upper] ?? "EUROPE";
+}
+
 export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   const upper = ticker.toUpperCase();
   if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];
@@ -970,7 +1014,7 @@ export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   return {
     ticker: upper,
     companyName: upper,
-    market: marketFromTickerSuffix(upper) ?? "NYSE",
+    market: marketFromIndexTicker(upper) ?? marketFromTickerSuffix(upper) ?? "NYSE",
     sector: "Finance",
     tags: [upper],
     logoColor: getTickerAccentColor(upper),
