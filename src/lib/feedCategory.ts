@@ -38,6 +38,11 @@ const EXCHANGE_TAGS = new Set([
   "HONG KONG",
   "AUSTRALIA",
   "EUROPE",
+  // Regional catch-alls for countries without a single tracked exchange.
+  "LATAM",
+  "AFRICA",
+  "MENA",
+  "ASIA",
 ]);
 
 const CRYPTO_TICKERS = new Set(["BTC", "ETH", "COIN"]);

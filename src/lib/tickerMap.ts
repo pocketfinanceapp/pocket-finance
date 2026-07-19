@@ -996,6 +996,83 @@ function marketFromIndexTicker(upper: string): MarketExchange | null {
   return INDEX_TICKER_MARKET[upper] ?? "EUROPE";
 }
 
+/**
+ * Marketaux's own entity country (from its exchange-country metadata) is
+ * ground truth — far more reliable than guessing a market from the ticker
+ * string. Covers Marketaux's full supported-country list. "us" is
+ * deliberately omitted: US tickers are ambiguous between NASDAQ/NYSE, which
+ * only the catalog/ticker-suffix logic can resolve.
+ */
+const COUNTRY_TO_MARKET: Record<string, MarketExchange> = {
+  au: "ASX",
+  nz: "ASX", // no dedicated NZX bucket — closest Oceania exchange we track
+  gb: "LSE",
+  ie: "Euronext", // Euronext Dublin
+  fr: "Euronext",
+  nl: "Euronext",
+  pt: "Euronext", // Euronext Lisbon
+  be: "Euronext",
+  it: "Euronext", // Borsa Italiana, part of Euronext since 2021
+  de: "XETRA",
+  ch: "SIX",
+  jp: "Nikkei",
+  hk: "HKEX",
+  cn: "SSE",
+  kr: "KRX",
+  tw: "TWSE",
+  in: "BSE",
+  sg: "SGX",
+  ca: "TSX",
+  br: "B3",
+  mx: "BMV",
+  sa: "TADAWUL",
+  // Latin America — no dedicated exchange bucket per country
+  ar: "LATAM",
+  cl: "LATAM",
+  co: "LATAM",
+  pe: "LATAM",
+  ec: "LATAM",
+  uy: "LATAM",
+  ve: "LATAM",
+  bo: "LATAM",
+  ni: "LATAM",
+  pa: "LATAM",
+  hn: "LATAM",
+  // Middle East / North Africa (outside Saudi, which has its own exchange)
+  il: "MENA",
+  qa: "MENA",
+  ir: "MENA",
+  sy: "MENA",
+  // Africa
+  eg: "AFRICA",
+  za: "AFRICA",
+  // South/Southeast Asia without a dedicated exchange bucket
+  id: "ASIA",
+  th: "ASIA",
+  pk: "ASIA",
+  // Rest of Europe (real exchanges exist, but not ones we track individually)
+  at: "EUROPE",
+  by: "EUROPE",
+  bg: "EUROPE",
+  hr: "EUROPE",
+  cz: "EUROPE",
+  gr: "EUROPE",
+  pl: "EUROPE",
+  ro: "EUROPE",
+  ru: "EUROPE",
+  es: "EUROPE",
+  tr: "EUROPE",
+  ua: "EUROPE",
+  am: "EUROPE",
+};
+
+function marketFromCountryCode(
+  countryCode: string | null | undefined
+): MarketExchange | null {
+  if (!countryCode) return null;
+  return COUNTRY_TO_MARKET[countryCode.toLowerCase()] ?? null;
+}
+
 export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   const upper = ticker.toUpperCase();
   if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];
@@ -1090,13 +1167,30 @@ function resolveMarketFromSource(
 }
 
 /** Feed card exchange label — derived from ticker, not article index */
-export function resolveMarketForTicker(ticker: string): MarketExchange {
+export function resolveMarketForTicker(
+  ticker: string,
+  entityCountry?: string | null
+): MarketExchange {
   const upper = ticker.toUpperCase();
 
   if (isCryptoAssetTicker(upper)) return "CRYPTO";
   if (COMMODITY_DISPLAY_TICKERS.has(upper)) return "COMMODITIES";
   if (US_MARKETS_DISPLAY_TICKERS.has(upper)) return "US MARKETS";
   if (isPrivateTicker(upper)) return "NASDAQ";
+
+  // A curated catalog entry is a deliberate choice — trust it over any
+  // country signal (e.g. SONY is deliberately "Nikkei" even though its
+  // NYSE-listed ADR articles may carry entityCountry "us").
+  if (TICKER_BY_SYMBOL[upper]) {
+    return TICKER_BY_SYMBOL[upper].market;
+  }
+
+  // For anything NOT in our catalog, Marketaux's own entity country is
+  // ground truth — far more reliable than guessing from the ticker string
+  // (this is what used to make every uncatalogued foreign ticker default
+  // to NYSE, then later to a blanket "EUROPE" guess).
+  const fromCountry = marketFromCountryCode(entityCountry);
+  if (fromCountry) return fromCountry;
 
   const market = getTickerMetaBySymbol(upper).market;
   if (isUsListedEquity(upper)) {
@@ -1111,6 +1205,7 @@ export function resolveMarketForArticle(article: {
   ticker: string;
   sourceName?: string;
   sourceId?: string | null;
+  entityCountry?: string | null;
 }): MarketExchange {
   const fromSource = resolveMarketFromSource(
     article.sourceName,
@@ -1118,5 +1213,5 @@ export function resolveMarketForArticle(article: {
   );
   if (fromSource) return fromSource;
 
-  return resolveMarketForTicker(article.ticker);
+  return resolveMarketForTicker(article.ticker, article.entityCountry);
 }

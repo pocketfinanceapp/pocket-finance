@@ -115,6 +115,7 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
 
   const sourceName = raw.source ? formatSourceDomain(raw.source) : "Financial News";
   const id = hashId(raw.uuid || raw.url);
+  const entityCountry = bestEntity?.country ? bestEntity.country.toLowerCase() : null;
 
   return {
     id,
@@ -129,6 +130,7 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
       ticker: meta.ticker,
       sourceName,
       sourceId: raw.source || null,
+      entityCountry,
     }),
     sector: meta.sector,
     ticker: meta.ticker,
@@ -143,7 +145,7 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
     shares: Math.floor(pseudoRandom(id + "shares", 200, 5000)),
     marketauxUuid: raw.uuid || null,
     sentimentScore: bestEntity ? bestEntity.sentimentScore : null,
-    entityCountry: bestEntity?.country ? bestEntity.country.toLowerCase() : null,
+    entityCountry,
   };
 }
 

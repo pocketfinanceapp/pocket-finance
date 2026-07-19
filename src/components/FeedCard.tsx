@@ -107,6 +107,7 @@ export function FeedCard({
     ticker: article.ticker,
     sourceName: article.sourceName,
     sourceId: article.sourceId,
+    entityCountry: article.entityCountry,
   });
   const categoryTag = getFeedCategoryTag(article, displayMarket);
   const feedChip = resolveFeedChip(article, categoryTag);

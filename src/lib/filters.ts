@@ -69,6 +69,10 @@ export function marketToFilter(market: string): MarketFilter | null {
   if (m === "HONG KONG") return "HKEX";
   if (m === "AUSTRALIA") return "ASX";
   if (m === "EUROPE") return "LSE";
+  if (m === "LATAM") return "B3";
+  if (m === "MENA") return "TADAWUL";
+  if (m === "ASIA") return "SGX";
+  if (m === "AFRICA") return "NASDAQ";
 
   if (m === "NASDAQ") return "NASDAQ";
   if (m === "NYSE") return "NYSE";

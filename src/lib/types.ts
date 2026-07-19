@@ -23,7 +23,11 @@ export type MarketExchange =
   | "JAPAN"
   | "HONG KONG"
   | "AUSTRALIA"
-  | "EUROPE";
+  | "EUROPE"
+  | "LATAM"
+  | "AFRICA"
+  | "MENA"
+  | "ASIA";
 
 export type Sector =
   | "Technology"
