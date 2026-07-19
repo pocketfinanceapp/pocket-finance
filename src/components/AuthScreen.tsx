@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mail } from "lucide-react";
 import { PocketBrand } from "@/components/PocketLogo";
 import { useAuth } from "@/context/AuthContext";
-import { APP_BASE } from "@/lib/appPaths";
+import { APP_BASE, PRIVACY_PATH, TERMS_PATH } from "@/lib/appPaths";
 import { FadeInSection } from "@/components/SubPageShell";
 
 type AuthMode = "signIn" | "signUp";
@@ -475,6 +475,18 @@ export function AuthScreen() {
                 ? "Create account"
                 : "Log in"}
           </button>
+
+          <p className="pt-1 text-center text-[11px] leading-relaxed text-zinc-500">
+            By continuing you agree to Pocket Finance&apos;s{" "}
+            <a href={TERMS_PATH} target="_blank" rel="noopener noreferrer" className="text-zinc-300 underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href={PRIVACY_PATH} target="_blank" rel="noopener noreferrer" className="text-zinc-300 underline">
+              Privacy Policy
+            </a>
+            .
+          </p>
         </form>
       </FadeInSection>
     </AuthShell>

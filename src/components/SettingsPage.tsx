@@ -2,20 +2,25 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  AlertTriangle,
   Bell,
   Bookmark,
   Check,
   ChevronRight,
   ExternalLink,
+  FileText,
   Globe2,
   Heart,
   LogOut,
   Newspaper,
+  ShieldCheck,
   Star,
   Tag,
+  Trash2,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
+import { PRIVACY_PATH, TERMS_PATH } from "@/lib/appPaths";
 import { recordActivityEvent } from "@/lib/progression";
 import {
   fetchLikedArticles,
@@ -60,7 +65,7 @@ export function SettingsPage({
   initialScreen,
   catalogArticles = [],
 }: SettingsPageProps) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const [screen, setScreen] = useState<SettingsScreen>(initialScreen ?? "main");
   const [exiting, setExiting] = useState(false);
   const pageEntered = useTabEntered(true);
@@ -68,6 +73,9 @@ export function SettingsPage({
   const [likedArticles, setLikedArticles] = useState<LikedArticleEntry[]>([]);
   const [savedArticles, setSavedArticles] = useState<SavedArticleEntry[]>([]);
   const [loadingList, setLoadingList] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadLiked = useCallback(async () => {
     if (!user?.id) return;
@@ -98,6 +106,18 @@ export function SettingsPage({
     } finally {
       setSigningOut(false);
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteAccount();
+    if (result.error) {
+      setDeleteError(result.error);
+      setDeleting(false);
+      return;
+    }
+    // On success, deleteAccount() redirects to /login itself.
   };
 
   const handleSubBack = () => {
@@ -280,6 +300,35 @@ export function SettingsPage({
           </div>
         </SettingsSection>
 
+        <SettingsSection title="Legal">
+          <a
+            href={PRIVACY_PATH}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-no-drag
+            className="flex w-full items-center justify-between border-b border-[var(--pocket-border)] px-4 py-3 text-left active:bg-[var(--pocket-surface-hover)]"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-[#00C6C6]" />
+              <span className="font-medium text-pocket-text">Privacy Policy</span>
+            </div>
+            <ExternalLink className="h-4 w-4 text-pocket-muted" />
+          </a>
+          <a
+            href={TERMS_PATH}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-no-drag
+            className="flex w-full items-center justify-between px-4 py-3 text-left last:border-b-0 active:bg-[var(--pocket-surface-hover)]"
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="h-5 w-5 text-pocket-muted" />
+              <span className="font-medium text-pocket-text">Terms of Service</span>
+            </div>
+            <ExternalLink className="h-4 w-4 text-pocket-muted" />
+          </a>
+        </SettingsSection>
+
         <SettingsSection title="Account">
           <div className="border-b border-[var(--pocket-border)] px-4 py-3">
             <p className="text-[10px] font-medium uppercase tracking-wide text-pocket-muted">
@@ -292,11 +341,61 @@ export function SettingsPage({
             data-no-drag
             onClick={handleSignOut}
             disabled={signingOut}
-            className="flex w-full items-center justify-center gap-2 px-4 py-4 font-medium text-red-400 active:bg-white/[0.04] disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 border-b border-[var(--pocket-border)] px-4 py-4 font-medium text-red-400 active:bg-white/[0.04] disabled:opacity-50"
           >
             <LogOut className="h-5 w-5" />
             {signingOut ? "Signing out…" : "Sign Out"}
           </button>
+
+          {!deleteConfirmOpen ? (
+            <button
+              type="button"
+              data-no-drag
+              onClick={() => {
+                setDeleteError(null);
+                setDeleteConfirmOpen(true);
+              }}
+              className="flex w-full items-center justify-center gap-2 px-4 py-4 font-medium text-pocket-muted active:bg-white/[0.04]"
+            >
+              <Trash2 className="h-5 w-5" />
+              Delete Account
+            </button>
+          ) : (
+            <div className="px-4 py-4">
+              <div className="flex items-start gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-3">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                <p className="text-[12px] leading-relaxed text-red-200">
+                  This permanently deletes your account — comments, likes,
+                  saves, follows, and history. This cannot be undone.
+                </p>
+              </div>
+
+              {deleteError && (
+                <p className="mt-2 text-[12px] text-red-400">{deleteError}</p>
+              )}
+
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={() => setDeleteConfirmOpen(false)}
+                  disabled={deleting}
+                  className="flex-1 rounded-xl border border-[var(--pocket-border)] py-3 text-sm font-semibold text-pocket-text active:bg-[var(--pocket-surface-hover)] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  data-no-drag
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="flex-1 rounded-xl bg-red-500/90 py-3 text-sm font-semibold text-white active:opacity-80 disabled:opacity-50"
+                >
+                  {deleting ? "Deleting…" : "Yes, delete my account"}
+                </button>
+              </div>
+            </div>
+          )}
         </SettingsSection>
         </FadeInSection>
       </div>

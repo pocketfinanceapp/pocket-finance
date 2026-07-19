@@ -44,6 +44,7 @@ interface AuthContextValue {
   updateDisplayName: (displayName: string) => Promise<AuthResult>;
   resetPassword: (email: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
+  deleteAccount: () => Promise<AuthResult>;
   passwordRecoveryPending: boolean;
   clearPasswordRecovery: () => void;
   isGuest: boolean;
@@ -315,6 +316,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPasswordRecoveryPending(false);
   }, []);
 
+  const deleteAccount = useCallback(async (): Promise<AuthResult> => {
+    const supabase = getSupabase();
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
+
+    if (!currentSession) {
+      return { error: "You need to be logged in to delete your account." };
+    }
+
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
+      });
+
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        return { error: body?.error ?? "Failed to delete account." };
+      }
+    } catch {
+      return { error: "Failed to delete account. Please try again." };
+    }
+
+    // The account is gone server-side — clear the local session too rather
+    // than calling supabase.auth.signOut() (which would try to invalidate a
+    // session belonging to a user that no longer exists).
+    clearGuestMode();
+    setSession(null);
+    setUser(null);
+    if (typeof window !== "undefined") {
+      window.location.href = LOGIN_PATH;
+    }
+    return { error: null };
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -330,6 +369,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateDisplayName,
       resetPassword,
       updatePassword,
+      deleteAccount,
       passwordRecoveryPending,
       clearPasswordRecovery,
       isGuest,
@@ -350,6 +390,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateDisplayName,
       resetPassword,
       updatePassword,
+      deleteAccount,
       passwordRecoveryPending,
       clearPasswordRecovery,
       isGuest,
