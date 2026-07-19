@@ -358,6 +358,13 @@ export async function fetchCountryNews(
   url.searchParams.set("must_have_entities", "true");
   url.searchParams.set("countries", cleanCountry);
   url.searchParams.set("limit", String(limit));
+  // Without this, a "global markets wrap" story that only mentions a
+  // country's entity in passing (weak match_score) can surface under that
+  // country's Browse-by-region feed even though the story isn't really
+  // about it — e.g. an India-focused roundup showing up under Argentina
+  // because it name-dropped an Argentine ticker. Requiring a moderate match
+  // strength keeps the country feed to stories genuinely about that market.
+  url.searchParams.set("min_match_score", "20");
 
   try {
     const res = await fetch(url.toString(), {
