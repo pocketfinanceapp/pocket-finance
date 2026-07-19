@@ -903,6 +903,55 @@ export function getKnownTickerSymbols(): string[] {
   return Object.keys(TICKER_BY_SYMBOL);
 }
 
+/**
+ * Exchange suffix → market label, for tickers formatted like "WTC.AX" or
+ * "8160.SR" that aren't in our local catalog. Marketaux (and most data
+ * providers) append a country/exchange suffix to non-US tickers, so a
+ * ticker WITH a suffix is never actually NYSE/NASDAQ — defaulting those to
+ * NYSE (the old behavior) mislabeled every uncatalogued foreign stock as a
+ * US one. Suffix-less tickers (the common case, e.g. "AAPL") still default
+ * to NYSE below since that's the overwhelming majority in practice.
+ */
+const EXCHANGE_SUFFIX_MARKET: Record<string, MarketExchange> = {
+  AX: "ASX", // Australia
+  SR: "TADAWUL", // Saudi Arabia
+  L: "LSE", // London
+  HK: "HKEX", // Hong Kong
+  T: "Nikkei", // Tokyo
+  TO: "TSX", // Toronto
+  V: "TSX", // TSX Venture
+  SS: "SSE", // Shanghai
+  SZ: "SSE", // Shenzhen
+  KS: "KRX", // Korea
+  KQ: "KRX",
+  TW: "TWSE", // Taiwan
+  TWO: "TWSE",
+  DE: "XETRA", // Germany
+  F: "XETRA",
+  PA: "Euronext", // Paris
+  AS: "Euronext", // Amsterdam
+  BR: "Euronext", // Brussels
+  LS: "Euronext", // Lisbon
+  SW: "SIX", // Switzerland
+  SA: "B3", // Brazil
+  MX: "BMV", // Mexico
+  SI: "SGX", // Singapore
+  BO: "BSE", // India (BSE)
+  NS: "BSE", // India (NSE — closest available label)
+};
+
+function marketFromTickerSuffix(upper: string): MarketExchange | null {
+  const dotIndex = upper.lastIndexOf(".");
+  if (dotIndex === -1) return null;
+  const suffix = upper.slice(dotIndex + 1);
+  if (!suffix) return null;
+  if (EXCHANGE_SUFFIX_MARKET[suffix]) return EXCHANGE_SUFFIX_MARKET[suffix];
+  // Unrecognized but present suffix still means "not a plain US ticker" —
+  // EUROPE is used elsewhere as the generic non-US catch-all, which beats
+  // falsely claiming NYSE.
+  return "EUROPE";
+}
+
 export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   const upper = ticker.toUpperCase();
   if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];
@@ -921,7 +970,7 @@ export function getTickerMetaBySymbol(ticker: string): TickerMeta {
   return {
     ticker: upper,
     companyName: upper,
-    market: "NYSE",
+    market: marketFromTickerSuffix(upper) ?? "NYSE",
     sector: "Finance",
     tags: [upper],
     logoColor: getTickerAccentColor(upper),

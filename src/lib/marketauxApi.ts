@@ -18,6 +18,14 @@ function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** True for ticker symbols whose base code (before any ".XX" exchange
+ * suffix) is entirely digits, e.g. "8160.SR" — these have no letters to
+ * build a meaningful fallback avatar/label from. */
+function isNumericTickerSymbol(symbol: string): boolean {
+  const base = symbol.split(".")[0];
+  return /^\d+$/.test(base);
+}
+
 export interface MarketauxEntity {
   symbol: string;
   name: string;
@@ -238,6 +246,11 @@ export async function fetchTrendingEntities(
 
     return (data.data ?? [])
       .filter((e): e is RawTrendingEntity & { key: string } => Boolean(e.key))
+      // Some exchanges (e.g. Saudi Tadawul, "8160.SR") use purely numeric
+      // ticker codes. The trending endpoint returns no entity name, so
+      // there's nothing to show for these but the bare number — a
+      // meaningless label/avatar. Skip them rather than surface "81".
+      .filter((e) => !isNumericTickerSymbol(e.key))
       .map((e) => ({
         symbol: e.key,
         totalDocuments: e.total_documents ?? 0,
