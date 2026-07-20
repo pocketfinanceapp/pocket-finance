@@ -99,11 +99,6 @@ export function resolveSourceBrand(
   return { name, abbr, color, logoUrl };
 }
 
-export function extractSourceFromTitle(title: string): string | null {
-  const match = title.match(/\s[-–—]\s([^-–—]+)$/);
-  return match?.[1]?.trim() ?? null;
-}
-
 /** Remove trailing " - Publication Name" suffixes from news headlines */
 export function cleanArticleTitle(title: string): string {
   const trimmed = title.trim();

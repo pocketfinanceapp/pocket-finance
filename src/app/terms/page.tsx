@@ -83,10 +83,10 @@ export default function TermsOfServicePage() {
         <LegalSection title="Third-party content">
           <p>
             News articles, images, and data shown in Pocket Finance come from
-            third-party publishers and data providers (including Marketaux
-            and NewsAPI). We don&apos;t control and aren&apos;t responsible
-            for the accuracy of third-party content — we link to and
-            summarize it, we don&apos;t author it.
+            third-party publishers and data providers (including Marketaux).
+            We don&apos;t control and aren&apos;t responsible for the
+            accuracy of third-party content — we link to and summarize it,
+            we don&apos;t author it.
           </p>
         </LegalSection>
 

@@ -1,7 +1,7 @@
-import type { NewsArticle, Sector } from "./types";
+import type { NewsArticle } from "./types";
 import { hasUsableFeedImage } from "./feedImage";
 import { cleanArticleDescription } from "./articleText";
-import { cleanArticleTitle, extractSourceFromTitle } from "./sourceBranding";
+import { cleanArticleTitle } from "./sourceBranding";
 import {
   getTickerMetaBySymbol,
   inferTickerFromFields,
@@ -11,63 +11,6 @@ import {
 } from "./tickerMap";
 import { hashId, pseudoRandom } from "./utils";
 import type { MarketauxArticle } from "./marketauxApi";
-
-interface NewsApiArticle {
-  source?: { id?: string | null; name?: string };
-  author?: string | null;
-  title?: string;
-  description?: string | null;
-  url?: string;
-  urlToImage?: string | null;
-  publishedAt?: string;
-  content?: string | null;
-}
-
-function assignSector(metaSector: Sector, _index: number): Sector {
-  return metaSector;
-}
-
-export function mapNewsApiArticle(raw: NewsApiArticle): NewsArticle {
-  const rawTitle = raw.title ?? "Market Update";
-  const fromTitle = extractSourceFromTitle(rawTitle);
-  const sourceName =
-    raw.source?.name?.trim() || fromTitle || "Financial News";
-  const sourceId = raw.source?.id ?? null;
-  const title = cleanArticleTitle(rawTitle);
-  const description = cleanArticleDescription(raw.description ?? "");
-  const meta = inferTickerFromFields(
-    title,
-    description || raw.description || ""
-  );
-  const id = hashId(raw.url ?? title);
-  const body =
-    raw.content?.replace(/\[\+\d+ chars\]$/, "").trim() ||
-    `${description || "Latest developments shaping global markets."}\n\nInvestors are watching closely as ${meta.companyName} and peers react to shifting macro conditions. Analysts note that sentiment remains mixed amid rate expectations and earnings season positioning.\n\nTrading volumes have picked up across major indices, with technology and financials leading sector moves. Market participants continue to balance growth exposure against defensive positioning.`;
-
-  return {
-    id,
-    headline: title,
-    subheading: description,
-    body,
-    imageUrl: hasUsableFeedImage(raw.urlToImage) ? raw.urlToImage! : "",
-    market: resolveMarketForArticle({
-      ticker: meta.ticker,
-      sourceName,
-      sourceId,
-    }),
-    sector: assignSector(meta.sector, 0),
-    ticker: meta.ticker,
-    companyName: meta.companyName,
-    tags: meta.tags,
-    publishedAt: raw.publishedAt ?? new Date().toISOString(),
-    sourceName,
-    sourceId,
-    sourceUrl: raw.url ?? "#",
-    likes: 0,
-    comments: 0,
-    shares: Math.floor(pseudoRandom(id + "shares", 200, 5000)),
-  };
-}
 
 /** "reuters.com" -> "Reuters" — light formatting of Marketaux's raw source domain. */
 function formatSourceDomain(domain: string): string {

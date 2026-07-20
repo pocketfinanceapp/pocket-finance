@@ -6,7 +6,7 @@ Follow these steps in order. Total time: ~10 minutes.
 
 - GitHub account: https://github.com/signup
 - Vercel account (free): https://vercel.com/signup — use **Continue with GitHub**
-- NewsAPI key (optional but recommended): https://newsapi.org/register
+- Marketaux key (required for a live news feed): https://www.marketaux.com/account/dashboard
 
 ---
 
@@ -66,11 +66,11 @@ On the import screen (or **Settings → Environment Variables** after import):
 
 | Name | Value |
 |------|--------|
-| `NEWS_API_KEY` | Your key from newsapi.org |
+| `MARKETAUX_API_KEY` | Your key from marketaux.com |
 
 Apply to **Production**, **Preview**, and **Development**.
 
-Without this key, the app still runs but uses demo articles only.
+Without this key, the feed will be empty — there's no demo/placeholder content in the app.
 
 ---
 
@@ -89,7 +89,7 @@ When finished, Vercel shows:
 
 1. Open the production URL on your phone
 2. Complete onboarding once
-3. Test feed swipe and **Markets** tab
+3. Test feed swipe and the **Explore** tab
 
 Every `git push` to `main` triggers a new production deploy automatically.
 
@@ -100,7 +100,7 @@ Every `git push` to `main` triggers a new production deploy automatically.
 | Issue | Fix |
 |-------|-----|
 | Build fails on Vercel | Run `npm run build:clean` locally; fix errors; push again |
-| No news articles | Add `NEWS_API_KEY` in Vercel env vars; redeploy |
+| No news articles | Add `MARKETAUX_API_KEY` in Vercel env vars; redeploy |
 | Old UI on phone | Hard refresh or clear PWA cache |
 | `git push` rejected | `git pull origin main --rebase` then push again |
 
@@ -114,4 +114,4 @@ vercel login
 vercel --prod
 ```
 
-Set `NEWS_API_KEY` in the Vercel dashboard when prompted or via `vercel env add`.
+Set `MARKETAUX_API_KEY` in the Vercel dashboard when prompted or via `vercel env add`.

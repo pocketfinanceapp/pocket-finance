@@ -6,7 +6,7 @@ Bold news. Smarter moves. Mobile-first finance news feed.
 
 ```bash
 npm install
-cp .env.example .env.local   # add your NewsAPI key
+cp .env.example .env.local   # add your Marketaux key
 npm run dev                    # cleans .next cache, then starts dev server
 ```
 
@@ -14,7 +14,7 @@ npm run dev                    # cleans .next cache, then starts dev server
 
 1. Push this repo to GitHub (see [DEPLOY.md](./DEPLOY.md)).
 2. Import the repo at [vercel.com/new](https://vercel.com/new).
-3. Add environment variable: `NEWS_API_KEY` = your key from [newsapi.org](https://newsapi.org).
+3. Add environment variable: `MARKETAUX_API_KEY` = your key from [marketaux.com](https://www.marketaux.com).
 4. Deploy — Vercel auto-detects Next.js.
 
 ## Scripts
