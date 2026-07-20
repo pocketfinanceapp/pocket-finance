@@ -378,17 +378,6 @@ export function AuthScreen() {
               </svg>
             }
           />
-          <button
-            type="button"
-            onClick={() => {
-              continueAsGuest();
-              router.replace(APP_BASE);
-            }}
-            disabled={submitting}
-            className="flex w-full items-center justify-center rounded-xl border border-[#333] bg-transparent py-3.5 text-sm font-normal text-white transition-colors active:bg-white/[0.04] disabled:opacity-50"
-          >
-            Continue as Guest
-          </button>
         </div>
 
         <div className="mt-4 flex items-center gap-3">
@@ -488,6 +477,18 @@ export function AuthScreen() {
             .
           </p>
         </form>
+
+        <button
+          type="button"
+          onClick={() => {
+            continueAsGuest();
+            router.replace(APP_BASE);
+          }}
+          disabled={submitting}
+          className="mx-auto mt-5 mb-2 block text-center text-[12px] font-medium text-zinc-500 underline decoration-zinc-700 underline-offset-2 transition-colors active:text-zinc-300 disabled:opacity-50"
+        >
+          Continue without an account
+        </button>
       </FadeInSection>
     </AuthShell>
   );
