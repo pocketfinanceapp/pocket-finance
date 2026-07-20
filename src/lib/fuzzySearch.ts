@@ -26,7 +26,19 @@ function subsequenceMatch(query: string, text: string): boolean {
   return qi === query.length;
 }
 
-/** Fuzzy match with substring, subsequence, and light typo tolerance. */
+/**
+ * Fuzzy match with substring, subsequence, and light typo tolerance.
+ *
+ * Subsequence and whole-field typo tolerance are only applied to short
+ * fields (tickers, company names, sectors, tags) — on long free text like
+ * full headlines, a short common-letter query (e.g. "tesla") is nearly
+ * always a subsequence of *some* unrelated 80+ character sentence, which
+ * made search effectively return the unfiltered feed. Long fields still get
+ * an exact substring check, and per-word prefix/typo matching, which is
+ * what actually reflects "this headline mentions the word I typed."
+ */
+const SHORT_FIELD_MAX_LENGTH = 40;
+
 export function fuzzyMatchesQuery(query: string, fields: string[]): boolean {
   const q = query.toLowerCase().trim();
   if (!q) return true;
@@ -35,10 +47,14 @@ export function fuzzyMatchesQuery(query: string, fields: string[]): boolean {
     const f = field.toLowerCase();
     if (!f) continue;
     if (f.includes(q)) return true;
-    if (subsequenceMatch(q, f)) return true;
 
-    if (q.length >= 2 && levenshtein(q, f) <= Math.max(1, Math.floor(q.length / 3))) {
-      return true;
+    const isShortField = f.length <= SHORT_FIELD_MAX_LENGTH;
+
+    if (isShortField) {
+      if (subsequenceMatch(q, f)) return true;
+      if (q.length >= 2 && levenshtein(q, f) <= Math.max(1, Math.floor(q.length / 3))) {
+        return true;
+      }
     }
 
     for (const word of f.split(/\s+/)) {
