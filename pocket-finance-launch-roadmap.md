@@ -11,10 +11,10 @@ Owner key: **[You]** = account/vendor action only I can't do for you · **[Me]**
 
 | Step | Owner | Notes |
 |---|---|---|
-| Write Privacy Policy page | Me | Needs to accurately state what you collect: email, usage analytics, comments. I'll draft it against what the code actually does, not a generic template. |
-| Write Terms of Service page | Me | Standard SaaS terms adapted for a news app — no live trading, no financial advice. |
-| Link both from login/signup screen | Me | Required by both app stores, not just good practice. |
-| In-app account deletion flow | Me | Apple rejects apps without this outright (Guideline 5.1.1(v)). Straightforward with Supabase's admin API. |
+| ✅ Write Privacy Policy page | Me | Live at /privacy. |
+| ✅ Write Terms of Service page | Me | Live at /terms. |
+| ✅ Link both from login/signup screen | Me | Linked from the auth screen's terms footer. |
+| ✅ In-app account deletion flow | Me | Server route + Settings UI built, verified live via email flow testing. |
 
 **Estimate:** one focused build session. No external waiting time — this is the fastest track to close out.
 
