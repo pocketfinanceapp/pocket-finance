@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   /** Hides the circular Next.js "N" dev indicator during onboarding */
@@ -35,4 +36,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: "pocket-finance",
+  project: "javascript-nextjs",
+
+  // Only print Sentry's build-time logs in CI, not local dev builds.
+  silent: !process.env.CI,
+
+  // No SENTRY_AUTH_TOKEN is configured yet, so source map upload is
+  // skipped automatically — stack traces will show minified code until
+  // that's added. Safe to leave as-is; nothing breaks without it.
+});
