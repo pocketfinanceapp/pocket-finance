@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import { StreakHeroIcon } from "@/components/icons/StreakHeroIcon";
 import { LevelHeroIcon } from "@/components/icons/LevelHeroIcon";
-import { getLoginStreakState } from "@/lib/profileStorage";
+import { getInitialLoginStreakState, getLoginStreakState } from "@/lib/profileStorage";
 import { tabEnterStyle } from "@/lib/tabEnterAnimation";
 import { MAX_LEVEL, type LevelState } from "@/lib/progression";
 
@@ -21,7 +21,9 @@ export function ProfileProgressTabs({
   animateIn = true,
 }: ProfileProgressTabsProps) {
   const uid = useId();
-  const [loginStreak, setLoginStreak] = useState(() => getLoginStreakState());
+  const [loginStreak, setLoginStreak] = useState(() =>
+    getInitialLoginStreakState()
+  );
 
   useEffect(() => {
     const sync = () => setLoginStreak(getLoginStreakState());

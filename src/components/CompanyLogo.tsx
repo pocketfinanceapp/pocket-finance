@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Globe } from "lucide-react";
 import {
   getCachedLogoUrl,
@@ -29,14 +29,23 @@ export function CompanyLogo({
   const upper = ticker.toUpperCase();
   const showGlobe = upper === "MARKET";
   const label = logoLabel(upper);
-  const [logoUrl, setLogoUrl] = useState<string | null>(() =>
-    getCachedLogoUrl(upper)
-  );
+  // Seeding these from the sessionStorage-backed cache here caused a
+  // hydration mismatch (React error #418): the server always renders with
+  // an empty cache, but once the cache is warm on a repeat visit, the
+  // client's *first* render (before hydration even finishes) would already
+  // see a populated cache and render an <img> where the server rendered the
+  // ticker-letter fallback. Always start from the SSR-safe default and let
+  // the mount effect below apply the cached value immediately after.
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [imageReady, setImageReady] = useState(false);
-  const [failed, setFailed] = useState(() => isLogoExhausted(upper));
+  const [failed, setFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  useEffect(() => {
+  // useLayoutEffect (client-only, runs after hydration) rather than
+  // useEffect so a warm cache is applied before the browser paints — avoids
+  // a visible flash of the fallback letter without reintroducing the
+  // hydration mismatch the initial state above used to cause.
+  useLayoutEffect(() => {
     let cancelled = false;
 
     const cached = getCachedLogoUrl(upper);

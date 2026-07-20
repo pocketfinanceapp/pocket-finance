@@ -24,6 +24,7 @@ import {
 } from "@/lib/tickerMap";
 import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
+import { recordActivityEvent } from "@/lib/progression";
 import { CompanyLogo } from "./CompanyLogo";
 import { SentimentBadge, sentimentLabel, type SentimentLabel } from "./SentimentBadge";
 import { FadeInSection } from "./SubPageShell";
@@ -147,6 +148,16 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   const everydayImpact = isMacroTicker ? macroTopicEverydayImpact(ticker) : null;
   const relatedTickers = isCompanyTicker ? getRelatedTickers(ticker, 3) : [];
 
+  // Drives the "Market Watcher" / "Ticker Hunter" progression achievements.
+  // This swipe-right panel is the current equivalent of the old stock-detail
+  // panel those achievements were originally written against — the panel
+  // that used to record this event was removed along with the Markets tab,
+  // which left those achievements permanently unreachable until now.
+  useEffect(() => {
+    if (!isCompanyTicker || !ticker) return;
+    recordActivityEvent("stock_panel_opened", ticker, { ticker });
+  }, [isCompanyTicker, ticker]);
+
   useEffect(() => {
     if (!ticker || !infoSearchTerm || loadedFor === infoSearchTerm) return;
     let cancelled = false;
@@ -238,6 +249,12 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
     if (!targetTicker) return;
     const wasFollowing = isFollowingTicker(targetTicker);
     toggleFollowTicker(targetTicker);
+    if (!wasFollowing) {
+      // Drives "Watchlist Builder" / "Portfolio Architect" — Follow is the
+      // current equivalent of the old Watchlist feature those were written
+      // against.
+      recordActivityEvent("stock_watchlisted", targetTicker, { ticker: targetTicker });
+    }
     setFollowToast(
       wasFollowing
         ? `Unfollowed ${targetTicker.toUpperCase()}`

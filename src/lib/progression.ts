@@ -874,9 +874,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       id === "stock_follower" ||
       id === "portfolio_architect"
     ) {
-      return "stocks watchlisted";
+      return "companies followed";
     }
-    if (category === "markets") return "stock panels viewed";
+    if (category === "markets") return "company info panels viewed";
     if (id === "daily_champion" || id === "goal_machine") return "daily goals";
     if (category === "consistency") return "day streak";
     if (id.includes("briefing")) return "briefings completed";
@@ -1023,8 +1023,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "market_watcher",
       "markets",
       "Market Watcher",
-      "Viewed your first stock panel",
-      "Tap a ticker on any article to open its stock panel.",
+      "Viewed your first company info panel",
+      "Swipe right on any article, or tap a ticker, to open company info.",
       "📈",
       hasAnyStockViewed ? 1 : 0,
       1,
@@ -1034,8 +1034,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "stock_follower",
       "markets",
       "Stock Follower",
-      "Added a stock to your watchlist",
-      "Save a ticker to your watchlist from a stock panel or article.",
+      "Followed your first company",
+      "Follow a ticker from company info or an article to track it.",
       "⭐",
       totalWatchlisted,
       1,
@@ -1045,8 +1045,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "market_explorer",
       "markets",
       "Market Explorer",
-      "Opened 5 different stock panels",
-      "Explore 5 different tickers — each unique panel counts once.",
+      "Opened 5 different company info panels",
+      "Explore 5 different tickers — each unique company counts once.",
       "🔭",
       totalStockPanels,
       5,
@@ -1055,9 +1055,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     make(
       "watchlist_builder",
       "markets",
-      "Watchlist Builder",
-      "Added 5 stocks to your watchlist",
-      "Track the market — add 5 tickers to your watchlist.",
+      "Following Builder",
+      "Followed 5 companies",
+      "Track the market — follow 5 tickers.",
       "📋",
       totalWatchlisted,
       5,
@@ -1067,7 +1067,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "market_veteran",
       "markets",
       "Market Veteran",
-      "Opened 15 different stock panels",
+      "Opened 15 different company info panels",
       "Deep dive into 15 unique tickers over time.",
       "🎯",
       totalStockPanels,
@@ -1078,8 +1078,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "ticker_hunter",
       "markets",
       "Ticker Hunter",
-      "Opened 30 different stock panels",
-      "Research mode — open 30 unique ticker panels.",
+      "Opened 30 different company info panels",
+      "Research mode — open 30 unique companies.",
       "🔍",
       totalStockPanels,
       30,
@@ -1089,8 +1089,8 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "portfolio_architect",
       "markets",
       "Portfolio Architect",
-      "Added 15 stocks to your watchlist",
-      "Build a serious watchlist — track 15 tickers.",
+      "Followed 15 companies",
+      "Build a serious watchlist — follow 15 tickers.",
       "🏗️",
       totalWatchlisted,
       15,

@@ -13,6 +13,7 @@ import {
   useTabEntered,
 } from "@/lib/tabEnterAnimation";
 import { timeAgo } from "@/lib/utils";
+import { recordActivityEvent } from "@/lib/progression";
 import { CompanyLogo } from "./CompanyLogo";
 import { SentimentBadge } from "./SentimentBadge";
 
@@ -112,6 +113,9 @@ export function TickerDetailPanel({
   const handleFollow = () => {
     const wasFollowing = following;
     toggleFollowTicker(ticker);
+    if (!wasFollowing) {
+      recordActivityEvent("stock_watchlisted", ticker, { ticker });
+    }
     setFollowToast(
       wasFollowing
         ? `Unfollowed ${ticker.toUpperCase()}`
@@ -119,6 +123,14 @@ export function TickerDetailPanel({
     );
     window.setTimeout(() => setFollowToast(null), 2200);
   };
+
+  // Drives "Market Watcher" / "Ticker Hunter" progression achievements —
+  // this Explore ticker page is the current equivalent of the old
+  // stock-detail panel those were originally written against.
+  useEffect(() => {
+    if (!ticker) return;
+    recordActivityEvent("stock_panel_opened", ticker, { ticker });
+  }, [ticker]);
 
   useEffect(() => {
     let cancelled = false;

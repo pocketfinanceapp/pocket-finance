@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Bookmark, ChevronRight, Newspaper } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
@@ -39,8 +40,12 @@ export function SavedPage({ catalogArticles }: SavedPageProps) {
   const { navigate } = useNavigation();
   const entered = useTabPageEntered("saved");
 
-  const articlesById = new Map(
-    catalogArticles.map((article) => [article.id, article] as const)
+  // Was rebuilt from scratch on every render (including every parent
+  // re-render while this tab is mounted) against the full article catalog —
+  // the main cause of Saved tab feeling slow on tab switches.
+  const articlesById = useMemo(
+    () => new Map(catalogArticles.map((article) => [article.id, article] as const)),
+    [catalogArticles]
   );
 
   const openSaved = (entry: SavedArticleEntry) => {

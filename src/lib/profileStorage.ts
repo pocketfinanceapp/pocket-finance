@@ -111,6 +111,30 @@ export function getReadingStreak(): number {
 
 const WEEK_STRIP_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
+/** SSR-safe stand-in for getLoginStreakState()'s return shape — matches
+ * exactly what that function returns on the server (no localStorage access,
+ * so all streak data is zeroed). Used to seed client state so the first
+ * client render matches the server-rendered HTML; the real value is then
+ * applied via an effect right after mount. Calling the real, localStorage-
+ * reading function directly in a useState initializer caused a hydration
+ * mismatch (React error #418) for any returning user, since it would
+ * return real data on the client's first render but empty data on the
+ * server's. */
+export function getInitialLoginStreakState() {
+  const dayIndex = (new Date().getDay() + 6) % 7;
+  const weeklyStrip = WEEK_STRIP_LABELS.map((day, i) => ({
+    day,
+    completed: false,
+    isToday: i === dayIndex,
+  }));
+  return {
+    currentStreak: 0,
+    bestStreak: 0,
+    visitedToday: false,
+    weeklyStrip,
+  };
+}
+
 export function getLoginStreakState() {
   const data = loadStreakData();
   const today = localDateKey();

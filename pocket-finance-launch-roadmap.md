@@ -25,16 +25,16 @@ Owner key: **[You]** = account/vendor action only I can't do for you · **[Me]**
 
 | Step | Owner | Notes |
 |---|---|---|
-| Buy a custom domain | You | Prerequisite for trustworthy auth emails and a real app store listing (support URL, marketing URL). Do this first — everything else in this track waits on it. |
-| Point domain at Vercel | Both | Quick once you own the domain; I can walk you through the DNS records. |
-| Sign up for Resend (or similar) | You | For custom SMTP so auth emails come from your domain, not Supabase's shared sender. |
-| Verify domain with Resend (SPF/DKIM/DMARC) | You | DNS records at your registrar — usually propagates within a few hours, occasionally up to 24h. |
-| Wire Resend SMTP into Supabase | You | Authentication → Settings → SMTP Settings in the Supabase dashboard. |
-| Rewrite Supabase email templates | Me | Signup confirmation + password reset copy, branded as Pocket Finance instead of the generic default. |
-| Upgrade Marketaux to Basic | You | Your current usage pattern is already close to or past the Free plan's 100 req/day cap from background refreshes alone — this isn't optional scaling prep, it's likely overdue. $29/mo or $24/mo annual. |
-| Confirm Vercel plan allows commercial use | You | Hobby plan's ToS prohibits commercial use — check your billing tier. |
-| Check Twelve Data + Massive.com billing | You | Both look like dead integrations left over from the removed stock-panel feature — nothing live in the app calls them. Possible recurring cost for zero usage. |
-| Add error monitoring (Sentry) | Me | Nothing catches production errors right now — you'd only find out about a bug if a user tells you. |
+| ✅ Buy a custom domain | You | Prerequisite for trustworthy auth emails and a real app store listing (support URL, marketing URL). Do this first — everything else in this track waits on it. |
+| ✅ Point domain at Vercel | Both | Quick once you own the domain; I can walk you through the DNS records. |
+| ✅ Sign up for Resend (or similar) | You | For custom SMTP so auth emails come from your domain, not Supabase's shared sender. |
+| ✅ Verify domain with Resend (SPF/DKIM/DMARC) | You | DNS records at your registrar — usually propagates within a few hours, occasionally up to 24h. |
+| ✅ Wire Resend SMTP into Supabase | You | Authentication → Settings → SMTP Settings in the Supabase dashboard. |
+| ✅ Rewrite Supabase email templates | Me | Signup confirmation + password reset copy, branded as Pocket Finance instead of the generic default. Verified live: confirmation email sent from noreply@pocketfinance.app, branded correctly, confirm link worked. |
+| ✅ Upgrade Marketaux | You | Upgraded to the Standard plan (originally scoped as Basic — Marketaux's plan tiers/naming may have changed). Free plan's 100 req/day cap from background refreshes was already a real constraint, not optional scaling prep. |
+| ✅ Confirm Vercel plan allows commercial use | You | Upgraded to Pro ($20/user/month, $20 included usage credit). Covers commercial use, plus faster builds and cold start prevention. |
+| ☐ Check Twelve Data + Massive.com billing | You | Both look like dead integrations left over from the removed stock-panel feature — nothing live in the app calls them. Possible recurring cost for zero usage. |
+| ☐ Add error monitoring (Sentry) | Me | Nothing catches production errors right now — you'd only find out about a bug if a user tells you. |
 
 **Estimate:** domain purchase + DNS is the long pole here, mostly waiting (hours, sometimes up to a day). Everything else is a few hours of setup once the domain is live.
 

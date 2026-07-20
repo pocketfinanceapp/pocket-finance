@@ -51,10 +51,17 @@ async function fetchFromNewsApi(
   url.searchParams.set("pageSize", String(NEWS_PAGE_SIZE));
   url.searchParams.set("page", String(page));
   url.searchParams.set("apiKey", apiKey);
-  url.searchParams.set("_cb", String(Date.now()));
 
+  // Was `cache: "no-store"` with a cache-busting `_cb` timestamp param —
+  // meaning this hit the live NewsAPI on literally every single page load
+  // with no caching at all, which was the dominant contributor to the
+  // ~10-12s cold load time (up to two sequential 8s-timeout requests, plus
+  // a possible third backup request below, on every visit). NewsAPI's own
+  // "everything" endpoint isn't second-by-second real-time anyway, so a
+  // short revalidation window makes nearly all visits served from Next's
+  // data cache instead, while still keeping the feed fresh within ~90s.
   const res = await fetch(url.toString(), {
-    cache: "no-store",
+    next: { revalidate: 90 },
     signal: AbortSignal.timeout(8000),
   });
 
@@ -211,9 +218,8 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
       backup.searchParams.set("country", "us");
       backup.searchParams.set("pageSize", String(NEWS_PAGE_SIZE));
       backup.searchParams.set("apiKey", apiKey);
-      backup.searchParams.set("_cb", String(Date.now()));
       const res = await fetch(backup.toString(), {
-        cache: "no-store",
+        next: { revalidate: 90 },
         signal: AbortSignal.timeout(8000),
       });
 

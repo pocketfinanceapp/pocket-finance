@@ -116,15 +116,38 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
 
   const trendingTickers: TrendingTicker[] = useMemo(() => {
     if (liveTrending && liveTrending.length > 0) {
-      return liveTrending.map((e) => ({
-        ticker: e.symbol,
-        companyName: getTickerMetaBySymbol(e.symbol).companyName,
-        count: e.totalDocuments,
-        sentimentAvg: e.sentimentAvg,
-      }));
+      // Marketaux's global trending endpoint isn't filtered against our own
+      // article pool, so it can surface tickers with zero stories in the
+      // app (a "trending" badge that leads to "No stories in your feed
+      // right now") and tickers with no curated name (falls back to
+      // showing the raw symbol as its own "company name"). Only trust an
+      // entry once we can confirm it has a real story and a real name.
+      const localByTicker = new Map<string, NewsArticle>();
+      for (const article of catalogArticles) {
+        const key = article.ticker?.trim().toUpperCase();
+        if (key && !localByTicker.has(key)) localByTicker.set(key, article);
+      }
+
+      const filtered = liveTrending
+        .filter((e) => localByTicker.has(e.symbol.toUpperCase()))
+        .map((e) => {
+          const symbol = e.symbol.toUpperCase();
+          const localArticle = localByTicker.get(symbol);
+          return {
+            ticker: symbol,
+            // Prefer the name from an actual article in the feed — it's
+            // guaranteed accurate, unlike the ticker-map fallback.
+            companyName:
+              localArticle?.companyName || getTickerMetaBySymbol(symbol).companyName,
+            count: e.totalDocuments,
+            sentimentAvg: e.sentimentAvg,
+          };
+        });
+
+      if (filtered.length > 0) return filtered;
     }
     return localTrending;
-  }, [liveTrending, localTrending]);
+  }, [liveTrending, localTrending, catalogArticles]);
 
   const openSector = (sector: SectorFilter) => {
     clearFilters();

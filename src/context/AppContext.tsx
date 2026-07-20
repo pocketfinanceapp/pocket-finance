@@ -172,10 +172,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
   const [companyPanelReturnTab, setCompanyPanelReturnTab] =
     useState<NavTab | null>(null);
-  const [onboardingComplete, setOnboardingComplete] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return isOnboardingComplete();
-  });
+  // Always start false, matching the server-rendered HTML. Reading
+  // isOnboardingComplete() here directly (client-only, via localStorage)
+  // caused a hydration mismatch (React error #418) for any already-
+  // onboarded returning user: the server always renders as "not
+  // onboarded", but the client's first render would immediately see
+  // localStorage and render as "onboarded" — a structural difference (the
+  // onboarding overlay itself) on effectively every load. The mount effect
+  // below already re-checks isOnboardingComplete() and updates this right
+  // after mount, so real behavior is unaffected.
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [appUserId, setAppUserId] = useState<string | null>(null);
   const [watchlistLoaded, setWatchlistLoaded] = useState(false);
   const [marketsSnapshot, setMarketsSnapshot] =
