@@ -702,6 +702,63 @@ export function NewsFeed({
     setFeedIndex,
   ]);
 
+  // Desktop/trackpad mouse-wheel support. The card track otherwise only
+  // responds to touch/pointer drag, so a mouse-wheel visitor on the web
+  // saw a feed that looked frozen — scrolling did nothing. Kept fully
+  // separate from the drag-gesture effect above (own listener, own
+  // cooldown) rather than woven into it, since that gesture state machine
+  // has a history of subtle race conditions and a wheel event has a very
+  // different shape (many small deltaY ticks vs. one continuous drag).
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    let cooldownUntil = 0;
+    const WHEEL_COOLDOWN_MS = TRACK_TRANSITION_MS + 60;
+    const WHEEL_THRESHOLD = 24;
+
+    const onWheel = (e: WheelEvent) => {
+      if (!gesturesEnabledRef.current || settling.current) return;
+      if (panelIndexRef.current !== PANEL_FEED) return;
+      if (isInteractiveTarget(e.target)) return;
+      // Mostly-horizontal wheel gestures (e.g. a trackpad swipe) aren't
+      // this feed's vertical up/next navigation — leave them alone.
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (Math.abs(e.deltaY) < WHEEL_THRESHOLD) return;
+
+      const now = Date.now();
+      if (now < cooldownUntil) {
+        e.preventDefault();
+        return;
+      }
+
+      const maxIdx = Math.max(0, verticalFeedLengthRef.current - 1);
+      const current = feedIndexRef.current;
+      let next = current;
+
+      if (e.deltaY > 0) {
+        if (maxIdx > 0) next = current >= maxIdx ? 0 : current + 1;
+      } else {
+        next = Math.max(0, current - 1);
+      }
+
+      if (next !== current) {
+        e.preventDefault();
+        settling.current = true;
+        if (settleTimer.current) clearTimeout(settleTimer.current);
+        settleTimer.current = setTimeout(() => {
+          settling.current = false;
+          settleTimer.current = null;
+        }, TRACK_TRANSITION_MS);
+        setFeedIndex(next);
+        cooldownUntil = now + WHEEL_COOLDOWN_MS;
+      }
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [setFeedIndex]);
+
   const trackTransition = isDragging
     ? ""
     : "transition-transform duration-300 ease-out";

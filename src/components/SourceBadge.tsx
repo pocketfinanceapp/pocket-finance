@@ -51,7 +51,9 @@ export function SourceBadge({
         <p className="truncate text-[13px] text-white/70">
           <span className="font-bold text-white">{brand.name}</span>
           <span className="text-white/45"> · </span>
-          <time dateTime={publishedAt}>{timeLabel}</time>
+          <time dateTime={publishedAt} suppressHydrationWarning>
+            {timeLabel}
+          </time>
         </p>
       </div>
     );
@@ -100,7 +102,9 @@ export function SourceBadge({
               : "text-white/50"
           }`}
         >
-          <time dateTime={publishedAt}>{timeLabel}</time>
+          <time dateTime={publishedAt} suppressHydrationWarning>
+            {timeLabel}
+          </time>
         </p>
       </div>
     </div>

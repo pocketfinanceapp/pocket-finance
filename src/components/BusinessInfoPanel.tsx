@@ -55,7 +55,13 @@ function buildFacts(info: CompanyInfo | null): Fact[] {
       value: info.parentOrganization,
     });
   } else if (info.ownedBy) {
-    facts.push({ icon: Building2, label: "Owned by", value: info.ownedBy });
+    // Wikidata's "owned by" property is only used here as a fallback when
+    // there's no specific parent-organization claim — for large public
+    // companies that's almost always just the top institutional holder
+    // (BlackRock, Vanguard, etc.), not a controlling owner. "Owned by"
+    // reads as full/controlling ownership, which is misleading in that
+    // common case, so the fallback label says shareholder instead.
+    facts.push({ icon: Building2, label: "Major shareholder", value: info.ownedBy });
   }
   if (info.industry) {
     facts.push({ icon: Building2, label: "Industry", value: info.industry });

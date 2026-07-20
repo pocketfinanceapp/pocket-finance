@@ -9,6 +9,50 @@ interface SimilarState {
 }
 
 /**
+ * Marketaux's news/similar/{uuid} endpoint sometimes returns results that
+ * share nothing with the source article but the publisher — e.g. a
+ * Microsoft earnings piece paired with an unrelated Willis Lease Finance
+ * or UGI utility story, just because both ran on Seeking Alpha. Re-rank
+ * down to only the results that share something concrete with the source
+ * article (same ticker, a shared tag, or the source company's name showing
+ * up in the related headline) rather than trusting Marketaux's pairing
+ * blindly. Better to show nothing than to show something misleadingly
+ * labeled "more on this story."
+ */
+export function filterRelevantSimilarArticles(
+  source: NewsArticle,
+  items: NewsArticle[]
+): NewsArticle[] {
+  const sourceTicker = source.ticker?.toLowerCase().trim();
+  const sourceCompany = source.companyName?.toLowerCase().trim();
+  const sourceTags = new Set((source.tags ?? []).map((t) => t.toLowerCase()));
+  // Generic placeholder names ("Broad Market", etc.) aren't a specific
+  // enough signal to match on — skip the company-name check for those.
+  const isGenericCompany =
+    !sourceCompany || sourceCompany.length < 4 || sourceCompany === "broad market";
+
+  return items.filter((item) => {
+    if (item.id === source.id) return false;
+
+    const itemTicker = item.ticker?.toLowerCase().trim();
+    if (sourceTicker && itemTicker && itemTicker === sourceTicker) return true;
+
+    if (
+      sourceTags.size > 0 &&
+      (item.tags ?? []).some((t) => sourceTags.has(t.toLowerCase()))
+    ) {
+      return true;
+    }
+
+    if (!isGenericCompany && item.headline.toLowerCase().includes(sourceCompany!)) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+/**
  * Shared fetch for Marketaux's news/similar/{uuid} endpoint. Used by both
  * the "More on this story" carousel and the multi-source Pocket Briefing so
  * an article view only makes one similar-articles request, not two.

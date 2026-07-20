@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { getArticleSubheading } from "@/lib/articlePreview";
-import { useSimilarArticles } from "@/lib/useSimilarArticles";
+import { useSimilarArticles, filterRelevantSimilarArticles } from "@/lib/useSimilarArticles";
 import { ArticleAISummary } from "./ArticleAISummary";
 import { FeedCardFallbackBackground } from "./FeedCardFallbackBackground";
 import { FadeInSection } from "./SubPageShell";
@@ -79,8 +79,12 @@ export function ArticlePanel({ article, onBack, onOpenArticle }: ArticlePanelPro
   // RelatedArticles) so one article view makes one similar-articles
   // request, feeding both the "More on this story" carousel and the
   // multi-source Pocket Briefing.
-  const { articles: relatedArticles, loading: relatedLoading } =
+  const { articles: rawRelatedArticles, loading: relatedLoading } =
     useSimilarArticles(article.marketauxUuid);
+  const relatedArticles = useMemo(
+    () => filterRelevantSimilarArticles(article, rawRelatedArticles),
+    [article, rawRelatedArticles]
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });

@@ -271,9 +271,12 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
           </section>
 
           <section className="mt-7">
-            <h2 className="mb-2 text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
+            <h2 className="mb-1 text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
               Browse by region
             </h2>
+            <p className="mb-2 text-[11px] text-pocket-muted">
+              Countries with fresh stories today — coverage spans 80+ markets overall.
+            </p>
             <ul className="divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">
               {regionItems.map((item) => {
                 const dotColor =
