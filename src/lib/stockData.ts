@@ -1,5 +1,4 @@
 import type { ChartPoint, ChartRange, Competitor, StockProfile } from "./types";
-import { parseMarketCapToNumber } from "./companyStats";
 import { isCryptoAssetTicker } from "./cryptoBrand";
 import {
   buildCryptoCompetitor,
@@ -505,6 +504,20 @@ export function getStockProfile(ticker: string): StockProfile {
   });
 
   return { ...base, chartData };
+}
+
+/** "$1.5T" / "$340B" / "$180M" style market-cap string back to a raw number. */
+function parseMarketCapToNumber(value: string): number | null {
+  const normalized = value.replace(/[$,]/g, "").trim().toUpperCase();
+  const match = normalized.match(/^([\d.]+)(T|B|M)?$/);
+  if (!match) return null;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount)) return null;
+  const unit = match[2];
+  if (unit === "T") return amount * 1_000_000_000_000;
+  if (unit === "B") return amount * 1_000_000_000;
+  if (unit === "M") return amount * 1_000_000;
+  return amount;
 }
 
 /**

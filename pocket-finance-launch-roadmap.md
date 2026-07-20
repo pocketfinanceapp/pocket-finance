@@ -33,7 +33,7 @@ Owner key: **[You]** = account/vendor action only I can't do for you · **[Me]**
 | ✅ Rewrite Supabase email templates | Me | Signup confirmation + password reset copy, branded as Pocket Finance instead of the generic default. Verified live: confirmation email sent from noreply@pocketfinance.app, branded correctly, confirm link worked. |
 | ✅ Upgrade Marketaux | You | Upgraded to the Standard plan (originally scoped as Basic — Marketaux's plan tiers/naming may have changed). Free plan's 100 req/day cap from background refreshes was already a real constraint, not optional scaling prep. |
 | ✅ Confirm Vercel plan allows commercial use | You | Upgraded to Pro ($20/user/month, $20 included usage credit). Covers commercial use, plus faster builds and cold start prevention. |
-| ☐ Check Twelve Data + Massive.com billing | You | Both look like dead integrations left over from the removed stock-panel feature — nothing live in the app calls them. Possible recurring cost for zero usage. |
+| ☐ Check Twelve Data + Massive.com billing | You | Confirmed both were dead integrations — removed ~5,900 lines of unused code (components, API routes, lib files) tied to them. Massive has no payment method on file, nothing to do there. Twelve Data is still on a paid Venture plan ($149/mo) with nothing calling it anymore — cancel/downgrade it in your Twelve Data account billing settings. |
 | ☐ Add error monitoring (Sentry) | Me | Nothing catches production errors right now — you'd only find out about a bug if a user tells you. |
 
 **Estimate:** domain purchase + DNS is the long pole here, mostly waiting (hours, sometimes up to a day). Everything else is a few hours of setup once the domain is live.
