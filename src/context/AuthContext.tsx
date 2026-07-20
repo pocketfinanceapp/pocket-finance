@@ -342,9 +342,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: "Failed to delete account. Please try again." };
     }
 
-    // The account is gone server-side — clear the local session too rather
-    // than calling supabase.auth.signOut() (which would try to invalidate a
-    // session belonging to a user that no longer exists).
+    // The account is gone server-side — clear the persisted session too.
+    // scope: "local" only wipes the token out of localStorage; it does not
+    // call the server to invalidate it, so this is safe even though the
+    // underlying user no longer exists. Without this, the stale
+    // access/refresh token stays in localStorage and getSession() on the
+    // next page load happily returns it, making the user look signed in
+    // again even though the account is gone.
+    await supabase.auth.signOut({ scope: "local" });
     clearGuestMode();
     setSession(null);
     setUser(null);
