@@ -33,17 +33,6 @@ const nextConfig: NextConfig = {
   experimental: {
     /** Tree-shake lucide without fragile manual barrel paths */
     optimizePackageImports: ["lucide-react"],
-    /**
-     * Serializes static-page generation to 1 worker at build time. The
-     * shared /home layout fetches Marketaux data, and it re-executes once
-     * per statically generated /home/* route (7 routes) — with full
-     * concurrency, that fired ~14 identical Marketaux requests at once,
-     * before Next's fetch cache could populate and dedupe them, causing
-     * some to time out. Serializing means the first request populates the
-     * cache before the next route's layout render fires, so duplicates hit
-     * cache instead of the network.
-     */
-    cpus: 1,
   },
 };
 

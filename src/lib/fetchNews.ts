@@ -7,7 +7,40 @@ import type { NewsArticle } from "./types";
 const MAIN_FEED_CAP = 60;
 const TRENDING_CAP = 40;
 
-async function fetchTrendingFromMarketaux(): Promise<NewsArticle[]> {
+// Same window as the underlying fetch()'s `next: { revalidate: 1800 }`.
+const DEDUPE_WINDOW_MS = 1800 * 1000;
+
+/**
+ * Single-flight + short-lived memoization, keyed at the module level (not
+ * per-request like React's `cache()`). This matters because `/home/layout.tsx`
+ * is a shared layout that Next.js re-executes independently for every
+ * statically generated /home/* route (7 of them) during a build — without
+ * this, that fired ~14 near-simultaneous identical Marketaux requests
+ * before Next's own fetch cache had a chance to populate, and several
+ * would time out under that burst. Concurrent/rapid calls within the same
+ * process now share one in-flight promise instead of duplicating the
+ * network call.
+ */
+function singleFlight<T>(fn: () => Promise<T>) {
+  let inFlight: Promise<T> | null = null;
+  let cachedAt = 0;
+
+  return (): Promise<T> => {
+    const now = Date.now();
+    if (!inFlight || now - cachedAt > DEDUPE_WINDOW_MS) {
+      cachedAt = now;
+      inFlight = fn().catch((err) => {
+        // Don't let a failed call poison the cache for the dedupe window —
+        // let the next call retry instead of returning a stale rejection.
+        inFlight = null;
+        throw err;
+      });
+    }
+    return inFlight;
+  };
+}
+
+async function fetchTrendingFromMarketauxUncached(): Promise<NewsArticle[]> {
   const articles = await fetchMarketauxNews({
     mustHaveEntities: true,
     sort: "entity_match_score",
@@ -15,10 +48,13 @@ async function fetchTrendingFromMarketaux(): Promise<NewsArticle[]> {
   return articles.map(mapMarketauxArticle);
 }
 
-async function fetchMainFeedFromMarketaux(): Promise<NewsArticle[]> {
+async function fetchMainFeedFromMarketauxUncached(): Promise<NewsArticle[]> {
   const articles = await fetchMarketauxNews({ mustHaveEntities: true });
   return filterFinanceArticles(articles.map(mapMarketauxArticle));
 }
+
+const fetchTrendingFromMarketaux = singleFlight(fetchTrendingFromMarketauxUncached);
+const fetchMainFeedFromMarketaux = singleFlight(fetchMainFeedFromMarketauxUncached);
 
 /** Drops duplicate ids (by first-seen order) and caps the result. */
 function capArticles(articles: NewsArticle[], cap: number): NewsArticle[] {
