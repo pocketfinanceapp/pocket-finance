@@ -114,6 +114,21 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
     [catalogArticles]
   );
 
+  /** Story counts per topic from the cached feed pool — same source the
+   * local trending-ticker fallback uses. There's no live Marketaux
+   * endpoint for "stories by sector today" (sector is our own local
+   * categorization, not a Marketaux concept), so this reflects the
+   * current feed pool rather than a live daily total across all markets. */
+  const topicCounts = useMemo(() => {
+    const counts = new Map<SectorFilter, number>();
+    for (const sector of SECTOR_FILTERS) counts.set(sector, 0);
+    for (const article of catalogArticles) {
+      const sector = article.sector as SectorFilter;
+      if (counts.has(sector)) counts.set(sector, (counts.get(sector) ?? 0) + 1);
+    }
+    return counts;
+  }, [catalogArticles]);
+
   const trendingTickers: TrendingTicker[] = useMemo(() => {
     if (liveTrending && liveTrending.length > 0) {
       // Marketaux's global trending endpoint isn't filtered against our own
@@ -277,19 +292,25 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
               Browse by topic
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              {SECTOR_FILTERS.map((sector) => (
-                <button
-                  key={sector}
-                  type="button"
-                  data-no-drag
-                  onClick={() => openSector(sector)}
-                  className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4 text-left active:opacity-70"
-                >
-                  <span className="text-[14px] font-bold text-pocket-text">
-                    {sector}
-                  </span>
-                </button>
-              ))}
+              {SECTOR_FILTERS.map((sector) => {
+                const count = topicCounts.get(sector) ?? 0;
+                return (
+                  <button
+                    key={sector}
+                    type="button"
+                    data-no-drag
+                    onClick={() => openSector(sector)}
+                    className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4 text-left active:opacity-70"
+                  >
+                    <span className="text-[14px] font-bold text-pocket-text">
+                      {sector}
+                    </span>
+                    <p className="mt-0.5 text-[11px] text-pocket-muted">
+                      {count} {count === 1 ? "story" : "stories"}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
