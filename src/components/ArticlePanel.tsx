@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Bookmark } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import { hasRealArticlePhoto } from "@/lib/feedImage";
 import type { NewsArticle } from "@/lib/types";
 import { formatDate, readTime } from "@/lib/utils";
 import { getArticleSubheading } from "@/lib/articlePreview";
@@ -31,7 +32,8 @@ function ArticleHeroImage({ article }: { article: NewsArticle }) {
     setImageRetryCount(0);
   }, [article.imageUrl, article.id]);
 
-  const showFallback = !article.imageUrl || imageFailed;
+  const showFallback =
+    !hasRealArticlePhoto(article.imageUrl, article.headline) || imageFailed;
 
   // Retry once with a cache-busting param before giving up — a valid image
   // URL can still fail on first load (cold CDN edge, transient blip).

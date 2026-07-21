@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { getArticleContextLine } from "@/lib/articlePreview";
 import { getFeedCategoryTag } from "@/lib/feedCategory";
-import { estimateImageIsDark, hasUsableFeedImage } from "@/lib/feedImage";
+import { estimateImageIsDark, hasRealArticlePhoto } from "@/lib/feedImage";
 import { isInteractiveTarget } from "@/lib/gesture";
 import type { NewsArticle } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
@@ -112,7 +112,8 @@ export function FeedCard({
   const categoryTag = getFeedCategoryTag(article, displayMarket);
   const feedChip = resolveFeedChip(article, categoryTag);
   const contextLine = getArticleContextLine(article);
-  const showFallback = !hasUsableFeedImage(article.imageUrl) || imageFailed;
+  const showFallback =
+    !hasRealArticlePhoto(article.imageUrl, article.headline) || imageFailed;
   const hasHeroImage = !showFallback;
   const useSoftOverlay = hasHeroImage && isDarkImage;
   const iconClass =
@@ -146,7 +147,8 @@ export function FeedCard({
       : article.imageUrl;
 
   useEffect(() => {
-    if (!hasUsableFeedImage(article.imageUrl) || !article.imageUrl) return;
+    if (!hasRealArticlePhoto(article.imageUrl, article.headline) || !article.imageUrl)
+      return;
 
     let cancelled = false;
     void estimateImageIsDark(article.imageUrl).then((dark) => {
@@ -163,7 +165,7 @@ export function FeedCard({
     return () => {
       cancelled = true;
     };
-  }, [article.id, article.imageUrl]);
+  }, [article.id, article.imageUrl, article.headline]);
 
   useEffect(() => {
     if (!isFirstCard || !active) {

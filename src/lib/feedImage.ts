@@ -47,6 +47,30 @@ export function hasUsableFeedImage(url: string | undefined | null): boolean {
   return !isLowQualityImageUrl(url);
 }
 
+/**
+ * Earnings/conference call transcripts (common on Seeking Alpha and similar
+ * aggregators) never have a real photo — the publisher auto-attaches a
+ * generic branded placeholder instead. That placeholder's URL doesn't match
+ * any pattern in LOW_QUALITY_URL_PATTERNS (it's a normal-looking image, just
+ * not a real one), so it slips past hasUsableFeedImage and gets rendered as
+ * if it were a genuine hero photo — the same repeated wordmark graphic on
+ * every transcript article. This only affects rendering (which visual to
+ * show), not feed inclusion — the article still belongs in the feed, it
+ * should just use the category fallback art instead of a fake "real" photo.
+ */
+const GENERIC_PLACEHOLDER_TITLE_PATTERN =
+  /\b(earnings|conference)\s+call\s+transcript\b/i;
+
+export function hasRealArticlePhoto(
+  url: string | undefined | null,
+  headline?: string | null
+): boolean {
+  if (headline && GENERIC_PLACEHOLDER_TITLE_PATTERN.test(headline)) {
+    return false;
+  }
+  return hasUsableFeedImage(url);
+}
+
 /** Rough luminance check for adaptive feed overlays (best-effort; CORS may block). */
 export function estimateImageIsDark(src: string): Promise<boolean> {
   return new Promise((resolve) => {
