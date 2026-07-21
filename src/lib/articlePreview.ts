@@ -79,15 +79,29 @@ function truncateContext(text: string, max = CONTEXT_MAX_CHARS): string {
 }
 
 /**
+ * Some upstream snippets (Marketaux's own excerpt, not our truncation) end
+ * mid-sentence with no terminal punctuation at all — e.g. "Eversource
+ * Energy stock remains a". truncateContext() only adds "…" when its OWN
+ * character limit does the cutting, so a short-but-incomplete source
+ * snippet like that slips through untouched and reads like a rendering
+ * bug. Catch that case here regardless of length.
+ */
+function ensureTerminalPunctuation(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+  return /[.!?…]$/.test(trimmed) ? trimmed : `${trimmed}…`;
+}
+
+/**
  * One-line "why it matters" copy for feed cards — uses existing article
  * description/summary only (no AI generation).
  */
 export function getArticleContextLine(article: NewsArticle): string {
   const subheading = getArticleSubheading(article.subheading);
-  if (subheading) return truncateContext(subheading);
+  if (subheading) return ensureTerminalPunctuation(truncateContext(subheading));
 
   const body = getArticleBodyPreview(article);
-  if (body) return truncateContext(body);
+  if (body) return ensureTerminalPunctuation(truncateContext(body));
 
   return "";
 }

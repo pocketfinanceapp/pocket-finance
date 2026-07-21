@@ -61,11 +61,29 @@ export function hasUsableFeedImage(url: string | undefined | null): boolean {
 const GENERIC_PLACEHOLDER_TITLE_PATTERN =
   /\b(earnings|conference)\s+call\s+transcript\b/i;
 
+/**
+ * URL shapes for known sitewide "no real photo" fallback graphics —
+ * catches dry filing/report headlines (e.g. "HEXPOL AB (publ) 2026 Q2")
+ * that don't match GENERIC_PLACEHOLDER_TITLE_PATTERN above but still get
+ * served the publisher's generic social-share image instead of a real
+ * photo. Checking the URL shape directly is more reliable than trying to
+ * enumerate every dry-headline phrasing that might trigger it.
+ */
+const GENERIC_PLACEHOLDER_URL_PATTERNS = ["og_image", "og-image", "default-social"];
+
 export function hasRealArticlePhoto(
   url: string | undefined | null,
   headline?: string | null
 ): boolean {
   if (headline && GENERIC_PLACEHOLDER_TITLE_PATTERN.test(headline)) {
+    return false;
+  }
+  if (
+    url &&
+    GENERIC_PLACEHOLDER_URL_PATTERNS.some((pattern) =>
+      url.toLowerCase().includes(pattern)
+    )
+  ) {
     return false;
   }
   return hasUsableFeedImage(url);
