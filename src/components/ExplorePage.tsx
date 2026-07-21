@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { TrendingUp } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useNavigation } from "@/context/NavigationContext";
 import { SECTOR_FILTERS, type SectorFilter } from "@/lib/filters";
@@ -128,6 +129,20 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
     }
     return counts;
   }, [catalogArticles]);
+
+  /** The topics with the most stories right now — a `require ≥3 stories`
+   * floor keeps a near-empty category from getting a "Trending" tag just
+   * because it happens to edge out other near-empty categories. */
+  const trendingTopics = useMemo(() => {
+    const ranked = SECTOR_FILTERS.map((sector) => ({
+      sector,
+      count: topicCounts.get(sector) ?? 0,
+    }))
+      .filter((entry) => entry.count >= 3)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 2);
+    return new Set(ranked.map((entry) => entry.sector));
+  }, [topicCounts]);
 
   const trendingTickers: TrendingTicker[] = useMemo(() => {
     if (liveTrending && liveTrending.length > 0) {
@@ -294,6 +309,7 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
             <div className="grid grid-cols-2 gap-3">
               {SECTOR_FILTERS.map((sector) => {
                 const count = topicCounts.get(sector) ?? 0;
+                const isTrending = trendingTopics.has(sector);
                 return (
                   <button
                     key={sector}
@@ -302,12 +318,22 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
                     onClick={() => openSector(sector)}
                     className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4 text-left active:opacity-70"
                   >
-                    <span className="text-[14px] font-bold text-pocket-text">
-                      {sector}
-                    </span>
-                    <p className="mt-0.5 text-[11px] text-pocket-muted">
-                      {count} {count === 1 ? "story" : "stories"}
-                    </p>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="text-[14px] font-bold text-pocket-text">
+                          {sector}
+                        </span>
+                        <p className="mt-0.5 text-[11px] text-pocket-muted">
+                          {count} {count === 1 ? "story" : "stories"}
+                        </p>
+                      </div>
+                      {isTrending && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2 py-0.5 text-[10px] font-semibold text-[#00C6C6]">
+                          <TrendingUp className="h-3 w-3" strokeWidth={2.5} />
+                          Trending
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })}
