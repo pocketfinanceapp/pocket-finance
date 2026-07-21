@@ -135,6 +135,31 @@ const DEPRIORITISE_KEYWORDS = [
   "reality show",
 ] as const;
 
+/**
+ * Dry procedural wire/PR boilerplate — technically finance-adjacent (so it
+ * doesn't trip DEPRIORITISE_KEYWORDS above), but low-substance enough that a
+ * feed full of it reads as thin. Softly deprioritised rather than removed —
+ * still real, sourced content some users may want.
+ */
+const LOW_SUBSTANCE_WIRE_PATTERNS = [
+  "form 8.3",
+  "rule 8.3",
+  "opening position disclosure",
+  "dealing disclosure",
+  "definitive proxy",
+  "proxy statement",
+  "save the date",
+  "conference call and webcast",
+  "conference call invitation",
+  "to host conference call",
+  "to host earnings call",
+  "to participate in conference",
+  "investor conference schedule",
+  "webcast information",
+  "notice of annual general meeting",
+  "notice of extraordinary general meeting",
+] as const;
+
 function articleBlob(article: NewsArticle): string {
   return [
     article.headline,
@@ -188,6 +213,13 @@ export function computeFinanceRelevanceScore(article: NewsArticle): number {
 
   for (const keyword of DEPRIORITISE_KEYWORDS) {
     if (text.includes(keyword)) score -= 32;
+  }
+
+  for (const phrase of LOW_SUBSTANCE_WIRE_PATTERNS) {
+    if (text.includes(phrase)) {
+      score -= 22;
+      break;
+    }
   }
 
   // Politics without market angle
