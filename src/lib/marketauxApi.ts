@@ -120,6 +120,9 @@ interface FetchMarketauxNewsOptions {
   sort?: "published_at" | "entity_match_score" | "entity_sentiment_score";
   /** Specific tickers to filter to (used for per-stock news tabs). */
   symbols?: string[];
+  /** 1-based page number, for paging deeper into the result set (infinite
+   * scroll) beyond the first page's ~50 articles. Omit for page 1. */
+  page?: number;
 }
 
 export async function fetchMarketauxNews(
@@ -140,6 +143,9 @@ export async function fetchMarketauxNews(
   }
   if (options.symbols?.length) {
     url.searchParams.set("symbols", options.symbols.join(","));
+  }
+  if (options.page && options.page > 1) {
+    url.searchParams.set("page", String(options.page));
   }
 
   try {

@@ -65,10 +65,16 @@ export function NewsFeed({
   showAddToHomeBanner = true,
   onSidePanelChange,
 }: NewsFeedProps) {
-  const [allArticles] = useState(initialArticles);
+  const [allArticles, setAllArticles] = useState(initialArticles);
   const [trendingPool] = useState(() =>
     initialTrendingArticles.length > 0 ? initialTrendingArticles : initialArticles
   );
+  // Infinite scroll: initialArticles is page 1 (~60 articles). Page 2+ is
+  // fetched on demand as the user nears the end of what's loaded, so the
+  // feed keeps going instead of hitting a hard stop.
+  const [nextFeedPage, setNextFeedPage] = useState(2);
+  const [loadingMoreArticles, setLoadingMoreArticles] = useState(false);
+  const [hasMoreArticlePages, setHasMoreArticlePages] = useState(true);
   const {
     followedMarkets,
     marketFilters,
@@ -351,6 +357,58 @@ export function NewsFeed({
   const gesturesEnabled = !filterOpen && !commentsOpen && !searchOpen;
   const verticalFeedLengthRef = useRef(verticalFeedArticles.length);
   verticalFeedLengthRef.current = verticalFeedArticles.length;
+
+  // Infinite scroll: fetch the next page of articles once the user is
+  // within a few cards of the end of what's loaded, so the feed never
+  // visibly runs out. Scoped to the general "For You"/trending-off feed —
+  // the trending pool is a bounded top-40 ranking (paging it further would
+  // mean progressively less-trending results, not "more trending"), and the
+  // country-scoped feed is a separate, already-complete endpoint response.
+  useEffect(() => {
+    if (displayedFeedMode === "trending" || countryFilter) return;
+    if (loadingMoreArticles || !hasMoreArticlePages) return;
+    if (verticalFeedArticles.length === 0) return;
+
+    const remaining = verticalFeedArticles.length - 1 - effectiveFeedIndex;
+    if (remaining > 5) return;
+
+    let cancelled = false;
+    setLoadingMoreArticles(true);
+
+    fetch(`/api/news/more?page=${nextFeedPage}`)
+      .then((res) => (res.ok ? res.json() : { articles: [] }))
+      .then((data: { articles?: NewsArticle[] }) => {
+        if (cancelled) return;
+        const fresh = (data.articles ?? []).filter(
+          (a) => !allArticles.some((existing) => existing.id === a.id)
+        );
+        if (fresh.length === 0) {
+          setHasMoreArticlePages(false);
+          return;
+        }
+        setAllArticles((prev) => [...prev, ...fresh]);
+        setNextFeedPage((p) => p + 1);
+      })
+      .catch(() => {
+        if (!cancelled) setHasMoreArticlePages(false);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMoreArticles(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    effectiveFeedIndex,
+    verticalFeedArticles.length,
+    displayedFeedMode,
+    countryFilter,
+    loadingMoreArticles,
+    hasMoreArticlePages,
+    nextFeedPage,
+    allArticles,
+  ]);
 
   useEffect(() => {
     if (effectiveFeedIndex !== feedIndex) {

@@ -113,3 +113,26 @@ export async function fetchNewsArticles(): Promise<NewsArticle[]> {
     return [];
   }
 }
+
+/**
+ * Additional pages of the main feed, fetched on demand as the user scrolls
+ * near the end of what's already loaded — powers infinite scroll instead of
+ * capping the feed at the initial ~60-article page. Deliberately not
+ * single-flighted like fetchMainFeedFromMarketaux above: each page number is
+ * its own distinct request (different cache key), triggered one at a time
+ * client-side rather than in a build-time burst, so there's no thundering-
+ * herd risk to guard against here.
+ */
+export async function fetchMoreNewsArticles(page: number): Promise<NewsArticle[]> {
+  if (!process.env.MARKETAUX_API_KEY) return [];
+  if (page < 2) return [];
+
+  try {
+    const articles = await fetchMarketauxNews({ mustHaveEntities: true, page });
+    const mapped = filterFinanceArticles(articles.map(mapMarketauxArticle));
+    return capArticles(withUsableImage(mapped), MAIN_FEED_CAP);
+  } catch (err) {
+    console.error("[fetchNews] Marketaux more-pages fetch threw:", err);
+    return [];
+  }
+}
