@@ -146,7 +146,11 @@ export async function fetchMarketauxNews(
     const res = await fetch(url.toString(), {
       // Protects the 100-requests/day free-tier quota — see file header.
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(8000),
+      // 15s: Vercel builds fire several of these near-simultaneously across
+      // statically generated routes, and Marketaux can be slow to respond
+      // under that burst — 8s was tripping real, otherwise-successful
+      // requests during build.
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
@@ -228,7 +232,7 @@ export async function fetchTrendingEntities(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
@@ -298,7 +302,7 @@ export async function fetchTrendingCountries(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
@@ -369,7 +373,7 @@ export async function fetchCountryNews(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
@@ -445,7 +449,7 @@ export async function fetchEntitySentimentHistory(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
@@ -502,7 +506,7 @@ export async function fetchSimilarArticles(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {
