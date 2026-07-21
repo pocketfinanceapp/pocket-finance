@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { NavTab } from "@/components/BottomNav";
@@ -45,7 +46,6 @@ import {
   fetchSavedArticles,
   fetchUserLikedCount,
   fetchUserStoriesRead,
-  incrementUserStoriesRead,
   setUserStoriesRead,
   saveArticle as dbSaveArticle,
   unsaveArticle as dbUnsaveArticle,
@@ -553,11 +553,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCompanyPanelReturnTab(null);
   }, []);
 
+  // incrementStoriesRead fires on every feed scroll (it's an impression
+  // counter, not a "genuinely read" tracker — see getUniqueArticlesOpened
+  // in progression.ts for that). Previously this called
+  // incrementUserStoriesRead() on every single call, which did a Supabase
+  // SELECT followed by an UPSERT (two round trips) per scroll — a fast
+  // scroll session could fire dozens of these per minute, and concurrent
+  // calls could even race and lose increments (read-modify-write with no
+  // locking). Local state still updates instantly for UI responsiveness;
+  // the Supabase write is now debounced to one UPSERT (no preceding
+  // SELECT needed — we already know the target value locally) a couple of
+  // seconds after scrolling settles.
+  const storiesReadSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
   const incrementStoriesRead = useCallback(() => {
-    setStoriesRead((n) => n + 1);
-    if (!appUserId) return;
-    void incrementUserStoriesRead(appUserId).then((next) => {
-      if (next !== null) setStoriesRead(next);
+    setStoriesRead((n) => {
+      const next = n + 1;
+      if (appUserId) {
+        if (storiesReadSyncTimer.current) {
+          clearTimeout(storiesReadSyncTimer.current);
+        }
+        storiesReadSyncTimer.current = setTimeout(() => {
+          storiesReadSyncTimer.current = null;
+          void setUserStoriesRead(appUserId, next);
+        }, 2000);
+      }
+      return next;
     });
   }, [appUserId]);
 
