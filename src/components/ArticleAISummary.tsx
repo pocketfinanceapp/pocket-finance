@@ -20,6 +20,17 @@ interface ArticleAISummaryProps {
   relatedArticles?: NewsArticle[];
   /** True while the related-articles fetch is still in flight. */
   relatedLoading?: boolean;
+  /**
+   * True only when this article's panel is the one actually visible to the
+   * user (swiped open), as opposed to merely mounted in the background for
+   * the currently-centered feed card (ArticlePanel is always rendered for
+   * that card so the horizontal swipe transition has something to animate
+   * to). Gates the "briefing completed" XP/progression side effect below —
+   * without this, scrolling past a card for 6+ seconds silently counted as
+   * having read it, awarding XP and firing a personalization re-sort for
+   * articles the user never actually opened.
+   */
+  active?: boolean;
 }
 
 function BriefingSkeleton() {
@@ -74,6 +85,7 @@ export function ArticleAISummary({
   article,
   relatedArticles = [],
   relatedLoading = false,
+  active = true,
 }: ArticleAISummaryProps) {
   const [loading, setLoading] = useState(true);
   const [briefing, setBriefing] = useState<PocketBriefing | null>(null);
@@ -149,6 +161,14 @@ export function ArticleAISummary({
   }, [article, relatedLoading]);
 
   useEffect(() => {
+    // Only count as "read" once the panel is actually the one the user is
+    // looking at. This effect used to run for every card just because it
+    // was pre-mounted for the horizontal swipe transition, which meant
+    // scrolling past a card for 6+ seconds silently marked its briefing
+    // "completed" (XP + progression event) even though the user never
+    // opened it — and the resulting personalization re-sort on every scroll
+    // was what caused already-seen articles to resurface later in the feed.
+    if (!active) return;
     if (loading || !briefing) return;
     if (completionFiredRef.current) return;
 
@@ -192,7 +212,7 @@ export function ArticleAISummary({
       observerRef.current?.disconnect();
       observerRef.current = null;
     };
-  }, [loading, briefing, article.id]);
+  }, [loading, briefing, article.id, active]);
 
   if (!loading && !briefing) return null;
 

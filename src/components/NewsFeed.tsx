@@ -75,6 +75,11 @@ export function NewsFeed({
   const [nextFeedPage, setNextFeedPage] = useState(2);
   const [loadingMoreArticles, setLoadingMoreArticles] = useState(false);
   const [hasMoreArticlePages, setHasMoreArticlePages] = useState(true);
+  // Consecutive page fetches that came back empty or all-duplicate. Marketaux
+  // pages aren't guaranteed to be disjoint, so one overlapping page doesn't
+  // mean we've truly reached the end — only give up after a few in a row.
+  const consecutiveEmptyPagesRef = useRef(0);
+  const MAX_CONSECUTIVE_EMPTY_PAGES = 3;
   const {
     followedMarkets,
     marketFilters,
@@ -383,14 +388,31 @@ export function NewsFeed({
           (a) => !allArticles.some((existing) => existing.id === a.id)
         );
         if (fresh.length === 0) {
-          setHasMoreArticlePages(false);
+          consecutiveEmptyPagesRef.current += 1;
+          // Still advance the page pointer even on an empty/overlapping
+          // page — a page that duplicated page N-1 doesn't mean page N+1
+          // will too, and retrying the *same* page number forever would be
+          // the real dead end.
+          setNextFeedPage((p) => p + 1);
+          if (consecutiveEmptyPagesRef.current >= MAX_CONSECUTIVE_EMPTY_PAGES) {
+            setHasMoreArticlePages(false);
+          }
           return;
         }
+        consecutiveEmptyPagesRef.current = 0;
         setAllArticles((prev) => [...prev, ...fresh]);
         setNextFeedPage((p) => p + 1);
       })
       .catch(() => {
-        if (!cancelled) setHasMoreArticlePages(false);
+        // A transient network hiccup shouldn't permanently disable infinite
+        // scroll for the rest of the session — just skip this attempt and
+        // let the effect re-fire on the next scroll/re-render.
+        if (!cancelled) {
+          consecutiveEmptyPagesRef.current += 1;
+          if (consecutiveEmptyPagesRef.current >= MAX_CONSECUTIVE_EMPTY_PAGES) {
+            setHasMoreArticlePages(false);
+          }
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingMoreArticles(false);
@@ -848,7 +870,11 @@ export function NewsFeed({
             className="h-full shrink-0 overflow-y-auto overscroll-contain"
             style={{ width: "33.3333%", touchAction: "pan-y" }}
           >
-            <BusinessInfoPanel article={article ?? null} onBack={goToFeed} />
+            <BusinessInfoPanel
+              article={article ?? null}
+              onBack={goToFeed}
+              active={panelIndex === PANEL_INFO}
+            />
           </div>
 
           <div
@@ -989,6 +1015,7 @@ export function NewsFeed({
                 article={article}
                 onBack={goToFeed}
                 onOpenArticle={openArticle}
+                active={panelIndex === PANEL_ARTICLE}
               />
             )}
           </div>

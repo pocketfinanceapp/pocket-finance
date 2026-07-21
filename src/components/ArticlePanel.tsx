@@ -21,6 +21,12 @@ interface ArticlePanelProps {
   article: NewsArticle;
   onBack: () => void;
   onOpenArticle?: (article: NewsArticle) => void;
+  /**
+   * True only when this panel is the one actually visible/swiped-open, as
+   * opposed to pre-mounted in the background for the currently-centered
+   * feed card. Forwarded to ArticleAISummary to gate its "read" tracking.
+   */
+  active?: boolean;
 }
 
 function ArticleHeroImage({ article }: { article: NewsArticle }) {
@@ -72,7 +78,7 @@ function ArticleHeroImage({ article }: { article: NewsArticle }) {
   );
 }
 
-export function ArticlePanel({ article, onBack, onOpenArticle }: ArticlePanelProps) {
+export function ArticlePanel({ article, onBack, onOpenArticle, active = true }: ArticlePanelProps) {
   const { saveArticle, unsaveArticle, isArticleSaved } = useApp();
   const saved = isArticleSaved(article.id);
   const displaySubheading = getArticleSubheading(article.subheading);
@@ -187,6 +193,7 @@ export function ArticlePanel({ article, onBack, onOpenArticle }: ArticlePanelPro
           article={article}
           relatedArticles={relatedArticles}
           relatedLoading={relatedLoading}
+          active={active}
         />
 
         <a

@@ -32,6 +32,13 @@ import { FadeInSection } from "./SubPageShell";
 interface BusinessInfoPanelProps {
   article: NewsArticle | null;
   onBack: () => void;
+  /**
+   * True only when this panel is actually swiped open, as opposed to
+   * pre-mounted in the background for the currently-centered feed card (see
+   * matching note on ArticlePanel/ArticleAISummary). Gates the
+   * "stock_panel_opened" activity event below.
+   */
+  active?: boolean;
 }
 
 interface Fact {
@@ -112,7 +119,7 @@ function summarizeSentiment(
  * via Wikipedia (see macroTopicWikiSearchTerm), just under a "Market theme"
  * label instead of a ticker, and without a Follow button.
  */
-export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
+export function BusinessInfoPanel({ article, onBack, active = true }: BusinessInfoPanelProps) {
   const { toggleFollowTicker, isFollowingTicker, requestFeedJump } = useApp();
   const [info, setInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -153,10 +160,21 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
   // panel those achievements were originally written against — the panel
   // that used to record this event was removed along with the Markets tab,
   // which left those achievements permanently unreachable until now.
+  //
+  // Gated behind `active`: this component is always mounted in the
+  // background for whichever feed card is currently centered (so the
+  // horizontal swipe transition has something to animate to), not just when
+  // the user actually swipes right to view it. Without the `active` check,
+  // every single scroll to a new card with a valid ticker recorded a
+  // phantom "panel opened" event and dispatched a personalization re-sort
+  // (recordActivityEvent always fires pf-progression-updated, even for a
+  // ticker it's already rewarded) — by far the most frequent source of the
+  // feed-reshuffling-mid-scroll bug, since unlike the article-briefing
+  // completion timer this one fired immediately, not after a 6s delay.
   useEffect(() => {
-    if (!isCompanyTicker || !ticker) return;
+    if (!active || !isCompanyTicker || !ticker) return;
     recordActivityEvent("stock_panel_opened", ticker, { ticker });
-  }, [isCompanyTicker, ticker]);
+  }, [active, isCompanyTicker, ticker]);
 
   useEffect(() => {
     if (!ticker || !infoSearchTerm || loadedFor === infoSearchTerm) return;
@@ -637,7 +655,10 @@ export function BusinessInfoPanel({ article, onBack }: BusinessInfoPanelProps) {
                                 {headline.headline}
                               </p>
                               <p className="mt-1 text-[11px] text-pocket-muted">
-                                {headline.sourceName} · {timeAgo(headline.publishedAt)}
+                                {headline.sourceName} ·{" "}
+                                <span suppressHydrationWarning>
+                                  {timeAgo(headline.publishedAt)}
+                                </span>
                               </p>
                             </div>
                           </button>
