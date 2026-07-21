@@ -1073,7 +1073,49 @@ function marketFromCountryCode(
   return COUNTRY_TO_MARKET[countryCode.toLowerCase()] ?? null;
 }
 
-export function getTickerMetaBySymbol(ticker: string): TickerMeta {
+/**
+ * Keyword buckets for Marketaux's free-text entity `industry` field (e.g.
+ * "Semiconductors", "Biotechnology", "Oil & Gas E&P", "REIT—Diversified"),
+ * checked most-specific-first. Only ~180 well-known tickers have a
+ * hand-curated sector in BASE_METAS above — every other ticker Marketaux
+ * surfaces (the vast majority, given its 80+ market coverage) used to fall
+ * straight to a hardcoded "Finance" default regardless of what industry the
+ * company was actually in, which skewed Browse-by-topic hard toward Finance
+ * and left Technology/Energy/Healthcare/etc. looking empty. This uses the
+ * industry Marketaux already gives us instead of discarding it.
+ */
+const INDUSTRY_SECTOR_KEYWORDS: [pattern: RegExp, sector: Sector][] = [
+  [/crypto|blockchain|bitcoin|digital assets/, "Crypto"],
+  [/reit|real estate/, "Real Estate"],
+  [/mining|gold|silver|copper|steel|aluminum|coal|precious metals|industrial metals/, "Mining"],
+  [/oil|gas|energy|petroleum|uranium|solar|utilit/, "Energy"],
+  [
+    /health|biotech|pharma|drug manufactur|medical|diagnostic|hospital|therapeutic/,
+    "Healthcare",
+  ],
+  [
+    /software|semiconductor|technology|internet|computer|electronic|it services|information technology|telecom|communication equipment/,
+    "Technology",
+  ],
+  [
+    /consumer|retail|restaurant|apparel|automobile|auto (manufactur|parts)|beverage|food|grocery|leisure|travel|hotel|airline|footwear|household|personal products|tobacco/,
+    "Consumer",
+  ],
+];
+
+function sectorFromIndustry(industry: string | null | undefined): Sector | null {
+  if (!industry) return null;
+  const lower = industry.toLowerCase();
+  for (const [pattern, sector] of INDUSTRY_SECTOR_KEYWORDS) {
+    if (pattern.test(lower)) return sector;
+  }
+  return null;
+}
+
+export function getTickerMetaBySymbol(
+  ticker: string,
+  industryHint?: string | null
+): TickerMeta {
   const upper = ticker.toUpperCase();
   if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];
 
@@ -1092,7 +1134,7 @@ export function getTickerMetaBySymbol(ticker: string): TickerMeta {
     ticker: upper,
     companyName: upper,
     market: marketFromIndexTicker(upper) ?? marketFromTickerSuffix(upper) ?? "NYSE",
-    sector: "Finance",
+    sector: sectorFromIndustry(industryHint) ?? "Finance",
     tags: [upper],
     logoColor: getTickerAccentColor(upper),
   };
