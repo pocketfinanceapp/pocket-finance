@@ -616,9 +616,11 @@ export function NewsFeed({
         ) {
           resetFeedIndex();
         } else if (velocity < -SWIPE_VELOCITY || dy < -SWIPE_THRESHOLD_PX) {
-          if (maxIdx > 0) {
-            next = next >= maxIdx ? 0 : next + 1;
-          }
+          // Stop at the last card rather than looping back to the first —
+          // wrapping silently reads as the feed randomly resetting,
+          // especially on a short filtered/personalized list where the
+          // "end" is reached quickly.
+          next = Math.min(maxIdx, next + 1);
           if (next !== feedIndexRef.current) lockDuringSettle();
           setFeedIndex(next);
         } else if (velocity > SWIPE_VELOCITY || dy > SWIPE_THRESHOLD_PX) {
@@ -737,7 +739,9 @@ export function NewsFeed({
       let next = current;
 
       if (e.deltaY > 0) {
-        if (maxIdx > 0) next = current >= maxIdx ? 0 : current + 1;
+        // Stop at the last card instead of wrapping back to the first —
+        // see matching comment in the touch/pointer handler above.
+        next = Math.min(maxIdx, current + 1);
       } else {
         next = Math.max(0, current - 1);
       }
