@@ -146,11 +146,11 @@ export async function fetchMarketauxNews(
     const res = await fetch(url.toString(), {
       // Protects the 100-requests/day free-tier quota — see file header.
       next: { revalidate: 1800 },
-      // 15s: Vercel builds fire several of these near-simultaneously across
-      // statically generated routes, and Marketaux can be slow to respond
-      // under that burst — 8s was tripping real, otherwise-successful
-      // requests during build.
-      signal: AbortSignal.timeout(15000),
+      // 20s: fetchNews.ts single-flights the two build-time callers of this
+      // endpoint, so this is no longer about concurrent-request bursts —
+      // just giving a single slow Marketaux response (observed up to ~15s
+      // for the entity_match_score-sorted query) enough headroom.
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
@@ -232,7 +232,7 @@ export async function fetchTrendingEntities(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
@@ -302,7 +302,7 @@ export async function fetchTrendingCountries(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
@@ -373,7 +373,7 @@ export async function fetchCountryNews(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
@@ -449,7 +449,7 @@ export async function fetchEntitySentimentHistory(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
@@ -506,7 +506,7 @@ export async function fetchSimilarArticles(
   try {
     const res = await fetch(url.toString(), {
       next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
