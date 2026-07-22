@@ -160,6 +160,44 @@ const LOW_SUBSTANCE_WIRE_PATTERNS = [
   "notice of extraordinary general meeting",
 ] as const;
 
+/**
+ * Non-finance PR/marketing-industry press releases — a different category
+ * from LOW_SUBSTANCE_WIRE_PATTERNS above (those are dry *finance* wire
+ * boilerplate; these are marketing/advertising/PR trade content that isn't
+ * about finance at all). Some low-quality aggregator sources republish this
+ * kind of thing verbatim from marketing-industry wire feeds, and it can
+ * still pick up a stray finance keyword (e.g. "investment", "market") and a
+ * ticker mention from a sponsor logo, which was letting pieces like a
+ * "Campaign Connect Indonesia" marketing-conference release through with a
+ * real market tag despite having nothing to do with finance.
+ */
+const NON_FINANCE_PR_PATTERNS = [
+  "marketing conference",
+  "advertising conference",
+  "advertising awards",
+  "marketing awards",
+  "creative awards",
+  "media summit",
+  "marketing summit",
+  "advertising summit",
+  "campaign connect",
+  "influencer marketing",
+  "digital marketing agency",
+  "creative agency",
+  "brand summit",
+  "pr awards",
+  "public relations awards",
+] as const;
+
+/**
+ * Sources known to republish low-substance wire/PR content (marketing
+ * releases, syndicated boilerplate) that Marketaux still tags with a real
+ * ticker/market, letting it slip past the usual finance-relevance signals.
+ * Soft penalty, not exclusion — a source can still occasionally carry a
+ * genuine finance story.
+ */
+const LOW_QUALITY_AGGREGATOR_SOURCES = ["manilatimes"] as const;
+
 function articleBlob(article: NewsArticle): string {
   return [
     article.headline,
@@ -220,6 +258,17 @@ export function computeFinanceRelevanceScore(article: NewsArticle): number {
       score -= 22;
       break;
     }
+  }
+
+  for (const phrase of NON_FINANCE_PR_PATTERNS) {
+    if (text.includes(phrase)) {
+      score -= 35;
+      break;
+    }
+  }
+
+  if (LOW_QUALITY_AGGREGATOR_SOURCES.some((name) => sourceBlob.includes(name))) {
+    score -= 15;
   }
 
   // Politics without market angle

@@ -4,6 +4,7 @@ import { cleanArticleDescription } from "./articleText";
 import { cleanArticleTitle } from "./sourceBranding";
 import {
   getTickerMetaBySymbol,
+  inferCountryFromHeadline,
   inferTickerFromFields,
   isMacroOrCommodityTicker,
   macroThemeConfirmedByTitle,
@@ -39,12 +40,45 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
   // declined.") and still have that be the single entity Marketaux found —
   // dragging an Asia/chips-selloff story into a "Crude Oil" theme. Only
   // trust a macro/commodity pick when the headline itself supports it.
-  const bestEntity =
+  const macroCheckedEntity =
     topEntity &&
     isMacroOrCommodityTicker(topEntity.symbol) &&
     !macroThemeConfirmedByTitle(topEntity.symbol, title)
       ? null
       : topEntity;
+
+  // A high-scoring entity can still be a passing mention — a quoted
+  // analyst's employer, a comparison — rather than the article's actual
+  // subject. When the headline itself carries a strong, unambiguous signal
+  // that the story is about a specific foreign market ("Nifty", "rupee",
+  // "Hang Seng"...) and the top entity is neither from that country nor
+  // named anywhere in the headline, trust the headline over the entity.
+  // Otherwise a US-listed company mentioned only in passing ends up putting
+  // a "NYSE"/"NASDAQ" badge on a story that has nothing to do with the US
+  // market (e.g. an Economic Times rupee story landing a "NYSE: Citigroup"
+  // tag because a Citigroup analyst note was cited mid-article).
+  const headlineCountry = inferCountryFromHeadline(title);
+  const titleLower = title.toLowerCase();
+  const entityNameLower = (macroCheckedEntity?.name || "").toLowerCase().trim();
+  const entitySymbolLower = (macroCheckedEntity?.symbol || "").toLowerCase().trim();
+  // Word-boundary match, not a bare substring check — a naive
+  // titleLower.includes("c") would "find" the single-letter ticker C inside
+  // any word containing the letter c (e.g. "crude"), which meant short
+  // tickers (C, T, F...) always looked "named in the title" even when they
+  // weren't actually mentioned.
+  const entityNamedInTitle =
+    (entityNameLower.length > 0 && titleLower.includes(entityNameLower)) ||
+    (entitySymbolLower.length > 0 &&
+      new RegExp(`\\b${entitySymbolLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(
+        titleLower
+      ));
+  const entityMismatchesHeadlineCountry =
+    macroCheckedEntity !== null &&
+    headlineCountry !== null &&
+    macroCheckedEntity.country?.toLowerCase() !== headlineCountry &&
+    !entityNamedInTitle;
+
+  const bestEntity = entityMismatchesHeadlineCountry ? null : macroCheckedEntity;
 
   // Keep our own curated market/sector/tags for symbols we recognize, but
   // prefer Marketaux's live company name over our generic ticker-as-name
@@ -74,6 +108,7 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
       sourceName,
       sourceId: raw.source || null,
       entityCountry,
+      headline: title,
     }),
     sector: meta.sector,
     ticker: meta.ticker,

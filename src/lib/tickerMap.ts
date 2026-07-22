@@ -1242,13 +1242,87 @@ export function resolveMarketForTicker(
   return market;
 }
 
+/**
+ * Explicit "(EXCHANGE:TICKER)" style tags directly in a headline are the
+ * strongest possible market signal — the publisher is telling the reader
+ * exactly what's being traded and where. Marketaux's entity extraction can
+ * still pick an unrelated ticker as the top-scored entity for the article
+ * (see inferCountryFromHeadline below), which used to leave e.g. a headline
+ * literally reading "...(ASX:REH)...(ASX:REA)" tagged "NYSE" on the feed
+ * card. Checked ahead of everything else in resolveMarketForArticle.
+ */
+const EXPLICIT_EXCHANGE_TICKER_RE =
+  /\(\s*(ASX|NSE|BSE|LSE|TSX|HKEX|HKG|SEHK|SGX|KRX|TWSE|XETRA|SIX|NASDAQ|NYSE)\s*:\s*[A-Z0-9.]{1,10}\s*\)/i;
+
+const EXCHANGE_PREFIX_TO_MARKET: Record<string, MarketExchange> = {
+  ASX: "ASX",
+  NSE: "BSE", // India — we only track one bucket (BSE) for the Indian market
+  BSE: "BSE",
+  LSE: "LSE",
+  TSX: "TSX",
+  HKEX: "HKEX",
+  HKG: "HKEX",
+  SEHK: "HKEX",
+  SGX: "SGX",
+  KRX: "KRX",
+  TWSE: "TWSE",
+  XETRA: "XETRA",
+  SIX: "SIX",
+  NASDAQ: "NASDAQ",
+  NYSE: "NYSE",
+};
+
+export function explicitExchangeFromHeadline(
+  headline: string | null | undefined
+): MarketExchange | null {
+  if (!headline) return null;
+  const match = headline.match(EXPLICIT_EXCHANGE_TICKER_RE);
+  if (!match) return null;
+  return EXCHANGE_PREFIX_TO_MARKET[match[1].toUpperCase()] ?? null;
+}
+
+/**
+ * Strong, unambiguous headline-only signals that a story is fundamentally
+ * about a specific country's market — used in newsMapper.ts as a sanity
+ * check against Marketaux's top-scored entity. A high-scoring entity can
+ * still be a passing mention (a quoted analyst's employer, a comparison)
+ * rather than the article's actual subject; when that happens with a
+ * US-listed entity on a headline that reads as e.g. "Rupee rebound bets
+ * vanish as soaring crude blunts inflows", the result is a "NYSE"/"NASDAQ"
+ * badge on a story that has nothing to do with the US market. Keywords are
+ * deliberately narrow and unambiguous so this only fires on a genuine
+ * mismatch, not on stories that merely mention a country in passing.
+ */
+const HEADLINE_COUNTRY_SIGNALS: [pattern: RegExp, country: string][] = [
+  [/\b(nifty|sensex|rupee|bse|nse)\b/i, "in"],
+  [/\bhang seng\b/i, "hk"],
+  [/\b(nikkei|topix)\b/i, "jp"],
+  [/\bkospi\b/i, "kr"],
+  [/\b(shanghai composite|shenzhen composite|csi 300|yuan|renminbi)\b/i, "cn"],
+  [/\b(ftse 100|footsie)\b/i, "gb"],
+  [/\bdax\b/i, "de"],
+  [/\b(asx ?200|aussie dollar)\b/i, "au"],
+  [/\b(tsx composite|toronto stock exchange|loonie)\b/i, "ca"],
+];
+
+export function inferCountryFromHeadline(headline: string): string | null {
+  for (const [pattern, country] of HEADLINE_COUNTRY_SIGNALS) {
+    if (pattern.test(headline)) return country;
+  }
+  return null;
+}
+
 /** Feed card exchange label — source region + US equity exchanges */
 export function resolveMarketForArticle(article: {
   ticker: string;
   sourceName?: string;
   sourceId?: string | null;
   entityCountry?: string | null;
+  headline?: string | null;
 }): MarketExchange {
+  const explicit = explicitExchangeFromHeadline(article.headline);
+  if (explicit) return explicit;
+
   const fromSource = resolveMarketFromSource(
     article.sourceName,
     article.sourceId
