@@ -29,56 +29,70 @@ function formatSourceDomain(domain: string): string {
 export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
   const title = cleanArticleTitle(raw.title);
   const description = cleanArticleDescription(raw.description || raw.snippet || "");
+  const titleLower = title.toLowerCase();
+
+  // Word-boundary match on the symbol, not a bare substring check — a
+  // naive titleLower.includes("c") would "find" the single-letter ticker C
+  // inside any word containing the letter c (e.g. "crude"), which made
+  // short tickers (C, T, F...) always look "named in the title" even when
+  // they weren't actually mentioned.
+  function isNamedInTitle(entity: { name: string; symbol: string }): boolean {
+    const nameLower = (entity.name || "").toLowerCase().trim();
+    if (nameLower && titleLower.includes(nameLower)) return true;
+    const symbolLower = (entity.symbol || "").toLowerCase().trim();
+    if (!symbolLower) return false;
+    const escaped = symbolLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`\\b${escaped}\\b`).test(titleLower);
+  }
 
   const topEntity =
     raw.entities.length > 0
       ? [...raw.entities].sort((a, b) => b.matchScore - a.matchScore)[0]
       : null;
 
-  // Marketaux's top-scored entity is usually right, but a "markets wrap"
-  // style story can mention a commodity/index only in passing (e.g. "...Oil
-  // declined.") and still have that be the single entity Marketaux found —
-  // dragging an Asia/chips-selloff story into a "Crude Oil" theme. Only
-  // trust a macro/commodity pick when the headline itself supports it.
-  const macroCheckedEntity =
+  // Marketaux picks one top-scored entity per article, but that can still
+  // be a passing mention (a quoted analyst's employer, a competitor
+  // comparison) rather than the story's actual subject — even when it's
+  // the *only* entity Marketaux extracted, so there's nothing to outrank
+  // it in a relative comparison (e.g. a Ryanair incident story that
+  // extracted only "Alaska Air" as an entity, or a "Kraken expands
+  // tokenized stocks" story whose top entity was Robinhood). The most
+  // reliable signal available is whether the headline itself actually
+  // names the company/ticker — real subject-of-the-story headlines almost
+  // always do ("Kraken Expands...", "...(NYSE:ALK)"), passing mentions
+  // almost never do. When Marketaux extracted multiple entities and one of
+  // the *other* ones is the one actually named in the headline, prefer it
+  // over the nominally higher-scored one.
+  const namedEntities = raw.entities.filter(isNamedInTitle);
+  const headlineConfirmedEntity =
+    namedEntities.length > 0
+      ? [...namedEntities].sort((a, b) => b.matchScore - a.matchScore)[0]
+      : null;
+
+  // Fallback when nothing in the headline matches any extracted entity
+  // (e.g. a "markets wrap" story with no single named company) — the
+  // top-scored entity is still the best guess, but stays subject to two
+  // guards: a macro/commodity theme only mentioned in passing (e.g.
+  // "...Oil declined." dragging an unrelated story into "Crude Oil"), and
+  // a headline that carries a strong, unambiguous foreign-market signal
+  // ("Nifty", "rupee", "Hang Seng"...) that the entity's own country
+  // contradicts.
+  const macroCheckedFallback =
     topEntity &&
     isMacroOrCommodityTicker(topEntity.symbol) &&
     !macroThemeConfirmedByTitle(topEntity.symbol, title)
       ? null
       : topEntity;
 
-  // A high-scoring entity can still be a passing mention — a quoted
-  // analyst's employer, a comparison — rather than the article's actual
-  // subject. When the headline itself carries a strong, unambiguous signal
-  // that the story is about a specific foreign market ("Nifty", "rupee",
-  // "Hang Seng"...) and the top entity is neither from that country nor
-  // named anywhere in the headline, trust the headline over the entity.
-  // Otherwise a US-listed company mentioned only in passing ends up putting
-  // a "NYSE"/"NASDAQ" badge on a story that has nothing to do with the US
-  // market (e.g. an Economic Times rupee story landing a "NYSE: Citigroup"
-  // tag because a Citigroup analyst note was cited mid-article).
   const headlineCountry = inferCountryFromHeadline(title);
-  const titleLower = title.toLowerCase();
-  const entityNameLower = (macroCheckedEntity?.name || "").toLowerCase().trim();
-  const entitySymbolLower = (macroCheckedEntity?.symbol || "").toLowerCase().trim();
-  // Word-boundary match, not a bare substring check — a naive
-  // titleLower.includes("c") would "find" the single-letter ticker C inside
-  // any word containing the letter c (e.g. "crude"), which meant short
-  // tickers (C, T, F...) always looked "named in the title" even when they
-  // weren't actually mentioned.
-  const entityNamedInTitle =
-    (entityNameLower.length > 0 && titleLower.includes(entityNameLower)) ||
-    (entitySymbolLower.length > 0 &&
-      new RegExp(`\\b${entitySymbolLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(
-        titleLower
-      ));
-  const entityMismatchesHeadlineCountry =
-    macroCheckedEntity !== null &&
+  const fallbackMismatchesHeadlineCountry =
+    macroCheckedFallback !== null &&
     headlineCountry !== null &&
-    macroCheckedEntity.country?.toLowerCase() !== headlineCountry &&
-    !entityNamedInTitle;
+    macroCheckedFallback.country?.toLowerCase() !== headlineCountry;
 
-  const bestEntity = entityMismatchesHeadlineCountry ? null : macroCheckedEntity;
+  const bestEntity =
+    headlineConfirmedEntity ??
+    (fallbackMismatchesHeadlineCountry ? null : macroCheckedFallback);
 
   // Keep our own curated market/sector/tags for symbols we recognize, but
   // prefer Marketaux's live company name over our generic ticker-as-name
