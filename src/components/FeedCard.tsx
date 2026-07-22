@@ -583,18 +583,19 @@ function FeedChip({
   if (kind === "stock") {
     return (
       <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2.5 py-1 text-[11px] font-semibold text-[#00C6C6]">
+        {/* Neutral bar-chart glyph, not a trend arrow — this chip just
+            marks "this is a stock ticker," independent of sentiment. An
+            upward zigzag here previously read as "price is up" even on
+            cards with a "Bearish tone" badge right next to it. */}
         <svg
           className="h-3 w-3 shrink-0"
           viewBox="0 0 24 24"
-          fill="none"
+          fill="currentColor"
           aria-hidden
         >
-          <path
-            d="M3 17 L8 12 L12 15 L16 8 L21 14"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
+          <rect x="4" y="10" width="3.2" height="8" rx="1" />
+          <rect x="10.4" y="6" width="3.2" height="12" rx="1" />
+          <rect x="16.8" y="12.5" width="3.2" height="5.5" rx="1" />
         </svg>
         <span className="truncate">{label}</span>
       </div>
