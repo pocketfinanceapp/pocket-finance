@@ -241,6 +241,17 @@ export function NewsFeed({
 
     const fadeOutTimer = window.setTimeout(() => {
       setDisplayedFeedMode(feedMode);
+      // feedIndex is global app state, not reset just by switching modes —
+      // without this, switching from For You to Trending (or back) drops
+      // the user at whatever scroll position they were already at, applied
+      // to a *different* underlying array. Since the two lists naturally
+      // share some of the same popular stories (a trending ticker's story
+      // often also ranks well in For You), landing mid-scroll on one of
+      // those overlapping cards reads as "Trending shows the same
+      // articles" even though the two lists genuinely differ — you're just
+      // not looking at the top of either one. Reset to the top on every
+      // mode switch so Trending always starts from its own #1 story.
+      resetFeedIndex();
       fadeInTimer = window.setTimeout(() => setTabContentVisible(true), 50);
     }, 200);
 
@@ -248,7 +259,7 @@ export function NewsFeed({
       window.clearTimeout(fadeOutTimer);
       if (fadeInTimer !== undefined) window.clearTimeout(fadeInTimer);
     };
-  }, [feedMode, displayedFeedMode]);
+  }, [feedMode, displayedFeedMode, resetFeedIndex]);
 
   const filteredArticles = useMemo(
     () =>
