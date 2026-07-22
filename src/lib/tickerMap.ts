@@ -430,6 +430,22 @@ for (const [alias, symbol] of COMPANY_ALIASES) {
 
 const TICKER_BY_SYMBOL: Record<string, TickerMeta> = { ...BASE_METAS };
 
+/**
+ * Reverse index (lowercased company name -> canonical symbol) used as a
+ * fallback when Marketaux's entity symbol doesn't match our catalog
+ * directly. Marketaux occasionally returns a non-standard symbol variant
+ * for a company we do have a clean catalog entry for (e.g. an alternate
+ * listing/share-class code like "JPMMV" instead of "JPM") — when that
+ * happens the entity's own company NAME still matches ours exactly, so we
+ * can recover the clean ticker/market instead of showing the raw variant.
+ */
+const SYMBOL_BY_COMPANY_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(TICKER_BY_SYMBOL).map(([symbol, m]) => [
+    m.companyName.toLowerCase(),
+    symbol,
+  ])
+);
+
 const NAME_KEYS = Object.entries(TICKER_MAP).sort(
   (a, b) => b[0].length - a[0].length
 );
@@ -1114,10 +1130,16 @@ function sectorFromIndustry(industry: string | null | undefined): Sector | null 
 
 export function getTickerMetaBySymbol(
   ticker: string,
-  industryHint?: string | null
+  industryHint?: string | null,
+  companyNameHint?: string | null
 ): TickerMeta {
   const upper = ticker.toUpperCase();
   if (TICKER_BY_SYMBOL[upper]) return TICKER_BY_SYMBOL[upper];
+
+  if (companyNameHint) {
+    const bySymbol = SYMBOL_BY_COMPANY_NAME[companyNameHint.trim().toLowerCase()];
+    if (bySymbol) return TICKER_BY_SYMBOL[bySymbol];
+  }
 
   if (isCryptoAssetTicker(upper)) {
     return {

@@ -85,7 +85,7 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
   // fallback for symbols outside our catalog.
   const meta = bestEntity
     ? {
-        ...getTickerMetaBySymbol(bestEntity.symbol, bestEntity.industry),
+        ...getTickerMetaBySymbol(bestEntity.symbol, bestEntity.industry, bestEntity.name),
         companyName: bestEntity.name || bestEntity.symbol,
       }
     : inferTickerFromFields(title, description);
