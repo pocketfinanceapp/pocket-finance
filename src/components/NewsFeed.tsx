@@ -73,9 +73,24 @@ export function NewsFeed({
   // Infinite scroll: initialArticles is page 1 (~60 articles). Page 2+ is
   // fetched on demand as the user nears the end of what's loaded, so the
   // feed keeps going instead of hitting a hard stop.
-  const [nextFeedPage, setNextFeedPage] = useState(2);
-  const [loadingMoreArticles, setLoadingMoreArticles] = useState(false);
-  const [hasMoreArticlePages, setHasMoreArticlePages] = useState(true);
+  //
+  // These three are refs, not state, deliberately. They used to be `useState`
+  // and were listed in the fetch effect's own dependency array below — which
+  // meant the effect calling `setLoadingMoreArticles(true)` as its first
+  // action caused a re-render that changed one of the effect's *own*
+  // dependencies, which re-ran the effect (cleanup-then-rerun), which set
+  // `cancelled = true` on the very closure whose fetch was still in flight.
+  // When that fetch resolved, `if (cancelled) return;` silently discarded
+  // the freshly-fetched articles and skipped `setNextFeedPage` — so the page
+  // counter never advanced and nothing ever got appended to the feed, even
+  // though the network call itself succeeded every time. This is why
+  // infinite scroll looked "never triggered" in production: it *was*
+  // firing, just immediately cancelling and discarding its own results.
+  // None of these three values are read in JSX, so there's no reason for
+  // them to be state — refs avoid the self-triggering re-run entirely.
+  const nextFeedPageRef = useRef(2);
+  const loadingMoreRef = useRef(false);
+  const hasMoreArticlePagesRef = useRef(true);
   // Consecutive page fetches that came back empty or all-duplicate. Marketaux
   // pages aren't guaranteed to be disjoint, so one overlapping page doesn't
   // mean we've truly reached the end — only give up after a few in a row.
@@ -377,19 +392,18 @@ export function NewsFeed({
   // country-scoped feed is a separate, already-complete endpoint response.
   useEffect(() => {
     if (displayedFeedMode === "trending" || countryFilter) return;
-    if (loadingMoreArticles || !hasMoreArticlePages) return;
+    if (loadingMoreRef.current || !hasMoreArticlePagesRef.current) return;
     if (verticalFeedArticles.length === 0) return;
 
     const remaining = verticalFeedArticles.length - 1 - effectiveFeedIndex;
     if (remaining > 5) return;
 
-    let cancelled = false;
-    setLoadingMoreArticles(true);
+    loadingMoreRef.current = true;
+    const page = nextFeedPageRef.current;
 
-    fetch(`/api/news/more?page=${nextFeedPage}`)
+    fetch(`/api/news/more?page=${page}`)
       .then((res) => (res.ok ? res.json() : { articles: [] }))
       .then((data: { articles?: NewsArticle[] }) => {
-        if (cancelled) return;
         const fresh = (data.articles ?? []).filter(
           (a) => !allArticles.some((existing) => existing.id === a.id)
         );
@@ -399,42 +413,33 @@ export function NewsFeed({
           // page — a page that duplicated page N-1 doesn't mean page N+1
           // will too, and retrying the *same* page number forever would be
           // the real dead end.
-          setNextFeedPage((p) => p + 1);
+          nextFeedPageRef.current += 1;
           if (consecutiveEmptyPagesRef.current >= MAX_CONSECUTIVE_EMPTY_PAGES) {
-            setHasMoreArticlePages(false);
+            hasMoreArticlePagesRef.current = false;
           }
           return;
         }
         consecutiveEmptyPagesRef.current = 0;
+        nextFeedPageRef.current += 1;
         setAllArticles((prev) => [...prev, ...fresh]);
-        setNextFeedPage((p) => p + 1);
       })
       .catch(() => {
         // A transient network hiccup shouldn't permanently disable infinite
         // scroll for the rest of the session — just skip this attempt and
         // let the effect re-fire on the next scroll/re-render.
-        if (!cancelled) {
-          consecutiveEmptyPagesRef.current += 1;
-          if (consecutiveEmptyPagesRef.current >= MAX_CONSECUTIVE_EMPTY_PAGES) {
-            setHasMoreArticlePages(false);
-          }
+        consecutiveEmptyPagesRef.current += 1;
+        if (consecutiveEmptyPagesRef.current >= MAX_CONSECUTIVE_EMPTY_PAGES) {
+          hasMoreArticlePagesRef.current = false;
         }
       })
       .finally(() => {
-        if (!cancelled) setLoadingMoreArticles(false);
+        loadingMoreRef.current = false;
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [
     effectiveFeedIndex,
     verticalFeedArticles.length,
     displayedFeedMode,
     countryFilter,
-    loadingMoreArticles,
-    hasMoreArticlePages,
-    nextFeedPage,
     allArticles,
   ]);
 
