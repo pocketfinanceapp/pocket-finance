@@ -303,13 +303,20 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
           )}
 
           <section className="mt-7">
-            <h2 className="mb-2 text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
-              Browse by topic
-            </h2>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="text-[13px] font-bold uppercase tracking-widest text-pocket-muted">
+                Browse by topic
+              </h2>
+              {trendingTopics.size > 0 && (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2 py-0.5 text-[10px] font-semibold text-[#00C6C6]">
+                  <TrendingUp className="h-3 w-3" strokeWidth={2.5} />
+                  Trending: {SECTOR_FILTERS.filter((s) => trendingTopics.has(s)).join(", ")}
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {SECTOR_FILTERS.map((sector) => {
                 const count = topicCounts.get(sector) ?? 0;
-                const isTrending = trendingTopics.has(sector);
                 return (
                   <button
                     key={sector}
@@ -318,22 +325,12 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
                     onClick={() => openSector(sector)}
                     className="rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)] px-4 py-4 text-left active:opacity-70"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <span className="text-[14px] font-bold text-pocket-text">
-                          {sector}
-                        </span>
-                        <p className="mt-0.5 text-[11px] text-pocket-muted">
-                          {count} {count === 1 ? "story" : "stories"}
-                        </p>
-                      </div>
-                      {isTrending && (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#00C6C6]/35 bg-[#00C6C6]/14 px-2 py-0.5 text-[10px] font-semibold text-[#00C6C6]">
-                          <TrendingUp className="h-3 w-3" strokeWidth={2.5} />
-                          Trending
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[14px] font-bold text-pocket-text">
+                      {sector}
+                    </span>
+                    <p className="mt-0.5 text-[11px] text-pocket-muted">
+                      {count} {count === 1 ? "story" : "stories"}
+                    </p>
                   </button>
                 );
               })}
