@@ -370,6 +370,24 @@ export function NewsFeed({
   // article never flashes to the wrong one for a frame.
   const anchorArticleIdRef = useRef<string | null>(null);
   const prevVerticalArticlesRef = useRef<NewsArticle[] | null>(null);
+  const prevDisplayedFeedModeRef = useRef(displayedFeedMode);
+
+  // A For You <-> Trending switch is a deliberate jump to a different feed,
+  // not a mid-session re-sort of the same one. Without this, the anchor
+  // logic below would go hunting for wherever the article the user was
+  // last looking at in For You happens to also appear in the Trending
+  // list — and since the two feeds legitimately share some of the same
+  // popular stories, it would often find one and land there, several cards
+  // deep, instead of at Trending's own #1 story. That's what made
+  // switching to Trending look like "it's just showing the same articles"
+  // — the list genuinely differed, but the anchor kept re-centering on a
+  // story that happened to exist in both. Drop the anchor on a mode
+  // switch so it honors feedIndex's reset to 0 (see the fade effect above)
+  // instead of fighting it.
+  if (prevDisplayedFeedModeRef.current !== displayedFeedMode) {
+    anchorArticleIdRef.current = null;
+    prevDisplayedFeedModeRef.current = displayedFeedMode;
+  }
 
   let effectiveFeedIndex = feedIndex;
   if (
