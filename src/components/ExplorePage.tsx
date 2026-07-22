@@ -13,6 +13,11 @@ import type {
 import { countryName } from "@/lib/countryNames";
 import { getTickerMetaBySymbol } from "@/lib/tickerMap";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
+import {
+  DEFAULT_TRENDING_TICKER_LIMIT,
+  rankTickersByMentions,
+  type TrendingTicker,
+} from "@/lib/trendingTickers";
 import type { NewsArticle } from "@/lib/types";
 import { CompanyLogo } from "./CompanyLogo";
 import { MarketFlag } from "./MarketFlag";
@@ -23,39 +28,6 @@ interface ExplorePageProps {
   catalogArticles: NewsArticle[];
   /** Called when the ticker detail overlay opens/closes (hides bottom nav) */
   onSidePanelChange?: (open: boolean) => void;
-}
-
-interface TrendingTicker {
-  ticker: string;
-  companyName: string;
-  count: number;
-  sentimentAvg: number | null;
-}
-
-/** Local fallback: ranks tickers by mentions in the cached article pool —
- * used only when the live Marketaux trending endpoint is unavailable. */
-function rankTickersByMentions(articles: NewsArticle[]): TrendingTicker[] {
-  const counts = new Map<string, TrendingTicker>();
-
-  for (const article of articles) {
-    const ticker = article.ticker?.trim().toUpperCase();
-    if (!ticker) continue;
-    const existing = counts.get(ticker);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      counts.set(ticker, {
-        ticker,
-        companyName: article.companyName || ticker,
-        count: 1,
-        sentimentAvg: null,
-      });
-    }
-  }
-
-  return [...counts.values()]
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 12);
 }
 
 export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageProps) {
@@ -111,7 +83,7 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
   }, [selectedTicker, onSidePanelChange]);
 
   const localTrending = useMemo(
-    () => rankTickersByMentions(catalogArticles),
+    () => rankTickersByMentions(catalogArticles, DEFAULT_TRENDING_TICKER_LIMIT),
     [catalogArticles]
   );
 
@@ -144,39 +116,52 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
     return new Set(ranked.map((entry) => entry.sector));
   }, [topicCounts]);
 
+  /**
+   * Confirmed-hot tickers from Marketaux's live global-trending endpoint go
+   * first (when they actually have a story in our own catalog — otherwise
+   * the badge would lead to "no stories" for that ticker), then backfilled
+   * with the full local mention-ranking across every Browse-by-topic
+   * sector so the strip reflects everything in the catalog — around
+   * DEFAULT_TRENDING_TICKER_LIMIT tickers — rather than being capped at whatever
+   * sliver happens to overlap the live endpoint.
+   */
   const trendingTickers: TrendingTicker[] = useMemo(() => {
+    const merged: TrendingTicker[] = [];
+    const seen = new Set<string>();
+
     if (liveTrending && liveTrending.length > 0) {
-      // Marketaux's global trending endpoint isn't filtered against our own
-      // article pool, so it can surface tickers with zero stories in the
-      // app (a "trending" badge that leads to "No stories in your feed
-      // right now") and tickers with no curated name (falls back to
-      // showing the raw symbol as its own "company name"). Only trust an
-      // entry once we can confirm it has a real story and a real name.
       const localByTicker = new Map<string, NewsArticle>();
       for (const article of catalogArticles) {
         const key = article.ticker?.trim().toUpperCase();
         if (key && !localByTicker.has(key)) localByTicker.set(key, article);
       }
 
-      const filtered = liveTrending
-        .filter((e) => localByTicker.has(e.symbol.toUpperCase()))
-        .map((e) => {
-          const symbol = e.symbol.toUpperCase();
-          const localArticle = localByTicker.get(symbol);
-          return {
-            ticker: symbol,
-            // Prefer the name from an actual article in the feed — it's
-            // guaranteed accurate, unlike the ticker-map fallback.
-            companyName:
-              localArticle?.companyName || getTickerMetaBySymbol(symbol).companyName,
-            count: e.totalDocuments,
-            sentimentAvg: e.sentimentAvg,
-          };
+      for (const e of liveTrending) {
+        const symbol = e.symbol.toUpperCase();
+        const localArticle = localByTicker.get(symbol);
+        if (!localArticle || seen.has(symbol)) continue;
+        seen.add(symbol);
+        merged.push({
+          ticker: symbol,
+          // Prefer the name from an actual article in the feed — it's
+          // guaranteed accurate, unlike the ticker-map fallback.
+          companyName:
+            localArticle.companyName || getTickerMetaBySymbol(symbol).companyName,
+          count: e.totalDocuments,
+          sentimentAvg: e.sentimentAvg,
+          articles: [localArticle],
         });
-
-      if (filtered.length > 0) return filtered;
+      }
     }
-    return localTrending;
+
+    for (const t of localTrending) {
+      if (merged.length >= DEFAULT_TRENDING_TICKER_LIMIT) break;
+      if (seen.has(t.ticker)) continue;
+      seen.add(t.ticker);
+      merged.push(t);
+    }
+
+    return merged;
   }, [liveTrending, localTrending, catalogArticles]);
 
   const openSector = (sector: SectorFilter) => {

@@ -21,7 +21,7 @@ import {
 } from "@/lib/profileStorage";
 import { recordActivityEvent } from "@/lib/progression";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
-import { rankTrendingArticles } from "@/lib/trendingArticles";
+import { articlesForTrendingTickers } from "@/lib/trendingTickers";
 import { resolveArticleTicker } from "@/lib/tickerMap";
 import { countryName } from "@/lib/countryNames";
 import type { NewsArticle } from "@/lib/types";
@@ -60,15 +60,16 @@ type LockedAxis = "x" | "y" | null;
 
 export function NewsFeed({
   initialArticles,
-  initialTrendingArticles = [],
+  // The Trending tab now derives from the same ticker-mention basis as
+  // Explore's "Trending Tickers" (see trendingArticles memo below and
+  // lib/trendingTickers.ts), built from allArticles rather than a
+  // separately-fetched pool — initialTrendingArticles is accepted for
+  // backward compatibility with callers but no longer consumed here.
   embedded = false,
   showAddToHomeBanner = true,
   onSidePanelChange,
 }: NewsFeedProps) {
   const [allArticles, setAllArticles] = useState(initialArticles);
-  const [trendingPool] = useState(() =>
-    initialTrendingArticles.length > 0 ? initialTrendingArticles : initialArticles
-  );
   // Infinite scroll: initialArticles is page 1 (~60 articles). Page 2+ is
   // fetched on demand as the user nears the end of what's loaded, so the
   // feed keeps going instead of hitting a hard stop.
@@ -308,13 +309,18 @@ export function NewsFeed({
   feedIndexRef.current = feedIndex;
   feedModeRef.current = feedMode;
 
+  // Built from the same article pool and ticker-mention ranking as
+  // Explore's "Trending Tickers" strip (see lib/trendingTickers.ts), so
+  // scrolling the Trending tab here surfaces coverage of the same trending
+  // tickers Explore shows, rather than an unrelated engagement-score
+  // ranking over a separately-fetched pool.
   const trendingArticles = useMemo(() => {
     const pool =
       hiddenSources.length > 0
-        ? trendingPool.filter((a) => !hiddenSources.includes(a.sourceName))
-        : trendingPool;
-    return rankTrendingArticles(pool).slice(0, 40);
-  }, [trendingPool, hiddenSources]);
+        ? allArticles.filter((a) => !hiddenSources.includes(a.sourceName))
+        : allArticles;
+    return articlesForTrendingTickers(pool);
+  }, [allArticles, hiddenSources]);
 
   const verticalFeedArticles = useMemo(() => {
     const base =
