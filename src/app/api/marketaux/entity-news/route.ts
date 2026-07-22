@@ -36,13 +36,34 @@ export async function GET(request: Request) {
     // passing-mention match. That let e.g. a "Ryanair Passenger Partly
     // Sucked From Jet After Window Breaks" story (Ryanair is clearly the
     // subject) show up in Alaska Air Group's "Recent headlines" just
-    // because ALK was mentioned incidentally, with a far lower matchScore
-    // than Ryanair's own entity. Only keep articles where the requested
-    // symbol is genuinely the *top*-scored entity, i.e. actually what the
-    // story is about.
+    // because ALK was mentioned incidentally. That specific case turned out
+    // to be Marketaux's *only* extracted entity for the article too (so a
+    // "is this the top-scored entity" comparison alone doesn't catch it —
+    // there was nothing to outrank it), so the real check is against the
+    // headline text itself: does the story actually name this company or
+    // ticker anywhere in its title? A genuinely-about-this-company headline
+    // almost always does ("Alaska Air Stock: ...", "...(NYSE:ALK)"); a
+    // passing-mention one doesn't.
     const upperSymbol = symbol.toUpperCase();
+    const symbolPattern = new RegExp(
+      `\\b${upperSymbol.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+      "i"
+    );
     const primaryTopicOnly = raw.filter((article) => {
-      if (article.entities.length <= 1) return true;
+      const matchedEntity = article.entities.find(
+        (e) => e.symbol.toUpperCase() === upperSymbol
+      );
+      const nameLower = matchedEntity?.name?.toLowerCase().trim() ?? "";
+      const titleLower = article.title.toLowerCase();
+
+      const namedInTitle =
+        symbolPattern.test(article.title) ||
+        (nameLower.length > 0 && titleLower.includes(nameLower));
+      if (namedInTitle) return true;
+
+      // Not named in the title — only allow it through if it's clearly the
+      // dominant entity (sole match, or highest matchScore among several).
+      if (article.entities.length <= 1) return false;
       const topEntity = [...article.entities].sort(
         (a, b) => b.matchScore - a.matchScore
       )[0];
