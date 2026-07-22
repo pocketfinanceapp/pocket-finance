@@ -30,7 +30,26 @@ export async function GET(request: Request) {
       mustHaveEntities: true,
       sort: "published_at",
     });
-    const articles = raw.slice(0, limit).map(mapMarketauxArticle);
+
+    // Marketaux's symbols filter includes an article as long as the
+    // requested ticker is *one of* its matched entities — even a weak,
+    // passing-mention match. That let e.g. a "Ryanair Passenger Partly
+    // Sucked From Jet After Window Breaks" story (Ryanair is clearly the
+    // subject) show up in Alaska Air Group's "Recent headlines" just
+    // because ALK was mentioned incidentally, with a far lower matchScore
+    // than Ryanair's own entity. Only keep articles where the requested
+    // symbol is genuinely the *top*-scored entity, i.e. actually what the
+    // story is about.
+    const upperSymbol = symbol.toUpperCase();
+    const primaryTopicOnly = raw.filter((article) => {
+      if (article.entities.length <= 1) return true;
+      const topEntity = [...article.entities].sort(
+        (a, b) => b.matchScore - a.matchScore
+      )[0];
+      return topEntity.symbol.toUpperCase() === upperSymbol;
+    });
+
+    const articles = primaryTopicOnly.slice(0, limit).map(mapMarketauxArticle);
     return NextResponse.json({ articles });
   } catch (err) {
     console.error("[marketaux] entity-news fetch threw:", err);
