@@ -38,6 +38,7 @@ export function DiscussionThread({
 }: DiscussionThreadProps) {
   const [localExpanded, setLocalExpanded] = useState(depth === 0);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const hasReplies = comment.replies.length > 0;
   const expanded = expandedIds.has(comment.id) || localExpanded;
   const isReplyTarget = replyTargetId === comment.id;
@@ -46,6 +47,7 @@ export function DiscussionThread({
 
   useEffect(() => {
     setPickerOpen(false);
+    setConfirmingDelete(false);
   }, [resetKey]);
 
   const toggleExpanded = () => {
@@ -169,15 +171,40 @@ export function DiscussionThread({
                 </button>
 
                 {isOwn && (
-                  <button
-                    type="button"
-                    data-no-drag
-                    onClick={() => onDelete(comment.id)}
-                    className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-pocket-muted transition-colors hover:text-red-400"
-                    aria-label="Delete comment"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
-                  </button>
+                  confirmingDelete ? (
+                    <div className="flex items-center gap-0.5 rounded-full bg-red-500/10 pl-2 pr-0.5">
+                      <span className="text-[11px] font-medium text-red-400">Delete?</span>
+                      <button
+                        type="button"
+                        data-no-drag
+                        onClick={() => {
+                          setConfirmingDelete(false);
+                          onDelete(comment.id);
+                        }}
+                        className="rounded-full px-2 py-1 text-[11px] font-semibold text-red-400 transition-colors hover:text-red-300"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        data-no-drag
+                        onClick={() => setConfirmingDelete(false)}
+                        className="rounded-full px-2 py-1 text-[11px] font-medium text-pocket-muted transition-colors hover:text-pocket-text"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      data-no-drag
+                      onClick={() => setConfirmingDelete(true)}
+                      className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-pocket-muted transition-colors hover:text-red-400"
+                      aria-label="Delete comment"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    </button>
+                  )
                 )}
               </div>
 

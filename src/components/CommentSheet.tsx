@@ -190,10 +190,10 @@ export function CommentSheet({
 
   const handleDelete = async (commentId: string) => {
     if (!user) return;
-    const confirmed = window.confirm(
-      "Delete this comment? This can't be undone."
-    );
-    if (!confirmed) return;
+    // Confirmation now happens inline in DiscussionThread (a "Delete? Yes/No"
+    // toggle next to the trash icon) rather than a native window.confirm() —
+    // native confirm() blocks the JS thread with an unstyled browser dialog
+    // that clashes with the rest of the app's custom sheet/toast UI.
     setComments((prev) => markCommentDeletedInTree(prev, commentId));
     await deleteComment(user.id, commentId);
     trackEvent(user.id, "comment_deleted", commentId);
