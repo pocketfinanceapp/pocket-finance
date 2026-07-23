@@ -203,9 +203,15 @@ export function BusinessInfoPanel({ article, onBack, active = true }: BusinessIn
   }, [ticker, infoSearchTerm, loadedFor]);
 
   // Recent Marketaux headlines for this entity — makes the panel feel alive
-  // instead of a Wikipedia dead-end.
+  // instead of a Wikipedia dead-end. Company tickers only: our synthetic
+  // theme tickers (OIL, GOLD, FED, SPX, QQQ, DJI, MARKET) aren't real
+  // Marketaux entity symbols — "OIL" and "GOLD" in particular collide with
+  // real (largely inactive) tickers on Marketaux, e.g. an iPath ETN whose
+  // ticker happens to be "OIL", surfacing years-old, off-topic robo-content
+  // under "Recent headlines" instead of the crude-oil-the-commodity theme
+  // this panel actually means.
   useEffect(() => {
-    if (!ticker) {
+    if (!ticker || !isCompanyTicker) {
       setHeadlines([]);
       return;
     }
@@ -227,7 +233,7 @@ export function BusinessInfoPanel({ article, onBack, active = true }: BusinessIn
     return () => {
       cancelled = true;
     };
-  }, [ticker]);
+  }, [ticker, isCompanyTicker]);
 
   // Aggregate sentiment across recent coverage — reuses the same
   // entity-stats endpoint that powers the Explore ticker detail chart.
