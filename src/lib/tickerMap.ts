@@ -143,6 +143,7 @@ const BASE_METAS: Record<string, TickerMeta> = {
   AMAT: meta("AMAT", "Applied Materials", "NASDAQ", "Technology", "#00629b"),
   LRCX: meta("LRCX", "Lam Research", "NASDAQ", "Technology", "#005587"),
   SLB: meta("SLB", "SLB N.V.", "NYSE", "Energy", "#005eb8"),
+  T: meta("T", "AT&T Inc.", "NYSE", "Technology", "#00a8e0"),
   VZ: meta("VZ", "Verizon Communications", "NYSE", "Technology", "#cd040b"),
   CMCSA: meta("CMCSA", "Comcast Corporation", "NASDAQ", "Technology", "#000000"),
   CAT: meta("CAT", "Caterpillar Inc.", "NYSE", "Technology", "#ffcd11"),
@@ -263,6 +264,8 @@ BASE_METAS.MARKET = THEME_MARKET;
 
 /** Company name / alias → ticker symbol (60+ entries) */
 const COMPANY_ALIASES: Array<[string, string]> = [
+  ["at&t", "T"],
+  ["at&t inc", "T"],
   ["lululemon", "LULU"],
   ["apple", "AAPL"],
   ["microsoft", "MSFT"],
@@ -768,6 +771,21 @@ export function inferTickerFromFields(
 /** @deprecated Use inferTickerFromFields */
 export function inferTickerFromText(text: string): TickerMeta {
   return inferTickerFromFields(text, "");
+}
+
+/**
+ * Strict, title-only catalog lookup — no broad-market/theme fallback and no
+ * "guess a company name from sentence structure" fallback like
+ * inferTickerFromFields has. Returns a ticker only when our own catalog
+ * (exact symbol or company-name alias) is genuinely matched in the headline
+ * text itself. Used to cross-check Marketaux's entity pick when Marketaux's
+ * own fallback entity isn't confirmed by the headline either — see
+ * newsMapper.ts.
+ */
+export function findCatalogTickerNamedInTitle(title: string): TickerMeta | null {
+  const scores = new Map<string, number>();
+  scoreTextForTickers(title, TITLE_WEIGHT, scores);
+  return pickBestTicker(scores);
 }
 
 /**

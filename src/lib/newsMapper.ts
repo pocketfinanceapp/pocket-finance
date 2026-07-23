@@ -3,6 +3,7 @@ import { hasUsableFeedImage } from "./feedImage";
 import { cleanArticleDescription } from "./articleText";
 import { cleanArticleTitle } from "./sourceBranding";
 import {
+  findCatalogTickerNamedInTitle,
   getTickerMetaBySymbol,
   inferCountryFromHeadline,
   inferTickerFromFields,
@@ -90,9 +91,27 @@ export function mapMarketauxArticle(raw: MarketauxArticle): NewsArticle {
     headlineCountry !== null &&
     macroCheckedFallback.country?.toLowerCase() !== headlineCountry;
 
+  // Marketaux's fallback entity is itself unconfirmed by the headline text
+  // (that's why we got here — headlineConfirmedEntity was null). If our own
+  // hand-maintained catalog independently recognizes a *different* company
+  // that genuinely IS named in the headline, trust that over Marketaux's
+  // unconfirmed pick. This catches cases where Marketaux extracted only one
+  // (wrong) entity for a story — nothing to relatively outrank it — e.g. an
+  // "AT&T Shares Jump" earnings story where Marketaux's sole extracted
+  // entity was an unrelated passing mention of EchoStar (SATS).
+  const catalogHeadlineMatch =
+    headlineConfirmedEntity || !macroCheckedFallback
+      ? null
+      : findCatalogTickerNamedInTitle(title);
+  const catalogDisagreesWithFallback =
+    catalogHeadlineMatch !== null &&
+    catalogHeadlineMatch.ticker !== macroCheckedFallback?.symbol;
+
   const bestEntity =
     headlineConfirmedEntity ??
-    (fallbackMismatchesHeadlineCountry ? null : macroCheckedFallback);
+    (fallbackMismatchesHeadlineCountry || catalogDisagreesWithFallback
+      ? null
+      : macroCheckedFallback);
 
   // Keep our own curated market/sector/tags for symbols we recognize, but
   // prefer Marketaux's live company name over our generic ticker-as-name
