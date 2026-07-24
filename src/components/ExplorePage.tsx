@@ -9,9 +9,10 @@ import { getCoveredCountryItems } from "@/lib/coveredCountries";
 import type {
   MarketauxTrendingCountry,
   MarketauxTrendingEntity,
+  MarketauxTrendingIndustry,
 } from "@/lib/marketauxApi";
 import { countryName } from "@/lib/countryNames";
-import { getTickerMetaBySymbol } from "@/lib/tickerMap";
+import { getTickerMetaBySymbol, sectorFromIndustry } from "@/lib/tickerMap";
 import { tabEnterStyle, useTabPageEntered } from "@/lib/tabEnterAnimation";
 import {
   DEFAULT_TRENDING_TICKER_LIMIT,
@@ -46,6 +47,9 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
   const [liveCountries, setLiveCountries] = useState<
     MarketauxTrendingCountry[] | null
   >(null);
+  const [liveIndustries, setLiveIndustries] = useState<
+    MarketauxTrendingIndustry[] | null
+  >(null);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,6 +83,21 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    fetch("/api/marketaux/trending-industries?limit=30")
+      .then((res) => (res.ok ? res.json() : { industries: [] }))
+      .then((data: { industries?: MarketauxTrendingIndustry[] }) => {
+        if (!cancelled) setLiveIndustries(data.industries ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setLiveIndustries([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     onSidePanelChange?.(selectedTicker !== null);
   }, [selectedTicker, onSidePanelChange]);
 
@@ -87,20 +106,33 @@ export function ExplorePage({ catalogArticles, onSidePanelChange }: ExplorePageP
     [catalogArticles]
   );
 
-  /** Story counts per topic from the cached feed pool — same source the
-   * local trending-ticker fallback uses. There's no live Marketaux
-   * endpoint for "stories by sector today" (sector is our own local
-   * categorization, not a Marketaux concept), so this reflects the
-   * current feed pool rather than a live daily total across all markets. */
+  /** Story counts per topic. Marketaux's industry taxonomy is its own
+   * free-text classification, not our SECTOR_FILTERS, so live industry
+   * buckets from /api/marketaux/trending-industries are re-bucketed with
+   * the same sectorFromIndustry() keyword mapping used per-ticker
+   * elsewhere — this gives real full-catalog daily totals instead of
+   * counting whatever's in the ~60-article local feed cache. Falls back to
+   * the local catalog count if the live fetch is empty/unavailable. */
   const topicCounts = useMemo(() => {
     const counts = new Map<SectorFilter, number>();
     for (const sector of SECTOR_FILTERS) counts.set(sector, 0);
+
+    if (liveIndustries && liveIndustries.length > 0) {
+      for (const entry of liveIndustries) {
+        const sector = sectorFromIndustry(entry.industry);
+        if (sector && counts.has(sector)) {
+          counts.set(sector, (counts.get(sector) ?? 0) + entry.totalDocuments);
+        }
+      }
+      return counts;
+    }
+
     for (const article of catalogArticles) {
       const sector = article.sector as SectorFilter;
       if (counts.has(sector)) counts.set(sector, (counts.get(sector) ?? 0) + 1);
     }
     return counts;
-  }, [catalogArticles]);
+  }, [liveIndustries, catalogArticles]);
 
   /** The topics with the most stories right now — a `require ≥3 stories`
    * floor keeps a near-empty category from getting a "Trending" tag just

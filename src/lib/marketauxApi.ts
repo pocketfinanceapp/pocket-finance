@@ -345,6 +345,74 @@ export async function fetchTrendingCountries(
 }
 
 /**
+ * Real "stories by industry today" counts from Marketaux's trending
+ * aggregation endpoint (it supports `group_by=industry` alongside `symbol`/
+ * `country` — confirmed in Marketaux's docs). Marketaux's industry taxonomy
+ * is its own free-text classification (e.g. "Software", "Oil & Gas E&P",
+ * "REIT—Diversified"), not our app's SECTOR_FILTERS — callers bucket these
+ * with `sectorFromIndustry()` from tickerMap.ts, the same keyword mapping
+ * already used per-ticker elsewhere in the app. Powers "Browse by topic"
+ * with real full-catalog daily totals instead of counting whatever's in the
+ * ~60-article local feed cache.
+ */
+export interface MarketauxTrendingIndustry {
+  industry: string;
+  totalDocuments: number;
+}
+
+export async function fetchTrendingIndustries(
+  options: { limit?: number; minDocCount?: number } = {}
+): Promise<MarketauxTrendingIndustry[]> {
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  if (!apiKey) return [];
+
+  const url = new URL("https://api.marketaux.com/v1/entity/trending/aggregation");
+  url.searchParams.set("api_token", apiKey);
+  url.searchParams.set("group_by", "industry");
+  // Same "today" scope as fetchTrendingEntities/fetchTrendingCountries, so
+  // the counts reflect what's actually fresh right now.
+  url.searchParams.set("published_on", todayIsoDate());
+  if (options.minDocCount) {
+    url.searchParams.set("min_doc_count", String(options.minDocCount));
+  }
+  if (options.limit) {
+    url.searchParams.set("limit", String(options.limit));
+  }
+
+  try {
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(20000),
+    });
+
+    if (!res.ok) {
+      console.error(
+        `[marketaux] trending industries HTTP ${res.status} ${res.statusText}`
+      );
+      return [];
+    }
+
+    const data = (await res.json()) as RawTrendingResponse;
+    if (data.error) {
+      console.error(
+        `[marketaux] trending industries API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
+
+    return (data.data ?? [])
+      .filter((e): e is RawTrendingEntity & { key: string } => Boolean(e.key))
+      .map((e) => ({
+        industry: e.key,
+        totalDocuments: e.total_documents ?? 0,
+      }));
+  } catch (err) {
+    console.error("[marketaux] trending industries fetch threw:", err);
+    return [];
+  }
+}
+
+/**
  * Real articles for a single country — powers "Browse by region" actually
  * showing something when a country is tapped. Distinct from the main feed
  * (no country scope) and from client-side filtering by an article's

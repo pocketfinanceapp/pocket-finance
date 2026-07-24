@@ -1140,7 +1140,7 @@ const INDUSTRY_SECTOR_KEYWORDS: [pattern: RegExp, sector: Sector][] = [
   ],
 ];
 
-function sectorFromIndustry(industry: string | null | undefined): Sector | null {
+export function sectorFromIndustry(industry: string | null | undefined): Sector | null {
   if (!industry) return null;
   const lower = industry.toLowerCase();
   for (const [pattern, sector] of INDUSTRY_SECTOR_KEYWORDS) {
