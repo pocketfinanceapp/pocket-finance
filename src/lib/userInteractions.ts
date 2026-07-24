@@ -125,17 +125,23 @@ export async function incrementUserStoriesRead(
 
 export async function fetchUserLikedCount(userId: string): Promise<number> {
   return dedupeRequest(`fetchUserLikedCount:${userId}`, async () => {
+    // Deliberately not `count: "exact", head: true` — that combination was
+    // consistently returning 503s in production (verified live: every
+    // other query on this table succeeded, only this HEAD+exact-count
+    // shape failed, repeatedly, across several rounds of testing). A
+    // per-user liked list is small, so a plain select + client-side
+    // length is cheap and avoids whatever's wrong with the HEAD path.
     const supabase = getSupabase();
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from("liked_articles")
-      .select("*", { count: "exact", head: true })
+      .select("id")
       .eq("user_id", userId);
 
     if (error) {
       console.error("fetchUserLikedCount:", error.message);
       return 0;
     }
-    return count ?? 0;
+    return data?.length ?? 0;
   });
 }
 
@@ -144,17 +150,20 @@ export async function fetchUserLikedCount(userId: string): Promise<number> {
 // ---------------------------------------------------------------------------
 
 export async function fetchLikeCount(articleId: string): Promise<number> {
+  // See the comment on fetchUserLikedCount - the count:"exact", head:true
+  // combination was the one query shape returning 503s in production, so
+  // this uses the same plain-select-and-count-client-side approach.
   const supabase = getSupabase();
-  const { count, error } = await supabase
+  const { data, error } = await supabase
     .from("liked_articles")
-    .select("*", { count: "exact", head: true })
+    .select("id")
     .eq("article_id", articleId);
 
   if (error) {
     console.error("fetchLikeCount:", error.message);
     return 0;
   }
-  return count ?? 0;
+  return data?.length ?? 0;
 }
 
 // The feed renders every card at once (no virtualization), so on a fresh
@@ -414,9 +423,15 @@ export async function fetchCommentCount(articleId: string): Promise<number> {
   // render as a "This comment was deleted" tombstone in the thread, but
   // shouldn't count toward the visible comment count. Without this filter,
   // deleting a comment leaves the count exactly where it was.
-  const { count, error } = await supabase
+  //
+  // Deliberately not count:"exact",head:true - see the comment on
+  // fetchUserLikedCount for why (that exact combination was the one query
+  // shape returning 503s in production across liked_articles; using the
+  // same plain-select approach here defensively, since it's the same
+  // count=exact HEAD pattern against a different table).
+  const { data, error } = await supabase
     .from("comments")
-    .select("*", { count: "exact", head: true })
+    .select("id")
     .eq("article_id", articleId)
     .is("deleted_at", null);
 
@@ -424,7 +439,7 @@ export async function fetchCommentCount(articleId: string): Promise<number> {
     console.error("fetchCommentCount:", error.message);
     return 0;
   }
-  return parseCommentCount(count);
+  return parseCommentCount(data?.length ?? 0);
 }
 
 export interface PostCommentResult {
