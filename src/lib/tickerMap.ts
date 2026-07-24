@@ -1124,7 +1124,10 @@ function marketFromCountryCode(
 const INDUSTRY_SECTOR_KEYWORDS: [pattern: RegExp, sector: Sector][] = [
   [/crypto|blockchain|bitcoin|digital assets/, "Crypto"],
   [/reit|real estate/, "Real Estate"],
-  [/mining|gold|silver|copper|steel|aluminum|coal|precious metals|industrial metals/, "Mining"],
+  [
+    /mining|gold|silver|copper|steel|aluminum|coal|precious metals|industrial metals|basic materials|chemicals/,
+    "Mining",
+  ],
   [/oil|gas|energy|petroleum|uranium|solar|utilit/, "Energy"],
   [
     /health|biotech|pharma|drug manufactur|medical|diagnostic|hospital|therapeutic/,
@@ -1138,6 +1141,13 @@ const INDUSTRY_SECTOR_KEYWORDS: [pattern: RegExp, sector: Sector][] = [
     /consumer|retail|restaurant|apparel|automobile|auto (manufactur|parts)|beverage|food|grocery|leisure|travel|hotel|airline|footwear|household|personal products|tobacco/,
     "Consumer",
   ],
+  // Marketaux's own "Financial Services"/"Financial" industry values land
+  // here explicitly — without this they fell through to null in any
+  // aggregate count (only the separate per-ticker `?? "Finance"` default
+  // covered them), which meant Financial Services documents — one of the
+  // largest single buckets in Marketaux's own industry breakdown — were
+  // silently dropped from Explore's Browse-by-topic Finance count.
+  [/bank|insurance|financial|asset management|capital markets|broker/, "Finance"],
 ];
 
 export function sectorFromIndustry(industry: string | null | undefined): Sector | null {
