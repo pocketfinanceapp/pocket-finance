@@ -626,7 +626,18 @@ export async function fetchSearchNews(
   }
 
   if (looksLikeTickerSymbol(trimmed)) {
-    const bySymbol = await run({ symbols: trimmed.toUpperCase() });
+    // min_match_score keeps this to articles genuinely about the ticker,
+    // not just "market wrap"/investor-letter roundups that name-drop it
+    // among a dozen other tickers — same reasoning as fetchCountryNews's
+    // min_match_score, just a higher bar since this is a precise lookup.
+    const bySymbol = await run({
+      symbols: trimmed.toUpperCase(),
+      filter_entities: "true",
+      must_have_entities: "true",
+      min_match_score: "40",
+      sort: "entity_match_score",
+      sort_order: "desc",
+    });
     if (bySymbol.length > 0) return bySymbol;
   }
 
