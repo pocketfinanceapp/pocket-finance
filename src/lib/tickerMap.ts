@@ -144,6 +144,7 @@ const BASE_METAS: Record<string, TickerMeta> = {
   LRCX: meta("LRCX", "Lam Research", "NASDAQ", "Technology", "#005587"),
   SLB: meta("SLB", "SLB N.V.", "NYSE", "Energy", "#005eb8"),
   T: meta("T", "AT&T Inc.", "NYSE", "Technology", "#00a8e0"),
+  ALK: meta("ALK", "Alaska Air Group", "NYSE", "Consumer", "#01426a"),
   VZ: meta("VZ", "Verizon Communications", "NYSE", "Technology", "#cd040b"),
   CMCSA: meta("CMCSA", "Comcast Corporation", "NASDAQ", "Technology", "#000000"),
   CAT: meta("CAT", "Caterpillar Inc.", "NYSE", "Technology", "#ffcd11"),
@@ -266,6 +267,8 @@ BASE_METAS.MARKET = THEME_MARKET;
 const COMPANY_ALIASES: Array<[string, string]> = [
   ["at&t", "T"],
   ["at&t inc", "T"],
+  ["alaska air", "ALK"],
+  ["alaska airlines", "ALK"],
   ["lululemon", "LULU"],
   ["apple", "AAPL"],
   ["microsoft", "MSFT"],
