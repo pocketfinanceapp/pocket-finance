@@ -166,6 +166,48 @@ export function NewsFeed({
     };
   }, [countryFilter]);
 
+  // Real, sector-scoped articles for "Browse by topic" (Explore → tap a
+  // topic card). Filtering the ~60-article general feed pool by each
+  // article's own `.sector` field client-side had the same problem region
+  // used to: the topic card can say "74 stories" (a live full-catalog
+  // count from fetchTrendingIndustries) while the actual feed pool only
+  // has a handful of that sector loaded, so tapping in showed nowhere near
+  // what was promised. Only kicks in for the single-sector drill-down case
+  // (tapping a topic card always clears filters first, so exactly one
+  // sector is active) — the multi-select Filters sheet still filters the
+  // general pool client-side, same as market filters do.
+  const singleSectorFilter = sectorFilters.length === 1 ? sectorFilters[0] : null;
+  const [sectorArticles, setSectorArticles] = useState<NewsArticle[]>([]);
+  const [sectorArticlesLoading, setSectorArticlesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!singleSectorFilter || countryFilter) {
+      setSectorArticles([]);
+      setSectorArticlesLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSectorArticlesLoading(true);
+    fetch(
+      `/api/marketaux/sector-news?sector=${encodeURIComponent(singleSectorFilter)}&limit=40`
+    )
+      .then((res) => (res.ok ? res.json() : { articles: [] }))
+      .then((data: { articles?: NewsArticle[] }) => {
+        if (!cancelled) setSectorArticles(data.articles ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setSectorArticles([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSectorArticlesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [singleSectorFilter, countryFilter]);
+
   const refreshTopics = useCallback(() => {
     const topics = loadFavouriteTopics();
     setFavouriteTopics(topics);
@@ -261,10 +303,16 @@ export function NewsFeed({
     };
   }, [feedMode, displayedFeedMode, resetFeedIndex]);
 
+  const feedBaseArticles = countryFilter
+    ? countryArticles
+    : singleSectorFilter
+      ? sectorArticles
+      : allArticles;
+
   const filteredArticles = useMemo(
     () =>
       buildFeedArticles(
-        countryFilter ? countryArticles : allArticles,
+        feedBaseArticles,
         displayedFeedMode,
         followedMarkets,
         marketFilters,
@@ -279,9 +327,7 @@ export function NewsFeed({
         null
       ),
     [
-      allArticles,
-      countryArticles,
-      countryFilter,
+      feedBaseArticles,
       displayedFeedMode,
       followedMarkets,
       marketFilters,
@@ -418,9 +464,10 @@ export function NewsFeed({
   // visibly runs out. Scoped to the general "For You"/trending-off feed —
   // the trending pool is a bounded top-40 ranking (paging it further would
   // mean progressively less-trending results, not "more trending"), and the
-  // country-scoped feed is a separate, already-complete endpoint response.
+  // country- and sector-scoped feeds are each a separate, already-complete
+  // endpoint response (fetchCountryNews / fetchSectorNews).
   useEffect(() => {
-    if (displayedFeedMode === "trending" || countryFilter) return;
+    if (displayedFeedMode === "trending" || countryFilter || singleSectorFilter) return;
     if (loadingMoreRef.current || !hasMoreArticlePagesRef.current) return;
     if (verticalFeedArticles.length === 0) return;
 
@@ -469,6 +516,7 @@ export function NewsFeed({
     verticalFeedArticles.length,
     displayedFeedMode,
     countryFilter,
+    singleSectorFilter,
     allArticles,
   ]);
 
@@ -948,6 +996,15 @@ export function NewsFeed({
               >
                 <p className="text-sm font-medium text-pocket-muted">
                   Loading stories from {countryName(countryFilter)}…
+                </p>
+              </div>
+            ) : singleSectorFilter && sectorArticlesLoading ? (
+              <div
+                className="pf-feed-empty flex h-full flex-col items-center justify-center px-8 text-center"
+                style={tabEnterStyle(homeEntered, 120)}
+              >
+                <p className="text-sm font-medium text-pocket-muted">
+                  Loading {singleSectorFilter} stories…
                 </p>
               </div>
             ) : verticalFeedArticles.length === 0 ? (

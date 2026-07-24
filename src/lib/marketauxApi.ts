@@ -13,6 +13,8 @@
  * not with visitor count.
  */
 
+import type { Sector } from "./types";
+
 /** UTC calendar date in Y-m-d, for Marketaux's `published_on` param. */
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
@@ -470,6 +472,86 @@ export async function fetchCountryNews(
       .filter((a): a is MarketauxArticle => a !== null);
   } catch (err) {
     console.error("[marketaux] country news fetch threw:", err);
+    return [];
+  }
+}
+
+/**
+ * Marketaux's own entity industry taxonomy (Morningstar's standard
+ * sectors), mapped to our app's SECTOR_FILTERS for the `industries` query
+ * param below. Kept conceptually in sync with sectorFromIndustry()'s
+ * keyword buckets in tickerMap.ts — Industrials/Communication Services are
+ * deliberately left unmapped, same as there, since neither has a home in
+ * our 8-sector taxonomy. Crypto isn't a Morningstar industry at all
+ * (crypto entities have no `industry` value); it's fetched separately via
+ * `entity_types=cryptocurrency`.
+ */
+const SECTOR_TO_MARKETAUX_INDUSTRIES: Partial<Record<Sector, string[]>> = {
+  Technology: ["Technology"],
+  Finance: ["Financial Services"],
+  Energy: ["Energy", "Utilities"],
+  Mining: ["Basic Materials"],
+  Healthcare: ["Healthcare"],
+  Consumer: ["Consumer Cyclical", "Consumer Defensive"],
+  "Real Estate": ["Real Estate"],
+};
+
+/**
+ * Real articles for a single Browse-by-topic sector — mirrors
+ * fetchCountryNews above. Tapping a topic card used to filter the general
+ * ~60-article local feed pool by each article's own `.sector` field
+ * client-side, which returned only a handful of stories no matter how
+ * large the topic's live count (from fetchTrendingIndustries) actually
+ * was — same class of problem Browse by region had before fetchCountryNews.
+ */
+export async function fetchSectorNews(
+  sector: Sector,
+  limit = 40
+): Promise<MarketauxArticle[]> {
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  if (!apiKey) return [];
+
+  const url = new URL("https://api.marketaux.com/v1/news/all");
+  url.searchParams.set("api_token", apiKey);
+  url.searchParams.set("language", "en");
+  url.searchParams.set("filter_entities", "true");
+  url.searchParams.set("must_have_entities", "true");
+  url.searchParams.set("limit", String(limit));
+
+  if (sector === "Crypto") {
+    url.searchParams.set("entity_types", "cryptocurrency");
+  } else {
+    const industries = SECTOR_TO_MARKETAUX_INDUSTRIES[sector];
+    if (!industries?.length) return [];
+    url.searchParams.set("industries", industries.join(","));
+  }
+
+  try {
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(20000),
+    });
+
+    if (!res.ok) {
+      console.error(
+        `[marketaux] sector news HTTP ${res.status} ${res.statusText} (${sector})`
+      );
+      return [];
+    }
+
+    const data = (await res.json()) as RawMarketauxResponse;
+    if (data.error) {
+      console.error(
+        `[marketaux] sector news API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+      );
+      return [];
+    }
+
+    return (data.data ?? [])
+      .map(mapArticle)
+      .filter((a): a is MarketauxArticle => a !== null);
+  } catch (err) {
+    console.error("[marketaux] sector news fetch threw:", err);
     return [];
   }
 }
