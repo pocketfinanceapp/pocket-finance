@@ -205,6 +205,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [marketsSnapshot, setMarketsSnapshot] =
     useState<MarketsSnapshot | null>(null);
 
+  // Kept in sync with the state above so syncAppUser/reloadSavedArticles/
+  // ensureWatchlistLoaded can read the *current* values without listing
+  // appUserId/watchlistLoaded as dependencies. Those callbacks are the ones
+  // that set this same state, so depending on it made their own identity
+  // change mid-flight (before the in-progress async fetch resolved) —
+  // callers whose effects depend on the callback's identity (AppGate's
+  // syncAppUser effect, TabAppShell's ensureWatchlistLoaded effect) would
+  // then re-fire and kick off a second, duplicate round of fetches. Ref
+  // reads avoid the self-referential dependency without changing behavior.
+  const appUserIdRef = useRef<string | null>(null);
+  const watchlistLoadedRef = useRef(false);
+  useEffect(() => {
+    appUserIdRef.current = appUserId;
+  }, [appUserId]);
+  useEffect(() => {
+    watchlistLoadedRef.current = watchlistLoaded;
+  }, [watchlistLoaded]);
+
   const reloadProfileStats = useCallback(async () => {
     if (!appUserId) {
       setStoriesRead(0);
@@ -222,25 +240,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLikedArticleIds(likedIds);
   }, [appUserId]);
 
-  const reloadSavedArticles = useCallback(
-    async (force = false) => {
-      if (!appUserId) {
-        setSavedArticles([]);
-        setWatchlistLoaded(false);
-        return;
-      }
-      if (!force && watchlistLoaded) return;
-      const articles = await fetchSavedArticles(appUserId);
-      setSavedArticles(articles);
-      setWatchlistLoaded(true);
-    },
-    [appUserId, watchlistLoaded]
-  );
+  const reloadSavedArticles = useCallback(async (force = false) => {
+    const currentUserId = appUserIdRef.current;
+    if (!currentUserId) {
+      setSavedArticles([]);
+      setWatchlistLoaded(false);
+      return;
+    }
+    if (!force && watchlistLoadedRef.current) return;
+    const articles = await fetchSavedArticles(currentUserId);
+    setSavedArticles(articles);
+    setWatchlistLoaded(true);
+  }, []);
 
   const ensureWatchlistLoaded = useCallback(() => {
-    if (!appUserId || watchlistLoaded) return;
+    if (!appUserIdRef.current || watchlistLoadedRef.current) return;
     void reloadSavedArticles(true);
-  }, [appUserId, watchlistLoaded, reloadSavedArticles]);
+  }, [reloadSavedArticles]);
 
   const ensureMarketsLoaded = useCallback(() => {
     setMarketsSnapshot((prev) => {
@@ -274,6 +290,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const syncAppUser = useCallback(
     async (userId: string | null) => {
       if (!userId) {
+        appUserIdRef.current = null;
         setAppUserId(null);
         const complete = isOnboardingComplete();
         setOnboardingComplete(complete);
@@ -285,6 +302,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setSectorInterestsState([]);
         }
         setSavedArticles([]);
+        watchlistLoadedRef.current = false;
         setWatchlistLoaded(false);
         setStoriesRead(0);
         setLikedArticlesCount(0);
@@ -292,7 +310,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const alreadySynced = appUserId === userId && watchlistLoaded;
+      // Read + update the refs synchronously (not just via the mirroring
+      // effects above) so a second syncAppUser call fired back-to-back with
+      // the same userId — before this call's state updates have committed
+      // and re-rendered — still sees an accurate "already synced" gate.
+      const alreadySynced =
+        appUserIdRef.current === userId && watchlistLoadedRef.current;
+      appUserIdRef.current = userId;
       setAppUserId(userId);
 
       try {
@@ -314,6 +338,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       const articles = await fetchSavedArticles(userId);
       setSavedArticles(articles);
+      watchlistLoadedRef.current = true;
       setWatchlistLoaded(true);
 
       let stories = await fetchUserStoriesRead(userId);
@@ -346,7 +371,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       initSessionSnapshot({ likedArticlesCount: liked });
       grantAchievementRewards({ likedArticlesCount: liked });
     },
-    [appUserId, watchlistLoaded]
+    // Deliberately no appUserId/watchlistLoaded deps — this function sets
+    // both, so depending on them would recreate it mid-flight and cause
+    // AppGate's syncAppUser effect to re-fire before the fetches above
+    // resolve, duplicating them. Current values are read via the refs.
+    []
   );
 
   const saveArticle = useCallback(
