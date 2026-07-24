@@ -37,7 +37,8 @@ export function FeedHeader({
   onToggleFollowingOnly,
   className = "",
 }: FeedHeaderProps) {
-  const { marketFilters, sectorFilters, searchQuery, clearFilters } = useApp();
+  const { marketFilters, sectorFilters, searchQuery, countryFilter, clearFilters } =
+    useApp();
   const navRef = useRef<HTMLElement>(null);
   const tabRefs = useRef<Partial<Record<FeedMode, HTMLButtonElement>>>({});
   const feedModeRef = useRef(feedMode);
@@ -49,12 +50,14 @@ export function FeedHeader({
   const filterLabels = getExplicitFilterLabels(
     marketFilters,
     sectorFilters,
-    searchQuery
+    searchQuery,
+    countryFilter
   );
   const showFilterPill = hasExplicitFilters(
     marketFilters,
     sectorFilters,
-    searchQuery
+    searchQuery,
+    countryFilter
   );
 
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();

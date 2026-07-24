@@ -15,6 +15,10 @@ import type { NavTab } from "@/components/BottomNav";
 import type { MarketFilter, SectorFilter } from "@/lib/filters";
 import { isOnboardingComplete, markOnboardingComplete } from "@/lib/onboarding";
 import {
+  PF_ARTICLE_COMMENT_UPDATED,
+  type ArticleCommentUpdatedDetail,
+} from "@/lib/articleInteractionEvents";
+import {
   loadFollowedMarkets,
   saveFollowedMarkets,
 } from "@/lib/marketPreferences";
@@ -49,6 +53,7 @@ import {
   fetchUserLikedCount,
   fetchUserLikedArticleIds,
   fetchLikeCounts,
+  fetchCommentCounts,
   fetchUserStoriesRead,
   setUserStoriesRead,
   saveArticle as dbSaveArticle,
@@ -142,6 +147,9 @@ interface AppContextValue {
    */
   likeCounts: Map<string, number>;
   ensureLikeCountsLoaded: (articleIds: string[]) => void;
+  /** Same batching pattern as likeCounts, for comment counts. */
+  commentCounts: Map<string, number>;
+  ensureCommentCountsLoaded: (articleIds: string[]) => void;
   feedIndex: number;
   setFeedIndex: (index: number) => void;
   resetFeedIndex: () => void;
@@ -227,6 +235,66 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     }, 60);
+  }, []);
+
+  // Same batching pattern as likeCounts above, for comment counts — see
+  // useArticleCommentCount, which used to fetch its own count per card.
+  const [commentCounts, setCommentCounts] = useState<Map<string, number>>(
+    new Map()
+  );
+  const commentCountKnownRef = useRef<Set<string>>(new Set());
+  const commentCountQueueRef = useRef<Set<string>>(new Set());
+  const commentCountFlushTimerRef = useRef<number | null>(null);
+
+  const ensureCommentCountsLoaded = useCallback((articleIds: string[]) => {
+    let hasNew = false;
+    for (const id of articleIds) {
+      if (!commentCountKnownRef.current.has(id)) {
+        commentCountKnownRef.current.add(id);
+        commentCountQueueRef.current.add(id);
+        hasNew = true;
+      }
+    }
+    if (!hasNew || commentCountFlushTimerRef.current !== null) return;
+
+    commentCountFlushTimerRef.current = window.setTimeout(async () => {
+      const ids = Array.from(commentCountQueueRef.current);
+      commentCountQueueRef.current.clear();
+      commentCountFlushTimerRef.current = null;
+      if (ids.length === 0) return;
+      const counts = await fetchCommentCounts(ids);
+      setCommentCounts((prev) => {
+        const next = new Map(prev);
+        for (const [id, count] of counts) next.set(id, count);
+        return next;
+      });
+    }, 60);
+  }, []);
+
+  // Comment counts can also change from outside the batch loader (posting
+  // or deleting a comment via CommentSheet, which already emits
+  // PF_ARTICLE_COMMENT_UPDATED) — mirror those updates into the shared map
+  // so any card that re-mounts or re-reads it sees the fresh count instead
+  // of re-fetching a now-stale cached value.
+  useEffect(() => {
+    const onCommentUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<ArticleCommentUpdatedDetail>)
+        .detail;
+      if (!detail) return;
+      commentCountKnownRef.current.add(detail.articleId);
+      setCommentCounts((prev) => {
+        if (prev.get(detail.articleId) === detail.commentCount) return prev;
+        const next = new Map(prev);
+        next.set(detail.articleId, detail.commentCount);
+        return next;
+      });
+    };
+    window.addEventListener(PF_ARTICLE_COMMENT_UPDATED, onCommentUpdated);
+    return () =>
+      window.removeEventListener(
+        PF_ARTICLE_COMMENT_UPDATED,
+        onCommentUpdated
+      );
   }, []);
 
   const [feedIndex, setFeedIndexState] = useState(0);
@@ -489,6 +557,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           articleId: article.id,
         });
         trackEvent(appUserId, "article_saved", article.id);
+        // Live count so Saver/Super Saver/Archive Keeper can actually
+        // unlock — recordActivityEvent's own grantAchievementRewards()
+        // call runs with no opts and is now deliberately blocked from
+        // unlocking these (see progression.ts's savedCountIsLive), so a
+        // real save needs to explicitly supply the current count here.
+        grantAchievementRewards({ savedArticlesCount: savedArticles.length + 1 });
       }
       return ok;
     },
@@ -594,6 +668,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           wasFollowing ? "ticker_unfollowed" : "ticker_followed",
           upper
         );
+        // Live count so Stock Follower/Following Builder/Portfolio
+        // Architect can actually unlock — see the matching comment in
+        // saveArticle above for why this explicit call is needed.
+        grantAchievementRewards({ followedTickersCount: next.length });
         return next;
       });
     },
@@ -764,6 +842,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setLikedArticleIds,
       likeCounts,
       ensureLikeCountsLoaded,
+      commentCounts,
+      ensureCommentCountsLoaded,
       feedIndex,
       setFeedIndex,
       resetFeedIndex,
@@ -820,6 +900,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       likedArticleIds,
       likeCounts,
       ensureLikeCountsLoaded,
+      commentCounts,
+      ensureCommentCountsLoaded,
       feedIndex,
       setFeedIndex,
       resetFeedIndex,

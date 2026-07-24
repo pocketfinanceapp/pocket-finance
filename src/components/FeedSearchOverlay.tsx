@@ -151,6 +151,16 @@ export function FeedSearchOverlay({
     const q = query.trim();
     if (!q) return [];
 
+    // Local results render instantly (computed from articles already
+    // loaded); live results (Marketaux search) land ~350ms+ later via a
+    // debounced fetch. Local results are sorted on their own here — NOT
+    // merged into one array with live results and globally re-sorted by
+    // score — specifically so that once a row is visible, it never moves
+    // when live results arrive. Re-sorting the combined list caused a
+    // real, reproducible bug: a result could get displaced or reordered
+    // by an incoming live match at the exact moment a user tapped it,
+    // landing the tap on a different row than the one they saw. Live
+    // matches are appended below whatever's already showing instead.
     const local = articles
       .filter((article) =>
         fuzzyMatchesQuery(
@@ -165,17 +175,19 @@ export function FeedSearchOverlay({
           [article.ticker]
         )
       )
-      .map((article) => ({ article, score: scoreArticle(article, q) }));
+      .map((article) => ({ article, score: scoreArticle(article, q) }))
+      .sort((a, b) => b.score - a.score);
 
     const seenIds = new Set(local.map((r) => r.article.id));
     // Live results are already relevance-matched server-side (Marketaux
-    // symbol/full-text search) — score them just high enough to interleave
-    // reasonably with strong local matches, but after exact local matches.
+    // symbol/full-text search) — score them just high enough to sort
+    // reasonably among themselves, appended after all local matches.
     const live = liveResults
       .filter((article) => !seenIds.has(article.id))
-      .map((article) => ({ article, score: scoreArticle(article, q) || 25 }));
+      .map((article) => ({ article, score: scoreArticle(article, q) || 25 }))
+      .sort((a, b) => b.score - a.score);
 
-    return [...local, ...live].sort((a, b) => b.score - a.score).slice(0, 40);
+    return [...local, ...live].slice(0, 40);
   }, [articles, liveResults, query]);
 
   if (!mounted) return null;

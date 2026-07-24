@@ -865,6 +865,18 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
   // Prefer the live current count so "X/15 companies followed" always
   // matches what's actually in the Following list right now.
   const followedCount = opts?.followedTickersCount ?? totalWatchlisted;
+  // Whether this call actually has the live count. grantAchievementRewards()
+  // is invoked from recordActivityEvent() on nearly every user action
+  // (article_opened, stock_panel_opened, etc.) with NO opts at all — if the
+  // stale totalWatchlisted fallback were allowed to satisfy an unlock in
+  // that path, a user who once followed 5+ tickers and later unfollowed
+  // most of them would have "Following Builder" permanently unlock the
+  // next time they merely open an article, since make() below treats any
+  // unlock as permanent. Achievements built on followedCount pass
+  // !followedCountIsLive as blockNewUnlock so only a call that actually
+  // supplies the live count (see AppContext's toggleFollowTicker) can
+  // newly unlock them — already-unlocked ones are unaffected either way.
+  const followedCountIsLive = opts?.followedTickersCount !== undefined;
 
   // --- Saved articles: all article_saved keys in usedRewardKeys ---
   // Includes baseline-seeded keys + new saves, so no double-counting.
@@ -876,6 +888,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
   // Prefer the live current count so "X/20 articles saved" always matches
   // what's actually in the Saved Articles list right now.
   const savedCount = opts?.savedArticlesCount ?? totalSaved;
+  // Same rationale as followedCountIsLive above, for the saved-count
+  // achievements (Saver/Super Saver/Archive Keeper).
+  const savedCountIsLive = opts?.savedArticlesCount !== undefined;
 
   // --- Topic diversity: unique categories across all time ---
   const allCategories = store.events
@@ -939,7 +954,15 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     progress: number,
     required: number,
     xpReward: number,
-    progressUnit?: string
+    progressUnit?: string,
+    // True when this pass's progress number came from a stale fallback
+    // (e.g. grantAchievementRewards() called with no opts, which happens
+    // on nearly every user action via recordActivityEvent) rather than a
+    // live count — set by the followedCountIsLive/savedCountIsLive checks
+    // above for the achievements that need it. Prevents a *new* unlock
+    // from being permanently recorded off of stale data; has no effect on
+    // an achievement that's already genuinely unlocked.
+    blockNewUnlock = false
   ): Achievement {
     // Once genuinely earned (XP already granted — see grantAchievementRewards),
     // stay unlocked permanently even if the live progress value later dips
@@ -959,7 +982,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       progress: Math.min(progress, required),
       required,
       xpReward,
-      unlocked: alreadyEarned || progress >= required,
+      unlocked: alreadyEarned || (progress >= required && !blockNewUnlock),
       progressUnit: progressUnit ?? defaultProgressUnit(id, category),
     };
   }
@@ -1076,7 +1099,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "⭐",
       followedCount,
       1,
-      25
+      25,
+      undefined,
+      !followedCountIsLive
     ),
     make(
       "market_explorer",
@@ -1098,7 +1123,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "📋",
       followedCount,
       5,
-      50
+      50,
+      undefined,
+      !followedCountIsLive
     ),
     make(
       "market_veteran",
@@ -1131,7 +1158,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "🏗️",
       followedCount,
       15,
-      120
+      120,
+      undefined,
+      !followedCountIsLive
     ),
 
     // Consistency — easiest → hardest
@@ -1278,7 +1307,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "🔖",
       savedCount,
       5,
-      35
+      35,
+      undefined,
+      !savedCountIsLive
     ),
     make(
       "briefing_master",
@@ -1311,7 +1342,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "📥",
       savedCount,
       20,
-      70
+      70,
+      undefined,
+      !savedCountIsLive
     ),
     make(
       "briefing_sage",
@@ -1344,7 +1377,9 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "🗄️",
       savedCount,
       50,
-      110
+      110,
+      undefined,
+      !savedCountIsLive
     ),
 
     // Engagement — easiest → hardest

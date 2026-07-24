@@ -189,12 +189,25 @@ export function CommentSheet({
   };
 
   const handleDelete = async (commentId: string) => {
-    if (!user) return;
+    if (!user || !article) return;
     // Confirmation now happens inline in DiscussionThread (a "Delete? Yes/No"
     // toggle next to the trash icon) rather than a native window.confirm() —
     // native confirm() blocks the JS thread with an unstyled browser dialog
     // that clashes with the rest of the app's custom sheet/toast UI.
-    setComments((prev) => markCommentDeletedInTree(prev, commentId));
+    setComments((prev) => {
+      const next = markCommentDeletedInTree(prev, commentId);
+      // The sheet's own header count re-derives from `comments` on every
+      // render (countThreadComments now excludes isDeleted nodes), so it
+      // self-corrects automatically. But the FeedCard badge outside this
+      // sheet only updates via this event — without it, deleting a
+      // comment left the feed's badge overstating the count until the
+      // article was refetched from scratch.
+      emitArticleCommentUpdated({
+        articleId: article.id,
+        commentCount: countThreadComments(next),
+      });
+      return next;
+    });
     await deleteComment(user.id, commentId);
     trackEvent(user.id, "comment_deleted", commentId);
   };

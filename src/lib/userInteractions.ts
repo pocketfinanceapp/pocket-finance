@@ -442,6 +442,36 @@ export async function fetchCommentCount(articleId: string): Promise<number> {
   return parseCommentCount(data?.length ?? 0);
 }
 
+// Same rationale as fetchLikeCounts above: the feed renders every card at
+// once, so every FeedCard's useArticleCommentCount used to fire its own
+// per-article comment-count query on mount — a burst of concurrent queries
+// against the comments table. This batches a whole page of article ids
+// into one query, tallied client-side, paired with the debounced
+// ensureCommentCountsLoaded queue in AppContext.
+export async function fetchCommentCounts(
+  articleIds: string[]
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (articleIds.length === 0) return counts;
+  for (const id of articleIds) counts.set(id, 0);
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("comments")
+    .select("article_id")
+    .in("article_id", articleIds)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("fetchCommentCounts:", error.message);
+    return counts;
+  }
+  for (const row of data ?? []) {
+    counts.set(row.article_id, (counts.get(row.article_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 export interface PostCommentResult {
   comment: Comment | null;
   /** Set when the comment was rejected by the client-side content filter — a

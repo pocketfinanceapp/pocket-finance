@@ -47,9 +47,16 @@ export function buildDiscussionThread(
   return roots;
 }
 
+// Soft-deleted comments still render in the tree as "This comment was
+// deleted" tombstones (so replies stay attached to something), but
+// shouldn't count toward the visible total — matches the deleted_at filter
+// fetchCommentCount() applies server-side. Without the isDeleted check
+// here, deleting your own comment left the header count exactly where it
+// was.
 export function countThreadComments(comments: ThreadComment[]): number {
   return comments.reduce(
-    (sum, comment) => sum + 1 + countThreadComments(comment.replies),
+    (sum, comment) =>
+      sum + (comment.isDeleted ? 0 : 1) + countThreadComments(comment.replies),
     0
   );
 }
