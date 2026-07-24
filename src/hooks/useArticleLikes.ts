@@ -18,8 +18,13 @@ import { trackEvent } from "@/lib/analytics";
 import type { NewsArticle } from "@/lib/types";
 
 export function useArticleLikes(article: NewsArticle) {
-  const { reloadProfileStats, likedArticleIds, setLikedArticleIds } =
-    useApp();
+  const {
+    reloadProfileStats,
+    likedArticleIds,
+    setLikedArticleIds,
+    likeCounts,
+    ensureLikeCountsLoaded,
+  } = useApp();
   const { user } = useAuth();
   // Derived from the shared AppContext set (one fetch per session, not one
   // per rendered card — see the comment on likedArticleIds in AppContext)
@@ -30,14 +35,19 @@ export function useArticleLikes(article: NewsArticle) {
   const [likeCount, setLikeCount] = useState(0);
   const [toggling, setToggling] = useState(false);
 
-  const refresh = useCallback(async () => {
-    const count = await fetchLikeCount(article.id);
-    setLikeCount(count);
-  }, [article.id]);
+  // Request this article's count through the shared, debounced batch
+  // loader rather than fetching it directly — see the comment on
+  // likeCounts/ensureLikeCountsLoaded in AppContext for why (every card in
+  // the unvirtualized feed mounting at once used to mean one HEAD count
+  // query per card, which was tripping intermittent 503s).
+  useEffect(() => {
+    ensureLikeCountsLoaded([article.id]);
+  }, [article.id, ensureLikeCountsLoaded]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    const known = likeCounts.get(article.id);
+    if (known !== undefined) setLikeCount(known);
+  }, [article.id, likeCounts]);
 
   useEffect(() => {
     const onLikeUpdated = (event: Event) => {

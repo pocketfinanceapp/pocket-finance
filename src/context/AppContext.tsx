@@ -48,6 +48,7 @@ import {
   fetchSavedArticles,
   fetchUserLikedCount,
   fetchUserLikedArticleIds,
+  fetchLikeCounts,
   fetchUserStoriesRead,
   setUserStoriesRead,
   saveArticle as dbSaveArticle,
@@ -131,6 +132,16 @@ interface AppContextValue {
    */
   likedArticleIds: Set<string>;
   setLikedArticleIds: Dispatch<SetStateAction<Set<string>>>;
+  /**
+   * Global like counts, keyed by article id. The feed renders every card
+   * at once (no virtualization), so each FeedCard used to fetch its own
+   * count independently on mount — a burst of dozens of concurrent
+   * count=exact HEAD queries against liked_articles that was tripping
+   * intermittent 503s from Supabase. ensureLikeCountsLoaded batches
+   * whatever ids get requested within a short window into one query.
+   */
+  likeCounts: Map<string, number>;
+  ensureLikeCountsLoaded: (articleIds: string[]) => void;
   feedIndex: number;
   setFeedIndex: (index: number) => void;
   resetFeedIndex: () => void;
@@ -181,6 +192,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [likedArticleIds, setLikedArticleIds] = useState<Set<string>>(
     new Set()
   );
+  const [likeCounts, setLikeCounts] = useState<Map<string, number>>(
+    new Map()
+  );
+  // Ids already fetched or queued, so repeat mounts of the same card don't
+  // re-queue a count that's already known or already in flight.
+  const likeCountKnownRef = useRef<Set<string>>(new Set());
+  const likeCountQueueRef = useRef<Set<string>>(new Set());
+  const likeCountFlushTimerRef = useRef<number | null>(null);
+
+  const ensureLikeCountsLoaded = useCallback((articleIds: string[]) => {
+    let hasNew = false;
+    for (const id of articleIds) {
+      if (!likeCountKnownRef.current.has(id)) {
+        likeCountKnownRef.current.add(id);
+        likeCountQueueRef.current.add(id);
+        hasNew = true;
+      }
+    }
+    if (!hasNew || likeCountFlushTimerRef.current !== null) return;
+
+    // Short window so every card that mounts in the same render burst
+    // (or the same scroll-triggered batch) gets folded into one query
+    // instead of each firing its own request the instant it mounts.
+    likeCountFlushTimerRef.current = window.setTimeout(async () => {
+      const ids = Array.from(likeCountQueueRef.current);
+      likeCountQueueRef.current.clear();
+      likeCountFlushTimerRef.current = null;
+      if (ids.length === 0) return;
+      const counts = await fetchLikeCounts(ids);
+      setLikeCounts((prev) => {
+        const next = new Map(prev);
+        for (const [id, count] of counts) next.set(id, count);
+        return next;
+      });
+    }, 60);
+  }, []);
+
   const [feedIndex, setFeedIndexState] = useState(0);
   const [feedJumpArticleId, setFeedJumpArticleId] = useState<string | null>(
     null
@@ -714,6 +762,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       likedArticlesCount,
       likedArticleIds,
       setLikedArticleIds,
+      likeCounts,
+      ensureLikeCountsLoaded,
       feedIndex,
       setFeedIndex,
       resetFeedIndex,
@@ -768,6 +818,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       storiesRead,
       likedArticlesCount,
       likedArticleIds,
+      likeCounts,
+      ensureLikeCountsLoaded,
       feedIndex,
       setFeedIndex,
       resetFeedIndex,

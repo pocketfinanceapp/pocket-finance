@@ -157,6 +157,36 @@ export async function fetchLikeCount(articleId: string): Promise<number> {
   return count ?? 0;
 }
 
+// The feed renders every card at once (no virtualization), so on a fresh
+// load every FeedCard mounting at the same moment used to fire its own
+// fetchLikeCount HEAD request - dozens of concurrent count queries against
+// the same table, which is what was tripping the intermittent 503s. This
+// batched version fetches counts for a whole page of articles in a single
+// query (client-side tally instead of N separate count=exact HEAD calls),
+// paired with the debounced request queue in AppContext.ensureLikeCountsLoaded.
+export async function fetchLikeCounts(
+  articleIds: string[]
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (articleIds.length === 0) return counts;
+  for (const id of articleIds) counts.set(id, 0);
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("liked_articles")
+    .select("article_id")
+    .in("article_id", articleIds);
+
+  if (error) {
+    console.error("fetchLikeCounts:", error.message);
+    return counts;
+  }
+  for (const row of data ?? []) {
+    counts.set(row.article_id, (counts.get(row.article_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 export async function fetchUserLikedArticleIds(
   userId: string
 ): Promise<Set<string>> {
