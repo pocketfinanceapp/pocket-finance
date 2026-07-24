@@ -625,19 +625,20 @@ export async function fetchSearchNews(
     }
   }
 
+  // Both branches below sort by match strength/relevance rather than
+  // recency, which unbounded skews toward old, evergreen-sounding pieces
+  // (shareholder-alert boilerplate from years back, "unusual options
+  // activity" wire filler) over anything current — cap the window so
+  // results are both relevant and recent.
+  const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
   if (looksLikeTickerSymbol(trimmed)) {
     // min_match_score keeps this to articles genuinely about the ticker,
     // not just "market wrap"/investor-letter roundups that name-drop it
     // among a dozen other tickers — same reasoning as fetchCountryNews's
     // min_match_score, just a higher bar since this is a precise lookup.
-    // Sorting by match strength (rather than recency) surfaces the most
-    // clearly-relevant articles for the ticker, but unbounded that skews
-    // toward old, evergreen-sounding pieces (shareholder-alert boilerplate
-    // from years back) over anything current — cap the window so what
-    // shows up is both relevant and recent.
-    const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10);
     const bySymbol = await run({
       symbols: trimmed.toUpperCase(),
       filter_entities: "true",
@@ -650,7 +651,11 @@ export async function fetchSearchNews(
     if (bySymbol.length > 0) return bySymbol;
   }
 
-  return run({ search: trimmed, sort: "relevance_score" });
+  return run({
+    search: trimmed,
+    sort: "relevance_score",
+    published_after: sixMonthsAgo,
+  });
 }
 
 /**
