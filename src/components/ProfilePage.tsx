@@ -105,8 +105,13 @@ export function ProfilePage({
   onSubPageChange,
   catalogArticles = [],
 }: ProfilePageProps) {
-  const { storiesRead, likedArticlesCount, savedArticles, reloadProfileStats } =
-    useApp();
+  const {
+    storiesRead,
+    likedArticlesCount,
+    savedArticles,
+    followedTickers,
+    reloadProfileStats,
+  } = useApp();
   const { user, isGuest, requestSignIn } = useAuth();
 
   /* ── Sub-screen state ───────────────────────────────────────────────── */
@@ -180,9 +185,14 @@ export function ProfilePage({
     [likedArticlesCount, progressionTick]
   );
   const allAchievements = useMemo(
-    () => getAchievements({ likedArticlesCount }),
+    () =>
+      getAchievements({
+        likedArticlesCount,
+        savedArticlesCount: savedArticles.length,
+        followedTickersCount: followedTickers.length,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [likedArticlesCount, progressionTick]
+    [likedArticlesCount, savedArticles.length, followedTickers.length, progressionTick]
   );
   const uniqueArticlesOpened = useMemo(
     () => getLifetimeArticlesOpened(),
@@ -294,7 +304,11 @@ export function ProfilePage({
           title="Achievements"
           onClose={() => setShowAllAchievements(false)}
         >
-          <ProfileAchievements likedArticlesCount={likedArticlesCount} />
+          <ProfileAchievements
+            likedArticlesCount={likedArticlesCount}
+            savedArticlesCount={savedArticles.length}
+            followedTickersCount={followedTickers.length}
+          />
         </SubPageShell>
       </div>
     );
@@ -516,6 +530,8 @@ export function ProfilePage({
         <section className="mt-5" style={tabEnterStyle(profileEntered, 440)}>
           <ProfileAchievements
             likedArticlesCount={likedArticlesCount}
+            savedArticlesCount={savedArticles.length}
+            followedTickersCount={followedTickers.length}
             maxItems={3}
             onViewAll={() => setShowAllAchievements(true)}
           />

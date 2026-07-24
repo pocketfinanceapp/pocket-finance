@@ -12,6 +12,8 @@ import { tabStaggerStyle, useTabEntered } from "@/lib/tabEnterAnimation";
 
 interface ProfileAchievementsProps {
   likedArticlesCount?: number;
+  savedArticlesCount?: number;
+  followedTickersCount?: number;
   maxItems?: number;
   onViewAll?: () => void;
 }
@@ -99,13 +101,20 @@ function closestAchievements(
 
 export function ProfileAchievements({
   likedArticlesCount = 0,
+  savedArticlesCount,
+  followedTickersCount,
   maxItems,
   onViewAll,
 }: ProfileAchievementsProps) {
   const entered = useTabEntered(true);
   const allAchievements = useMemo(
-    () => getAchievements({ likedArticlesCount }),
-    [likedArticlesCount]
+    () =>
+      getAchievements({
+        likedArticlesCount,
+        savedArticlesCount,
+        followedTickersCount,
+      }),
+    [likedArticlesCount, savedArticlesCount, followedTickersCount]
   );
 
   const unlockedCount = allAchievements.filter((a) => a.unlocked).length;

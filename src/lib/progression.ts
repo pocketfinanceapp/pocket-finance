@@ -804,6 +804,27 @@ export function getWeeklyActivity(): WeeklyActivity {
 export interface GetAchievementsOptions {
   /** Pass from AppContext likedArticlesCount (Supabase-sourced). Defaults to 0. */
   likedArticlesCount?: number;
+  /**
+   * Pass from AppContext savedArticles.length (Supabase-sourced, live current
+   * count). Without this, saved-article achievements fall back to counting
+   * `article_saved:` keys ever logged — a lifetime total that never
+   * decreases when an article is unsaved, so it silently drifts above the
+   * real Saved Articles list (e.g. showing "15/20 articles saved" days
+   * after unsaving most of them, while the actual list has 1). Liked
+   * articles never had this problem because they were always Supabase-
+   * sourced only; this brings Saved in line with that.
+   */
+  savedArticlesCount?: number;
+  /**
+   * Pass from AppContext followedTickers.length (localStorage-sourced but a
+   * true symmetric toggle — add on follow, remove on unfollow — so it's
+   * always accurate). Without this, follow achievements fall back to
+   * counting `stock_watchlisted:` keys ever logged — a lifetime total that
+   * never decreases when a ticker is unfollowed, so it silently drifts
+   * above the real Following list (e.g. "5/5 companies followed" long
+   * after unfollowing all but one).
+   */
+  followedTickersCount?: number;
 }
 
 /**
@@ -841,12 +862,20 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     k.startsWith("stock_watchlisted:")
   ).length;
   const totalWatchlisted = (baseline?.watchlistCount ?? 0) + newWatchlisted;
+  // Prefer the live current count so "X/15 companies followed" always
+  // matches what's actually in the Following list right now.
+  const followedCount = opts?.followedTickersCount ?? totalWatchlisted;
 
   // --- Saved articles: all article_saved keys in usedRewardKeys ---
   // Includes baseline-seeded keys + new saves, so no double-counting.
+  // This is a lifetime total that never decreases on unsave — only used as
+  // a fallback below when the live Supabase count isn't available.
   const totalSaved = store.usedRewardKeys.filter((k) =>
     k.startsWith("article_saved:")
   ).length;
+  // Prefer the live current count so "X/20 articles saved" always matches
+  // what's actually in the Saved Articles list right now.
+  const savedCount = opts?.savedArticlesCount ?? totalSaved;
 
   // --- Topic diversity: unique categories across all time ---
   const allCategories = store.events
@@ -912,6 +941,14 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
     xpReward: number,
     progressUnit?: string
   ): Achievement {
+    // Once genuinely earned (XP already granted — see grantAchievementRewards),
+    // stay unlocked permanently even if the live progress value later dips
+    // back below the requirement (e.g. Super Saver after unsaving articles).
+    // Achievements shouldn't un-unlock from cleaning up your library; only
+    // the displayed progress number should track the live current count.
+    const alreadyEarned = store.usedRewardKeys.includes(
+      `achievement_unlocked:${id}`
+    );
     return {
       id,
       category,
@@ -922,7 +959,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       progress: Math.min(progress, required),
       required,
       xpReward,
-      unlocked: progress >= required,
+      unlocked: alreadyEarned || progress >= required,
       progressUnit: progressUnit ?? defaultProgressUnit(id, category),
     };
   }
@@ -1037,7 +1074,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Followed your first company",
       "Follow a ticker from company info or an article to track it.",
       "⭐",
-      totalWatchlisted,
+      followedCount,
       1,
       25
     ),
@@ -1059,7 +1096,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Followed 5 companies",
       "Track the market — follow 5 tickers.",
       "📋",
-      totalWatchlisted,
+      followedCount,
       5,
       50
     ),
@@ -1092,7 +1129,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Followed 15 companies",
       "Build a serious watchlist — follow 15 tickers.",
       "🏗️",
-      totalWatchlisted,
+      followedCount,
       15,
       120
     ),
@@ -1239,7 +1276,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Saved 5 articles",
       "Bookmark 5 articles to read later.",
       "🔖",
-      totalSaved,
+      savedCount,
       5,
       35
     ),
@@ -1272,7 +1309,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Saved 20 articles",
       "Build your library — save 20 articles.",
       "📥",
-      totalSaved,
+      savedCount,
       20,
       70
     ),
@@ -1305,7 +1342,7 @@ export function getAchievements(opts?: GetAchievementsOptions): Achievement[] {
       "Saved 50 articles",
       "Curate a deep library — save 50 articles.",
       "🗄️",
-      totalSaved,
+      savedCount,
       50,
       110
     ),
