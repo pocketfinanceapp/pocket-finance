@@ -16,6 +16,25 @@ const nextConfig: NextConfig = {
         destination: "/home/:path*",
         permanent: true,
       },
+      // Bare tab names (no /home prefix) 404 instead of landing in the app —
+      // seen live when a scroll/gesture edge case navigated to a bare
+      // "/explore" URL. All in-app tabs live under /home/*, so catch the
+      // bare forms defensively in case anything else constructs one too.
+      {
+        source: "/explore",
+        destination: "/home/explore",
+        permanent: true,
+      },
+      {
+        source: "/saved",
+        destination: "/home/saved",
+        permanent: true,
+      },
+      {
+        source: "/profile",
+        destination: "/home/profile",
+        permanent: true,
+      },
     ];
   },
   images: {

@@ -349,10 +349,15 @@ function parseCommentCount(count: number | null | undefined): number {
 
 export async function fetchCommentCount(articleId: string): Promise<number> {
   const supabase = getSupabase();
+  // Soft-deleted comments (deleted_at set — see deleteComment above) still
+  // render as a "This comment was deleted" tombstone in the thread, but
+  // shouldn't count toward the visible comment count. Without this filter,
+  // deleting a comment leaves the count exactly where it was.
   const { count, error } = await supabase
     .from("comments")
     .select("*", { count: "exact", head: true })
-    .eq("article_id", articleId);
+    .eq("article_id", articleId)
+    .is("deleted_at", null);
 
   if (error) {
     console.error("fetchCommentCount:", error.message);

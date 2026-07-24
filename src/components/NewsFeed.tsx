@@ -109,6 +109,7 @@ export function NewsFeed({
     resetFeedIndex,
     incrementStoriesRead,
     feedJumpArticleId,
+    requestFeedJump,
     clearFeedJump,
     hiddenSources,
     countryFilter,
@@ -207,6 +208,51 @@ export function NewsFeed({
       cancelled = true;
     };
   }, [singleSectorFilter, countryFilter]);
+
+  // Real, search-scoped articles for the search box. It used to just filter
+  // the ~60-article locally-loaded feed pool client-side — same class of
+  // problem topic/region had before their dedicated live fetches — so
+  // searching a common ticker like "AAPL" or a company like "Tesla" came
+  // back "No matches" unless that specific article happened to already be
+  // sitting in the small local page. Debounced so typing doesn't fire a
+  // network request on every keystroke. Doesn't kick in alongside an active
+  // country/topic drill-down — those already have their own live-scoped
+  // pool, and the search box's local text filter (still applied via
+  // buildFeedArticles below) is enough to refine within it.
+  const [searchArticles, setSearchArticles] = useState<NewsArticle[]>([]);
+  const [searchArticlesLoading, setSearchArticlesLoading] = useState(false);
+  const trimmedSearchQuery = searchQuery.trim();
+
+  useEffect(() => {
+    if (!trimmedSearchQuery || countryFilter || singleSectorFilter) {
+      setSearchArticles([]);
+      setSearchArticlesLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchArticlesLoading(true);
+    const debounce = window.setTimeout(() => {
+      fetch(
+        `/api/marketaux/search-news?q=${encodeURIComponent(trimmedSearchQuery)}&limit=40`
+      )
+        .then((res) => (res.ok ? res.json() : { articles: [] }))
+        .then((data: { articles?: NewsArticle[] }) => {
+          if (!cancelled) setSearchArticles(data.articles ?? []);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchArticles([]);
+        })
+        .finally(() => {
+          if (!cancelled) setSearchArticlesLoading(false);
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(debounce);
+    };
+  }, [trimmedSearchQuery, countryFilter, singleSectorFilter]);
 
   const refreshTopics = useCallback(() => {
     const topics = loadFavouriteTopics();
@@ -307,7 +353,9 @@ export function NewsFeed({
     ? countryArticles
     : singleSectorFilter
       ? sectorArticles
-      : allArticles;
+      : trimmedSearchQuery
+        ? searchArticles
+        : allArticles;
 
   const filteredArticles = useMemo(
     () =>
@@ -467,7 +515,13 @@ export function NewsFeed({
   // country- and sector-scoped feeds are each a separate, already-complete
   // endpoint response (fetchCountryNews / fetchSectorNews).
   useEffect(() => {
-    if (displayedFeedMode === "trending" || countryFilter || singleSectorFilter) return;
+    if (
+      displayedFeedMode === "trending" ||
+      countryFilter ||
+      singleSectorFilter ||
+      trimmedSearchQuery
+    )
+      return;
     if (loadingMoreRef.current || !hasMoreArticlePagesRef.current) return;
     if (verticalFeedArticles.length === 0) return;
 
@@ -517,6 +571,7 @@ export function NewsFeed({
     displayedFeedMode,
     countryFilter,
     singleSectorFilter,
+    trimmedSearchQuery,
     allArticles,
   ]);
 
@@ -614,9 +669,17 @@ export function NewsFeed({
   const handleSearchSelect = useCallback(
     (selected: NewsArticle) => {
       setSearchOpen(false);
-      jumpToForYouArticle(selected);
+      // Live search results (see FeedSearchOverlay) can point at an
+      // article outside the currently-loaded feed pool — that's the whole
+      // point of searching beyond what happens to already be paged in.
+      // Splice it into allArticles first so requestFeedJump's lookup
+      // (below) actually finds it instead of silently doing nothing.
+      setAllArticles((prev) =>
+        prev.some((a) => a.id === selected.id) ? prev : [selected, ...prev]
+      );
+      requestFeedJump(selected.id);
     },
-    [jumpToForYouArticle]
+    [requestFeedJump]
   );
 
   useEffect(() => {
@@ -1005,6 +1068,15 @@ export function NewsFeed({
               >
                 <p className="text-sm font-medium text-pocket-muted">
                   Loading {singleSectorFilter} stories…
+                </p>
+              </div>
+            ) : trimmedSearchQuery && searchArticlesLoading ? (
+              <div
+                className="pf-feed-empty flex h-full flex-col items-center justify-center px-8 text-center"
+                style={tabEnterStyle(homeEntered, 120)}
+              >
+                <p className="text-sm font-medium text-pocket-muted">
+                  Searching for &ldquo;{trimmedSearchQuery}&rdquo;…
                 </p>
               </div>
             ) : verticalFeedArticles.length === 0 ? (

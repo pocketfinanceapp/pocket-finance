@@ -68,6 +68,47 @@ export function FeedSearchOverlay({
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // This used to only ever match against `articles` — the ~60-article
+  // locally-loaded feed pool — which is why searching a real, common
+  // ticker like "AAPL" or a company like "Tesla" came back "No matches"
+  // unless that specific article happened to already be sitting in the
+  // small local page. Same class of problem Browse by topic/region had
+  // before their dedicated live fetches. This now also queries Marketaux's
+  // full catalog live, debounced, and merges the results in underneath the
+  // instant local matches (which still show immediately with no lag).
+  const [liveResults, setLiveResults] = useState<NewsArticle[]>([]);
+  const [liveLoading, setLiveLoading] = useState(false);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setLiveResults([]);
+      setLiveLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLiveLoading(true);
+    const debounce = window.setTimeout(() => {
+      fetch(`/api/marketaux/search-news?q=${encodeURIComponent(trimmed)}&limit=40`)
+        .then((res) => (res.ok ? res.json() : { articles: [] }))
+        .then((data: { articles?: NewsArticle[] }) => {
+          if (!cancelled) setLiveResults(data.articles ?? []);
+        })
+        .catch(() => {
+          if (!cancelled) setLiveResults([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLiveLoading(false);
+        });
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(debounce);
+    };
+  }, [query]);
+
   useEffect(() => {
     if (open) {
       setMounted(true);
@@ -110,7 +151,7 @@ export function FeedSearchOverlay({
     const q = query.trim();
     if (!q) return [];
 
-    return articles
+    const local = articles
       .filter((article) =>
         fuzzyMatchesQuery(
           q,
@@ -124,10 +165,18 @@ export function FeedSearchOverlay({
           [article.ticker]
         )
       )
-      .map((article) => ({ article, score: scoreArticle(article, q) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 30);
-  }, [articles, query]);
+      .map((article) => ({ article, score: scoreArticle(article, q) }));
+
+    const seenIds = new Set(local.map((r) => r.article.id));
+    // Live results are already relevance-matched server-side (Marketaux
+    // symbol/full-text search) — score them just high enough to interleave
+    // reasonably with strong local matches, but after exact local matches.
+    const live = liveResults
+      .filter((article) => !seenIds.has(article.id))
+      .map((article) => ({ article, score: scoreArticle(article, q) || 25 }));
+
+    return [...local, ...live].sort((a, b) => b.score - a.score).slice(0, 40);
+  }, [articles, liveResults, query]);
 
   if (!mounted) return null;
 
@@ -234,6 +283,12 @@ export function FeedSearchOverlay({
             </div>
             <p className="mt-8 px-1 text-center text-[13px] text-pocket-muted">
               Find any story by ticker, company, or headline
+            </p>
+          </div>
+        ) : results.length === 0 && liveLoading ? (
+          <div className="px-2 py-14 text-center">
+            <p className="text-[13px] text-pocket-muted">
+              Searching &ldquo;{trimmedQuery}&rdquo;…
             </p>
           </div>
         ) : results.length === 0 ? (

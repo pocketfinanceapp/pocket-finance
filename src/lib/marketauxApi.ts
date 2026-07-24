@@ -556,6 +556,83 @@ export async function fetchSectorNews(
   }
 }
 
+/** True for input shaped like a stock ticker: 1-6 letters, optionally with
+ * a ".XX" exchange suffix (e.g. "AAPL", "VOW3N.MX"). Company names like
+ * "Tesla" can match this shape too — that's fine, the caller falls back to
+ * full-text search if the exact-symbol lookup below comes back empty. */
+function looksLikeTickerSymbol(query: string): boolean {
+  return /^[a-z]{1,6}(\.[a-z]{1,3})?$/i.test(query);
+}
+
+/**
+ * Real articles matching a free-text search query — powers the in-app
+ * search box. It used to just filter the ~60-article locally-loaded feed
+ * pool client-side (same class of problem Browse by topic/region had
+ * before their dedicated live fetches), so searching a common ticker like
+ * "AAPL" or a company like "Tesla" returned "No matches" unless that
+ * specific article happened to already be sitting in the small local page.
+ *
+ * Tries an exact entity/symbol match first (Marketaux's `symbols` param)
+ * since that's the most precise match for a real ticker query; falls back
+ * to Marketaux's full-text `search` param (searches title + body, ranked
+ * by `relevance_score`) for company names and general terms, or if the
+ * symbol lookup came back empty.
+ */
+export async function fetchSearchNews(
+  query: string,
+  limit = 30
+): Promise<MarketauxArticle[]> {
+  const trimmed = query.trim();
+  const apiKey = process.env.MARKETAUX_API_KEY;
+  if (!trimmed || !apiKey) return [];
+
+  async function run(params: Record<string, string>): Promise<MarketauxArticle[]> {
+    const url = new URL("https://api.marketaux.com/v1/news/all");
+    url.searchParams.set("api_token", apiKey!);
+    url.searchParams.set("language", "en");
+    url.searchParams.set("limit", String(limit));
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.set(key, value);
+    }
+
+    try {
+      const res = await fetch(url.toString(), {
+        next: { revalidate: 900 },
+        signal: AbortSignal.timeout(20000),
+      });
+
+      if (!res.ok) {
+        console.error(
+          `[marketaux] search news HTTP ${res.status} ${res.statusText} (${trimmed})`
+        );
+        return [];
+      }
+
+      const data = (await res.json()) as RawMarketauxResponse;
+      if (data.error) {
+        console.error(
+          `[marketaux] search news API error: ${data.error.code ?? "?"} ${data.error.message ?? ""}`
+        );
+        return [];
+      }
+
+      return (data.data ?? [])
+        .map(mapArticle)
+        .filter((a): a is MarketauxArticle => a !== null);
+    } catch (err) {
+      console.error("[marketaux] search news fetch threw:", err);
+      return [];
+    }
+  }
+
+  if (looksLikeTickerSymbol(trimmed)) {
+    const bySymbol = await run({ symbols: trimmed.toUpperCase() });
+    if (bySymbol.length > 0) return bySymbol;
+  }
+
+  return run({ search: trimmed, sort: "relevance_score" });
+}
+
 /**
  * Day-by-day sentiment history for a single entity — powers the sentiment
  * trend chart on a ticker's detail page. This is a "market mood over time"
