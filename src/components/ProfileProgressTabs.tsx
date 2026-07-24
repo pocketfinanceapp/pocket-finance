@@ -81,6 +81,14 @@ export function ProfileProgressTabs({
                 Personal best: {loginStreak.bestStreak} days
               </p>
             )}
+            {/* This counts days you've opened the app, not days you've
+                completed your daily goals — the achievement badges below
+                (Rising Star, Diamond Hands, etc.) track that separately, so
+                the two streak numbers can genuinely differ. */}
+            <p className="mt-1.5 text-[11px] text-pocket-muted/70">
+              Counts days opened — achievement streaks below also need your
+              daily goals done.
+            </p>
           </div>
         </div>
 

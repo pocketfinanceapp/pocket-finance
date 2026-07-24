@@ -10,7 +10,6 @@ import {
 } from "@/lib/articleInteractionEvents";
 import {
   fetchLikeCount,
-  fetchUserLikedArticleIds,
   likeArticle,
   unlikeArticle,
 } from "@/lib/userInteractions";
@@ -19,22 +18,22 @@ import { trackEvent } from "@/lib/analytics";
 import type { NewsArticle } from "@/lib/types";
 
 export function useArticleLikes(article: NewsArticle) {
-  const { reloadProfileStats } = useApp();
+  const { reloadProfileStats, likedArticleIds, setLikedArticleIds } =
+    useApp();
   const { user } = useAuth();
-  const [liked, setLiked] = useState(false);
+  // Derived from the shared AppContext set (one fetch per session, not one
+  // per rendered card — see the comment on likedArticleIds in AppContext)
+  // rather than each card independently re-fetching the user's full liked
+  // list. Updating that set below is what makes every other card showing
+  // this same article stay in sync instantly, no event round-trip needed.
+  const liked = likedArticleIds.has(article.id);
   const [likeCount, setLikeCount] = useState(0);
   const [toggling, setToggling] = useState(false);
 
   const refresh = useCallback(async () => {
     const count = await fetchLikeCount(article.id);
     setLikeCount(count);
-    if (user) {
-      const ids = await fetchUserLikedArticleIds(user.id);
-      setLiked(ids.has(article.id));
-    } else {
-      setLiked(false);
-    }
-  }, [article.id, user]);
+  }, [article.id]);
 
   useEffect(() => {
     void refresh();
@@ -45,7 +44,6 @@ export function useArticleLikes(article: NewsArticle) {
       const detail = (event as CustomEvent<ArticleLikeUpdatedDetail>).detail;
       if (detail.articleId !== article.id) return;
       setLikeCount(detail.likeCount);
-      if (detail.liked !== undefined) setLiked(detail.liked);
     };
 
     window.addEventListener(PF_ARTICLE_LIKE_UPDATED, onLikeUpdated);
@@ -53,12 +51,25 @@ export function useArticleLikes(article: NewsArticle) {
       window.removeEventListener(PF_ARTICLE_LIKE_UPDATED, onLikeUpdated);
   }, [article.id]);
 
+  const setLikedLocally = useCallback(
+    (next: boolean) => {
+      setLikedArticleIds((prev) => {
+        if (next === prev.has(article.id)) return prev;
+        const updated = new Set(prev);
+        if (next) updated.add(article.id);
+        else updated.delete(article.id);
+        return updated;
+      });
+    },
+    [article.id, setLikedArticleIds]
+  );
+
   const toggleLike = useCallback(async () => {
     if (!user || toggling) return;
     setToggling(true);
 
     const wasLiked = liked;
-    setLiked(!wasLiked);
+    setLikedLocally(!wasLiked);
     setLikeCount((c) => (wasLiked ? Math.max(0, c - 1) : c + 1));
 
     const ok = wasLiked
@@ -66,7 +77,7 @@ export function useArticleLikes(article: NewsArticle) {
       : await likeArticle(user.id, article);
 
     if (!ok) {
-      setLiked(wasLiked);
+      setLikedLocally(wasLiked);
       setLikeCount((c) => (wasLiked ? c + 1 : Math.max(0, c - 1)));
     } else {
       if (!wasLiked) {
@@ -84,17 +95,17 @@ export function useArticleLikes(article: NewsArticle) {
     }
 
     setToggling(false);
-  }, [user, toggling, liked, article, reloadProfileStats]);
+  }, [user, toggling, liked, article, reloadProfileStats, setLikedLocally]);
 
   const likeOnly = useCallback(async () => {
     if (!user || toggling || liked) return false;
     setToggling(true);
-    setLiked(true);
+    setLikedLocally(true);
     setLikeCount((c) => c + 1);
 
     const ok = await likeArticle(user.id, article);
     if (!ok) {
-      setLiked(false);
+      setLikedLocally(false);
       setLikeCount((c) => Math.max(0, c - 1));
     } else {
       markArticleLiked(article.id);
@@ -111,7 +122,7 @@ export function useArticleLikes(article: NewsArticle) {
 
     setToggling(false);
     return ok;
-  }, [user, toggling, liked, article, reloadProfileStats]);
+  }, [user, toggling, liked, article, reloadProfileStats, setLikedLocally]);
 
   return { liked, likeCount, toggleLike, likeOnly, toggling };
 }

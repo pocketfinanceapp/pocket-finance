@@ -8,6 +8,8 @@ import {
   useMemo,
   useRef,
   useState,
+  type Dispatch,
+  type SetStateAction,
 } from "react";
 import type { NavTab } from "@/components/BottomNav";
 import type { MarketFilter, SectorFilter } from "@/lib/filters";
@@ -45,6 +47,7 @@ import { setActiveDisplayCurrency } from "@/lib/utils";
 import {
   fetchSavedArticles,
   fetchUserLikedCount,
+  fetchUserLikedArticleIds,
   fetchUserStoriesRead,
   setUserStoriesRead,
   saveArticle as dbSaveArticle,
@@ -116,6 +119,18 @@ interface AppContextValue {
   isFollowingTicker: (ticker: string) => boolean;
   storiesRead: number;
   likedArticlesCount: number;
+  /**
+   * Every liked article id for the current user, fetched once here instead
+   * of per-card. Each FeedCard's like button used to call
+   * fetchUserLikedArticleIds itself via useArticleLikes — with a dozen-plus
+   * cards mounted at once (or more over a long scroll session), that meant
+   * a dozen-plus identical full-table Supabase fetches for the exact same
+   * data on every load, which is what a "liked_articles?select=article_id"
+   * request storm in the network log traces back to. One shared fetch here,
+   * updated locally on like/unlike, replaces all of them.
+   */
+  likedArticleIds: Set<string>;
+  setLikedArticleIds: Dispatch<SetStateAction<Set<string>>>;
   feedIndex: number;
   setFeedIndex: (index: number) => void;
   resetFeedIndex: () => void;
@@ -163,6 +178,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [followedTickers, setFollowedTickers] = useState<string[]>([]);
   const [storiesRead, setStoriesRead] = useState(0);
   const [likedArticlesCount, setLikedArticlesCount] = useState(0);
+  const [likedArticleIds, setLikedArticleIds] = useState<Set<string>>(
+    new Set()
+  );
   const [feedIndex, setFeedIndexState] = useState(0);
   const [feedJumpArticleId, setFeedJumpArticleId] = useState<string | null>(
     null
@@ -191,14 +209,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!appUserId) {
       setStoriesRead(0);
       setLikedArticlesCount(0);
+      setLikedArticleIds(new Set());
       return;
     }
-    const [stories, liked] = await Promise.all([
+    const [stories, liked, likedIds] = await Promise.all([
       fetchUserStoriesRead(appUserId),
       fetchUserLikedCount(appUserId),
+      fetchUserLikedArticleIds(appUserId),
     ]);
     setStoriesRead(stories);
     setLikedArticlesCount(liked);
+    setLikedArticleIds(likedIds);
   }, [appUserId]);
 
   const reloadSavedArticles = useCallback(
@@ -267,6 +288,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setWatchlistLoaded(false);
         setStoriesRead(0);
         setLikedArticlesCount(0);
+        setLikedArticleIds(new Set());
         return;
       }
 
@@ -306,9 +328,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* storage blocked */
       }
-      const liked = await fetchUserLikedCount(userId);
+      const [liked, likedIds] = await Promise.all([
+        fetchUserLikedCount(userId),
+        fetchUserLikedArticleIds(userId),
+      ]);
       setStoriesRead(stories);
       setLikedArticlesCount(liked);
+      setLikedArticleIds(likedIds);
 
       // One-time baseline migration — runs only on first load, then no-ops
       migrateActivityData({
@@ -624,6 +650,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isFollowingTicker,
       storiesRead,
       likedArticlesCount,
+      likedArticleIds,
+      setLikedArticleIds,
       feedIndex,
       setFeedIndex,
       resetFeedIndex,
@@ -677,6 +705,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isFollowingTicker,
       storiesRead,
       likedArticlesCount,
+      likedArticleIds,
       feedIndex,
       setFeedIndex,
       resetFeedIndex,
