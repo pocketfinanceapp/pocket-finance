@@ -99,11 +99,27 @@ export function TickerDetailPanel({
   const [loadingChart, setLoadingChart] = useState(true);
   const [followToast, setFollowToast] = useState<string | null>(null);
 
-  const meta = getTickerMetaBySymbol(ticker);
   const following = isFollowingTicker(ticker);
   const articles = catalogArticles
     .filter((a) => a.ticker.toUpperCase() === ticker.toUpperCase())
     .slice(0, 8);
+
+  // Tickers outside our ~170-entry curated catalog fall back to showing the
+  // bare ticker as the "company name" (e.g. header reads "SCHL / SCHL"
+  // instead of "Scholastic Corporation / SCHL"). The articles already
+  // loaded for this ticker carry Marketaux's real entity name, so prefer
+  // that over the generic fallback rather than one-off adding every company
+  // to the static catalog.
+  const catalogMeta = getTickerMetaBySymbol(ticker);
+  const isGenericFallback =
+    catalogMeta.companyName.toUpperCase() === ticker.toUpperCase();
+  const realCompanyName = articles.find(
+    (a) => a.companyName && a.companyName.toUpperCase() !== ticker.toUpperCase()
+  )?.companyName;
+  const meta =
+    isGenericFallback && realCompanyName
+      ? { ...catalogMeta, companyName: realCompanyName }
+      : catalogMeta;
 
   const handleBack = () => {
     setExiting(true);
