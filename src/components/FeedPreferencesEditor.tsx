@@ -49,8 +49,12 @@ export function FeedPreferencesEditor() {
       </div>
 
       <div>
-        <p className="mb-3 text-[13px] font-medium text-pocket-muted">
+        <p className="text-[13px] font-medium text-pocket-muted">
           Sector interests
+        </p>
+        <p className="mb-3 mt-0.5 text-[12px] leading-snug text-pocket-muted">
+          Broad categories for your feed. For specific topics, see My Topics
+          in Settings.
         </p>
         <div className="flex flex-wrap gap-2">
           {SECTOR_FILTERS.map((sector) => {

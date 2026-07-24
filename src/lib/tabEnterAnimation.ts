@@ -6,18 +6,22 @@ import { useNavigationOptional } from "@/context/NavigationContext";
 export const TAB_ENTER_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 export const TAB_EXIT_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
-export const PANEL_ENTER_MS = 520;
-export const PANEL_EXIT_MS = 380;
-export const LIST_FADE_OUT_MS = 220;
-export const LIST_FADE_IN_MS = 480;
+// Trimmed from the original 520/380/220/480ms set — live testing showed the
+// cumulative effect of these transitions (plus stagger delays) reading as a
+// ~0.5-1s "blank flash" on nearly every navigation. Durations below keep the
+// same easing/motion design but resolve noticeably faster.
+export const PANEL_ENTER_MS = 320;
+export const PANEL_EXIT_MS = 260;
+export const LIST_FADE_OUT_MS = 150;
+export const LIST_FADE_IN_MS = 300;
 
 export function tabEnterStyle(entered: boolean, delayMs = 0): CSSProperties {
   return {
     opacity: entered ? 1 : 0,
     transform: entered ? "translateY(0) scale(1)" : "translateY(14px) scale(0.98)",
     transition: entered
-      ? `opacity 600ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 720ms ${TAB_ENTER_EASE} ${delayMs}ms`
-      : `opacity 320ms ${TAB_EXIT_EASE} ${delayMs}ms, transform 360ms ${TAB_EXIT_EASE} ${delayMs}ms`,
+      ? `opacity 360ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 420ms ${TAB_ENTER_EASE} ${delayMs}ms`
+      : `opacity 220ms ${TAB_EXIT_EASE} ${delayMs}ms, transform 260ms ${TAB_EXIT_EASE} ${delayMs}ms`,
     willChange: entered ? "auto" : "opacity, transform",
   };
 }
@@ -27,8 +31,8 @@ export function tabEnterFadeStyle(entered: boolean, delayMs = 0): CSSProperties 
     opacity: entered ? 1 : 0,
     transform: entered ? "translateY(0)" : "translateY(6px)",
     transition: entered
-      ? `opacity 560ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 640ms ${TAB_ENTER_EASE} ${delayMs}ms`
-      : `opacity 280ms ${TAB_EXIT_EASE} ${delayMs}ms, transform 320ms ${TAB_EXIT_EASE} ${delayMs}ms`,
+      ? `opacity 320ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 360ms ${TAB_ENTER_EASE} ${delayMs}ms`
+      : `opacity 200ms ${TAB_EXIT_EASE} ${delayMs}ms, transform 220ms ${TAB_EXIT_EASE} ${delayMs}ms`,
   };
 }
 
@@ -38,13 +42,13 @@ export function tabStaggerStyle(
   index: number,
   baseDelayMs = 0
 ): CSSProperties {
-  const delayMs = baseDelayMs + Math.min(index, 24) * 42;
+  const delayMs = baseDelayMs + Math.min(index, 24) * 20;
   return {
     opacity: entered ? 1 : 0,
     transform: entered ? "translateY(0) scale(1)" : "translateY(18px) scale(0.96)",
     transition: entered
-      ? `opacity 580ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 700ms ${TAB_ENTER_EASE} ${delayMs}ms`
-      : `opacity 260ms ${TAB_EXIT_EASE} ${Math.min(delayMs, 120)}ms, transform 320ms ${TAB_EXIT_EASE} ${Math.min(delayMs, 120)}ms`,
+      ? `opacity 340ms ${TAB_ENTER_EASE} ${delayMs}ms, transform 400ms ${TAB_ENTER_EASE} ${delayMs}ms`
+      : `opacity 200ms ${TAB_EXIT_EASE} ${Math.min(delayMs, 80)}ms, transform 240ms ${TAB_EXIT_EASE} ${Math.min(delayMs, 80)}ms`,
   };
 }
 
@@ -54,8 +58,8 @@ export function panelEnterStyle(visible: boolean): CSSProperties {
     opacity: visible ? 1 : 0,
     transform: visible ? "translateX(0)" : "translateX(28px)",
     transition: visible
-      ? `opacity 420ms ${TAB_ENTER_EASE}, transform ${PANEL_ENTER_MS}ms ${TAB_ENTER_EASE}`
-      : `opacity 300ms ${TAB_EXIT_EASE}, transform ${PANEL_EXIT_MS}ms ${TAB_EXIT_EASE}`,
+      ? `opacity 260ms ${TAB_ENTER_EASE}, transform ${PANEL_ENTER_MS}ms ${TAB_ENTER_EASE}`
+      : `opacity 200ms ${TAB_EXIT_EASE}, transform ${PANEL_EXIT_MS}ms ${TAB_EXIT_EASE}`,
     willChange: visible ? "auto" : "opacity, transform",
   };
 }
@@ -66,8 +70,8 @@ export function listLayerStyle(visible: boolean): CSSProperties {
     opacity: visible ? 1 : 0,
     transform: visible ? "translateY(0) scale(1)" : "translateY(10px) scale(0.99)",
     transition: visible
-      ? `opacity ${LIST_FADE_IN_MS}ms ${TAB_ENTER_EASE}, transform 560ms ${TAB_ENTER_EASE}`
-      : `opacity ${LIST_FADE_OUT_MS}ms ${TAB_EXIT_EASE}, transform 300ms ${TAB_EXIT_EASE}`,
+      ? `opacity ${LIST_FADE_IN_MS}ms ${TAB_ENTER_EASE}, transform 340ms ${TAB_ENTER_EASE}`
+      : `opacity ${LIST_FADE_OUT_MS}ms ${TAB_EXIT_EASE}, transform 220ms ${TAB_EXIT_EASE}`,
     pointerEvents: visible ? "auto" : "none",
   };
 }

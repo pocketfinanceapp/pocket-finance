@@ -164,7 +164,8 @@ export function SettingsPage({
           {screen === "topics" ? (
             <div className="pt-4">
               <p className="mb-4 text-sm text-pocket-muted">
-                Choose topics to personalise your For You feed.
+                Boost specific topics in your For You feed, on top of the
+                broader sectors and markets you set in Feed Preferences.
               </p>
               <MyTopicsSelector />
             </div>
@@ -277,6 +278,7 @@ export function SettingsPage({
           <SettingsRow
             icon={<Newspaper className="h-5 w-5 text-[#3B6EF5]" />}
             label="Feed Preferences"
+            subtitle="Markets & sectors — the broad categories your feed pulls from"
             onClick={() => setScreen("feedPrefs")}
           />
           <SettingsRow
@@ -287,6 +289,7 @@ export function SettingsPage({
           <SettingsRow
             icon={<Tag className="h-5 w-5 text-pocket-muted" />}
             label="My Topics"
+            subtitle="Specific topics to boost on top of your sectors"
             onClick={() => setScreen("topics")}
           />
           <div className="flex items-center justify-between border-b border-[var(--pocket-border)] px-4 py-3 last:border-b-0">
@@ -427,10 +430,12 @@ function SettingsSection({
 function SettingsRow({
   icon,
   label,
+  subtitle,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
+  subtitle?: string;
   onClick: () => void;
 }) {
   return (
@@ -442,9 +447,16 @@ function SettingsRow({
     >
       <div className="flex items-center gap-3">
         {icon}
-        <span className="font-medium text-pocket-text">{label}</span>
+        <div className="min-w-0">
+          <span className="font-medium text-pocket-text">{label}</span>
+          {subtitle && (
+            <p className="mt-0.5 text-[12px] leading-snug text-pocket-muted">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-      <ChevronRight className="h-5 w-5 text-pocket-muted" />
+      <ChevronRight className="h-5 w-5 shrink-0 text-pocket-muted" />
     </button>
   );
 }
