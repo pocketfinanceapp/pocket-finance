@@ -29,38 +29,53 @@ function subsequenceMatch(query: string, text: string): boolean {
 /**
  * Fuzzy match with substring, subsequence, and light typo tolerance.
  *
- * Subsequence and whole-field typo tolerance are only applied to short
- * fields (tickers, company names, sectors, tags) — on long free text like
- * full headlines, a short common-letter query (e.g. "tesla") is nearly
- * always a subsequence of *some* unrelated 80+ character sentence, which
- * made search effectively return the unfiltered feed. Long fields still get
- * an exact substring check, and per-word prefix/typo matching, which is
- * what actually reflects "this headline mentions the word I typed."
+ * Subsequence and whole-field typo tolerance are ONLY applied to genuine
+ * ticker-style fields passed via `symbolFields` (short, single-token
+ * symbols like "AAPL") — never to free text like company names, sectors,
+ * or headlines. A 4-letter query is a subsequence of almost any
+ *20-40-character company name (e.g. "aapl" is a subsequence of "Applied
+ * Industrial Technologies" and of "Atlassian Corporation Plc"), which
+ * previously surfaced completely unrelated companies as top results for an
+ * exact, well-known ticker search. Free-text fields only get an exact
+ * substring check plus per-word prefix/typo matching, which is what
+ * actually reflects "this text mentions the word I typed."
  */
-const SHORT_FIELD_MAX_LENGTH = 40;
-
-export function fuzzyMatchesQuery(query: string, fields: string[]): boolean {
+export function fuzzyMatchesQuery(
+  query: string,
+  fields: string[],
+  symbolFields: string[] = []
+): boolean {
   const q = query.toLowerCase().trim();
   if (!q) return true;
+
+  for (const field of symbolFields) {
+    const f = field.toLowerCase();
+    if (!f) continue;
+    if (f.includes(q)) return true;
+    if (subsequenceMatch(q, f)) return true;
+    if (q.length >= 2 && levenshtein(q, f) <= Math.max(1, Math.floor(q.length / 3))) {
+      return true;
+    }
+  }
 
   for (const field of fields) {
     const f = field.toLowerCase();
     if (!f) continue;
     if (f.includes(q)) return true;
 
-    const isShortField = f.length <= SHORT_FIELD_MAX_LENGTH;
-
-    if (isShortField) {
-      if (subsequenceMatch(q, f)) return true;
-      if (q.length >= 2 && levenshtein(q, f) <= Math.max(1, Math.floor(q.length / 3))) {
-        return true;
-      }
-    }
-
     for (const word of f.split(/\s+/)) {
       if (word.length < 2) continue;
       if (word.startsWith(q) || q.startsWith(word)) return true;
-      if (q.length >= 3 && levenshtein(q, word) <= 2) return true;
+      // Scale the allowed edit distance with query length — a flat "<= 2"
+      // was loose enough that a 4-letter ticker like "AAPL" would
+      // typo-match unrelated 4-letter words (e.g. "Call" in an unrelated
+      // headline), surfacing wrong companies instead of "No matches."
+      if (
+        q.length >= 3 &&
+        levenshtein(q, word) <= Math.max(1, Math.floor(q.length / 3))
+      ) {
+        return true;
+      }
     }
   }
 

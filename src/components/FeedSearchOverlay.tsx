@@ -112,14 +112,17 @@ export function FeedSearchOverlay({
 
     return articles
       .filter((article) =>
-        fuzzyMatchesQuery(q, [
-          article.headline,
-          article.ticker,
-          article.companyName,
-          article.sourceName,
-          article.sector,
-          ...article.tags,
-        ])
+        fuzzyMatchesQuery(
+          q,
+          [
+            article.headline,
+            article.companyName,
+            article.sourceName,
+            article.sector,
+            ...article.tags,
+          ],
+          [article.ticker]
+        )
       )
       .map((article) => ({ article, score: scoreArticle(article, q) }))
       .sort((a, b) => b.score - a.score)
