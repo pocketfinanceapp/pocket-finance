@@ -36,22 +36,47 @@ function initials(name: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// In-flight request dedup
+//
+// Multiple call sites can legitimately end up asking for the same user's
+// data at nearly the same moment on page load (e.g. AppContext's initial
+// sync plus a secondary auth event or another component's own reload call).
+// Rather than chase down every such caller, collapse concurrent calls for
+// the same (function, args) pair into a single underlying request — this is
+// what actually stops duplicate Supabase queries from going out, regardless
+// of which part of the app triggered the second call.
+// ---------------------------------------------------------------------------
+const inFlightRequests = new Map<string, Promise<unknown>>();
+
+function dedupeRequest<T>(key: string, run: () => Promise<T>): Promise<T> {
+  const existing = inFlightRequests.get(key);
+  if (existing) return existing as Promise<T>;
+  const promise = run().finally(() => {
+    inFlightRequests.delete(key);
+  });
+  inFlightRequests.set(key, promise);
+  return promise;
+}
+
+// ---------------------------------------------------------------------------
 // User stats
 // ---------------------------------------------------------------------------
 
 export async function fetchUserStoriesRead(userId: string): Promise<number> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("user_stats")
-    .select("stories_read")
-    .eq("user_id", userId)
-    .maybeSingle();
+  return dedupeRequest(`fetchUserStoriesRead:${userId}`, async () => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("user_stats")
+      .select("stories_read")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-  if (error) {
-    console.error("fetchUserStoriesRead:", error.message);
-    return 0;
-  }
-  return data?.stories_read ?? 0;
+    if (error) {
+      console.error("fetchUserStoriesRead:", error.message);
+      return 0;
+    }
+    return data?.stories_read ?? 0;
+  });
 }
 
 export async function setUserStoriesRead(
@@ -99,17 +124,19 @@ export async function incrementUserStoriesRead(
 }
 
 export async function fetchUserLikedCount(userId: string): Promise<number> {
-  const supabase = getSupabase();
-  const { count, error } = await supabase
-    .from("liked_articles")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId);
+  return dedupeRequest(`fetchUserLikedCount:${userId}`, async () => {
+    const supabase = getSupabase();
+    const { count, error } = await supabase
+      .from("liked_articles")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
 
-  if (error) {
-    console.error("fetchUserLikedCount:", error.message);
-    return 0;
-  }
-  return count ?? 0;
+    if (error) {
+      console.error("fetchUserLikedCount:", error.message);
+      return 0;
+    }
+    return count ?? 0;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -133,17 +160,19 @@ export async function fetchLikeCount(articleId: string): Promise<number> {
 export async function fetchUserLikedArticleIds(
   userId: string
 ): Promise<Set<string>> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("liked_articles")
-    .select("article_id")
-    .eq("user_id", userId);
+  return dedupeRequest(`fetchUserLikedArticleIds:${userId}`, async () => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("liked_articles")
+      .select("article_id")
+      .eq("user_id", userId);
 
-  if (error) {
-    console.error("fetchUserLikedArticleIds:", error.message);
-    return new Set();
-  }
-  return new Set((data ?? []).map((r) => r.article_id));
+    if (error) {
+      console.error("fetchUserLikedArticleIds:", error.message);
+      return new Set<string>();
+    }
+    return new Set((data ?? []).map((r) => r.article_id));
+  });
 }
 
 export async function likeArticle(
@@ -216,26 +245,28 @@ export async function fetchLikedArticles(
 export async function fetchSavedArticles(
   userId: string
 ): Promise<SavedArticleEntry[]> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("saved_articles")
-    .select("id, article_id, article_title, article_url, ticker, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  return dedupeRequest(`fetchSavedArticles:${userId}`, async () => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("saved_articles")
+      .select("id, article_id, article_title, article_url, ticker, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("fetchSavedArticles:", error.message);
-    return [];
-  }
+    if (error) {
+      console.error("fetchSavedArticles:", error.message);
+      return [];
+    }
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    articleId: row.article_id,
-    articleTitle: row.article_title,
-    articleUrl: row.article_url,
-    ticker: row.ticker,
-    savedAt: row.created_at,
-  }));
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      articleId: row.article_id,
+      articleTitle: row.article_title,
+      articleUrl: row.article_url,
+      ticker: row.ticker,
+      savedAt: row.created_at,
+    }));
+  });
 }
 
 export async function saveArticle(
