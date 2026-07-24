@@ -223,6 +223,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     watchlistLoadedRef.current = watchlistLoaded;
   }, [watchlistLoaded]);
 
+  // Tracks an in-flight syncAppUser(userId) call. The stable-identity fix
+  // above stops syncAppUser from *recreating itself* mid-flight, but a
+  // second legitimate call for the same userId (e.g. two onAuthStateChange
+  // events firing back-to-back — INITIAL_SESSION then SIGNED_IN — before
+  // the first call's fetches resolve) can still arrive while
+  // watchlistLoadedRef is still false, so the "already synced" check alone
+  // doesn't catch it. This dedupes by userId: a second call for the same
+  // userId just awaits the first call's in-flight promise instead of
+  // re-running fetchSavedArticles/fetchUserStoriesRead/fetchUserLikedCount/
+  // fetchUserLikedArticleIds a second time.
+  const syncInFlightRef = useRef<{ userId: string; promise: Promise<void> } | null>(
+    null
+  );
+
   const reloadProfileStats = useCallback(async () => {
     if (!appUserId) {
       setStoriesRead(0);
@@ -290,6 +304,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const syncAppUser = useCallback(
     async (userId: string | null) => {
       if (!userId) {
+        syncInFlightRef.current = null;
         appUserIdRef.current = null;
         setAppUserId(null);
         const complete = isOnboardingComplete();
@@ -307,6 +322,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setStoriesRead(0);
         setLikedArticlesCount(0);
         setLikedArticleIds(new Set());
+        return;
+      }
+
+      // A second call for the same userId while the first is still
+      // in-flight (e.g. two auth events firing back-to-back) just rides
+      // along on the first call's promise instead of re-fetching.
+      if (syncInFlightRef.current?.userId === userId) {
+        await syncInFlightRef.current.promise;
         return;
       }
 
@@ -336,40 +359,50 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (alreadySynced) return;
 
-      const articles = await fetchSavedArticles(userId);
-      setSavedArticles(articles);
-      watchlistLoadedRef.current = true;
-      setWatchlistLoaded(true);
+      const runSync = async () => {
+        const articles = await fetchSavedArticles(userId);
+        setSavedArticles(articles);
+        watchlistLoadedRef.current = true;
+        setWatchlistLoaded(true);
 
-      let stories = await fetchUserStoriesRead(userId);
-      try {
-        const legacy = localStorage.getItem("pocket-stories-read");
-        const legacyCount = legacy ? parseInt(legacy, 10) || 0 : 0;
-        if (legacyCount > stories) {
-          await setUserStoriesRead(userId, legacyCount);
-          stories = legacyCount;
-          localStorage.removeItem("pocket-stories-read");
+        let stories = await fetchUserStoriesRead(userId);
+        try {
+          const legacy = localStorage.getItem("pocket-stories-read");
+          const legacyCount = legacy ? parseInt(legacy, 10) || 0 : 0;
+          if (legacyCount > stories) {
+            await setUserStoriesRead(userId, legacyCount);
+            stories = legacyCount;
+            localStorage.removeItem("pocket-stories-read");
+          }
+        } catch {
+          /* storage blocked */
         }
-      } catch {
-        /* storage blocked */
-      }
-      const [liked, likedIds] = await Promise.all([
-        fetchUserLikedCount(userId),
-        fetchUserLikedArticleIds(userId),
-      ]);
-      setStoriesRead(stories);
-      setLikedArticlesCount(liked);
-      setLikedArticleIds(likedIds);
+        const [liked, likedIds] = await Promise.all([
+          fetchUserLikedCount(userId),
+          fetchUserLikedArticleIds(userId),
+        ]);
+        setStoriesRead(stories);
+        setLikedArticlesCount(liked);
+        setLikedArticleIds(likedIds);
 
-      // One-time baseline migration — runs only on first load, then no-ops
-      migrateActivityData({
-        articlesRead: stories,
-        savedArticles: articles,
+        // One-time baseline migration — runs only on first load, then no-ops
+        migrateActivityData({
+          articlesRead: stories,
+          savedArticles: articles,
+        });
+        // Capture session snapshot after all Supabase data is loaded so the
+        // curator achievement (liked count) is accurate from the start.
+        initSessionSnapshot({ likedArticlesCount: liked });
+        grantAchievementRewards({ likedArticlesCount: liked });
+      };
+
+      const promise = runSync().finally(() => {
+        if (syncInFlightRef.current?.userId === userId) {
+          syncInFlightRef.current = null;
+        }
       });
-      // Capture session snapshot after all Supabase data is loaded so the
-      // curator achievement (liked count) is accurate from the start.
-      initSessionSnapshot({ likedArticlesCount: liked });
-      grantAchievementRewards({ likedArticlesCount: liked });
+      syncInFlightRef.current = { userId, promise };
+      await promise;
     },
     // Deliberately no appUserId/watchlistLoaded deps — this function sets
     // both, so depending on them would recreate it mid-flight and cause
