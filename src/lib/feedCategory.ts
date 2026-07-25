@@ -59,6 +59,14 @@ const CRYPTO_KEYWORDS = [
   "stablecoin",
 ] as const;
 
+// Big-tech companies whose own cloud/enterprise stories sometimes mention a
+// crypto term only in passing (a subheading or tag referencing "blockchain"
+// or "digital asset" custody as one of many enterprise features, e.g. an
+// Azure/cloud-computing article) — a bare CRYPTO_KEYWORDS hit shouldn't
+// override a headline that's clearly about one of these companies.
+const STRONG_TECH_HEADLINE_RE =
+  /\b(microsoft|azure|xbox|playstation|apple|google|alphabet|nvidia|openai)\b/i;
+
 function getCryptoTopicLabel(article: NewsArticle): string {
   const text = articleText(article);
   if (text.includes("bitcoin")) return "BITCOIN";
@@ -75,7 +83,7 @@ function inferContentCategoryTag(article: NewsArticle): string | null {
   const text = articleText(article);
 
   if (
-    /\b(xbox|playstation|microsoft|apple|google|alphabet|nvidia|semiconductor|openai|software|cloud computing)\b/.test(
+    /\b(xbox|playstation|microsoft|azure|apple|google|alphabet|nvidia|semiconductor|openai|software|cloud computing)\b/.test(
       text
     )
   ) {
@@ -111,8 +119,24 @@ export function isGenuinelyCryptoRelated(article: NewsArticle): boolean {
   if (ticker && CRYPTO_TICKERS.has(ticker)) return true;
   if (article.tags.some((tag) => CRYPTO_TICKERS.has(tag.toUpperCase()))) return true;
 
+  const headline = article.headline.toLowerCase();
   const text = articleText(article);
-  return CRYPTO_KEYWORDS.some((keyword) => text.includes(keyword));
+  const keywordHit = CRYPTO_KEYWORDS.some((keyword) => text.includes(keyword));
+  if (!keywordHit) return false;
+
+  // A crypto keyword that only shows up in the subheading/tags (not the
+  // headline itself) of a story whose headline is clearly about a big-tech
+  // company (e.g. "Microsoft Azure adds enterprise blockchain support") is
+  // an incidental mention, not the story's actual subject — don't let it
+  // override the real topic. A headline-level crypto mention still counts.
+  const headlineHasCryptoKeyword = CRYPTO_KEYWORDS.some((keyword) =>
+    headline.includes(keyword)
+  );
+  if (!headlineHasCryptoKeyword && STRONG_TECH_HEADLINE_RE.test(headline)) {
+    return false;
+  }
+
+  return true;
 }
 
 function isIpoStory(article: NewsArticle): boolean {

@@ -1,7 +1,22 @@
 import type { NewsArticle } from "./types";
 
-function stripHtml(text: string): string {
+/**
+ * Some wire-service feeds (via Marketaux) leave their internal embed
+ * placeholder tokens un-rendered in the plain-text body/subheading, e.g.
+ * "**media[1150179]**" or "[media 1150179]" — these are meant to be
+ * replaced with an actual embedded image/chart by the source's own CMS,
+ * but Marketaux passes the raw token straight through. Strip any of these
+ * shapes so they don't leak into feed cards or article descriptions.
+ */
+function stripEmbedTokens(text: string): string {
   return text
+    .replace(/\*{1,2}\s*(?:media|image|chart|embed|video)\s*\[\s*\d+\s*\]\s*\*{1,2}/gi, " ")
+    .replace(/\[\s*(?:media|image|chart|embed|video)\s*:?\s*\d+\s*\]/gi, " ")
+    .replace(/\{\s*(?:media|image|chart|embed|video)\s*:?\s*\d+\s*\}/gi, " ");
+}
+
+function stripHtml(text: string): string {
+  return stripEmbedTokens(text)
     .replace(/<[^>]*>/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")

@@ -670,7 +670,11 @@ function FollowingEditor() {
 
   return (
     <>
-      <p className="px-1 text-[13px] leading-relaxed text-pocket-muted">
+      <p className="px-1 text-[13px] font-semibold text-pocket-text">
+        Following {followedTickers.length}{" "}
+        {followedTickers.length === 1 ? "company" : "companies"}
+      </p>
+      <p className="mt-1 px-1 text-[13px] leading-relaxed text-pocket-muted">
         Companies you follow are boosted in your For You feed.
       </p>
       <ul className="mt-3 divide-y divide-[var(--pocket-border)] overflow-hidden rounded-2xl border border-[var(--pocket-border)] bg-[var(--pocket-card)]">

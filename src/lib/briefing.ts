@@ -19,8 +19,19 @@ const MAX_BODY_CHARS = 2400;
 const MAX_RELATED_SOURCES = 3;
 const MAX_RELATED_EXCERPT_CHARS = 600;
 
-function stripHtml(text: string): string {
+// Same wire-service embed placeholder leak as articlePreview.ts's
+// stripEmbedTokens — strip these before feeding raw body text into the
+// briefing prompt so a token like "**media[1150179]**" can't get echoed
+// back verbatim by the summarizer.
+function stripEmbedTokens(text: string): string {
   return text
+    .replace(/\*{1,2}\s*(?:media|image|chart|embed|video)\s*\[\s*\d+\s*\]\s*\*{1,2}/gi, " ")
+    .replace(/\[\s*(?:media|image|chart|embed|video)\s*:?\s*\d+\s*\]/gi, " ")
+    .replace(/\{\s*(?:media|image|chart|embed|video)\s*:?\s*\d+\s*\}/gi, " ");
+}
+
+function stripHtml(text: string): string {
+  return stripEmbedTokens(text)
     .replace(/<[^>]*>/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")

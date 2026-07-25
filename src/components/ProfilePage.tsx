@@ -41,8 +41,8 @@ import {
   type LevelState,
   type WeeklyActivity,
 } from "@/lib/progression";
-import type { LikedArticleEntry, NewsArticle, SavedArticleEntry } from "@/lib/types";
-import { fetchLikedArticles, fetchSavedArticles } from "@/lib/userInteractions";
+import type { LikedArticleEntry, NewsArticle } from "@/lib/types";
+import { fetchLikedArticles } from "@/lib/userInteractions";
 import { buildWatchlistItems } from "@/lib/watchlistUtils";
 import { getDismissedWatchlistTickers } from "@/lib/watchlistStore";
 import { timeAgo } from "@/lib/utils";
@@ -141,7 +141,6 @@ export function ProfilePage({
   const [recentlyRead, setRecentlyRead] = useState<RecentlyReadEntry[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [likedPreview, setLikedPreview] = useState<LikedArticleEntry[]>([]);
-  const [savedPreview, setSavedPreview] = useState<SavedArticleEntry[]>([]);
 
   const refreshLocalProfile = useCallback(() => {
     setRecentlyRead(loadRecentlyRead());
@@ -153,15 +152,24 @@ export function ProfilePage({
     refreshLocalProfile();
   }, [reloadProfileStats, refreshLocalProfile]);
 
+  // Saved preview derives directly from the live savedArticles list already
+  // kept in AppContext (same source reloadSavedArticles/saveArticle write
+  // to), instead of a separate one-shot fetch — previously this only ran
+  // once on mount, so saving/unsaving an article elsewhere in the app while
+  // Profile stayed mounted (or navigating back to it without a full
+  // remount) left this list showing stale data.
+  const savedPreview = useMemo(() => savedArticles.slice(0, 2), [savedArticles]);
+
+  // Liked preview still needs its own fetch (AppContext only tracks a live
+  // count + id set for liked articles, not the full title/url entries), but
+  // now re-fetches whenever likedArticlesCount changes so it stays in sync
+  // with likes/unlikes made elsewhere, not just on mount.
   useEffect(() => {
     if (!user?.id) return;
     fetchLikedArticles(user.id)
       .then((items) => setLikedPreview(items.slice(0, 2)))
       .catch(() => {});
-    fetchSavedArticles(user.id)
-      .then((items) => setSavedPreview(items.slice(0, 2)))
-      .catch(() => {});
-  }, [user?.id]);
+  }, [user?.id, likedArticlesCount]);
 
   /* ── Progression data (re-derived when Supabase data or activity changes) */
   const progressionState: LevelState = useMemo(

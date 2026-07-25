@@ -56,6 +56,20 @@ const PULL_REFRESH_PX = 72;
 /** Matches the "duration-300" snap-transition class below. */
 const TRACK_TRANSITION_MS = 300;
 
+/**
+ * Loose headline normalization for duplicate detection across infinite-
+ * scroll pages — lowercased, punctuation/whitespace collapsed. Deliberately
+ * not exported/shared with search or other matching logic: this is a
+ * best-effort "is this basically the same story" check, not a general
+ * text-similarity utility.
+ */
+function normalizeArticleTitleForDedupe(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 type LockedAxis = "x" | "y" | null;
 
 export function NewsFeed({
@@ -534,9 +548,23 @@ export function NewsFeed({
     fetch(`/api/news/more?page=${page}`)
       .then((res) => (res.ok ? res.json() : { articles: [] }))
       .then((data: { articles?: NewsArticle[] }) => {
-        const fresh = (data.articles ?? []).filter(
-          (a) => !allArticles.some((existing) => existing.id === a.id)
+        // id-based dedup alone lets syndicated duplicates through: Marketaux
+        // sometimes assigns a different uuid to what's really the same wire
+        // story picked up by two republishers (or the same story re-indexed
+        // a page later once newer articles shift the pagination window) —
+        // that's what was showing up as the "same article twice" after
+        // enough continuous scrolling. A normalized-title check catches
+        // those even when the ids differ.
+        const seenTitles = new Set(
+          allArticles.map((a) => normalizeArticleTitleForDedupe(a.headline))
         );
+        const fresh = (data.articles ?? []).filter((a) => {
+          if (allArticles.some((existing) => existing.id === a.id)) return false;
+          const normalizedTitle = normalizeArticleTitleForDedupe(a.headline);
+          if (normalizedTitle && seenTitles.has(normalizedTitle)) return false;
+          if (normalizedTitle) seenTitles.add(normalizedTitle);
+          return true;
+        });
         if (fresh.length === 0) {
           consecutiveEmptyPagesRef.current += 1;
           // Still advance the page pointer even on an empty/overlapping

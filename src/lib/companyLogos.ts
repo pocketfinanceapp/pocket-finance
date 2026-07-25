@@ -38,18 +38,25 @@ const MANUAL_LOGOS: Record<string, string> = {
   NEAR: "https://cryptologos.cc/logos/near-protocol-near-logo.png",
   APT: "https://cryptologos.cc/logos/aptos-apt-logo.png",
   ARB: "https://cryptologos.cc/logos/arbitrum-arb-logo.png",
+  // Wikimedia now rejects hotlinked thumbnail requests for any width that
+  // isn't one of its "common thumbnail sizes" (20/40/60/120/250/330/500/
+  // 960/1280/1920/3840px) — the previous 512px width 400'd on every one of
+  // these (https://w.wiki/GHai), which is what was breaking these logos in
+  // production. Switched to the nearest supported size, 500px. SPACEX and
+  // CHIME were additionally pointing at filenames that no longer exist on
+  // Commons (renamed/replaced) — updated to their current file + hash path.
   OPENAI:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/OpenAI_Logo.svg/512px-OpenAI_Logo.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/OpenAI_Logo.svg/500px-OpenAI_Logo.svg.png",
   SPACEX:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/SpaceX_Company_Logo.svg/512px-SpaceX_Company_Logo.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/SpaceX-Logo.svg/500px-SpaceX-Logo.svg.png",
   ANTHROPIC:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/500px-Anthropic_logo.svg.png",
   STRIPE:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stripe_Logo%2C_revised_2016.svg/512px-Stripe_Logo%2C_revised_2016.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stripe_Logo%2C_revised_2016.svg/500px-Stripe_Logo%2C_revised_2016.svg.png",
   KLARNA:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Klarna_Payment_Badge.svg/512px-Klarna_Payment_Badge.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Klarna_Payment_Badge.svg/500px-Klarna_Payment_Badge.svg.png",
   CHIME:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Chime_%28company%29_logo.svg/512px-Chime_%28company%29_logo.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Chime_company_logo.svg/500px-Chime_company_logo.svg.png",
   TM: "/logos/companies/tm.png",
   ORCL: "/logos/companies/orcl.png",
 };

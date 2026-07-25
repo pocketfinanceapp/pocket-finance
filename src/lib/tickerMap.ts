@@ -463,12 +463,52 @@ const SCANNABLE_SYMBOLS = Object.keys(TICKER_BY_SYMBOL)
 
 const DEPRECATED_TICKERS = new Set(["", "SPY", "MARKET"]);
 
+/**
+ * Tickers that are also ordinary English words in wide use — matching these
+ * case-insensitively against arbitrary headline/description text produces
+ * false positives on totally unrelated articles (e.g. "net income", "net
+ * loss", "right now", "for now" mis-tagging finance stories as Cloudflare
+ * (NET) or ServiceNow (NOW) stories; "bp" as an abbreviation for basis
+ * points mis-tagging as BP p.l.c.; "cat" in ordinary usage mis-tagging as
+ * Caterpillar). A real ticker mention in a headline is virtually always
+ * capitalized ("NET", "$NET", "NOW Inc") — a lowercase/mixed-case bare
+ * mention of the word is the common-English-word usage, not the stock.
+ * These require the bare-word match to appear in actual UPPERCASE in the
+ * source text; the `$SYMBOL`/`(SYMBOL` forms (already unambiguous) stay
+ * case-insensitive.
+ */
+const AMBIGUOUS_WORD_TICKERS = new Set(["NET", "NOW", "BP", "CAT"]);
+
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// "PG&E" (Pacific Gas & Electric, not in our catalog) satisfies PG's own
+// word-boundary regex — the "&" right after "PG" isn't a word character, so
+// the boundary check alone can't tell "PG&E" apart from a bare "PG" mention
+// of Procter & Gamble. Excluded explicitly rather than folding into the
+// generic boundary regex, since this is one specific well-known company
+// name colliding with another ticker, not a general ambiguous-word case.
+const PGE_RE = /\bpg&e\b/i;
+
 function matchSymbol(text: string, symbol: string): boolean {
   const sym = escapeRegex(symbol);
+  if (symbol === "PG" && PGE_RE.test(text)) {
+    // Still allow a genuine standalone "PG" mention elsewhere in the same
+    // text even when "PG&E" also appears — only suppress the specific
+    // "PG&E" occurrence, not every PG mention in the article.
+    const withoutPGE = text.replace(PGE_RE, " ");
+    if (!new RegExp(
+      `(?:\\$${sym}(?![A-Za-z0-9])|\\(${sym}(?![A-Za-z0-9])|(?<![A-Za-z0-9])${sym}(?![A-Za-z0-9]))`
+    ).test(withoutPGE)) {
+      return false;
+    }
+  }
+  if (AMBIGUOUS_WORD_TICKERS.has(symbol)) {
+    return new RegExp(
+      `(?:\\$${sym}(?![A-Za-z0-9])|\\(${sym}(?![A-Za-z0-9])|(?<![A-Za-z0-9])${sym}(?![A-Za-z0-9]))`
+    ).test(text);
+  }
   return new RegExp(
     `(?:\\$${sym}(?![A-Za-z0-9])|\\(${sym}(?![A-Za-z0-9])|(?<![A-Za-z0-9])${sym}(?![A-Za-z0-9]))`,
     "i"
