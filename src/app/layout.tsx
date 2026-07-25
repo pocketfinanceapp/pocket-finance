@@ -9,10 +9,43 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const SITE_URL = "https://www.pocketfinance.app";
+const SITE_TITLE = "Pocket Finance — Finance news, built for the way you scroll";
+const SITE_DESCRIPTION =
+  "Swipe through breaking market headlines, read full articles, and check stock intelligence — all in seconds.";
+
 export const metadata: Metadata = {
-  title: "Pocket Finance — Finance news, built for the way you scroll",
-  description:
-    "Swipe through breaking market headlines, read full articles, and check stock intelligence — all in seconds.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: "/",
+  },
+  // Without these, sharing the link on X/Reddit/Slack/iMessage/Product Hunt
+  // etc. renders a blank/broken link preview instead of a card — this is
+  // the metadata that actually gets read for that, separate from the plain
+  // <title>/<meta description> above.
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "Pocket Finance",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/logo.png?v=2",
+        width: 1024,
+        height: 1024,
+        alt: "Pocket Finance",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/logo.png?v=2"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
