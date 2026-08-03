@@ -78,9 +78,9 @@ export default function PrivacyPolicyPage() {
               <strong>Vercel</strong> — hosts the app itself.
             </li>
             <li>
-              <strong>Marketaux</strong> — supplies the news articles you
-              read. We don&apos;t send them any personal information about
-              you.
+              <strong>News data provider</strong> — supplies the news
+              articles you read. We don&apos;t send them any personal
+              information about you.
             </li>
             <li>
               <strong>Anthropic (Claude)</strong> — generates the optional
