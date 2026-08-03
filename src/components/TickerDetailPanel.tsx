@@ -263,7 +263,7 @@ export function TickerDetailPanel({
             )}
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-pocket-muted">
-            Derived from Marketaux&apos;s news sentiment analysis for{" "}
+            Based on recent news coverage for{" "}
             {meta.companyName} — a read on news tone, never a price chart.
           </p>
         </section>

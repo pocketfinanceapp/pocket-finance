@@ -1138,7 +1138,7 @@ export function NewsFeed({
                       No stories from {countryName(countryFilter)} right now
                     </p>
                     <p className="mt-2 text-sm font-medium text-pocket-muted">
-                      Marketaux hasn&apos;t indexed anything from here today —
+                      We haven&apos;t found anything from here today —
                       check back later, or browse everyone&apos;s feed.
                     </p>
                     <button

@@ -169,13 +169,30 @@ export function computeForYouScore(
   if (ticker && input.recentlyReadTickers.has(ticker)) score += 28;
 
   if (input.likedArticleIds.has(article.id)) score += 22;
-  if (input.openedArticleIds.has(article.id)) score -= 12;
+  // Strong push-down for anything already opened — without this,
+  // personalization bonuses above (up to +65) keep re-surfacing already-read
+  // stories at the top of the feed indefinitely, which is what made reopening
+  // the app show the same handful of articles every time.
+  if (input.openedArticleIds.has(article.id)) score -= 70;
 
+  // Recency now carries enough weight to compete with personalization
+  // bonuses, so genuinely new stories reliably surface above older
+  // already-seen ones on reopen, while ties still favour personalized picks.
   const ageHours =
     (Date.now() - new Date(article.publishedAt).getTime()) / 3_600_000;
-  if (ageHours < 12) score += 18;
-  else if (ageHours < 48) score += 10;
-  else if (ageHours < 120) score += 4;
+  if (ageHours < 6) score += 60;
+  else if (ageHours < 24) score += 35;
+  else if (ageHours < 72) score += 15;
+  else {
+    // Beyond 3 days, apply a growing penalty on top of getting no bonus.
+    // Ticker/sector/topic personalization bonuses can stack past 150+ points
+    // for a heavily-followed name, which was enough to keep a 9-day-old
+    // story pinned above genuinely fresh articles. This decay scales with
+    // staleness so no amount of personalization match can permanently park
+    // an old story at the top of the feed.
+    const daysStale = (ageHours - 72) / 24;
+    score -= Math.min(220, Math.round(daysStale * 22));
+  }
 
   return score;
 }

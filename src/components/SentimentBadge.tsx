@@ -79,7 +79,7 @@ export function SentimentBadge({
   const badge = (
     <div
       className={`inline-flex items-center gap-1 rounded-full border font-semibold ${padding} ${styleClass} ${className}`}
-      title={`Marketaux news sentiment score: ${score.toFixed(2)}`}
+      title={`News sentiment score: ${score.toFixed(2)}`}
     >
       <Icon className={`${iconSize} shrink-0`} strokeWidth={2.5} />
       <span>{text}</span>
