@@ -56,7 +56,7 @@ export function SavedPage({ catalogArticles }: SavedPageProps) {
 
     const full = articlesById.get(entry.articleId);
     if (full) {
-      requestFeedJump(entry.articleId);
+      requestFeedJump(entry.articleId, full);
       navigate("home");
       return;
     }

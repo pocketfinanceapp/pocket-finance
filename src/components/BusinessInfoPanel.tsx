@@ -288,7 +288,7 @@ export function BusinessInfoPanel({ article, onBack, active = true }: BusinessIn
   };
 
   const openHeadline = (headline: NewsArticle) => {
-    requestFeedJump(headline.id);
+    requestFeedJump(headline.id, headline);
     onBack();
   };
 

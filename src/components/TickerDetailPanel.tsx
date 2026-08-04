@@ -173,7 +173,7 @@ export function TickerDetailPanel({
   const chartablePoints = points.filter((p) => p.sentimentAvg !== null);
 
   const openArticle = (article: NewsArticle) => {
-    requestFeedJump(article.id);
+    requestFeedJump(article.id, article);
     navigate("home");
   };
 

@@ -123,6 +123,7 @@ export function NewsFeed({
     resetFeedIndex,
     incrementStoriesRead,
     feedJumpArticleId,
+    feedJumpArticle,
     requestFeedJump,
     clearFeedJump,
     hiddenSources,
@@ -712,11 +713,28 @@ export function NewsFeed({
 
   useEffect(() => {
     if (!feedJumpArticleId) return;
-    const article = allArticles.find((a) => a.id === feedJumpArticleId);
-    if (article) jumpToForYouArticle(article);
+    const existing = allArticles.find((a) => a.id === feedJumpArticleId);
+    if (existing) {
+      jumpToForYouArticle(existing);
+    } else if (feedJumpArticle && feedJumpArticle.id === feedJumpArticleId) {
+      // Jump target isn't in the currently-loaded feed pool — happens when
+      // opening an older headline from a ticker page, company page, or
+      // Saved, since those aren't necessarily part of what's already paged
+      // into the swipeable feed. Splice it in (same trick handleSearchSelect
+      // above already uses) so there's actually something to land on,
+      // instead of the jump silently no-opping and leaving the user staring
+      // at whatever was already at the top of the feed.
+      setAllArticles((prev) =>
+        prev.some((a) => a.id === feedJumpArticle.id)
+          ? prev
+          : [feedJumpArticle, ...prev]
+      );
+      jumpToForYouArticle(feedJumpArticle);
+    }
     clearFeedJump();
   }, [
     feedJumpArticleId,
+    feedJumpArticle,
     allArticles,
     jumpToForYouArticle,
     clearFeedJump,

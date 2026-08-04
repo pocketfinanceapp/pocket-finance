@@ -154,7 +154,8 @@ interface AppContextValue {
   setFeedIndex: (index: number) => void;
   resetFeedIndex: () => void;
   feedJumpArticleId: string | null;
-  requestFeedJump: (articleId: string) => void;
+  feedJumpArticle: NewsArticle | null;
+  requestFeedJump: (articleId: string, article?: NewsArticle) => void;
   clearFeedJump: () => void;
   companyPanelTicker: string | null;
   companyPanelReturnTab: NavTab | null;
@@ -299,6 +300,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [feedIndex, setFeedIndexState] = useState(0);
   const [feedJumpArticleId, setFeedJumpArticleId] = useState<string | null>(
+    null
+  );
+  const [feedJumpArticle, setFeedJumpArticle] = useState<NewsArticle | null>(
     null
   );
   const [companyPanelTicker, setCompanyPanelTicker] = useState<string | null>(
@@ -739,12 +743,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFeedIndexState(0);
   }, []);
 
-  const requestFeedJump = useCallback((articleId: string) => {
-    setFeedJumpArticleId(articleId);
-  }, []);
+  const requestFeedJump = useCallback(
+    (articleId: string, article?: NewsArticle) => {
+      setFeedJumpArticleId(articleId);
+      // Callers that already have the full article (ticker pages, company
+      // pages, Saved) pass it along so NewsFeed can splice it into its
+      // loaded pool when the target isn't already there — otherwise the
+      // jump silently no-ops and the user just lands back on whatever was
+      // already at the top of the feed. See NewsFeed's feedJumpArticleId
+      // effect for the other half of this.
+      setFeedJumpArticle(article ?? null);
+    },
+    []
+  );
 
   const clearFeedJump = useCallback(() => {
     setFeedJumpArticleId(null);
+    setFeedJumpArticle(null);
   }, []);
 
   const requestCompanyPanel = useCallback(
@@ -848,6 +863,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFeedIndex,
       resetFeedIndex,
       feedJumpArticleId,
+      feedJumpArticle,
       requestFeedJump,
       clearFeedJump,
       companyPanelTicker,
@@ -906,6 +922,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setFeedIndex,
       resetFeedIndex,
       feedJumpArticleId,
+      feedJumpArticle,
       requestFeedJump,
       clearFeedJump,
       companyPanelTicker,
