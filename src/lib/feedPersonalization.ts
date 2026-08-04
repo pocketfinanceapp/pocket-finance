@@ -197,11 +197,32 @@ export function computeForYouScore(
   return score;
 }
 
+/**
+ * Freshness tier an article falls into — lower is newer. Used as the primary
+ * sort key in rankForYouFeed so personalization can only reorder articles
+ * within the same freshness tier, never let an older story outrank a newer
+ * one. Without this, stacked personalization bonuses (followed ticker +
+ * saved + engaged + sector, easily 150+ points) could still keep a
+ * day-old-plus story pinned above something posted an hour ago.
+ */
+function ageTier(article: NewsArticle): number {
+  const ageHours =
+    (Date.now() - new Date(article.publishedAt).getTime()) / 3_600_000;
+  if (ageHours < 3) return 0;
+  if (ageHours < 12) return 1;
+  if (ageHours < 24) return 2;
+  if (ageHours < 48) return 3;
+  if (ageHours < 96) return 4;
+  return 5;
+}
+
 export function rankForYouFeed(
   articles: NewsArticle[],
   input: FeedPersonalizationInput
 ): NewsArticle[] {
   return [...articles].sort((a, b) => {
+    const tierDiff = ageTier(a) - ageTier(b);
+    if (tierDiff !== 0) return tierDiff;
     const diff = computeForYouScore(b, input) - computeForYouScore(a, input);
     if (diff !== 0) return diff;
     return (
