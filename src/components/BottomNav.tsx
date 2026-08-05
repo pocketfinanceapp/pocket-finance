@@ -75,7 +75,13 @@ export function BottomNav({ active }: BottomNavProps) {
         bottom: 0,
         left: 0,
         right: 0,
-        height: BOTTOM_NAV_HEIGHT,
+        // Total on-screen height includes the home-indicator safe area,
+        // with that same amount reserved as bottom padding so the icon
+        // grid (h-full below) still renders at exactly BOTTOM_NAV_HEIGHT,
+        // clear of the indicator. --app-feed-vh in globals.css subtracts
+        // this same total so feed content lines up flush above this bar.
+        height: `calc(${BOTTOM_NAV_HEIGHT} + env(safe-area-inset-bottom))`,
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
       <div className="grid h-full w-full grid-cols-4 items-end pb-1">
