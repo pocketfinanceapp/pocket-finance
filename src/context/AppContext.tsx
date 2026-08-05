@@ -177,6 +177,51 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  // Sets --app-vh / --app-feed-vh from real measured pixels instead of
+  // relying purely on CSS (100svh + env(safe-area-inset-bottom) via calc()).
+  // That CSS-only approach didn't reliably resolve in Capacitor's WKWebView
+  // on-device/in-Simulator — the feed's bottom ticker/sentiment row stayed
+  // clipped behind the bottom nav bar at rest, only appearing mid-swipe-drag
+  // once the card's transform temporarily shifted it into view. Measuring
+  // window.innerHeight and the safe area directly in JS sidesteps whatever
+  // that CSS resolution quirk is, since both are read as real numbers
+  // rather than chained through calc()/env()/svh in a custom property.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const measureSafeAreaBottom = (): number => {
+      const probe = document.createElement("div");
+      probe.style.position = "fixed";
+      probe.style.bottom = "0";
+      probe.style.left = "0";
+      probe.style.height = "0";
+      probe.style.paddingBottom = "env(safe-area-inset-bottom)";
+      probe.style.visibility = "hidden";
+      probe.style.pointerEvents = "none";
+      document.body.appendChild(probe);
+      const value = parseFloat(getComputedStyle(probe).paddingBottom) || 0;
+      document.body.removeChild(probe);
+      return value;
+    };
+
+    const applyViewportHeightVars = () => {
+      const vh = window.innerHeight;
+      const safeAreaBottom = measureSafeAreaBottom();
+      const navHeight = 65 + safeAreaBottom; // 65 = BOTTOM_NAV_PX in lib/layout.ts
+      const root = document.documentElement.style;
+      root.setProperty("--app-vh", `${vh}px`);
+      root.setProperty("--app-feed-vh", `${vh - navHeight}px`);
+    };
+
+    applyViewportHeightVars();
+    window.addEventListener("resize", applyViewportHeightVars);
+    window.addEventListener("orientationchange", applyViewportHeightVars);
+    return () => {
+      window.removeEventListener("resize", applyViewportHeightVars);
+      window.removeEventListener("orientationchange", applyViewportHeightVars);
+    };
+  }, []);
+
   const [ready, setReady] = useState(false);
   const [savedArticles, setSavedArticles] = useState<SavedArticleEntry[]>([]);
   const [followedMarkets, setFollowedMarketsState] = useState<MarketFilter[]>(
