@@ -49,7 +49,14 @@ async function fetchTrendingFromMarketauxUncached(): Promise<NewsArticle[]> {
 }
 
 async function fetchMainFeedFromMarketauxUncached(): Promise<NewsArticle[]> {
-  const articles = await fetchMarketauxNews({ mustHaveEntities: true });
+  // Explicit sort, not relying on Marketaux's documented default — this is
+  // the pool the "For You" timeline is built from, so guaranteeing
+  // newest-first at the API level (not just in our own client-side
+  // re-ranking) is worth being explicit about rather than implicit.
+  const articles = await fetchMarketauxNews({
+    mustHaveEntities: true,
+    sort: "published_at",
+  });
   return filterFinanceArticles(articles.map(mapMarketauxArticle));
 }
 
@@ -128,7 +135,11 @@ export async function fetchMoreNewsArticles(page: number): Promise<NewsArticle[]
   if (page < 2) return [];
 
   try {
-    const articles = await fetchMarketauxNews({ mustHaveEntities: true, page });
+    const articles = await fetchMarketauxNews({
+      mustHaveEntities: true,
+      sort: "published_at",
+      page,
+    });
     const mapped = filterFinanceArticles(articles.map(mapMarketauxArticle));
     return capArticles(withUsableImage(mapped), MAIN_FEED_CAP);
   } catch (err) {

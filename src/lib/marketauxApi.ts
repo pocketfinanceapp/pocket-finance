@@ -152,8 +152,19 @@ export async function fetchMarketauxNews(
 
   try {
     const res = await fetch(url.toString(), {
-      // Protects the 100-requests/day free-tier quota — see file header.
-      next: { revalidate: 1800 },
+      // Was 1800s (30 min) — on a low-traffic pre-launch app, a 30-minute
+      // ISR window can sit unrefreshed for hours between visits (Next only
+      // revalidates on the *next* request after expiry), which is how a
+      // several-day-old cached batch can end up as "the freshest thing
+      // available" at the top of the feed. 300s tightens that gap while
+      // staying far under the Standard plan's 10,000 requests/day quota
+      // (this fetch is shared across all visitors via Next's data cache, so
+      // real origin calls stay well below one per 5 minutes). Note this
+      // doesn't fully eliminate staleness — the first visit after a long
+      // gap still renders once from the old cached batch while Next
+      // revalidates in the background — it just shrinks how stale that one
+      // render can be.
+      next: { revalidate: 300 },
       // 20s: fetchNews.ts single-flights the two build-time callers of this
       // endpoint, so this is no longer about concurrent-request bursts —
       // just giving a single slow Marketaux response (observed up to ~15s
