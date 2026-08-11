@@ -125,6 +125,18 @@ interface FetchMarketauxNewsOptions {
   /** 1-based page number, for paging deeper into the result set (infinite
    * scroll) beyond the first page's ~50 articles. Omit for page 1. */
   page?: number;
+  /**
+   * ISO timestamp (Y-m-d\TH:i:s) — only return articles published after
+   * this. Confirmed by direct testing that Marketaux appears to cache the
+   * response for the exact query shape used here (no date bound) for many
+   * hours server-side — two identical requests 15+ hours apart returned
+   * byte-identical results, including an unchanged `meta.found` count.
+   * Adding this param broke that stale response immediately. So beyond its
+   * literal filtering purpose, this is load-bearing as a cache-buster:
+   * without it, our own revalidate window is meaningless because the
+   * upstream response itself never changes.
+   */
+  publishedAfter?: string;
 }
 
 export async function fetchMarketauxNews(
@@ -148,6 +160,9 @@ export async function fetchMarketauxNews(
   }
   if (options.page && options.page > 1) {
     url.searchParams.set("page", String(options.page));
+  }
+  if (options.publishedAfter) {
+    url.searchParams.set("published_after", options.publishedAfter);
   }
 
   try {

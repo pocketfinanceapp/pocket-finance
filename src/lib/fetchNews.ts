@@ -7,8 +7,31 @@ import type { NewsArticle } from "./types";
 const MAIN_FEED_CAP = 60;
 const TRENDING_CAP = 40;
 
-// Same window as the underlying fetch()'s `next: { revalidate: 1800 }`.
-const DEDUPE_WINDOW_MS = 1800 * 1000;
+// Same window as the underlying fetch()'s `next: { revalidate: 300 }`.
+const DEDUPE_WINDOW_MS = 300 * 1000;
+
+/**
+ * Rolling `published_after` cutoff, rounded down to a `stepMinutes` bucket
+ * so the value — and therefore the request URL — stays stable within one
+ * revalidate window instead of changing every millisecond (which would
+ * defeat Next's fetch cache and hit Marketaux on every single request).
+ *
+ * This exists for more than filtering: direct testing showed Marketaux
+ * appears to cache its response for the exact "no date bound" query shape
+ * for many hours at a time — two calls 15+ hours apart came back
+ * byte-identical, `meta.found` included. Adding any `published_after` value
+ * broke that immediately. Omitting this param is why the main feed could
+ * get stuck showing the same batch of articles for most of a day even
+ * though our own cache was refreshing every few minutes — we were asking
+ * Marketaux the identical question and it kept giving the identical
+ * (stale) answer.
+ */
+function rollingPublishedAfter(hoursBack: number, stepMinutes = 10): string {
+  const stepMs = stepMinutes * 60_000;
+  const bucketed = Math.floor(Date.now() / stepMs) * stepMs;
+  const cutoff = bucketed - hoursBack * 3_600_000;
+  return new Date(cutoff).toISOString().slice(0, 19);
+}
 
 /**
  * Single-flight + short-lived memoization, keyed at the module level (not
@@ -53,9 +76,12 @@ async function fetchMainFeedFromMarketauxUncached(): Promise<NewsArticle[]> {
   // the pool the "For You" timeline is built from, so guaranteeing
   // newest-first at the API level (not just in our own client-side
   // re-ranking) is worth being explicit about rather than implicit.
+  // publishedAfter is the real fix for stale-feed reports — see
+  // rollingPublishedAfter's comment above.
   const articles = await fetchMarketauxNews({
     mustHaveEntities: true,
     sort: "published_at",
+    publishedAfter: rollingPublishedAfter(48),
   });
   return filterFinanceArticles(articles.map(mapMarketauxArticle));
 }
@@ -135,9 +161,14 @@ export async function fetchMoreNewsArticles(page: number): Promise<NewsArticle[]
   if (page < 2) return [];
 
   try {
+    // Wider lookback than the main feed's 48h — deeper pages are expected
+    // to page further back over time, but still bounded so we're not
+    // relying on Marketaux's default (unbounded) query shape, which is the
+    // one shown to get stuck serving a stale cached response for hours.
     const articles = await fetchMarketauxNews({
       mustHaveEntities: true,
       sort: "published_at",
+      publishedAfter: rollingPublishedAfter(24 * 14),
       page,
     });
     const mapped = filterFinanceArticles(articles.map(mapMarketauxArticle));
